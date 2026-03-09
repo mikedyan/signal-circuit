@@ -1,0 +1,130 @@
+{
+  "day": 1,
+  "title": "Foundation — Canvas, Gates, Wires, Simulation",
+  "summary": "Build the core playable foundation: a skeuomorphic breadboard canvas with grid, an IC-chip style gate toolbox (AND, OR, NOT), drag-and-drop gate placement, wire drawing between pins, a basic signal propagation engine, two tutorial levels, and visual feedback showing 0/1 states on inputs, outputs, and wires.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Create index.html entry point with canvas element, toolbox sidebar, and level info panel. Link all CSS and JS files.",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "Page loads without errors in Chrome",
+        "Canvas element fills the main area",
+        "Toolbox sidebar visible on the left",
+        "Level info area visible (level name, truth table placeholder)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Implement breadboard canvas rendering — white breadboard background with grid holes, pan/zoom not required yet but canvas should be large enough for ~20 gates.",
+      "files_to_modify": ["js/canvas.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Canvas renders a breadboard-like grid pattern",
+        "Grid holes are visible at regular intervals",
+        "Canvas is at least 800x600 usable area",
+        "Skeuomorphic look: white/off-white background, subtle hole pattern"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Implement gate definitions (AND, OR, NOT) with input/output pin positions, rendering as IC chips (black rectangles with pin legs and labels), and gate logic functions.",
+      "files_to_modify": ["js/gates.js"],
+      "acceptance_criteria": [
+        "AND gate has 2 inputs, 1 output, correct logic",
+        "OR gate has 2 inputs, 1 output, correct logic",
+        "NOT gate has 1 input, 1 output, correct logic",
+        "Gates render as black IC-chip rectangles with visible pin legs",
+        "Gate type label visible on chip body"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Implement toolbox UI — sidebar shows AND, OR, NOT as draggable chips. User drags a gate from toolbox onto the canvas to place it. Snap to grid.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Toolbox shows 3 gate types (AND, OR, NOT)",
+        "Dragging from toolbox creates a gate that follows cursor",
+        "Dropping on canvas places the gate at grid-snapped position",
+        "Dropping outside canvas cancels placement",
+        "Placed gates are rendered on canvas"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T5",
+      "description": "Implement wire drawing — click on an output pin, drag to an input pin, creates a colored wire connection. Wire routes as straight/angled line segments.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Clicking an output pin starts wire drawing mode",
+        "Wire preview follows cursor during drawing",
+        "Releasing on a valid input pin creates permanent wire",
+        "Releasing on empty space cancels wire",
+        "Wires render as colored lines between connected pins",
+        "Cannot connect output-to-output or input-to-input"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T6",
+      "description": "Implement circuit simulation engine — topological sort of gates, propagate signals from level inputs through gates to outputs. Evaluate all rows of the target truth table.",
+      "files_to_modify": ["js/simulation.js"],
+      "acceptance_criteria": [
+        "Simulation correctly evaluates AND(0,0)=0, AND(1,1)=1, etc.",
+        "Simulation handles chains of gates (output of gate A into input of gate B)",
+        "Simulation tests all rows of a truth table and reports pass/fail per row",
+        "Unconnected inputs default to 0"
+      ],
+      "depends_on": ["T3", "T5"]
+    },
+    {
+      "id": "T7",
+      "description": "Implement level system with 2 tutorial levels plus level input/output nodes on canvas. Level 1: 'AND Gate Basics' (connect 2 inputs through AND to output). Level 2: 'NOT Gate — Inversion' (connect input through NOT to output).",
+      "files_to_modify": ["js/levels.js", "js/canvas.js"],
+      "acceptance_criteria": [
+        "Level 1 loads with 2 input nodes and 1 output node on canvas",
+        "Level 1 truth table: AND gate behavior",
+        "Level 2 loads with 1 input node and 1 output node",
+        "Level 2 truth table: NOT gate behavior",
+        "Input/output nodes render distinctly (labeled, colored)",
+        "Level title and instructions displayed"
+      ],
+      "depends_on": ["T6"]
+    },
+    {
+      "id": "T8",
+      "description": "Implement Run button and visual feedback — run simulation, color wires red(1)/blue(0), show truth table with green/red row indicators, display pass/fail result.",
+      "files_to_modify": ["js/ui.js", "js/simulation.js", "js/canvas.js"],
+      "acceptance_criteria": [
+        "Run button triggers circuit evaluation",
+        "Wires change color to show signal state (red=1, blue=0)",
+        "Truth table rows highlight green (correct) or red (incorrect)",
+        "Overall pass/fail message displayed after simulation",
+        "Input/output nodes show their current values"
+      ],
+      "depends_on": ["T6", "T7"]
+    },
+    {
+      "id": "T9",
+      "description": "Wire up main.js to initialize the app — load first level, set up event loop, connect all modules.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "App initializes without errors",
+        "First level loads on page open",
+        "All interactions work end-to-end: place gate, wire it, run simulation, see results"
+      ],
+      "depends_on": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Gate logic correctness for all input combinations",
+    "Wire connections only form between valid pin types",
+    "Simulation handles disconnected/partial circuits gracefully",
+    "Canvas rendering performance with multiple gates",
+    "Both tutorial levels are completable end-to-end"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
