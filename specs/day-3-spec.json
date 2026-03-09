@@ -1,0 +1,82 @@
+{
+  "day": 3,
+  "title": "Level System & Progression — Select Screen, Stars, XOR, Celebration",
+  "summary": "Transform Signal Circuit from a demo into a real game with campaign structure: level select screen with chapter organization, 1-3 star rating based on gate count efficiency, localStorage progress persistence, 5 new levels bringing the total to 10, XOR gate unlock at level 6, and a celebration animation on level completion.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Level select screen — shows before gameplay with chapter organization, level buttons showing stars earned and lock state. Chapter 1: Basics (levels 1-5), Chapter 2: Combinations (levels 6-10). Click a level to start it. Back button from gameplay returns to level select.",
+      "files_to_modify": ["index.html", "js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Level select screen shows on app load",
+        "Levels organized under Chapter 1 and Chapter 2 headers",
+        "Completed levels show star count (1-3 stars)",
+        "Locked levels are grayed out and not clickable",
+        "Clicking an unlocked level starts it",
+        "Back button in gameplay returns to level select",
+        "Level 1 is always unlocked, subsequent levels unlock on completion"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Star rating system — 1-3 stars based on gate count. Each level defines optimalGates (3 stars), goodGates (2 stars), and anything above gets 1 star. Stars displayed after level completion and on level select.",
+      "files_to_modify": ["js/levels.js", "js/simulation.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Star count calculated based on number of gates used",
+        "3 stars for optimal gate count, 2 stars for good, 1 star for any completion",
+        "Stars displayed after level completion in result area",
+        "Stars shown on level select buttons"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "localStorage progress persistence — save completed levels and star ratings. Load on app start. Clear progress option in settings.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Level completions persist across page reloads",
+        "Star ratings persist across reloads",
+        "Level unlocks persist",
+        "Progress can be cleared with a reset button"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Add XOR gate definition and 5 new levels (6-10). Level 6 introduces XOR. Levels 7-10 combine gates in increasingly complex ways. Total: 10 levels across 2 chapters.",
+      "files_to_modify": ["js/gates.js", "js/levels.js"],
+      "acceptance_criteria": [
+        "XOR gate has 2 inputs, 1 output, correct logic (0,0→0, 0,1→1, 1,0→1, 1,1→0)",
+        "XOR gate renders as IC chip with distinct color",
+        "Level 6 introduces XOR gate",
+        "Levels 7-10 have correct truth tables and are solvable",
+        "All 10 levels completable with correct circuits"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Level completion celebration — confetti-style particle animation on level completion. Brief but satisfying. Stars animate in. Success message with star display and Next Level button.",
+      "files_to_modify": ["js/ui.js", "js/canvas.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Particle/confetti animation plays on successful level completion",
+        "Stars animate in (scale up or appear one by one)",
+        "Celebration is brief (<2 seconds)",
+        "Next Level button appears after celebration",
+        "Celebration doesn't block interaction for long"
+      ],
+      "depends_on": ["T2"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Level select navigation and state management",
+    "Star rating calculation correctness",
+    "localStorage persistence across page reloads",
+    "XOR gate logic verification",
+    "All 10 levels completable end-to-end",
+    "Celebration animation timing and visual quality"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
