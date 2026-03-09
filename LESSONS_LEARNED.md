@@ -18,3 +18,7 @@
 - GameState is the central state object, accessible globally as `window.game` for debugging
 - Script load order matters: gates.js → wires.js → simulation.js → levels.js → canvas.js → ui.js → main.js
 - Wire class uses plain objects in some places (push literal objects) — should standardize to Wire class instances
+- Undo/redo stores action objects with enough data to reverse them (gate type, position, associated wires)
+- `roundRect()` utility function used for consistent rounded corner rendering
+- Animated simulation uses async/await with requestAnimationFrame for smooth visuals
+- Wire hit-detection: point-to-segment distance at 8px threshold works well for 3px wide wires
