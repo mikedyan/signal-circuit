@@ -5,6 +5,7 @@ class CanvasRenderer {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.gameState = gameState;
+    this.hoveredPin = null;
     this.resize();
     window.addEventListener('resize', () => this.resize());
   }
@@ -19,10 +20,8 @@ class CanvasRenderer {
     const ctx = this.ctx;
     const { width, height } = this.canvas;
 
-    // Clear
     ctx.clearRect(0, 0, width, height);
 
-    // Breadboard background
     this.drawBreadboard(ctx, width, height);
 
     // Wires (behind gates)
@@ -41,38 +40,52 @@ class CanvasRenderer {
       const isSelected = this.gameState.selectedGate === gate;
       gate.render(ctx, isSelected);
     }
+
+    // Hovered pin highlight
+    if (this.hoveredPin) {
+      ctx.beginPath();
+      ctx.arc(this.hoveredPin.x, this.hoveredPin.y, 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+      ctx.fill();
+      ctx.strokeStyle = '#0f0';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
   }
 
   drawBreadboard(ctx, width, height) {
-    // Background
-    ctx.fillStyle = '#e8e4d8';
+    // Background gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#ece8d8');
+    bgGrad.addColorStop(1, '#e0dcd0');
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle grid pattern
+    // Grid holes
     const gridSize = 20;
-    ctx.fillStyle = '#d4d0c4';
     for (let x = gridSize; x < width; x += gridSize) {
       for (let y = gridSize; y < height; y += gridSize) {
         ctx.beginPath();
         ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ccc8bc';
         ctx.fill();
       }
     }
 
-    // Central channel (like a real breadboard)
+    // Central channel
     const channelY = height / 2;
-    ctx.fillStyle = '#c8c4b8';
+    ctx.fillStyle = '#c8c4b4';
     ctx.fillRect(0, channelY - 3, width, 6);
 
-    // Power rails at top and bottom
-    ctx.strokeStyle = '#cc3333';
+    // Power rails
+    ctx.strokeStyle = 'rgba(200, 50, 50, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, 30);
     ctx.lineTo(width, 30);
     ctx.stroke();
 
-    ctx.strokeStyle = '#3333cc';
+    ctx.strokeStyle = 'rgba(50, 50, 200, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, height - 30);
@@ -81,28 +94,25 @@ class CanvasRenderer {
 
     // Rail labels
     ctx.font = 'bold 10px Courier New';
-    ctx.fillStyle = '#cc3333';
+    ctx.fillStyle = 'rgba(200, 50, 50, 0.5)';
     ctx.textAlign = 'left';
     ctx.fillText('+', 5, 34);
-    ctx.fillStyle = '#3333cc';
+    ctx.fillStyle = 'rgba(50, 50, 200, 0.5)';
     ctx.fillText('−', 5, height - 26);
   }
 
-  // Hit-test a pin near mouse position
   findPinAt(mx, my, threshold = 18) {
     const gs = this.gameState;
 
-    // Check input node pins
     for (const node of gs.inputNodes) {
       const pin = node.getPin();
-      const px = pin.x + 12; // pin circle offset
+      const px = pin.x + 12;
       const py = pin.y;
       if (Math.hypot(mx - px, my - py) < threshold) {
         return { gateId: node.id, pinIndex: 0, pinType: 'output', x: px, y: py };
       }
     }
 
-    // Check output node pins
     for (const node of gs.outputNodes) {
       const pin = node.getPin();
       const px = pin.x - 12;
@@ -112,7 +122,6 @@ class CanvasRenderer {
       }
     }
 
-    // Check gate pins
     for (const gate of gs.gates) {
       const inputPins = gate.getInputPins();
       for (let i = 0; i < inputPins.length; i++) {
@@ -138,9 +147,7 @@ class CanvasRenderer {
     return null;
   }
 
-  // Hit-test a gate body
   findGateAt(mx, my) {
-    // Check in reverse order (topmost first)
     for (let i = this.gameState.gates.length - 1; i >= 0; i--) {
       if (this.gameState.gates[i].containsPoint(mx, my)) {
         return this.gameState.gates[i];

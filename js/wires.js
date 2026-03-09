@@ -1,4 +1,4 @@
-// wires.js — Wire management and drawing
+// wires.js — Wire management, drawing, selection, and deletion
 
 class Wire {
   constructor(fromGateId, fromPinIndex, toGateId, toPinIndex, id) {
@@ -17,9 +17,11 @@ class WireManager {
     this.wires = [];
     this.nextId = 1;
     this.drawing = false;
-    this.drawFrom = null; // {gateId, pinIndex, pinType, x, y}
+    this.drawFrom = null;
     this.mouseX = 0;
     this.mouseY = 0;
+    this.selectedWire = null;
+    this.hoveredWire = null;
   }
 
   startDrawing(gateId, pinIndex, pinType, x, y) {
@@ -30,17 +32,19 @@ class WireManager {
   updateMouse(x, y) {
     this.mouseX = x;
     this.mouseY = y;
+    // Update hover detection
+    if (!this.drawing) {
+      this.hoveredWire = this.findWireAt(x, y);
+    }
   }
 
   finishDrawing(gateId, pinIndex, pinType, x, y) {
     if (!this.drawing || !this.drawFrom) {
       this.cancelDrawing();
-      return false;
+      return null;
     }
 
     const from = this.drawFrom;
-
-    // Must connect output → input
     let fromGate, fromPin, toGate, toPin;
     if (from.pinType === 'output' && pinType === 'input') {
       fromGate = from.gateId;
@@ -53,34 +57,37 @@ class WireManager {
       toGate = from.gateId;
       toPin = from.pinIndex;
     } else {
-      // Invalid connection (same type)
       this.cancelDrawing();
-      return false;
+      return null;
     }
 
-    // Check if this input is already connected
+    // Remove existing connection to this input
     const existing = this.wires.find(w => w.toGateId === toGate && w.toPinIndex === toPin);
     if (existing) {
-      // Remove existing wire first
       this.wires = this.wires.filter(w => w.id !== existing.id);
     }
 
-    // Don't allow self-connection
     if (fromGate === toGate) {
       this.cancelDrawing();
-      return false;
+      return null;
     }
 
     const wire = new Wire(fromGate, fromPin, toGate, toPin, this.nextId++);
     this.wires.push(wire);
     this.drawing = false;
     this.drawFrom = null;
-    return true;
+    return wire;
   }
 
   cancelDrawing() {
     this.drawing = false;
     this.drawFrom = null;
+  }
+
+  removeWire(wire) {
+    this.wires = this.wires.filter(w => w.id !== wire.id);
+    if (this.selectedWire === wire) this.selectedWire = null;
+    if (this.hoveredWire === wire) this.hoveredWire = null;
   }
 
   removeWiresForGate(gateId) {
@@ -89,7 +96,30 @@ class WireManager {
 
   clear() {
     this.wires = [];
+    this.selectedWire = null;
+    this.hoveredWire = null;
     this.cancelDrawing();
+  }
+
+  // Find a wire near a point (for click selection)
+  findWireAt(px, py, threshold = 8) {
+    for (const wire of this.wires) {
+      const endpoints = this.getWireEndpoints(wire);
+      if (!endpoints) continue;
+
+      const { fromPin, toPin } = endpoints;
+      const sx = fromPin.x + (fromPin.type === 'output' ? 12 : -12);
+      const sy = fromPin.y;
+      const ex = toPin.x + (toPin.type === 'input' ? -12 : 12);
+      const ey = toPin.y;
+      const midX = (sx + ex) / 2;
+
+      // Check distance to each segment of the wire path
+      if (distToSegment(px, py, sx, sy, midX, sy) < threshold) return wire;
+      if (distToSegment(px, py, midX, sy, midX, ey) < threshold) return wire;
+      if (distToSegment(px, py, midX, ey, ex, ey) < threshold) return wire;
+    }
+    return null;
   }
 
   getWireEndpoints(wire) {
@@ -115,40 +145,37 @@ class WireManager {
   }
 
   render(ctx) {
-    // Render existing wires
+    const sim = this.gameState.simulation;
+
     for (const wire of this.wires) {
       const endpoints = this.getWireEndpoints(wire);
       if (!endpoints) continue;
 
       const { fromPin, toPin } = endpoints;
-
-      // Determine start/end with pin offset
       const sx = fromPin.x + (fromPin.type === 'output' ? 12 : -12);
       const sy = fromPin.y;
       const ex = toPin.x + (toPin.type === 'input' ? -12 : 12);
       const ey = toPin.y;
-
-      // Wire color based on signal
-      const color = wire.signalValue ? '#ff4444' : '#4466cc';
-
-      // Draw wire as a routed path
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-
-      // Simple routing: horizontal, vertical, horizontal
       const midX = (sx + ex) / 2;
-      ctx.lineTo(midX, sy);
-      ctx.lineTo(midX, ey);
-      ctx.lineTo(ex, ey);
-      ctx.stroke();
+
+      const isSelected = this.selectedWire === wire;
+      const isHovered = this.hoveredWire === wire;
+
+      // Wire color
+      let color;
+      if (isSelected) {
+        color = '#ff0';
+      } else if (wire.signalValue) {
+        color = '#ff4444';
+      } else {
+        color = '#4466cc';
+      }
 
       // Wire shadow
       ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-      ctx.lineWidth = 5;
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(sx, sy + 2);
       ctx.lineTo(midX, sy + 2);
@@ -156,18 +183,44 @@ class WireManager {
       ctx.lineTo(ex, ey + 2);
       ctx.stroke();
 
-      // Redraw wire on top of shadow
+      // Main wire
       ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = isSelected || isHovered ? 4 : 3;
       ctx.beginPath();
       ctx.moveTo(sx, sy);
       ctx.lineTo(midX, sy);
       ctx.lineTo(midX, ey);
       ctx.lineTo(ex, ey);
       ctx.stroke();
+
+      // Glow effect for selected/hovered
+      if (isSelected || isHovered) {
+        ctx.strokeStyle = isSelected ? 'rgba(255,255,0,0.3)' : 'rgba(100,200,255,0.2)';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(midX, sy);
+        ctx.lineTo(midX, ey);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+      }
+
+      // Animated pulse dot during simulation
+      if (sim.animating && wire.signalValue && sim.animationProgress < 1) {
+        const t = sim.animationProgress;
+        const pulsePos = getPointOnWirePath(sx, sy, midX, ey, ex, ey, t);
+        ctx.beginPath();
+        ctx.arc(pulsePos.x, pulsePos.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.9)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pulsePos.x, pulsePos.y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.3)';
+        ctx.fill();
+      }
     }
 
-    // Render wire being drawn
+    // Wire being drawn
     if (this.drawing && this.drawFrom) {
       const sx = this.drawFrom.x;
       const sy = this.drawFrom.y;
@@ -177,9 +230,53 @@ class WireManager {
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.moveTo(sx, sy);
+
+      // Route preview
+      const midX = (sx + this.mouseX) / 2;
+      ctx.lineTo(midX, sy);
+      ctx.lineTo(midX, this.mouseY);
       ctx.lineTo(this.mouseX, this.mouseY);
       ctx.stroke();
       ctx.setLineDash([]);
     }
+  }
+}
+
+// Utility: distance from point to line segment
+function distToSegment(px, py, x1, y1, x2, y2) {
+  const A = px - x1;
+  const B = py - y1;
+  const C = x2 - x1;
+  const D = y2 - y1;
+  const dot = A * C + B * D;
+  const lenSq = C * C + D * D;
+  let t = lenSq !== 0 ? dot / lenSq : -1;
+  t = Math.max(0, Math.min(1, t));
+  const xx = x1 + t * C;
+  const yy = y1 + t * D;
+  return Math.hypot(px - xx, py - yy);
+}
+
+// Get interpolated point along the 3-segment wire path
+function getPointOnWirePath(sx, sy, midX, ey, ex, eyEnd, t) {
+  // Three segments: (sx,sy)→(midX,sy), (midX,sy)→(midX,ey), (midX,ey)→(ex,eyEnd)
+  const seg1Len = Math.abs(midX - sx);
+  const seg2Len = Math.abs(ey - sy);
+  const seg3Len = Math.abs(ex - midX);
+  const totalLen = seg1Len + seg2Len + seg3Len;
+
+  if (totalLen === 0) return { x: sx, y: sy };
+
+  const dist = t * totalLen;
+
+  if (dist <= seg1Len) {
+    const frac = seg1Len > 0 ? dist / seg1Len : 0;
+    return { x: sx + (midX - sx) * frac, y: sy };
+  } else if (dist <= seg1Len + seg2Len) {
+    const frac = seg2Len > 0 ? (dist - seg1Len) / seg2Len : 0;
+    return { x: midX, y: sy + (ey - sy) * frac };
+  } else {
+    const frac = seg3Len > 0 ? (dist - seg1Len - seg2Len) / seg3Len : 0;
+    return { x: midX + (ex - midX) * frac, y: eyEnd };
   }
 }

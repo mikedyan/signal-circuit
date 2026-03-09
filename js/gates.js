@@ -41,7 +41,6 @@ class Gate {
     this.outputValues = new Array(this.def.outputs).fill(0);
   }
 
-  // Get pin positions in canvas coordinates
   getInputPins() {
     const pins = [];
     const spacing = this.def.height / (this.def.inputs + 1);
@@ -89,22 +88,29 @@ class Gate {
     const { x, y } = this;
     const { width, height, name, color } = this.def;
 
-    // IC chip body shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.fillRect(x + 3, y + 3, width, height);
+    // IC chip body shadow (depth effect)
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    roundRect(ctx, x + 4, y + 4, width, height, 3);
+    ctx.fill();
 
     // IC chip body
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(x, y, width, height);
+    const bodyGrad = ctx.createLinearGradient(x, y, x, y + height);
+    bodyGrad.addColorStop(0, '#2a2a2a');
+    bodyGrad.addColorStop(0.5, '#1a1a1a');
+    bodyGrad.addColorStop(1, '#111');
+    ctx.fillStyle = bodyGrad;
+    roundRect(ctx, x, y, width, height, 3);
+    ctx.fill();
 
     // Chip border
     ctx.strokeStyle = isSelected ? '#0f0' : '#555';
-    ctx.lineWidth = isSelected ? 2 : 1.5;
-    ctx.strokeRect(x, y, width, height);
+    ctx.lineWidth = isSelected ? 2.5 : 1.5;
+    roundRect(ctx, x, y, width, height, 3);
+    ctx.stroke();
 
     // Notch at top-left (IC chip detail)
     ctx.beginPath();
-    ctx.arc(x + 10, y, 5, 0, Math.PI);
+    ctx.arc(x + 12, y, 5, 0, Math.PI);
     ctx.fillStyle = '#333';
     ctx.fill();
 
@@ -115,10 +121,9 @@ class Gate {
     ctx.textBaseline = 'middle';
     ctx.fillText(name, x + width / 2, y + height / 2);
 
-    // Input pins (legs on the left)
+    // Input pins
     const inputPins = this.getInputPins();
     inputPins.forEach((pin, i) => {
-      // Pin leg
       ctx.strokeStyle = '#888';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -126,20 +131,27 @@ class Gate {
       ctx.lineTo(pin.x, pin.y);
       ctx.stroke();
 
-      // Pin circle
+      const val = this.inputValues[i];
       ctx.beginPath();
       ctx.arc(pin.x - 12, pin.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = this.inputValues[i] ? '#ff3333' : '#336';
+      ctx.fillStyle = val ? '#ff3333' : '#336';
       ctx.fill();
       ctx.strokeStyle = '#888';
       ctx.lineWidth = 1;
       ctx.stroke();
+
+      // Glow for active pins
+      if (val) {
+        ctx.beginPath();
+        ctx.arc(pin.x - 12, pin.y, 9, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 50, 50, 0.25)';
+        ctx.fill();
+      }
     });
 
-    // Output pins (legs on the right)
+    // Output pins
     const outputPins = this.getOutputPins();
     outputPins.forEach((pin, i) => {
-      // Pin leg
       ctx.strokeStyle = '#888';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -147,14 +159,21 @@ class Gate {
       ctx.lineTo(pin.x + 12, pin.y);
       ctx.stroke();
 
-      // Pin circle
+      const val = this.outputValues[i];
       ctx.beginPath();
       ctx.arc(pin.x + 12, pin.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = this.outputValues[i] ? '#ff3333' : '#336';
+      ctx.fillStyle = val ? '#ff3333' : '#336';
       ctx.fill();
       ctx.strokeStyle = '#888';
       ctx.lineWidth = 1;
       ctx.stroke();
+
+      if (val) {
+        ctx.beginPath();
+        ctx.arc(pin.x + 12, pin.y, 9, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 50, 50, 0.25)';
+        ctx.fill();
+      }
     });
   }
 }
@@ -162,7 +181,7 @@ class Gate {
 // Input/Output nodes for levels
 class IONode {
   constructor(type, label, x, y, id) {
-    this.type = type; // 'input' or 'output'
+    this.type = type;
     this.label = label;
     this.x = x;
     this.y = y;
@@ -174,22 +193,20 @@ class IONode {
 
   getPin() {
     if (this.type === 'input') {
-      // Output pin (right side — feeds into the circuit)
       return {
         x: this.x + this.width,
         y: this.y + this.height / 2,
         index: 0,
         gateId: this.id,
-        type: 'output', // input node OUTPUTS to circuit
+        type: 'output',
       };
     } else {
-      // Input pin (left side — receives from circuit)
       return {
         x: this.x,
         y: this.y + this.height / 2,
         index: 0,
         gateId: this.id,
-        type: 'input', // output node INPUTS from circuit
+        type: 'input',
       };
     }
   }
@@ -202,14 +219,30 @@ class IONode {
   render(ctx) {
     const { x, y, width, height, label, value, type } = this;
 
+    // LED glow effect for output nodes when active
+    if (type === 'output' && value) {
+      ctx.beginPath();
+      ctx.arc(x + width / 2, y + height / 2, 30, 0, Math.PI * 2);
+      const glow = ctx.createRadialGradient(
+        x + width / 2, y + height / 2, 5,
+        x + width / 2, y + height / 2, 30
+      );
+      glow.addColorStop(0, 'rgba(255, 80, 80, 0.4)');
+      glow.addColorStop(1, 'rgba(255, 80, 80, 0)');
+      ctx.fillStyle = glow;
+      ctx.fill();
+    }
+
     // Background
     ctx.fillStyle = type === 'input' ? '#1a3a1a' : '#3a1a1a';
-    ctx.fillRect(x, y, width, height);
+    roundRect(ctx, x, y, width, height, 4);
+    ctx.fill();
 
     // Border
-    ctx.strokeStyle = type === 'input' ? '#0a0' : '#a00';
+    ctx.strokeStyle = type === 'input' ? '#0a0' : (value ? '#f44' : '#a00');
     ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, width, height);
+    roundRect(ctx, x, y, width, height, 4);
+    ctx.stroke();
 
     // Label
     ctx.fillStyle = '#fff';
@@ -227,7 +260,6 @@ class IONode {
     // Pin
     const pin = this.getPin();
     if (type === 'input') {
-      // Right side pin
       ctx.strokeStyle = '#888';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -242,7 +274,6 @@ class IONode {
       ctx.lineWidth = 1;
       ctx.stroke();
     } else {
-      // Left side pin
       ctx.strokeStyle = '#888';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -258,4 +289,19 @@ class IONode {
       ctx.stroke();
     }
   }
+}
+
+// Utility: draw a rounded rectangle path
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
