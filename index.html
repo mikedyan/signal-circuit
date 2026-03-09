@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signal Circuit — Logic Gate Puzzle Game</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Toolbox Sidebar -->
+    <div id="toolbox">
+      <h2>Parts</h2>
+      <!-- Gate tools injected by ui.js -->
+    </div>
+
+    <!-- Canvas Area -->
+    <div id="canvas-container">
+      <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- Info Panel -->
+    <div id="info-panel">
+      <div id="level-info">
+        <h2 id="level-title">Loading...</h2>
+        <p id="level-desc"></p>
+      </div>
+
+      <div id="level-nav">
+        <button id="prev-level">◀ Prev</button>
+        <button id="next-level">Next ▶</button>
+      </div>
+
+      <div id="truth-table-section">
+        <h3>Truth Table</h3>
+        <table id="truth-table"></table>
+      </div>
+
+      <div id="controls">
+        <button id="run-btn">▶ RUN</button>
+        <button id="clear-btn">Clear Circuit</button>
+        <div id="result-display" class="idle">Build your circuit, then press RUN</div>
+      </div>
+
+      <div id="status-bar">Ready</div>
+    </div>
+  </div>
+
+  <!-- Drag ghost element -->
+  <div id="drag-ghost"></div>
+
+  <!-- Scripts (order matters — dependencies first) -->
+  <script src="js/gates.js"></script>
+  <script src="js/wires.js"></script>
+  <script src="js/simulation.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
