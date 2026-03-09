@@ -1,0 +1,78 @@
+{
+  "day": 2,
+  "title": "Polish & Interaction — Animation, Deletion, Undo, OR Levels",
+  "summary": "Make Signal Circuit feel like a real game: add signal flow animation that shows signals traveling through wires, wire and gate deletion UI, undo/redo system, 3 new levels introducing the OR gate and basic gate combinations, gate rotation support, and significant visual polish including better shadows, cleaner IC chip rendering, and LED-style output indicators.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Signal flow animation — when RUN is pressed, animate signals propagating through wires one at a time with visible movement (glowing dot traveling along wire path). Show each truth table row being evaluated sequentially with a brief pause.",
+      "files_to_modify": ["js/simulation.js", "js/wires.js", "js/canvas.js"],
+      "acceptance_criteria": [
+        "Clicking RUN shows animated signal flow, not instant results",
+        "A glowing dot or pulse travels along each wire during animation",
+        "Each truth table row animates in sequence with ~500ms gap",
+        "Truth table rows light up one at a time as they're evaluated",
+        "Final result shown after all rows animate"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Wire deletion — click on a wire to select it (highlight), then Delete/Backspace to remove. Also right-click wire to delete immediately.",
+      "files_to_modify": ["js/wires.js", "js/canvas.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Clicking near a wire selects it (visual highlight)",
+        "Delete/Backspace removes selected wire",
+        "Right-clicking a wire removes it immediately",
+        "Wire removal updates simulation correctly"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Undo/redo system — track gate placement, gate removal, wire creation, wire removal as undoable actions. Ctrl+Z to undo, Ctrl+Shift+Z to redo.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Ctrl+Z undoes the last action (gate place, gate remove, wire create, wire remove)",
+        "Ctrl+Shift+Z redoes the last undone action",
+        "Undo stack clears redo stack when new action is performed",
+        "Works for at least 20 actions deep"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Add 3 new levels: Level 3 — OR Gate Basics (introduce OR), Level 4 — AND + NOT (build NAND behavior), Level 5 — OR + NOT (build NOR behavior). All with proper truth tables.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Level 3 uses OR gate, completable with single OR gate",
+        "Level 4 requires AND + NOT combination, truth table is NAND",
+        "Level 5 requires OR + NOT combination, truth table is NOR",
+        "All levels have clear descriptions and correct truth tables",
+        "Level navigation works across all 5 levels"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Visual polish — LED-style output indicators that glow, better gate shadows with proper depth, cleaner wire routing with slight curves, highlight pins on hover.",
+      "files_to_modify": ["js/gates.js", "js/canvas.js", "js/wires.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Output nodes have LED-like glow effect when value is 1",
+        "Gate shadows give proper 3D depth appearance",
+        "Pin circles glow on mouse hover for better discoverability",
+        "Overall visual quality noticeably improved from Day 1"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Animation timing and visual correctness",
+    "Wire deletion doesn't break circuit state",
+    "Undo/redo maintains consistent state",
+    "All 5 levels completable with correct circuits",
+    "Visual polish doesn't introduce rendering bugs"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
