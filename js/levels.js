@@ -158,8 +158,8 @@ const LEVELS = [
     title: 'AND from OR + NOT',
     description: 'Build AND behavior using ONLY OR and NOT gates. Think De Morgan!',
     availableGates: ['OR', 'NOT'],
-    optimalGates: 3,
-    goodGates: 4,
+    optimalGates: 4,
+    goodGates: 5,
     inputs: [
       { label: 'A', x: 60, y: 140 },
       { label: 'B', x: 60, y: 260 },
@@ -179,8 +179,8 @@ const LEVELS = [
     title: 'OR from AND + NOT',
     description: 'Build OR behavior using ONLY AND and NOT gates. De Morgan strikes again!',
     availableGates: ['AND', 'NOT'],
-    optimalGates: 3,
-    goodGates: 4,
+    optimalGates: 4,
+    goodGates: 5,
     inputs: [
       { label: 'A', x: 60, y: 140 },
       { label: 'B', x: 60, y: 260 },
