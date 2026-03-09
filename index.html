@@ -8,48 +8,68 @@
 </head>
 <body>
   <div id="app">
-    <!-- Toolbox Sidebar -->
-    <div id="toolbox">
-      <h2>Parts</h2>
-      <!-- Gate tools injected by ui.js -->
+    <!-- Level Select Screen -->
+    <div id="level-select-screen">
+      <div id="level-select-content">
+        <h1 id="game-title">⚡ Signal Circuit</h1>
+        <p id="game-subtitle">Logic Gate Puzzle Game</p>
+        <div id="chapters-container"></div>
+        <button id="reset-progress-btn">Reset Progress</button>
+      </div>
     </div>
 
-    <!-- Canvas Area -->
-    <div id="canvas-container">
-      <canvas id="game-canvas"></canvas>
-    </div>
-
-    <!-- Info Panel -->
-    <div id="info-panel">
-      <div id="level-info">
-        <h2 id="level-title">Loading...</h2>
-        <p id="level-desc"></p>
+    <!-- Gameplay Screen -->
+    <div id="gameplay-screen" style="display:none;">
+      <!-- Toolbox Sidebar -->
+      <div id="toolbox">
+        <button id="back-btn">← Back</button>
+        <h2>Parts</h2>
       </div>
 
-      <div id="level-nav">
-        <button id="prev-level">◀ Prev</button>
-        <button id="next-level">Next ▶</button>
+      <!-- Canvas Area -->
+      <div id="canvas-container">
+        <canvas id="game-canvas"></canvas>
+        <canvas id="celebration-canvas"></canvas>
       </div>
 
-      <div id="truth-table-section">
-        <h3>Truth Table</h3>
-        <table id="truth-table"></table>
-      </div>
+      <!-- Info Panel -->
+      <div id="info-panel">
+        <div id="level-info">
+          <h2 id="level-title">Loading...</h2>
+          <p id="level-desc"></p>
+        </div>
 
-      <div id="controls">
-        <button id="run-btn">▶ RUN</button>
-        <button id="clear-btn">Clear Circuit</button>
-        <div id="result-display" class="idle">Build your circuit, then press RUN</div>
-      </div>
+        <div id="level-nav">
+          <button id="prev-level">◀ Prev</button>
+          <button id="next-level">Next ▶</button>
+        </div>
 
-      <div id="status-bar">Ready</div>
+        <div id="truth-table-section">
+          <h3>Truth Table</h3>
+          <table id="truth-table"></table>
+        </div>
+
+        <div id="controls">
+          <button id="run-btn">▶ RUN</button>
+          <button id="clear-btn">Clear Circuit</button>
+          <div id="result-display" class="idle">Build your circuit, then press RUN</div>
+        </div>
+
+        <div id="star-display" style="display:none;">
+          <div id="stars-container"></div>
+          <p id="star-message"></p>
+          <button id="next-level-btn" style="display:none;">Next Level →</button>
+        </div>
+
+        <div id="status-bar">Ready</div>
+      </div>
     </div>
   </div>
 
   <!-- Drag ghost element -->
   <div id="drag-ghost"></div>
 
-  <!-- Scripts (order matters — dependencies first) -->
+  <!-- Scripts -->
   <script src="js/gates.js"></script>
   <script src="js/wires.js"></script>
   <script src="js/simulation.js"></script>

@@ -13,11 +13,148 @@ body {
   overflow: hidden;
   height: 100vh;
   width: 100vw;
-  display: flex;
 }
 
-/* ── Layout ── */
 #app {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Level Select Screen ── */
+#level-select-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a1a2a 100%);
+}
+
+#level-select-content {
+  max-width: 700px;
+  width: 90%;
+  text-align: center;
+}
+
+#game-title {
+  font-size: 42px;
+  color: #0f0;
+  text-shadow: 0 0 20px rgba(0, 255, 0, 0.4), 0 0 40px rgba(0, 255, 0, 0.2);
+  margin-bottom: 5px;
+  letter-spacing: 3px;
+}
+
+#game-subtitle {
+  font-size: 14px;
+  color: #666;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 40px;
+}
+
+.chapter {
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.chapter-title {
+  font-size: 14px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #333;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.level-btn {
+  background: #1a1a2e;
+  border: 2px solid #444;
+  border-radius: 8px;
+  padding: 12px 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  font-family: 'Courier New', monospace;
+}
+
+.level-btn:hover:not(.locked) {
+  border-color: #0f0;
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.level-btn.locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.level-btn.completed {
+  border-color: #0a0;
+}
+
+.level-number {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+}
+
+.level-btn.locked .level-number {
+  color: #555;
+}
+
+.level-stars {
+  font-size: 14px;
+  margin-top: 4px;
+  display: block;
+  height: 18px;
+}
+
+.level-stars .star-filled {
+  color: #ffd700;
+}
+
+.level-stars .star-empty {
+  color: #333;
+}
+
+.level-btn-title {
+  font-size: 9px;
+  color: #888;
+  display: block;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#reset-progress-btn {
+  margin-top: 30px;
+  background: none;
+  border: 1px solid #444;
+  color: #666;
+  padding: 8px 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+#reset-progress-btn:hover {
+  border-color: #a00;
+  color: #f44;
+}
+
+/* ── Gameplay Screen ── */
+#gameplay-screen {
   display: flex;
   width: 100%;
   height: 100%;
@@ -33,6 +170,23 @@ body {
   padding: 10px;
   gap: 10px;
   z-index: 10;
+}
+
+#back-btn {
+  background: #333;
+  color: #aaa;
+  border: 1px solid #555;
+  padding: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+#back-btn:hover {
+  background: #444;
+  color: #fff;
 }
 
 #toolbox h2 {
@@ -90,6 +244,14 @@ body {
 #game-canvas {
   display: block;
   cursor: crosshair;
+}
+
+#celebration-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 5;
 }
 
 #info-panel {
@@ -238,6 +400,65 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid #444;
   color: #666;
+}
+
+/* ── Star Display ── */
+#star-display {
+  text-align: center;
+  padding: 10px;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+
+#stars-container {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+#stars-container .star {
+  display: inline-block;
+  transition: all 0.3s;
+  opacity: 0;
+  transform: scale(0);
+}
+
+#stars-container .star.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#stars-container .star.filled {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+#stars-container .star.empty {
+  color: #333;
+}
+
+#star-message {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+#next-level-btn {
+  background: #0a0;
+  color: #fff;
+  border: 2px solid #0f0;
+  padding: 10px 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+#next-level-btn:hover {
+  background: #0c0;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
 }
 
 /* ── Level Navigation ── */

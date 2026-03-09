@@ -1,4 +1,6 @@
-// main.js — App initialization, game state, undo/redo
+// main.js — App initialization, game state, undo/redo, progress
+
+const STORAGE_KEY = 'signal-circuit-progress';
 
 class UndoManager {
   constructor() {
@@ -10,7 +12,7 @@ class UndoManager {
   push(action) {
     this.undoStack.push(action);
     if (this.undoStack.length > this.maxSize) this.undoStack.shift();
-    this.redoStack = []; // New action clears redo
+    this.redoStack = [];
   }
 
   undo() {
@@ -47,6 +49,8 @@ class GameState {
     this.renderer = null;
     this.ui = null;
     this.isAnimating = false;
+    this.currentScreen = 'level-select';
+    this.progress = this.loadProgress();
   }
 
   init() {
@@ -55,10 +59,84 @@ class GameState {
     this.ui = new UI(this);
 
     this.setupCanvasEvents(canvas);
-    this.loadLevel(1);
-    this.startRenderLoop();
+    this.ui.showScreen('level-select');
   }
 
+  // ── Progress Persistence ──
+  loadProgress() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {}
+    return { levels: {} };
+  }
+
+  saveProgress() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
+    } catch (e) {}
+  }
+
+  resetProgress() {
+    this.progress = { levels: {} };
+    this.saveProgress();
+  }
+
+  isLevelUnlocked(levelId) {
+    if (levelId === 1) return true;
+    const prev = this.progress.levels[levelId - 1];
+    return prev && prev.completed;
+  }
+
+  calculateStars(gateCount, level) {
+    if (gateCount <= level.optimalGates) return 3;
+    if (gateCount <= level.goodGates) return 2;
+    return 1;
+  }
+
+  completeLevel(levelId, gateCount) {
+    const level = getLevel(levelId);
+    if (!level) return;
+
+    const stars = this.calculateStars(gateCount, level);
+    const existing = this.progress.levels[levelId];
+
+    if (!existing || stars > existing.stars) {
+      this.progress.levels[levelId] = {
+        completed: true,
+        stars: stars,
+        bestGateCount: existing ? Math.min(existing.bestGateCount || gateCount, gateCount) : gateCount,
+      };
+    } else if (existing && gateCount < existing.bestGateCount) {
+      existing.bestGateCount = gateCount;
+    }
+
+    this.saveProgress();
+    return stars;
+  }
+
+  // ── Screen Management ──
+  showLevelSelect() {
+    this.currentScreen = 'level-select';
+    this.ui.renderLevelSelect();
+    this.ui.showScreen('level-select');
+    this.isAnimating = false;
+  }
+
+  startLevel(levelId) {
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.loadLevel(levelId);
+
+    // Need to resize canvas after showing gameplay screen
+    setTimeout(() => {
+      this.renderer.resize();
+    }, 50);
+  }
+
+  // ── Game State ──
   findNode(id) {
     const gate = this.gates.find(g => g.id === id);
     if (gate) return gate;
@@ -125,7 +203,6 @@ class GameState {
       case 'removeGate': {
         const gate = new Gate(action.gateType, action.x, action.y, action.gateId);
         this.gates.push(gate);
-        // Restore wires
         for (const wd of action.removedWires) {
           this.addWireFromData(wd.fromGateId, wd.fromPinIndex, wd.toGateId, wd.toPinIndex);
         }
@@ -202,6 +279,7 @@ class GameState {
     this.ui.updateToolbox();
     this.ui.updateTruthTable(null);
     this.ui.updateResultDisplay('idle', 'Build your circuit, then press RUN');
+    this.ui.hideStarDisplay();
     this.ui.updateStatusBar(`Level ${level.id}: ${level.title}`);
   }
 
@@ -222,20 +300,24 @@ class GameState {
     this.isAnimating = true;
 
     this.ui.updateResultDisplay('idle', 'Simulating...');
+    this.ui.hideStarDisplay();
 
     await this.simulation.runAnimated(
-      // onRowComplete
       (results, rowIndex) => {
         this.ui.updateTruthTable(results);
       },
-      // onDone
       (results) => {
         const allPass = results.every(r => r.pass);
         this.ui.updateTruthTable(results);
 
         if (allPass) {
+          const gateCount = this.gates.length;
+          const stars = this.completeLevel(this.currentLevel.id, gateCount);
+
           this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
           this.ui.updateStatusBar('Level complete! All truth table rows match.');
+          this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
+          this.ui.startCelebration();
         } else {
           const passCount = results.filter(r => r.pass).length;
           this.ui.updateResultDisplay('fail', `✗ ${passCount}/${results.length} rows correct`);
@@ -255,10 +337,8 @@ class GameState {
 
     canvas.addEventListener('mousedown', (e) => {
       if (this.isAnimating) return;
-
       const pos = this.renderer.getMousePos(e);
 
-      // Check for pin click (wire drawing)
       const pin = this.renderer.findPinAt(pos.x, pos.y);
       if (pin) {
         if (this.wireManager.drawing) {
@@ -280,13 +360,11 @@ class GameState {
         return;
       }
 
-      // Cancel wire drawing if clicking empty space
       if (this.wireManager.drawing) {
         this.wireManager.cancelDrawing();
         return;
       }
 
-      // Check for wire click (selection)
       const wire = this.wireManager.findWireAt(pos.x, pos.y);
       if (wire) {
         this.wireManager.selectedWire = wire;
@@ -294,7 +372,6 @@ class GameState {
         return;
       }
 
-      // Check for gate click (select/drag)
       const gate = this.renderer.findGateAt(pos.x, pos.y);
       if (gate) {
         this.selectedGate = gate;
@@ -306,21 +383,14 @@ class GameState {
         return;
       }
 
-      // Clicked empty space — deselect all
       this.selectedGate = null;
       this.wireManager.selectedWire = null;
     });
 
     canvas.addEventListener('mousemove', (e) => {
       const pos = this.renderer.getMousePos(e);
+      this.wireManager.updateMouse(pos.x, pos.y);
 
-      if (this.wireManager.drawing) {
-        this.wireManager.updateMouse(pos.x, pos.y);
-      } else {
-        this.wireManager.updateMouse(pos.x, pos.y);
-      }
-
-      // Pin hover highlight
       const pin = this.renderer.findPinAt(pos.x, pos.y);
       this.renderer.hoveredPin = pin;
 
@@ -330,7 +400,6 @@ class GameState {
         dragGate.y = Math.round((pos.y - dragOffsetY) / gridSize) * gridSize;
       }
 
-      // Update cursor
       if (pin) {
         canvas.style.cursor = 'pointer';
       } else if (this.wireManager.hoveredWire) {
@@ -347,7 +416,6 @@ class GameState {
       dragGate = null;
     });
 
-    // Right-click to delete gate or wire
     canvas.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       if (this.isAnimating) return;
@@ -372,9 +440,8 @@ class GameState {
       }
     });
 
-    // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      if (this.isAnimating) return;
+      if (this.isAnimating || this.currentScreen !== 'gameplay') return;
 
       if ((e.key === 'Delete' || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey) {
         if (this.wireManager.selectedWire) {
@@ -398,13 +465,11 @@ class GameState {
         this.wireManager.selectedWire = null;
       }
 
-      // Undo: Ctrl+Z / Cmd+Z
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         this.performUndo();
       }
 
-      // Redo: Ctrl+Shift+Z / Cmd+Shift+Z
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
         e.preventDefault();
         this.performRedo();
@@ -414,7 +479,9 @@ class GameState {
 
   startRenderLoop() {
     const loop = () => {
-      this.renderer.render();
+      if (this.currentScreen === 'gameplay') {
+        this.renderer.render();
+      }
       requestAnimationFrame(loop);
     };
     loop();
@@ -425,5 +492,6 @@ class GameState {
 window.addEventListener('DOMContentLoaded', () => {
   const game = new GameState();
   game.init();
+  game.startRenderLoop();
   window.game = game;
 });
