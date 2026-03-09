@@ -1,3 +1,7 @@
 # Bugs
 
-*No bugs yet — project just started.*
+## Open
+*None*
+
+## Closed
+*None yet*
