@@ -1,0 +1,85 @@
+{
+  "day": 4,
+  "title": "Challenge Mode — Procedural Puzzles, Sandbox, Difficulty Slider, Leaderboard",
+  "summary": "Add infinite replayability with a Challenge Mode: procedurally generated truth tables, a Sandbox free-build mode, difficulty slider (2-4 inputs, 1-2 outputs), gate-count scoring, and a localStorage leaderboard. The level select screen gains a Challenge Mode entry point.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Challenge Mode entry — add a 'Challenge Mode' section to the level select screen below the chapters. Two buttons: 'Random Challenge' and 'Sandbox'. Visual styling matches the existing level select aesthetic (green neon, dark background, Courier New).",
+      "files_to_modify": ["index.html", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Challenge Mode section visible on level select screen below chapters",
+        "'Random Challenge' button is clickable and styled consistently",
+        "'Sandbox' button is clickable and styled consistently",
+        "Buttons have hover effects matching existing level buttons"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Procedural truth table generator — generate random truth tables with configurable parameters: number of inputs (2-4), number of outputs (1-2). The generated table must be non-trivial (not all-0 or all-1 for any output), and solvable with basic gates. Exclude degenerate cases (output identical to a single input).",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Generator produces valid truth tables for 2, 3, and 4 inputs",
+        "Generator produces valid truth tables for 1 and 2 outputs",
+        "No degenerate tables (all-0, all-1, or single-input passthrough)",
+        "Function signature: generateChallenge(numInputs, numOutputs) returns a level-compatible object",
+        "Generated level includes correct input/output node positions scaled to the number of I/O"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Difficulty slider UI — when 'Random Challenge' is clicked, show a difficulty configuration panel with: input count slider (2-4), output count slider (1-2), and a 'Generate' button. Display difficulty label (Easy/Medium/Hard/Expert based on input×output combinations).",
+      "files_to_modify": ["index.html", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Difficulty panel appears when 'Random Challenge' is clicked",
+        "Input count slider works (2-4) with live label update",
+        "Output count slider works (1-2) with live label update",
+        "Difficulty label updates dynamically (Easy: 2in/1out, Medium: 2in/2out or 3in/1out, Hard: 3in/2out or 4in/1out, Expert: 4in/2out)",
+        "'Generate' button starts the challenge with selected parameters",
+        "Back button returns to level select"
+      ],
+      "depends_on": ["T1", "T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Sandbox mode — free-build canvas with all gates available (AND, OR, NOT, XOR), no truth table target, no run/pass/fail. The info panel shows 'Sandbox Mode' header, gate count, and a truth table that shows the ACTUAL behavior of whatever circuit is built (auto-updates). Include a 'Test' button that evaluates and shows the current circuit's truth table.",
+      "files_to_modify": ["index.html", "js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Sandbox mode loads with all 4 gate types available",
+        "2 inputs (A, B) and 1 output (OUT) by default",
+        "No target truth table — info panel shows 'Sandbox Mode'",
+        "'Test Circuit' button evaluates and displays the actual truth table",
+        "Gate count displayed live",
+        "No star rating or celebration",
+        "Back button returns to level select"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T5",
+      "description": "Scoring and localStorage leaderboard — after completing a challenge, show gate count as score. Store top 10 scores per difficulty level in localStorage. Show leaderboard on the challenge config panel. Score format: difficulty + gate count + timestamp.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Challenge completion shows gate count score",
+        "Top 10 scores saved per difficulty in localStorage",
+        "Leaderboard displayed on challenge config panel",
+        "Leaderboard shows rank, gate count, difficulty, and date",
+        "Clear leaderboard option available",
+        "Scores persist across page reloads"
+      ],
+      "depends_on": ["T3"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Procedural truth table generation — verify non-trivial tables at all difficulty levels",
+    "Sandbox mode — verify free-build with no scoring interference",
+    "Difficulty slider — verify all combinations produce valid challenges",
+    "Leaderboard persistence across page reloads",
+    "Regression: all 10 campaign levels still work correctly",
+    "Screen navigation: level select ↔ challenge config ↔ gameplay ↔ sandbox"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced in campaign mode or core gameplay, revert to previous commit"
+}
