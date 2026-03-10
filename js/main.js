@@ -1,6 +1,7 @@
 // main.js — App initialization, game state, undo/redo, progress
 
 const STORAGE_KEY = 'signal-circuit-progress';
+const LEADERBOARD_KEY = 'signal-circuit-leaderboard';
 
 class UndoManager {
   constructor() {
@@ -51,6 +52,9 @@ class GameState {
     this.isAnimating = false;
     this.currentScreen = 'level-select';
     this.progress = this.loadProgress();
+    this.leaderboard = this.loadLeaderboard();
+    this.isSandboxMode = false;
+    this.isChallengeMode = false;
   }
 
   init() {
@@ -82,6 +86,45 @@ class GameState {
   resetProgress() {
     this.progress = { levels: {} };
     this.saveProgress();
+  }
+
+  // ── Leaderboard Persistence ──
+  loadLeaderboard() {
+    try {
+      const saved = localStorage.getItem(LEADERBOARD_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {};
+  }
+
+  saveLeaderboard() {
+    try {
+      localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(this.leaderboard));
+    } catch (e) {}
+  }
+
+  getLeaderboard(difficultyKey) {
+    return (this.leaderboard[difficultyKey] || []).slice(0, 10);
+  }
+
+  addLeaderboardEntry(difficultyKey, gates, difficulty) {
+    if (!this.leaderboard[difficultyKey]) {
+      this.leaderboard[difficultyKey] = [];
+    }
+    this.leaderboard[difficultyKey].push({
+      gates,
+      difficulty,
+      timestamp: Date.now(),
+    });
+    // Sort by gate count ascending, keep top 10
+    this.leaderboard[difficultyKey].sort((a, b) => a.gates - b.gates);
+    this.leaderboard[difficultyKey] = this.leaderboard[difficultyKey].slice(0, 10);
+    this.saveLeaderboard();
+  }
+
+  clearLeaderboard() {
+    this.leaderboard = {};
+    this.saveLeaderboard();
   }
 
   isLevelUnlocked(levelId) {
@@ -120,12 +163,45 @@ class GameState {
   // ── Screen Management ──
   showLevelSelect() {
     this.currentScreen = 'level-select';
+    this.isSandboxMode = false;
+    this.isChallengeMode = false;
     this.ui.renderLevelSelect();
     this.ui.showScreen('level-select');
     this.isAnimating = false;
   }
 
+  showChallengeConfig() {
+    this.currentScreen = 'challenge-config';
+    this.ui.showScreen('challenge-config');
+    // Trigger initial leaderboard render
+    const ni = parseInt(document.getElementById('input-count-slider').value);
+    const no = parseInt(document.getElementById('output-count-slider').value);
+    this.ui.renderLeaderboard(ni, no);
+  }
+
+  startChallenge(numInputs, numOutputs) {
+    this.isChallengeMode = true;
+    this.isSandboxMode = false;
+    const level = generateChallenge(numInputs, numOutputs);
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.loadChallengeLevel(level);
+    setTimeout(() => this.renderer.resize(), 50);
+  }
+
+  startSandbox() {
+    this.isSandboxMode = true;
+    this.isChallengeMode = false;
+    const level = generateSandboxLevel();
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.loadChallengeLevel(level);
+    setTimeout(() => this.renderer.resize(), 50);
+  }
+
   startLevel(levelId) {
+    this.isChallengeMode = false;
+    this.isSandboxMode = false;
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
     this.loadLevel(levelId);
@@ -283,6 +359,40 @@ class GameState {
     this.ui.updateStatusBar(`Level ${level.id}: ${level.title}`);
   }
 
+  loadChallengeLevel(level) {
+    this.currentLevel = level;
+    this.gates = [];
+    this.inputNodes = [];
+    this.outputNodes = [];
+    this.wireManager.clear();
+    this.selectedGate = null;
+    this.undoManager.clear();
+    this.isAnimating = false;
+
+    for (const inp of level.inputs) {
+      const node = new IONode('input', inp.label, inp.x, inp.y, this.nextId++);
+      this.inputNodes.push(node);
+    }
+
+    for (const out of level.outputs) {
+      const node = new IONode('output', out.label, out.x, out.y, this.nextId++);
+      this.outputNodes.push(node);
+    }
+
+    this.ui.updateLevelInfo();
+    this.ui.updateToolbox();
+
+    if (level.isSandbox) {
+      this.ui.updateTruthTable(null);
+      this.ui.updateResultDisplay('idle', 'Free build — test your circuit anytime');
+    } else {
+      this.ui.updateTruthTable(null);
+      this.ui.updateResultDisplay('idle', 'Build your circuit, then press RUN');
+    }
+    this.ui.hideStarDisplay();
+    this.ui.updateStatusBar(level.isSandbox ? 'Sandbox Mode' : `Challenge: ${level.title}`);
+  }
+
   clearCircuit() {
     this.gates = [];
     this.wireManager.clear();
@@ -302,6 +412,12 @@ class GameState {
     this.ui.updateResultDisplay('idle', 'Simulating...');
     this.ui.hideStarDisplay();
 
+    // Sandbox mode: just evaluate and show actual truth table
+    if (this.isSandboxMode) {
+      await this.runSandboxTest();
+      return;
+    }
+
     await this.simulation.runAnimated(
       (results, rowIndex) => {
         this.ui.updateTruthTable(results);
@@ -312,12 +428,25 @@ class GameState {
 
         if (allPass) {
           const gateCount = this.gates.length;
-          const stars = this.completeLevel(this.currentLevel.id, gateCount);
 
-          this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
-          this.ui.updateStatusBar('Level complete! All truth table rows match.');
-          this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
-          this.ui.startCelebration();
+          if (this.isChallengeMode && this.currentLevel.isChallenge) {
+            // Challenge mode completion
+            this.addLeaderboardEntry(
+              this.currentLevel.difficultyKey,
+              gateCount,
+              this.currentLevel.difficulty
+            );
+            this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
+            this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
+            this.ui.showChallengeResult(gateCount, this.currentLevel);
+            this.ui.startCelebration();
+          } else {
+            const stars = this.completeLevel(this.currentLevel.id, gateCount);
+            this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
+            this.ui.updateStatusBar('Level complete! All truth table rows match.');
+            this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
+            this.ui.startCelebration();
+          }
         } else {
           const passCount = results.filter(r => r.pass).length;
           this.ui.updateResultDisplay('fail', `✗ ${passCount}/${results.length} rows correct`);
@@ -327,6 +456,33 @@ class GameState {
         this.isAnimating = false;
       }
     );
+  }
+
+  async runSandboxTest() {
+    // In sandbox, evaluate for all input combos and display actual behavior
+    const numInputs = this.inputNodes.length;
+    const numRows = Math.pow(2, numInputs);
+    const results = [];
+
+    for (let r = 0; r < numRows; r++) {
+      const inputs = [];
+      for (let i = numInputs - 1; i >= 0; i--) {
+        inputs.push((r >> i) & 1);
+      }
+      const outputs = this.simulation.evaluateOnce(inputs);
+      results.push({
+        inputs,
+        expectedOutputs: outputs,
+        actualOutputs: outputs,
+        pass: true, // Always "pass" in sandbox — just showing actual behavior
+      });
+    }
+
+    // Build sandbox truth table
+    this.ui.updateSandboxTruthTable(results);
+    this.ui.updateResultDisplay('pass', `Circuit tested — ${this.gates.length} gates`);
+    this.ui.updateStatusBar('Sandbox: circuit evaluated');
+    this.isAnimating = false;
   }
 
   setupCanvasEvents(canvas) {

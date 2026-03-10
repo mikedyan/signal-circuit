@@ -14,6 +14,7 @@ class UI {
     this.setupLevelNav();
     this.setupLevelSelect();
     this.setupBackButton();
+    this.setupChallengeConfig();
   }
 
   // ── Level Select Screen ──
@@ -96,11 +97,16 @@ class UI {
   showScreen(screen) {
     document.getElementById('level-select-screen').style.display = screen === 'level-select' ? 'flex' : 'none';
     document.getElementById('gameplay-screen').style.display = screen === 'gameplay' ? 'flex' : 'none';
+    document.getElementById('challenge-config-screen').style.display = screen === 'challenge-config' ? 'flex' : 'none';
   }
 
   setupBackButton() {
     document.getElementById('back-btn').addEventListener('click', () => {
-      this.gameState.showLevelSelect();
+      if (this.gameState.isChallengeMode) {
+        this.gameState.showChallengeConfig();
+      } else {
+        this.gameState.showLevelSelect();
+      }
     });
   }
 
@@ -236,10 +242,26 @@ class UI {
     const level = this.gameState.currentLevel;
     if (!level) return;
 
-    document.getElementById('level-title').textContent = `Level ${level.id}: ${level.title}`;
-    document.getElementById('level-desc').textContent = level.description;
-    document.getElementById('prev-level').disabled = level.id <= 1;
-    document.getElementById('next-level').disabled = level.id >= getLevelCount();
+    if (level.isSandbox) {
+      document.getElementById('level-title').textContent = '🔧 Sandbox Mode';
+      document.getElementById('level-desc').textContent = level.description;
+      document.getElementById('prev-level').disabled = true;
+      document.getElementById('next-level').disabled = true;
+      // Change run button text for sandbox
+      document.getElementById('run-btn').textContent = '🔍 TEST';
+    } else if (level.isChallenge) {
+      document.getElementById('level-title').textContent = `🎲 ${level.title}`;
+      document.getElementById('level-desc').textContent = level.description;
+      document.getElementById('prev-level').disabled = true;
+      document.getElementById('next-level').disabled = true;
+      document.getElementById('run-btn').textContent = '▶ RUN';
+    } else {
+      document.getElementById('level-title').textContent = `Level ${level.id}: ${level.title}`;
+      document.getElementById('level-desc').textContent = level.description;
+      document.getElementById('prev-level').disabled = level.id <= 1;
+      document.getElementById('next-level').disabled = level.id >= getLevelCount();
+      document.getElementById('run-btn').textContent = '▶ RUN';
+    }
   }
 
   // ── Truth Table ──
@@ -349,6 +371,180 @@ class UI {
 
   hideStarDisplay() {
     document.getElementById('star-display').style.display = 'none';
+  }
+
+  showChallengeResult(gateCount, level) {
+    const display = document.getElementById('star-display');
+    display.style.display = 'block';
+
+    const container = document.getElementById('stars-container');
+    container.innerHTML = '';
+    // Show a trophy instead of stars for challenges
+    const trophy = document.createElement('span');
+    trophy.className = 'star filled';
+    trophy.textContent = '🏆';
+    setTimeout(() => trophy.classList.add('visible'), 200);
+    container.appendChild(trophy);
+
+    const msg = document.getElementById('star-message');
+    msg.textContent = `${level.difficulty} challenge solved with ${gateCount} gates!`;
+
+    // Show "New Challenge" button instead of "Next Level"
+    const nextBtn = document.getElementById('next-level-btn');
+    nextBtn.textContent = '🎲 New Challenge';
+    nextBtn.style.display = 'inline-block';
+    // Temporarily change behavior
+    nextBtn.onclick = () => {
+      nextBtn.textContent = 'Next Level →';
+      nextBtn.onclick = null;
+      this.gameState.showChallengeConfig();
+    };
+  }
+
+  updateSandboxTruthTable(results) {
+    const level = this.gameState.currentLevel;
+    if (!level) return;
+
+    const table = document.getElementById('truth-table');
+    table.innerHTML = '';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    for (const inp of level.inputs) {
+      const th = document.createElement('th');
+      th.textContent = inp.label;
+      headerRow.appendChild(th);
+    }
+    for (const out of level.outputs) {
+      const th = document.createElement('th');
+      th.textContent = out.label;
+      th.style.color = '#f88';
+      headerRow.appendChild(th);
+    }
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    for (const row of results) {
+      const tr = document.createElement('tr');
+      tr.className = 'row-pass';
+
+      for (const val of row.inputs) {
+        const td = document.createElement('td');
+        td.textContent = val;
+        tr.appendChild(td);
+      }
+      for (const val of row.actualOutputs) {
+        const td = document.createElement('td');
+        td.textContent = val;
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+  }
+
+  // ── Challenge Config ──
+  setupChallengeConfig() {
+    // Random Challenge button on level select
+    document.getElementById('random-challenge-btn').addEventListener('click', () => {
+      this.gameState.showChallengeConfig();
+    });
+
+    // Sandbox button on level select
+    document.getElementById('sandbox-btn').addEventListener('click', () => {
+      this.gameState.startSandbox();
+    });
+
+    // Challenge config back button
+    document.getElementById('challenge-back-btn').addEventListener('click', () => {
+      this.gameState.showLevelSelect();
+    });
+
+    // Sliders
+    const inputSlider = document.getElementById('input-count-slider');
+    const outputSlider = document.getElementById('output-count-slider');
+    const inputLabel = document.getElementById('input-count-label');
+    const outputLabel = document.getElementById('output-count-label');
+
+    const updateDifficulty = () => {
+      const ni = parseInt(inputSlider.value);
+      const no = parseInt(outputSlider.value);
+      inputLabel.textContent = ni;
+      outputLabel.textContent = no;
+      const label = getDifficultyLabel(ni, no);
+      const badge = document.getElementById('difficulty-badge');
+      badge.textContent = label;
+      badge.className = label.toLowerCase();
+      this.renderLeaderboard(ni, no);
+    };
+
+    inputSlider.addEventListener('input', updateDifficulty);
+    outputSlider.addEventListener('input', updateDifficulty);
+
+    // Generate button
+    document.getElementById('generate-challenge-btn').addEventListener('click', () => {
+      const ni = parseInt(inputSlider.value);
+      const no = parseInt(outputSlider.value);
+      this.gameState.startChallenge(ni, no);
+    });
+
+    // Clear leaderboard
+    document.getElementById('clear-leaderboard-btn').addEventListener('click', () => {
+      if (confirm('Clear all challenge scores?')) {
+        this.gameState.clearLeaderboard();
+        const ni = parseInt(inputSlider.value);
+        const no = parseInt(outputSlider.value);
+        this.renderLeaderboard(ni, no);
+      }
+    });
+  }
+
+  renderLeaderboard(numInputs, numOutputs) {
+    const container = document.getElementById('leaderboard-container');
+    const key = `${numInputs}x${numOutputs}`;
+    const scores = this.gameState.getLeaderboard(key);
+
+    if (scores.length === 0) {
+      container.innerHTML = '<div class="leaderboard-empty">No scores yet — complete a challenge!</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    scores.forEach((entry, i) => {
+      const row = document.createElement('div');
+      row.className = 'leaderboard-entry';
+
+      const rank = document.createElement('span');
+      rank.className = 'lb-rank';
+      rank.textContent = `#${i + 1}`;
+
+      const gates = document.createElement('span');
+      gates.className = 'lb-gates';
+      gates.textContent = `${entry.gates} gates`;
+
+      const diff = document.createElement('span');
+      diff.className = 'lb-difficulty';
+      diff.textContent = entry.difficulty;
+
+      const date = document.createElement('span');
+      date.className = 'lb-date';
+      date.textContent = new Date(entry.timestamp).toLocaleDateString();
+
+      row.appendChild(rank);
+      row.appendChild(gates);
+      row.appendChild(diff);
+      row.appendChild(date);
+      container.appendChild(row);
+    });
+  }
+
+  // ── Gate Count Display (for sandbox and challenges) ──
+  updateGateCount() {
+    const el = document.getElementById('gate-count-display');
+    if (el) {
+      el.innerHTML = `Gates used: <span>${this.gameState.gates.length}</span>`;
+    }
   }
 
   // ── Celebration Particles ──

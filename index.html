@@ -14,7 +14,45 @@
         <h1 id="game-title">⚡ Signal Circuit</h1>
         <p id="game-subtitle">Logic Gate Puzzle Game</p>
         <div id="chapters-container"></div>
+
+        <!-- Challenge Mode Section -->
+        <div id="challenge-section">
+          <div class="chapter-title">Challenge Mode</div>
+          <div id="challenge-buttons">
+            <button id="random-challenge-btn" class="challenge-btn">🎲 Random Challenge</button>
+            <button id="sandbox-btn" class="challenge-btn">🔧 Sandbox</button>
+          </div>
+        </div>
+
         <button id="reset-progress-btn">Reset Progress</button>
+      </div>
+    </div>
+
+    <!-- Challenge Config Screen -->
+    <div id="challenge-config-screen" style="display:none;">
+      <div id="challenge-config-content">
+        <button id="challenge-back-btn">← Back</button>
+        <h2 id="challenge-config-title">⚡ Random Challenge</h2>
+
+        <div id="difficulty-controls">
+          <div class="slider-group">
+            <label>Inputs: <span id="input-count-label">2</span></label>
+            <input type="range" id="input-count-slider" min="2" max="4" value="2">
+          </div>
+          <div class="slider-group">
+            <label>Outputs: <span id="output-count-label">1</span></label>
+            <input type="range" id="output-count-slider" min="1" max="2" value="1">
+          </div>
+          <div id="difficulty-badge">Easy</div>
+        </div>
+
+        <button id="generate-challenge-btn" class="challenge-btn generate-btn">⚡ Generate Challenge</button>
+
+        <div id="leaderboard-section">
+          <h3>🏆 Leaderboard</h3>
+          <div id="leaderboard-container"></div>
+          <button id="clear-leaderboard-btn">Clear Scores</button>
+        </div>
       </div>
     </div>
 
