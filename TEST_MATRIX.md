@@ -60,12 +60,47 @@
 - [x] Star animation (scale in)
 - [x] Level select screen with title and chapters
 
+## Challenge Mode
+- [x] Challenge Mode section visible on level select
+- [x] Random Challenge button opens config screen
+- [x] Sandbox button opens sandbox mode
+- [x] Input count slider (2-4) with live label
+- [x] Output count slider (1-2) with live label
+- [x] Difficulty badge updates (Easy/Medium/Hard/Expert)
+- [x] Generate Challenge creates playable level
+- [x] 2-input/1-output challenge generates valid truth table
+- [x] 3-input/1-output challenge generates 8-row table
+- [x] 4-input/2-output challenge generates 16-row, 2-output table
+- [x] Non-degenerate tables (no all-0, all-1, or single-input passthroughs)
+- [x] Challenge completion shows trophy + gate count
+- [x] Challenge completion saves to leaderboard
+- [x] Leaderboard shows on config screen
+- [x] "New Challenge" button returns to config
+- [x] Back button from challenge returns to config
+- [x] Back button from config returns to level select
+
+## Sandbox Mode
+- [x] Sandbox loads with all 4 gate types
+- [x] 2 inputs (A, B) and 1 output (OUT)
+- [x] No target truth table
+- [x] "TEST" button evaluates actual circuit behavior
+- [x] Truth table shows actual outputs (AND behavior verified)
+- [x] No star rating or celebration
+- [x] Back button returns to level select
+
+## Leaderboard
+- [x] Scores saved per difficulty key in localStorage
+- [x] Leaderboard renders with rank, gates, difficulty, date
+- [x] Empty leaderboard shows "No scores yet"
+
 ## Edge Cases
 - [x] Empty circuit simulation (graceful)
 - [x] Gate add/remove with wire cleanup
 - [x] Level switch clears state
 - [x] Animation blocks interaction
 - [x] Progress persistence across reloads
+- [x] Challenge mode doesn't interfere with campaign levels
+- [x] Switching between campaign/challenge/sandbox clears state properly
 
 ## Browser Compatibility
 - [x] Chrome (desktop) — tested

@@ -28,3 +28,11 @@
 - Progress stored in localStorage as JSON with level-keyed structure
 - Level select uses DOM elements (not canvas) for better text rendering and accessibility
 - Celebration particles use a separate overlay canvas with pointer-events: none
+
+## Day 4: Challenge Mode Patterns
+- **Procedural truth table generation** — filter degenerate cases by checking: all-0, all-1, matches single input, matches inverted single input. Loop with retry up to 100 attempts.
+- **Multi-screen navigation** — showScreen() hides/shows all screen containers. Use `currentScreen` state var to decide render behavior.
+- **Challenge vs Campaign mode** — use boolean flags (`isChallengeMode`, `isSandboxMode`) on GameState to toggle scoring, UI, and navigation behavior rather than forking logic.
+- **Slider inputs** — use `input` event (not `change`) for live updates as user drags.
+- **Leaderboard storage** — separate localStorage key from progress. Key by difficulty (e.g., "2x1") for per-difficulty rankings.
+- **Sandbox evaluation** — generate all 2^N input combos programmatically and evaluate once per row. No animation needed — instant results.
