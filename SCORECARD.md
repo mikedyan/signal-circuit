@@ -1,5 +1,5 @@
 # Signal Circuit — Scorecard
 
-| Day | GPT-5.4 | Gemini | Opus | Avg | Δ | Top Priority |
-|-----|---------|--------|------|-----|---|-------------|
-| *scores will be added after each review cycle* |
+| Day | Gameplay | Design | Fresh Eyes | Avg | Δ | Top Priority |
+|-----|----------|--------|------------|-----|---|-------------|
+| 4 | 66 | 65 | 64 | 65 | — | Sound & audio feedback |
