@@ -740,6 +740,7 @@ class GameState {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
             this.audio.playWireConnect();
+            this.renderer.spawnSparks(pin.x, pin.y);
             this.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
           }
         } else {
@@ -804,6 +805,7 @@ class GameState {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
             this.audio.playWireConnect();
+            this.renderer.spawnSparks(pin.x, pin.y);
             this.undoManager.push({
               type: 'addWire',
               wireId: wire.id,

@@ -241,6 +241,31 @@ class AudioEngine {
     osc.stop(now + 0.05);
   }
 
+  // ── Sound: Achievement unlock chime ──
+  playAchievement() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    // Sparkle arpeggio: G5, B5, D6, G6
+    const notes = [783.99, 987.77, 1174.66, 1567.98];
+    notes.forEach((freq, i) => {
+      const t = now + i * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.35, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.3);
+    });
+  }
+
   // ── Helper: Noise burst ──
   _playNoiseBurst(duration, volume) {
     const ctx = this.ctx;

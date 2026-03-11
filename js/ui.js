@@ -668,6 +668,7 @@ class UI {
       setTimeout(() => {
         const toast = document.getElementById('achievement-toast');
         if (!toast) return;
+        this.gameState.audio.playAchievement();
         toast.innerHTML = `${ach.icon} <strong>${ach.name}</strong> unlocked!`;
         toast.style.display = 'block';
         // Reset animation

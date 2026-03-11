@@ -6,6 +6,7 @@ class CanvasRenderer {
     this.ctx = canvas.getContext('2d');
     this.gameState = gameState;
     this.hoveredPin = null;
+    this.sparkParticles = [];
     this.resize();
     window.addEventListener('resize', () => this.resize());
   }
@@ -86,6 +87,9 @@ class CanvasRenderer {
       }
     }
 
+    // Spark particles
+    this._renderSparks(ctx);
+
     // Hovered pin highlight
     if (this.hoveredPin) {
       ctx.beginPath();
@@ -144,6 +148,39 @@ class CanvasRenderer {
     ctx.fillText('+', 5, 34);
     ctx.fillStyle = 'rgba(50, 50, 200, 0.5)';
     ctx.fillText('−', 5, height - 26);
+  }
+
+  spawnSparks(x, y) {
+    for (let i = 0; i < 10; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 4;
+      this.sparkParticles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        decay: 0.03 + Math.random() * 0.02,
+        size: 2 + Math.random() * 3,
+      });
+    }
+  }
+
+  _renderSparks(ctx) {
+    for (let i = this.sparkParticles.length - 1; i >= 0; i--) {
+      const p = this.sparkParticles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.1; // gravity
+      p.life -= p.decay;
+      if (p.life <= 0) {
+        this.sparkParticles.splice(i, 1);
+        continue;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, ${Math.floor(150 + 105 * p.life)}, 50, ${p.life})`;
+      ctx.fill();
+    }
   }
 
   _drawNodeGlow(ctx, node, color) {
