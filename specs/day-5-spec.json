@@ -1,0 +1,75 @@
+{
+  "day": 5,
+  "title": "Sound Effects & Audio Feedback",
+  "summary": "Day 4 review unanimously identified missing audio as the #1 priority, directly impacting Juice (4/10), Addictiveness, and First Impression scores. This day adds a complete procedural audio system using the Web Audio API — gate placement clicks, wire connection zaps, simulation signal pulses, success jingles, and fail buzzes. A mute toggle ensures accessibility. Secondary: highlight compatible pins during wire drawing for better clarity.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Create js/audio.js — a procedural sound engine using Web Audio API. All sounds generated via oscillators/noise, no external files. Sounds: click (gate place), zap (wire connect), pulse (simulation tick), success jingle (level complete), fail buzz (incorrect circuit), delete sound (gate/wire removal). Include a global mute toggle and master volume.",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "AudioEngine class initializes Web Audio context on first user interaction",
+        "playClick() — short percussive click for gate placement",
+        "playWireConnect() — electric zap for wire connections",
+        "playWireDisconnect() — softer removal sound",
+        "playSimPulse() — subtle tick during simulation row evaluation",
+        "playSuccess() — ascending 3-note jingle for level complete",
+        "playFail() — descending buzzy tone for incorrect circuit",
+        "playButtonClick() — UI button feedback sound",
+        "setMute(bool) and isMuted getter",
+        "No errors if AudioContext is not available"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Integrate audio into game flow — trigger sounds from main.js, ui.js on gate add, wire connect, simulation events, level complete, and fail",
+      "files_to_modify": ["js/main.js", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "Gate placement triggers click sound",
+        "Wire completion triggers zap sound",
+        "Gate/wire deletion triggers disconnect sound",
+        "Each simulation row triggers pulse sound",
+        "Level completion triggers success jingle",
+        "Failed simulation triggers fail buzz",
+        "RUN button triggers button click sound",
+        "Audio.js loaded in index.html before main.js"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Add mute toggle button to the gameplay screen info panel",
+      "files_to_modify": ["index.html", "css/style.css", "js/main.js"],
+      "acceptance_criteria": [
+        "Mute button visible in gameplay UI (speaker icon)",
+        "Clicking toggles between muted/unmuted states",
+        "Visual indicator shows current state (🔊 vs 🔇)",
+        "Mute state persists in localStorage"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T4",
+      "description": "Highlight compatible pins during wire drawing — when user starts drawing from an output pin, highlight all available input pins (and vice versa) with a green glow",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "When drawing a wire from an output pin, all unconnected input pins glow green",
+        "When drawing from an input pin, all output pins glow green",
+        "Glow disappears when wire drawing is cancelled or completed",
+        "Does not interfere with existing hover highlight"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "All 6 sound types play correctly and at appropriate volume",
+    "Mute toggle works and persists across page reload",
+    "Audio context initializes properly on first interaction",
+    "No audio errors in console",
+    "Compatible pin highlighting during wire drawing",
+    "All existing features still work (regression)"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
