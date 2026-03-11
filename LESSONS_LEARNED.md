@@ -29,6 +29,14 @@
 - Level select uses DOM elements (not canvas) for better text rendering and accessibility
 - Celebration particles use a separate overlay canvas with pointer-events: none
 
+## Day 5: Audio Patterns
+- **Web Audio API lazy init** — AudioContext must be created from a user gesture (click/tap). Use `_ensureContext()` pattern: create on first sound call, not on page load.
+- **AudioContext resume** — Chrome suspends AudioContext until user interaction. Always call `ctx.resume()` before playing.
+- **Procedural sounds** — oscillators + gain envelopes are cheap and effective. No need for audio files. Sawtooth+noise for "zap", sine for clean tones, square for buzzy fail.
+- **Gain envelope cleanup** — use `exponentialRampToValueAtTime(0.001, ...)` not `0` (exponential can't ramp to zero). Stop oscillator after envelope ends.
+- **Status bar with child elements** — when adding buttons inside status bar, use a `<span>` for text and target that with `textContent` to avoid clobbering child elements.
+- **Compatible pin highlighting** — rendering pulsing highlights on valid connection targets during wire drawing significantly improves UX clarity. Use `performance.now()` for smooth sine-based pulse animation.
+
 ## Day 4: Challenge Mode Patterns
 - **Procedural truth table generation** — filter degenerate cases by checking: all-0, all-1, matches single input, matches inverted single input. Loop with retry up to 100 attempts.
 - **Multi-screen navigation** — showScreen() hides/shows all screen containers. Use `currentScreen` state var to decide render behavior.

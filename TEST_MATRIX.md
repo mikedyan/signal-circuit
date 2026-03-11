@@ -102,6 +102,25 @@
 - [x] Challenge mode doesn't interfere with campaign levels
 - [x] Switching between campaign/challenge/sandbox clears state properly
 
+## Audio
+- [x] AudioEngine initializes on first user interaction
+- [x] Gate placement triggers click sound
+- [x] Wire connection triggers zap sound
+- [x] Gate/wire deletion triggers disconnect sound
+- [x] Simulation row evaluation triggers pulse sound
+- [x] Level completion triggers success jingle
+- [x] Failed simulation triggers fail buzz
+- [x] RUN button triggers button click sound
+- [x] Mute button toggles sound on/off
+- [x] Mute state persists in localStorage across reload
+- [x] No audio errors when AudioContext unavailable
+- [x] Mute visual indicator (🔊 / 🔇) updates correctly
+
+## Wire Drawing UX
+- [x] Compatible pins highlighted during wire drawing
+- [x] Highlights pulse green for visibility
+- [x] Highlights disappear on cancel/completion
+
 ## Browser Compatibility
 - [x] Chrome (desktop) — tested
 - [ ] Firefox (desktop)
