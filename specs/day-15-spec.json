@@ -1,0 +1,75 @@
+{
+  "day": 15,
+  "title": "Core Loop Tightening & Wire Polish",
+  "summary": "Push toward 90/100 by addressing the three areas stuck at 8: Core Loop, Juice, and Uniqueness. Add real-time gate count optimality indicator, smooth bezier wires for placed connections, and per-row micro-celebrations during simulation.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Real-time gate count + optimality indicator — show a persistent HUD element during gameplay that displays current gate count, optimal count, and projected star rating. Updates live as gates are placed/removed. Format: 'Gates: 2/2 ⭐⭐⭐' or 'Gates: 5/2 ⭐'. This tightens the core loop by giving instant optimization feedback before running.",
+      "files_to_modify": ["js/ui.js", "js/main.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Gate count display visible during gameplay below the level description",
+        "Shows current count vs optimal count",
+        "Shows projected star rating (colored stars)",
+        "Updates in real-time when gates are added or removed",
+        "Hidden in sandbox mode",
+        "Shows for challenge mode too (without optimal reference)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Smooth bezier curved wires for placed connections — replace the current L-shaped Manhattan routing with smooth bezier curves for all placed wires. The wire should curve naturally from output pin to input pin. Keep shadow, glow, signal animation, and hit-testing working with the new curves.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Placed wires render as smooth bezier curves instead of L-shaped segments",
+        "Wire shadow follows the curve",
+        "Active wire glow follows the curve during simulation",
+        "Signal pulse dots animate along the curve path",
+        "Wire hit-testing works with curved wires (clicking to select/delete)",
+        "Wire hover highlighting works",
+        "Selected wire highlight works",
+        "No visual regression on any existing features"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Per-row micro-celebrations during simulation — when each truth table row passes, show a small green flash/checkmark particle burst on the truth table row. When a row fails, show a red shake. Makes the simulation sequence more visceral and juicy.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Each passing row gets a brief green pulse/flash animation",
+        "Each failing row gets a brief red shake animation",
+        "Animations are quick (200-300ms) and don't slow down simulation",
+        "Works for all level types (campaign, challenge, daily)",
+        "No animation in sandbox mode"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Wire color coding — give each wire a unique color from a palette (similar to real breadboard jumper wires) so complex circuits are easier to trace visually. Colors should be distinguishable and aesthetically pleasing. Active/simulation states still override with red/blue.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Each new wire gets a distinct color from a rotating palette",
+        "Palette has 8+ distinguishable colors that work on the breadboard background",
+        "Colors persist for the wire's lifetime",
+        "During simulation, active wires still glow red, inactive still show blue",
+        "When not simulating, wires show their unique color",
+        "Selected wire still highlighted yellow",
+        "Wire shadow color matches the wire color (darkened)"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Wire rendering looks smooth and natural with bezier curves",
+    "Gate count indicator updates correctly in real-time",
+    "Row animations fire correctly during simulation",
+    "Wire colors are distinguishable and aesthetically pleasing",
+    "No regressions in existing features (undo, hints, achievements, mobile)",
+    "Performance remains smooth with 10+ gates and many wires"
+  ],
+  "rollback_criteria": "If bezier wire changes break hit-testing or simulation animation, revert wire changes only"
+}

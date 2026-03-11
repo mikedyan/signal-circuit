@@ -80,3 +80,24 @@
 - Share circuit as URL (encode state in hash)
 - Dark mode PCB variant
 - Final bug sweep
+
+## Day 15-17: Push to 90+ (Extended)
+**Goal:** Tighten core loop, add juice, increase uniqueness
+
+### Day 15: Core Loop Tightening & Wire Polish
+- Real-time gate count + optimality indicator (projected stars while building)
+- Smooth bezier curved wires (replace L-shaped Manhattan routing)
+- Per-row micro-celebrations during simulation (green flash/red shake)
+- Wire color coding (unique colors per wire like real jumper wires)
+
+### Day 16: Dark Mode PCB Theme & Advanced Visuals
+- Toggle between breadboard and PCB green theme
+- Component labels on IC chips (pin numbers)
+- Wire routing intelligence (offset overlapping wires)
+- Ambient background animation (subtle circuit pulse)
+
+### Day 17: Content & Retention
+- 5 new bonus "constraint" levels (NAND-only, NOT-free, etc.)
+- Streak tracking for daily challenges
+- Stats page (total time played, favorite gate, etc.)
+- Social sharing improvements (screenshot of circuit)
