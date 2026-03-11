@@ -1,0 +1,68 @@
+{
+  "day": 6,
+  "title": "Mobile Support & Touch Events",
+  "summary": "Day 5 review identified mobile support as the #1 priority, aligning with the ROADMAP Day 6 plan. The game is currently desktop-only with no touch support. This day adds touch event handlers for gate drag-and-drop and wire drawing, responsive CSS layout for phones and tablets, proper viewport meta tag, and larger touch targets for pins. Secondary: add a brief onboarding tooltip on Level 1.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add touch event handlers to canvas for gate dragging, wire drawing, and interaction. Map touchstart/touchmove/touchend to equivalent mouse logic. Prevent default to block scroll/zoom during interactions.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Touch-drag gates from toolbox to canvas on mobile",
+        "Touch to start wire drawing from a pin",
+        "Touch another pin to complete wire",
+        "Touch and drag to move placed gates",
+        "Long-press on gate/wire to delete (replaces right-click)",
+        "No canvas scrolling during interaction"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add touch event handlers to toolbox for gate dragging on mobile",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Touch-drag from toolbox gate to canvas places the gate",
+        "Drag ghost follows touch position",
+        "Gate snaps to grid on drop"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Make layout responsive — stack panels vertically on narrow screens, adjust canvas size, ensure truth table and controls remain accessible",
+      "files_to_modify": ["css/style.css", "index.html"],
+      "acceptance_criteria": [
+        "On screens < 768px, layout stacks vertically (toolbox on top, canvas middle, info below)",
+        "Canvas fills available width",
+        "Truth table remains scrollable",
+        "All buttons are touch-friendly (min 44px tap target)",
+        "Level select grid adjusts to fit narrow screens",
+        "Viewport meta tag prevents zoom issues"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Add a brief onboarding tooltip on Level 1 — 'Click a pin to start drawing a wire' hint that appears once and can be dismissed",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Tooltip appears on Level 1 first load",
+        "Shows 'Click a pin to start drawing a wire' (or 'Tap a pin...' on mobile)",
+        "Dismissible by clicking/tapping",
+        "Only shows once (persisted in localStorage)",
+        "Doesn't block gameplay"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Touch events work for all interactions",
+    "Responsive layout renders correctly on narrow viewport",
+    "Canvas resizes properly on orientation change",
+    "All desktop functionality still works (regression)",
+    "Onboarding tooltip appears and dismisses correctly"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
