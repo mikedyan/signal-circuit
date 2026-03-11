@@ -73,6 +73,7 @@ class GameState {
     this.setupCanvasEvents(canvas);
     this.setupMuteButton();
     this.setupHintAndSkip();
+    this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
   }
 
@@ -203,6 +204,7 @@ class GameState {
     this.isSandboxMode = false;
     this.isChallengeMode = false;
     this.ui.renderLevelSelect();
+    this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
     this.isAnimating = false;
   }

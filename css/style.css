@@ -811,6 +811,126 @@ body {
   font-weight: bold;
 }
 
+/* ── Progress Bar ── */
+#progress-bar-container {
+  max-width: 600px;
+  margin: 0 auto 20px;
+  padding: 0 20px;
+}
+
+#progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+#progress-track {
+  height: 6px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #333;
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0a0, #0f0);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+.level-best-time {
+  font-size: 10px;
+  color: #666;
+  display: block;
+}
+
+/* ── Shortcuts Button ── */
+#shortcuts-btn {
+  background: #1a1a1a;
+  color: #888;
+  border: 1px solid #444;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+#shortcuts-btn:hover {
+  color: #0f0;
+  border-color: #0f0;
+}
+
+/* ── Shortcuts Overlay ── */
+#shortcuts-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#shortcuts-content {
+  background: #1a1a2e;
+  border: 2px solid #0f0;
+  border-radius: 12px;
+  padding: 24px 32px;
+  max-width: 350px;
+  width: 90%;
+}
+
+#shortcuts-content h3 {
+  color: #0f0;
+  margin: 0 0 16px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.shortcut-row kbd {
+  background: #2a2a2a;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #0f0;
+  min-width: 60px;
+  text-align: center;
+}
+
+#shortcuts-close {
+  display: block;
+  margin: 16px auto 0;
+  background: #0a0;
+  color: #fff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+}
+
 /* ── Hint Button ── */
 #hint-btn {
   background: #2a2a0a;

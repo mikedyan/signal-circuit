@@ -13,6 +13,10 @@
       <div id="level-select-content">
         <h1 id="game-title">⚡ Signal Circuit</h1>
         <p id="game-subtitle">Logic Gate Puzzle Game</p>
+        <div id="progress-bar-container">
+          <div id="progress-info"><span id="progress-text">0/15 Levels</span><span id="progress-stars">⭐ 0</span></div>
+          <div id="progress-track"><div id="progress-fill"></div></div>
+        </div>
         <div id="chapters-container"></div>
 
         <!-- Challenge Mode Section -->
@@ -61,6 +65,7 @@
       <!-- Toolbox Sidebar -->
       <div id="toolbox">
         <button id="back-btn">← Back</button>
+        <button id="shortcuts-btn" title="Keyboard shortcuts">?</button>
         <h2>Parts</h2>
       </div>
 
@@ -118,15 +123,26 @@
   <!-- Drag ghost element -->
   <div id="drag-ghost"></div>
   <div id="victory-flash"></div>
+  <div id="shortcuts-overlay" style="display:none;">
+    <div id="shortcuts-content">
+      <h3>⌨️ Keyboard Shortcuts</h3>
+      <div class="shortcut-row"><kbd>Ctrl+Z</kbd> Undo</div>
+      <div class="shortcut-row"><kbd>Ctrl+Y</kbd> Redo</div>
+      <div class="shortcut-row"><kbd>Delete</kbd> Remove selected</div>
+      <div class="shortcut-row"><kbd>Right-click</kbd> Delete gate/wire</div>
+      <div class="shortcut-row"><kbd>Esc</kbd> Cancel wire drawing</div>
+      <button id="shortcuts-close">Close</button>
+    </div>
+  </div>
 
   <!-- Scripts -->
-  <script src="js/gates.js?v=9"></script>
-  <script src="js/wires.js?v=9"></script>
-  <script src="js/simulation.js?v=9"></script>
-  <script src="js/levels.js?v=9"></script>
-  <script src="js/audio.js?v=9"></script>
-  <script src="js/canvas.js?v=9"></script>
-  <script src="js/ui.js?v=9"></script>
-  <script src="js/main.js?v=9"></script>
+  <script src="js/gates.js?v=10"></script>
+  <script src="js/wires.js?v=10"></script>
+  <script src="js/simulation.js?v=10"></script>
+  <script src="js/levels.js?v=10"></script>
+  <script src="js/audio.js?v=10"></script>
+  <script src="js/canvas.js?v=10"></script>
+  <script src="js/ui.js?v=10"></script>
+  <script src="js/main.js?v=10"></script>
 </body>
 </html>

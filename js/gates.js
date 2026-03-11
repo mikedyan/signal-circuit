@@ -88,6 +88,55 @@ class Gate {
     }
   }
 
+  _drawGateSymbol(ctx, cx, cy, color) {
+    const s = 10; // symbol scale
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+
+    switch (this.type) {
+      case 'AND':
+        ctx.beginPath();
+        ctx.moveTo(cx - s, cy - s * 0.7);
+        ctx.lineTo(cx, cy - s * 0.7);
+        ctx.arc(cx, cy, s * 0.7, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(cx - s, cy + s * 0.7);
+        ctx.closePath();
+        ctx.stroke();
+        break;
+      case 'OR':
+        ctx.beginPath();
+        ctx.moveTo(cx - s, cy - s * 0.7);
+        ctx.quadraticCurveTo(cx - s * 0.3, cy, cx - s, cy + s * 0.7);
+        ctx.quadraticCurveTo(cx + s * 0.3, cy + s * 0.5, cx + s, cy);
+        ctx.quadraticCurveTo(cx + s * 0.3, cy - s * 0.5, cx - s, cy - s * 0.7);
+        ctx.stroke();
+        break;
+      case 'NOT':
+        ctx.beginPath();
+        ctx.moveTo(cx - s, cy - s * 0.6);
+        ctx.lineTo(cx + s * 0.6, cy);
+        ctx.lineTo(cx - s, cy + s * 0.6);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx + s * 0.8, cy, 3, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case 'XOR':
+        ctx.beginPath();
+        ctx.moveTo(cx - s, cy - s * 0.7);
+        ctx.quadraticCurveTo(cx - s * 0.3, cy, cx - s, cy + s * 0.7);
+        ctx.quadraticCurveTo(cx + s * 0.3, cy + s * 0.5, cx + s, cy);
+        ctx.quadraticCurveTo(cx + s * 0.3, cy - s * 0.5, cx - s, cy - s * 0.7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - s * 1.3, cy - s * 0.7);
+        ctx.quadraticCurveTo(cx - s * 0.6, cy, cx - s * 1.3, cy + s * 0.7);
+        ctx.stroke();
+        break;
+    }
+  }
+
   containsPoint(px, py) {
     return px >= this.x && px <= this.x + this.def.width &&
            py >= this.y && py <= this.y + this.def.height;
@@ -123,12 +172,15 @@ class Gate {
     ctx.fillStyle = '#333';
     ctx.fill();
 
+    // Gate symbol (small icon)
+    this._drawGateSymbol(ctx, x + width / 2, y + height / 2 - 6, color);
+
     // Label
     ctx.fillStyle = color;
-    ctx.font = 'bold 14px Courier New';
+    ctx.font = 'bold 11px Courier New';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(name, x + width / 2, y + height / 2);
+    ctx.textBaseline = 'top';
+    ctx.fillText(name, x + width / 2, y + height / 2 + 6);
 
     // Input pins
     const inputPins = this.getInputPins();

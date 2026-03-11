@@ -16,6 +16,7 @@ class UI {
     this.setupBackButton();
     this.setupChallengeConfig();
     this.setupOnboarding();
+    this.setupShortcutsOverlay();
   }
 
   // ── Level Select Screen ──
@@ -80,6 +81,16 @@ class UI {
         titleSpan.className = 'level-btn-title';
         titleSpan.textContent = level.title;
         btn.appendChild(titleSpan);
+
+        // Best time display
+        if (isCompleted && levelProgress.bestTime) {
+          const timeSpan = document.createElement('span');
+          timeSpan.className = 'level-best-time';
+          const mins = Math.floor(levelProgress.bestTime / 60);
+          const secs = levelProgress.bestTime % 60;
+          timeSpan.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+          btn.appendChild(timeSpan);
+        }
 
         if (isUnlocked) {
           btn.addEventListener('click', () => {
@@ -598,6 +609,57 @@ class UI {
       row.appendChild(date);
       container.appendChild(row);
     });
+  }
+
+  // ── Shortcuts Overlay ──
+  setupShortcutsOverlay() {
+    const btn = document.getElementById('shortcuts-btn');
+    const overlay = document.getElementById('shortcuts-overlay');
+    const closeBtn = document.getElementById('shortcuts-close');
+
+    if (btn) {
+      btn.addEventListener('click', () => {
+        overlay.style.display = 'flex';
+      });
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        overlay.style.display = 'none';
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.style.display = 'none';
+      });
+    }
+    // Escape key closes overlay
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay && overlay.style.display !== 'none') {
+        overlay.style.display = 'none';
+      }
+    });
+  }
+
+  // ── Progress Bar ──
+  updateProgressBar(progress) {
+    const totalLevels = getLevelCount();
+    let completed = 0;
+    let totalStars = 0;
+
+    for (const [id, data] of Object.entries(progress.levels || {})) {
+      if (data.completed) completed++;
+      totalStars += data.stars || 0;
+    }
+
+    const pctComplete = totalLevels > 0 ? (completed / totalLevels) * 100 : 0;
+
+    const textEl = document.getElementById('progress-text');
+    const starsEl = document.getElementById('progress-stars');
+    const fillEl = document.getElementById('progress-fill');
+
+    if (textEl) textEl.textContent = `${completed}/${totalLevels} Levels`;
+    if (starsEl) starsEl.textContent = `⭐ ${totalStars}`;
+    if (fillEl) fillEl.style.width = pctComplete + '%';
   }
 
   // ── Onboarding ──
