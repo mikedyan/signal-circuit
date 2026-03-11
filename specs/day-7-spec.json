@@ -1,0 +1,75 @@
+{
+  "day": 7,
+  "title": "Juice & Visual Polish",
+  "summary": "Score dropped by 1 and Juice has been stuck at 5/10 for two consecutive days. This is a fix/polish day focused entirely on making the game feel alive. Adding: animated signal flow through wires during simulation, gate activation glow effects, wire hover/active glow, improved celebration with screen flash, screen transition animations, and improved audio with varied pitch/character. Also fixing mobile gate/pin scaling for better touch targets.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Animated signal flow during simulation — signals pulse along wires as they propagate. Use animated gradient/dots moving along wire paths. Show values flowing from inputs through gates to outputs.",
+      "files_to_modify": ["js/canvas.js", "js/simulation.js"],
+      "acceptance_criteria": [
+        "During simulation, colored dots/pulses flow along wires",
+        "Pulse color matches signal state (green for 1, dim for 0)",
+        "Animation is smooth and clearly directional (input → output)",
+        "Works for each truth table row evaluation"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Gate activation glow — gates glow when outputting 1 during simulation. Wire glow when carrying signal. Input/output nodes glow based on current value.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "Gates glow with colored border when output is 1",
+        "Wires glow brighter when carrying 1-signal",
+        "Input/output nodes pulse glow based on their value",
+        "Glow fades gracefully after simulation ends"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Screen transition animations — fade/slide transitions between level select and gameplay screens",
+      "files_to_modify": ["css/style.css", "js/ui.js"],
+      "acceptance_criteria": [
+        "Level select → gameplay has smooth transition (fade or slide)",
+        "Gameplay → level select has reverse transition",
+        "Transitions are fast (200-300ms) and don't block interaction"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Victory screen flash and improved celebration — brief green flash on correct circuit, more dramatic confetti, star rating animation with bounce/scale",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Green screen flash on correct circuit",
+        "More confetti particles with varied shapes",
+        "Star display animates with bounce/scale effect",
+        "Result display has brief pulse animation"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Scale gate rendering on mobile — make gates, pins, and wire thickness proportional to canvas size. Increase pin hit area for touch.",
+      "files_to_modify": ["js/canvas.js", "js/gates.js"],
+      "acceptance_criteria": [
+        "Pin hit area increased to 24px on touch devices",
+        "Gate rendering scales appropriately on small canvases",
+        "Wire thickness adjusts for canvas scale"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Signal flow animation visible during simulation",
+    "Gate glow effects work correctly",
+    "Screen transitions are smooth",
+    "Victory celebration is more impactful",
+    "Mobile rendering improved",
+    "All existing features still work"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
