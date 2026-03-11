@@ -1,0 +1,54 @@
+{
+  "day": 11,
+  "title": "Achievements & Daily Challenge",
+  "summary": "Addictiveness is at 8/10 with room to grow. This day adds an achievement system with unlockable badges and a daily challenge mode that generates a fresh puzzle based on the current date. These features give players a reason to return after completing all story levels.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Achievement system — define 10 achievements with progress tracking. Achievements: First Steps (complete level 1), Circuit Master (complete all 15), Speed Demon (complete any level in < 30s), Perfect Score (3 stars on any level), Star Collector (earn 30 stars), Chapter Champion (complete all of chapter 1/2/3 with 3 stars), Gate Guru (use 5+ gates in one solution), No Hints (complete a level 4+ without hints). Show unlock toast notification.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "10 achievements defined with criteria",
+        "Achievements tracked in localStorage",
+        "Toast notification appears when achievement unlocks",
+        "Achievements viewable from level select screen"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Achievement display — trophy button on level select that opens achievements modal showing all achievements with locked/unlocked state",
+      "files_to_modify": ["js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Trophy button visible on level select",
+        "Modal shows all 10 achievements",
+        "Locked achievements show greyed out",
+        "Unlocked show with gold/color and unlock date"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Daily Challenge mode — generates a unique puzzle based on the current date seed. 2-3 inputs, 1-2 outputs, random truth table. Shows current date and 'New puzzle every day!' text. Tracks daily streak.",
+      "files_to_modify": ["js/levels.js", "js/main.js", "js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Daily Challenge button on level select",
+        "Puzzle changes every day (seeded PRNG from date)",
+        "Shows current date on the puzzle",
+        "Tracks daily streak in localStorage",
+        "Completing daily challenge awards achievement"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Achievements unlock correctly based on criteria",
+    "Toast notifications appear and disappear",
+    "Achievement modal displays correctly",
+    "Daily challenge generates valid puzzles",
+    "Daily streak tracks correctly",
+    "All existing features still work"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
