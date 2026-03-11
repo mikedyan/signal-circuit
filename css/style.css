@@ -849,6 +849,67 @@ body {
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
+/* ── Screen Transitions ── */
+.screen {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.screen.screen-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.screen.screen-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Victory Flash ── */
+#victory-flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 255, 100, 0.3);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 999;
+  transition: opacity 0.1s;
+}
+
+#victory-flash.flash-active {
+  opacity: 1;
+  animation: flashFade 0.5s ease-out forwards;
+}
+
+@keyframes flashFade {
+  0% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* ── Star Bounce Animation ── */
+#star-display.star-animate {
+  animation: starBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes starBounce {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Result Display Pulse ── */
+#result-display.result-pulse {
+  animation: resultPulse 0.4s ease;
+}
+
+@keyframes resultPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 /* ── Drag ghost ── */
 #drag-ghost {
   position: fixed;

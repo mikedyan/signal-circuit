@@ -35,6 +35,33 @@ class CanvasRenderer {
       node.render(ctx);
     }
 
+    // Gate glow during simulation
+    const sim = this.gameState.simulation;
+    if (sim && sim.animating) {
+      for (const gate of this.gameState.gates) {
+        if (gate.outputValues && gate.outputValues.some(v => v === 1)) {
+          const pulse = 0.2 + 0.15 * Math.sin(performance.now() / 200);
+          ctx.shadowColor = 'rgba(0, 255, 100, 0.8)';
+          ctx.shadowBlur = 15;
+          ctx.fillStyle = `rgba(0, 255, 100, ${pulse})`;
+          ctx.fillRect(gate.x - 4, gate.y - 4, gate.def.width + 8, gate.def.height + 8);
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+        }
+      }
+      // IO node glow
+      for (const node of this.gameState.inputNodes) {
+        if (node.value === 1) {
+          this._drawNodeGlow(ctx, node, 'rgba(0, 200, 100, 0.4)');
+        }
+      }
+      for (const node of this.gameState.outputNodes) {
+        if (node.value === 1) {
+          this._drawNodeGlow(ctx, node, 'rgba(0, 200, 100, 0.4)');
+        }
+      }
+    }
+
     // Gates
     for (const gate of this.gameState.gates) {
       const isSelected = this.gameState.selectedGate === gate;
@@ -119,6 +146,14 @@ class CanvasRenderer {
     ctx.fillText('−', 5, height - 26);
   }
 
+  _drawNodeGlow(ctx, node, color) {
+    const pulse = 0.5 + 0.3 * Math.sin(performance.now() / 180);
+    ctx.beginPath();
+    ctx.arc(node.x + 25, node.y + 20, 30, 0, Math.PI * 2);
+    ctx.fillStyle = color.replace(/[\d.]+\)$/, pulse + ')');
+    ctx.fill();
+  }
+
   _getCompatiblePins(targetType) {
     const gs = this.gameState;
     const pins = [];
@@ -152,7 +187,11 @@ class CanvasRenderer {
     return pins;
   }
 
-  findPinAt(mx, my, threshold = 18) {
+  findPinAt(mx, my, threshold) {
+    if (!threshold) {
+      const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      threshold = isMobile ? 26 : 18;
+    }
     const gs = this.gameState;
 
     for (const node of gs.inputNodes) {

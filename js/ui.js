@@ -96,9 +96,21 @@ class UI {
   }
 
   showScreen(screen) {
-    document.getElementById('level-select-screen').style.display = screen === 'level-select' ? 'flex' : 'none';
-    document.getElementById('gameplay-screen').style.display = screen === 'gameplay' ? 'flex' : 'none';
-    document.getElementById('challenge-config-screen').style.display = screen === 'challenge-config' ? 'flex' : 'none';
+    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen'];
+    for (const id of screens) {
+      const el = document.getElementById(id);
+      const shouldShow = id === screen + '-screen';
+      if (shouldShow) {
+        el.style.display = 'flex';
+        el.classList.add('screen-enter');
+        void el.offsetWidth;
+        el.classList.remove('screen-enter');
+        el.classList.add('screen-active');
+      } else {
+        el.style.display = 'none';
+        el.classList.remove('screen-enter', 'screen-active');
+      }
+    }
   }
 
   setupBackButton() {
@@ -631,26 +643,53 @@ class UI {
     this.celebrationActive = true;
     this.celebrationParticles = [];
 
+    // Victory flash
+    const flash = document.getElementById('victory-flash');
+    if (flash) {
+      flash.classList.remove('flash-active');
+      void flash.offsetWidth;
+      flash.classList.add('flash-active');
+      setTimeout(() => flash.classList.remove('flash-active'), 600);
+    }
+
+    // Animate star display
+    const starDisplay = document.getElementById('star-display');
+    if (starDisplay) {
+      starDisplay.classList.remove('star-animate');
+      void starDisplay.offsetWidth;
+      starDisplay.classList.add('star-animate');
+    }
+
+    // Pulse result display
+    const resultDisplay = document.getElementById('result-display');
+    if (resultDisplay) {
+      resultDisplay.classList.remove('result-pulse');
+      void resultDisplay.offsetWidth;
+      resultDisplay.classList.add('result-pulse');
+    }
+
     const canvas = document.getElementById('celebration-canvas');
     const container = canvas.parentElement;
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
 
-    const colors = ['#ffd700', '#ff4444', '#0f0', '#00c8e8', '#c050f0', '#ff8800'];
+    const colors = ['#ffd700', '#ff4444', '#0f0', '#00c8e8', '#c050f0', '#ff8800', '#fff'];
+    const shapes = ['rect', 'circle', 'triangle'];
 
-    // Create particles
-    for (let i = 0; i < 60; i++) {
+    // Create more particles with varied shapes
+    for (let i = 0; i < 90; i++) {
       this.celebrationParticles.push({
-        x: canvas.width / 2 + (Math.random() - 0.5) * 200,
-        y: canvas.height / 2,
-        vx: (Math.random() - 0.5) * 12,
-        vy: -Math.random() * 10 - 4,
-        size: Math.random() * 6 + 3,
+        x: canvas.width / 2 + (Math.random() - 0.5) * 300,
+        y: canvas.height / 2 + (Math.random() - 0.5) * 100,
+        vx: (Math.random() - 0.5) * 14,
+        vy: -Math.random() * 12 - 3,
+        size: Math.random() * 7 + 3,
         color: colors[Math.floor(Math.random() * colors.length)],
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
         rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.3,
+        rotSpeed: (Math.random() - 0.5) * 0.4,
         life: 1,
-        decay: 0.008 + Math.random() * 0.01,
+        decay: 0.006 + Math.random() * 0.008,
       });
     }
 
@@ -679,7 +718,20 @@ class UI {
         ctx.rotate(p.rotation);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.life;
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        if (p.shape === 'circle') {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.shape === 'triangle') {
+          ctx.beginPath();
+          ctx.moveTo(0, -p.size / 2);
+          ctx.lineTo(-p.size / 2, p.size / 2);
+          ctx.lineTo(p.size / 2, p.size / 2);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        }
         ctx.restore();
       }
 

@@ -161,11 +161,16 @@ class WireManager {
       const isSelected = this.selectedWire === wire;
       const isHovered = this.hoveredWire === wire;
 
-      // Wire color
+      // Wire color based on state
       let color;
+      const isActive = wire.signalValue === 1;
       if (isSelected) {
         color = '#ff0';
-      } else if (wire.signalValue) {
+      } else if (sim.animating && isActive) {
+        color = '#ff5555';
+      } else if (sim.animating && !isActive) {
+        color = '#334488';
+      } else if (isActive) {
         color = '#ff4444';
       } else {
         color = '#4466cc';
@@ -182,6 +187,19 @@ class WireManager {
       ctx.lineTo(midX, ey + 2);
       ctx.lineTo(ex, ey + 2);
       ctx.stroke();
+
+      // Glow for active wires during simulation
+      if (sim.animating && isActive) {
+        const glowPulse = 0.15 + 0.15 * Math.sin(performance.now() / 150);
+        ctx.strokeStyle = `rgba(255, 80, 80, ${glowPulse})`;
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(midX, sy);
+        ctx.lineTo(midX, ey);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+      }
 
       // Main wire
       ctx.strokeStyle = color;
@@ -205,18 +223,31 @@ class WireManager {
         ctx.stroke();
       }
 
-      // Animated pulse dot during simulation
-      if (sim.animating && wire.signalValue && sim.animationProgress < 1) {
+      // Animated pulse dots during simulation (multiple trailing dots)
+      if (sim.animating && isActive && sim.animationProgress < 1) {
         const t = sim.animationProgress;
+        // Main pulse
         const pulsePos = getPointOnWirePath(sx, sy, midX, ey, ex, ey, t);
         ctx.beginPath();
-        ctx.arc(pulsePos.x, pulsePos.y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 100, 0.9)';
+        ctx.arc(pulsePos.x, pulsePos.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.95)';
         ctx.fill();
+        // Outer glow
         ctx.beginPath();
-        ctx.arc(pulsePos.x, pulsePos.y, 10, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 100, 0.3)';
+        ctx.arc(pulsePos.x, pulsePos.y, 13, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.25)';
         ctx.fill();
+        // Trailing dots
+        for (let trail = 1; trail <= 3; trail++) {
+          const tt = Math.max(0, t - trail * 0.08);
+          const tp = getPointOnWirePath(sx, sy, midX, ey, ex, ey, tt);
+          const alpha = 0.6 - trail * 0.15;
+          const size = 5 - trail;
+          ctx.beginPath();
+          ctx.arc(tp.x, tp.y, size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 200, 80, ${alpha})`;
+          ctx.fill();
+        }
       }
     }
 
