@@ -43,49 +43,76 @@ class AudioEngine {
     return this.muted;
   }
 
-  // ── Sound: Gate placement click ──
+  // ── Sound: Gate placement click (relay click feel) ──
   playClick() {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
+    // Main click
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(400, now + 0.06);
-    gain.gain.setValueAtTime(this.masterVolume * 0.6, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+    gain.gain.setValueAtTime(this.masterVolume * 0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.08);
+    osc.stop(now + 0.05);
+
+    // Harmonic overtone for "relay click" feel
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(2400, now);
+    osc2.frequency.exponentialRampToValueAtTime(600, now + 0.02);
+    gain2.gain.setValueAtTime(this.masterVolume * 0.2, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now);
+    osc2.stop(now + 0.04);
   }
 
-  // ── Sound: Wire connection zap ──
+  // ── Sound: Wire connection zap (electric crackle) ──
   playWireConnect() {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Zap: quick rising tone + noise burst
+    // Primary zap: rising sawtooth
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(200, now);
-    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-    gain.gain.setValueAtTime(this.masterVolume * 0.4, now);
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(1500, now + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+    gain.gain.setValueAtTime(this.masterVolume * 0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
     osc.stop(now + 0.12);
 
+    // Buzzy harmonic
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(300, now);
+    osc2.frequency.exponentialRampToValueAtTime(2000, now + 0.03);
+    gain2.gain.setValueAtTime(this.masterVolume * 0.15, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now);
+    osc2.stop(now + 0.08);
+
     // Noise crackle layer
-    this._playNoiseBurst(0.06, this.masterVolume * 0.15);
+    this._playNoiseBurst(0.08, this.masterVolume * 0.2);
   }
 
   // ── Sound: Wire/gate disconnection ──
@@ -128,7 +155,7 @@ class AudioEngine {
     osc.stop(now + 0.06);
   }
 
-  // ── Sound: Success jingle (ascending 3-note) ──
+  // ── Sound: Success jingle (rich ascending chord) ──
   playSuccess() {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
@@ -137,31 +164,37 @@ class AudioEngine {
     const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
 
     notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
       const t = now + i * 0.12;
-      osc.frequency.setValueAtTime(freq, t);
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.5, t + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.25);
+      // Main tone
+      ['sine', 'triangle'].forEach((type, j) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq * (j === 1 ? 2 : 1), t); // Octave harmonic
+        gain.gain.setValueAtTime(0, t);
+        const vol = j === 0 ? this.masterVolume * 0.4 : this.masterVolume * 0.15;
+        gain.gain.linearRampToValueAtTime(vol, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.3);
+      });
     });
 
-    // Final chord shimmer
-    const shimmer = ctx.createOscillator();
-    const sGain = ctx.createGain();
-    shimmer.type = 'triangle';
-    shimmer.frequency.setValueAtTime(1046.5, now + 0.36); // C6
-    sGain.gain.setValueAtTime(this.masterVolume * 0.3, now + 0.36);
-    sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-    shimmer.connect(sGain);
-    sGain.connect(ctx.destination);
-    shimmer.start(now + 0.36);
-    shimmer.stop(now + 0.8);
+    // Final chord shimmer with multiple harmonics
+    [1046.5, 1318.5].forEach((freq, i) => {
+      const shimmer = ctx.createOscillator();
+      const sGain = ctx.createGain();
+      shimmer.type = i === 0 ? 'triangle' : 'sine';
+      shimmer.frequency.setValueAtTime(freq, now + 0.36);
+      sGain.gain.setValueAtTime(this.masterVolume * (0.25 - i * 0.1), now + 0.36);
+      sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+      shimmer.connect(sGain);
+      sGain.connect(ctx.destination);
+      shimmer.start(now + 0.36);
+      shimmer.stop(now + 1.0);
+    });
   }
 
   // ── Sound: Fail buzz ──

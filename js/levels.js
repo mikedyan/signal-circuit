@@ -3,6 +3,7 @@
 const CHAPTERS = [
   { id: 1, title: 'Chapter 1: Basics', levels: [1, 2, 3, 4, 5] },
   { id: 2, title: 'Chapter 2: Combinations', levels: [6, 7, 8, 9, 10] },
+  { id: 3, title: 'Chapter 3: Multi-Output', levels: [11, 12, 13, 14, 15] },
 ];
 
 const LEVELS = [
@@ -264,6 +265,160 @@ const LEVELS = [
       { inputs: [0, 1], outputs: [1] },
       { inputs: [1, 0], outputs: [0] },
       { inputs: [1, 1], outputs: [1] },
+    ],
+  },
+
+  // ── Chapter 3: Multi-Output ──
+  {
+    id: 11,
+    title: 'Half Adder',
+    description: 'Build a half adder: compute SUM (XOR) and CARRY (AND) from two input bits. This is how computers add numbers!',
+    hints: [
+      'A half adder has two outputs: SUM = A XOR B, CARRY = A AND B.',
+      'You need two gates: one XOR for the sum, one AND for the carry.',
+      'Wire A,B → XOR → SUM. Also wire A,B → AND → CARRY.'
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 2,
+    goodGates: 3,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'SUM', x: 600, y: 130 },
+      { label: 'CARRY', x: 600, y: 270 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0, 0] },
+      { inputs: [0, 1], outputs: [1, 0] },
+      { inputs: [1, 0], outputs: [1, 0] },
+      { inputs: [1, 1], outputs: [0, 1] },
+    ],
+  },
+  {
+    id: 12,
+    title: '3-Input AND',
+    description: 'Build a 3-input AND gate. Output is 1 only when ALL THREE inputs are 1. Chain two AND gates together!',
+    hints: [
+      'With 2-input gates, you need to chain: AND(A, B) first, then AND that result with C.',
+      'Place two AND gates. Wire A,B into the first AND.',
+      'Wire first AND output + C into second AND → OUT.'
+    ],
+    availableGates: ['AND'],
+    optimalGates: 2,
+    goodGates: 3,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'C', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 0], outputs: [0] },
+      { inputs: [0, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+  },
+  {
+    id: 13,
+    title: 'Majority Vote',
+    description: 'Build a majority detector: output 1 when 2 or more of the 3 inputs are 1. Think: "at least 2 out of 3."',
+    hints: [
+      'Majority(A,B,C) = (A AND B) OR (B AND C) OR (A AND C).',
+      'Check each pair: AND(A,B), AND(B,C), AND(A,C). If ANY pair is both 1, majority passes.',
+      'Wire: A,B→AND₁, B,C→AND₂, A,C→AND₃, then OR all three results together.'
+    ],
+    availableGates: ['AND', 'OR'],
+    optimalGates: 5,
+    goodGates: 7,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'C', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 0], outputs: [0] },
+      { inputs: [0, 1, 1], outputs: [1] },
+      { inputs: [1, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 1], outputs: [1] },
+      { inputs: [1, 1, 0], outputs: [1] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+  },
+  {
+    id: 14,
+    title: 'Multiplexer',
+    description: 'Build a 2:1 multiplexer: when S=0 output A, when S=1 output B. The selector S chooses which input passes through.',
+    hints: [
+      'MUX = (A AND NOT(S)) OR (B AND S). When S=0, A passes; when S=1, B passes.',
+      'You need: NOT(S), AND(A, NOT(S)), AND(B, S), then OR the two AND results.',
+      'Wire: S→NOT. A+NOT(S)→AND₁. B+S→AND₂. AND₁+AND₂→OR→OUT.'
+    ],
+    availableGates: ['AND', 'OR', 'NOT'],
+    optimalGates: 4,
+    goodGates: 5,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'S', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 0], outputs: [0] },
+      { inputs: [0, 1, 1], outputs: [1] },
+      { inputs: [1, 0, 0], outputs: [1] },
+      { inputs: [1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 0], outputs: [1] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+  },
+  {
+    id: 15,
+    title: 'Full Adder',
+    description: 'The boss level! Build a full adder: add A + B + Cin and produce SUM and CARRY outputs. This is the building block of all CPU arithmetic.',
+    hints: [
+      'Full adder: SUM = A XOR B XOR Cin. CARRY = (A AND B) OR (Cin AND (A XOR B)).',
+      'First compute A XOR B. Then XOR that with Cin for SUM. For CARRY, AND(A,B) OR AND(Cin, A XOR B).',
+      'Wire: A,B→XOR₁. XOR₁+Cin→XOR₂→SUM. A,B→AND₁. XOR₁+Cin→AND₂. AND₁+AND₂→OR→CARRY.'
+    ],
+    availableGates: ['AND', 'OR', 'XOR'],
+    optimalGates: 5,
+    goodGates: 7,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'Cin', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'SUM', x: 600, y: 130 },
+      { label: 'CARRY', x: 600, y: 270 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0, 0] },
+      { inputs: [0, 0, 1], outputs: [1, 0] },
+      { inputs: [0, 1, 0], outputs: [1, 0] },
+      { inputs: [0, 1, 1], outputs: [0, 1] },
+      { inputs: [1, 0, 0], outputs: [1, 0] },
+      { inputs: [1, 0, 1], outputs: [0, 1] },
+      { inputs: [1, 1, 0], outputs: [0, 1] },
+      { inputs: [1, 1, 1], outputs: [1, 1] },
     ],
   },
 ];

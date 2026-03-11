@@ -56,6 +56,9 @@ class GameState {
     this.isSandboxMode = false;
     this.isChallengeMode = false;
     this.audio = new AudioEngine();
+    this.timerStart = null;
+    this.timerInterval = null;
+    this.timerRunning = false;
     this.hintsUsed = 0;
     this.maxHintPenalty = 0; // 0 = no penalty, 1 = max 2 stars, 2 = max 1 star
     this.levelStartTime = null;
@@ -175,6 +178,7 @@ class GameState {
     if (!level) return;
 
     const stars = this.calculateStars(gateCount, level);
+    const elapsed = this.stopTimer();
     const existing = this.progress.levels[levelId];
 
     if (!existing || stars > existing.stars) {
@@ -182,9 +186,11 @@ class GameState {
         completed: true,
         stars: stars,
         bestGateCount: existing ? Math.min(existing.bestGateCount || gateCount, gateCount) : gateCount,
+        bestTime: existing ? Math.min(existing.bestTime || elapsed, elapsed) : elapsed,
       };
-    } else if (existing && gateCount < existing.bestGateCount) {
-      existing.bestGateCount = gateCount;
+    } else {
+      if (gateCount < (existing.bestGateCount || Infinity)) existing.bestGateCount = gateCount;
+      if (elapsed < (existing.bestTime || Infinity)) existing.bestTime = elapsed;
     }
 
     this.saveProgress();
@@ -315,6 +321,32 @@ class GameState {
         this.showSkipButton();
       }
     }, 60000);
+  }
+
+  startTimer() {
+    this.timerStart = Date.now();
+    this.timerRunning = true;
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval = setInterval(() => this.updateTimerDisplay(), 1000);
+    this.updateTimerDisplay();
+  }
+
+  stopTimer() {
+    this.timerRunning = false;
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    return this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 0;
+  }
+
+  updateTimerDisplay() {
+    if (!this.timerRunning || !this.timerStart) return;
+    const elapsed = Math.floor((Date.now() - this.timerStart) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const el = document.getElementById('timer-display');
+    if (el) el.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
   // ── Game State ──
@@ -487,6 +519,7 @@ class GameState {
     this.ui.hideStarDisplay();
     this.ui.updateStatusBar(`Level ${level.id}: ${level.title}`);
     this.resetHintState();
+    this.startTimer();
 
     // Hide hint/skip for non-story levels
     const hintBtn = document.getElementById('hint-btn');
