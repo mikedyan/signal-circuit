@@ -444,6 +444,7 @@ class UI {
 
   hideStarDisplay() {
     document.getElementById('star-display').style.display = 'none';
+    document.getElementById('share-btn').style.display = 'none';
   }
 
   showChallengeResult(gateCount, level) {
@@ -615,6 +616,29 @@ class UI {
       row.appendChild(date);
       container.appendChild(row);
     });
+  }
+
+  // ── Share Button ──
+  showShareButton(gateCount, stars, elapsed) {
+    const btn = document.getElementById('share-btn');
+    if (!btn) return;
+    btn.style.display = '';
+    btn.onclick = () => {
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const starEmoji = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      const text = `⚡ Signal Circuit — Daily Challenge\n📅 ${dateStr}\n${starEmoji} ${gateCount} gates | ⏱ ${mins}:${secs.toString().padStart(2, '0')}\nhttps://mikedyan.github.io/signal-circuit/`;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          btn.textContent = '📋 Share Result';
+        }, 2000);
+      }).catch(() => {
+        btn.textContent = '⚠ Copy failed';
+      });
+    };
   }
 
   // ── Achievements ──

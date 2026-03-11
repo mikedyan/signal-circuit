@@ -842,6 +842,24 @@ body {
   width: 0%;
 }
 
+#share-btn {
+  background: #1a2a3a;
+  color: #88ccff;
+  border: 2px solid #4488cc;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+#share-btn:hover {
+  background: #2a3a4a;
+  border-color: #66aaff;
+}
+
 .level-best-time {
   font-size: 10px;
   color: #666;
@@ -1221,6 +1239,54 @@ body {
   0% { transform: scale(1); }
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
+}
+
+/* ── Intro Screen ── */
+#intro-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #0d1117;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+  animation: introFade 0.5s ease 1.2s forwards;
+}
+
+#intro-title {
+  font-family: 'Courier New', monospace;
+  font-size: 48px;
+  font-weight: bold;
+  color: #0f0;
+  text-shadow: 0 0 20px rgba(0, 255, 0, 0.5), 0 0 40px rgba(0, 255, 0, 0.2);
+  animation: introGlow 1.2s ease;
+}
+
+#intro-subtitle {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  color: #555;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin-top: 12px;
+  animation: introSlide 0.6s ease 0.3s both;
+}
+
+@keyframes introGlow {
+  0% { opacity: 0; transform: scale(0.5); filter: blur(10px); }
+  40% { opacity: 1; transform: scale(1.05); filter: blur(0); }
+  60% { transform: scale(1); text-shadow: 0 0 30px rgba(0, 255, 0, 0.8), 0 0 60px rgba(0, 255, 0, 0.4); }
+  100% { text-shadow: 0 0 20px rgba(0, 255, 0, 0.5), 0 0 40px rgba(0, 255, 0, 0.2); }
+}
+
+@keyframes introSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes introFade {
+  to { opacity: 0; pointer-events: none; }
 }
 
 /* ── Drag ghost ── */

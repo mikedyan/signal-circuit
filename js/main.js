@@ -76,6 +76,12 @@ class GameState {
     this.setupHintAndSkip();
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
+
+    // Remove intro after animation
+    setTimeout(() => {
+      const intro = document.getElementById('intro-screen');
+      if (intro) intro.remove();
+    }, 1800);
   }
 
   setupMuteButton() {
@@ -648,6 +654,8 @@ class GameState {
             const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
             if (this.currentLevel.isDaily) {
               if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
+              // Show share button for daily challenge
+              this.ui.showShareButton(gateCount, stars, elapsed);
             }
             this.ui.showAchievementToasts(newAchs);
           }

@@ -110,21 +110,50 @@ class CanvasRenderer {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Grid holes
+    // Subtle copper trace lines (horizontal)
+    ctx.strokeStyle = 'rgba(180, 160, 120, 0.15)';
+    ctx.lineWidth = 1;
+    for (let y = 40; y < height; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+
+    // Subtle copper trace lines (vertical)
+    for (let x = 40; x < width; x += 40) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+
+    // Grid holes with metallic sheen
     const gridSize = 20;
     for (let x = gridSize; x < width; x += gridSize) {
       for (let y = gridSize; y < height; y += gridSize) {
+        // Outer ring
         ctx.beginPath();
-        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#ccc8bc';
+        ctx.arc(x, y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#c8c4b4';
+        ctx.fill();
+        // Inner hole
+        ctx.beginPath();
+        ctx.arc(x, y, 1, 0, Math.PI * 2);
+        ctx.fillStyle = '#b8b4a8';
         ctx.fill();
       }
     }
 
-    // Central channel
+    // Central channel groove
     const channelY = height / 2;
     ctx.fillStyle = '#c8c4b4';
-    ctx.fillRect(0, channelY - 3, width, 6);
+    ctx.fillRect(0, channelY - 4, width, 8);
+    // Channel shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillRect(0, channelY - 4, width, 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillRect(0, channelY + 2, width, 2);
 
     // Power rails
     ctx.strokeStyle = 'rgba(200, 50, 50, 0.4)';
