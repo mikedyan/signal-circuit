@@ -1,0 +1,52 @@
+{
+  "day": 13,
+  "title": "Canvas Background & Sharing",
+  "summary": "Pushing for 85+. Improve the canvas with a textured breadboard background, add share functionality for daily challenge results, and a brief animated intro screen to boost first impression.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Textured breadboard canvas background — replace the plain dot grid with a more realistic breadboard pattern: subtle PCB green/brown trace lines, component area grid, copper trace aesthetic. Use canvas patterns.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "Canvas background has a distinct breadboard/PCB feel",
+        "Subtle colored trace lines in a grid pattern",
+        "Not overwhelming — games elements still clearly visible",
+        "Works at all canvas sizes"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Share daily challenge results — after completing a daily challenge, show a 'Share' button that copies a text-based result summary to clipboard (like Wordle style)",
+      "files_to_modify": ["js/ui.js", "js/main.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Share button appears after completing daily challenge",
+        "Copies formatted text to clipboard",
+        "Text includes: date, gate count, stars, time",
+        "Emoji-based visual representation (like Wordle results)",
+        "Feedback toast shows 'Copied to clipboard!'"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Brief animated intro — when the page first loads, show a brief title animation (Signal Circuit text with electric spark effect) before transitioning to level select. Keep it under 2 seconds.",
+      "files_to_modify": ["index.html", "css/style.css", "js/main.js"],
+      "acceptance_criteria": [
+        "On first load, title animates in with electric/glow effect",
+        "Animation lasts ~1.5 seconds",
+        "Transitions smoothly into level select",
+        "Only plays once per page load"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Breadboard background renders correctly",
+    "Share copies to clipboard",
+    "Intro animation plays smoothly",
+    "All existing features still work"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
