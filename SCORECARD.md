@@ -9,3 +9,4 @@
 | 8 | 76 | 76 | 78 | 77 | +4 | Content depth & replayability |
 | 9 | 80 | 79 | 80 | 80 | +3 | Visual design upgrade |
 | 10 | 82 | 82 | 82 | 82 | +2 | Addictiveness & retention |
+| 11 | 83 | 83 | 83 | 83 | +1 | Final polish & juice |
