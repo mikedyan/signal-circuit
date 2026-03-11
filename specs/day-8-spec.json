@@ -1,0 +1,67 @@
+{
+  "day": 8,
+  "title": "Difficulty Curve & Hint System",
+  "summary": "Difficulty Curve has been stuck at 6/10 for 4 straight days. Levels 4-5 (NAND/NOR) represent a conceptual jump from single-gate to multi-gate solutions without scaffolding. This day adds: a progressive hint system that can be triggered per-level, a 'gate chaining' tutorial hint on level 4, rebalanced level order, and improved level descriptions that guide thinking. Also adding a 'skip level' option for stuck players.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Implement a hint system — each level can have up to 3 progressive hints. First hint is free, subsequent hints cost a star from the rating. Hints appear as dismissible tooltips over the canvas. Add a 'Hint' button to the info panel.",
+      "files_to_modify": ["js/levels.js", "js/ui.js", "js/main.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Hint button visible in info panel",
+        "Clicking shows progressive hints (hint 1, then 2, then 3)",
+        "First hint is free, hints 2+ reduce max stars to 2/1",
+        "Each level has custom hint text in levels.js",
+        "Hints are dismissible by clicking",
+        "Hint state resets when level is restarted"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add hint text to all 10 levels, with focus on levels 4-5 which need the most guidance. Level 4 (NAND) hints should progressively teach: 'NAND = NOT(AND)', 'Connect inputs to AND gate, then invert the output with NOT', 'You need 2 gates: AND → NOT → output'",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "All 10 levels have 3 progressive hints",
+        "Level 4 (NAND) hints teach the concept step-by-step",
+        "Level 5 (NOR) hints similarly guide",
+        "Earlier levels have simpler hints",
+        "Later levels have hints that teach composition patterns"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Improve level descriptions to be more instructive — add educational text that explains what the target behavior means and how to think about it",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Each level description explains the concept clearly",
+        "Level 4: explains that NAND is the opposite of AND",
+        "Level 5: explains that NOR is the opposite of OR",
+        "Descriptions guide thinking without giving away the solution"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Add a 'Skip Level' button that appears after the player has been on a level for 60+ seconds or used all hints. Skipping unlocks the next level but awards 0 stars.",
+      "files_to_modify": ["js/ui.js", "js/main.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Skip button appears after 60 seconds on a level OR after all 3 hints used",
+        "Skipping unlocks next level with 0 stars",
+        "Skip button is styled distinctly (dimmer, less prominent)",
+        "Confirmation prompt before skipping"
+      ],
+      "depends_on": ["T1"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Hint system works progressively on all levels",
+    "Star penalty for hints is calculated correctly",
+    "Skip level works and unlocks next level",
+    "Level descriptions are clear and educational",
+    "All existing features still work"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
