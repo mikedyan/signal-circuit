@@ -256,19 +256,27 @@ class WireManager {
       const sx = this.drawFrom.x;
       const sy = this.drawFrom.y;
 
+      // Smooth bezier curve preview
       ctx.strokeStyle = '#0f0';
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
+      const dx = this.mouseX - sx;
+      const cpOffset = Math.min(Math.abs(dx) * 0.5, 100);
       ctx.beginPath();
       ctx.moveTo(sx, sy);
-
-      // Route preview
-      const midX = (sx + this.mouseX) / 2;
-      ctx.lineTo(midX, sy);
-      ctx.lineTo(midX, this.mouseY);
-      ctx.lineTo(this.mouseX, this.mouseY);
+      ctx.bezierCurveTo(
+        sx + cpOffset, sy,
+        this.mouseX - cpOffset, this.mouseY,
+        this.mouseX, this.mouseY
+      );
       ctx.stroke();
       ctx.setLineDash([]);
+
+      // Endpoint indicator
+      ctx.beginPath();
+      ctx.arc(this.mouseX, this.mouseY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+      ctx.fill();
     }
   }
 }

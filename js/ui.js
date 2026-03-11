@@ -18,6 +18,7 @@ class UI {
     this.setupOnboarding();
     this.setupShortcutsOverlay();
     this.setupAchievements();
+    this.setupHowToPlay();
   }
 
   // ── Level Select Screen ──
@@ -615,6 +616,19 @@ class UI {
       row.appendChild(diff);
       row.appendChild(date);
       container.appendChild(row);
+    });
+  }
+
+  // ── How to Play ──
+  setupHowToPlay() {
+    const btn = document.getElementById('how-to-play-btn');
+    const modal = document.getElementById('how-to-play-modal');
+    const closeBtn = document.getElementById('how-to-play-close');
+
+    if (btn) btn.addEventListener('click', () => modal.style.display = 'flex');
+    if (closeBtn) closeBtn.addEventListener('click', () => modal.style.display = 'none');
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
     });
   }
 

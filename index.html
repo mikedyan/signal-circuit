@@ -39,8 +39,23 @@
           </div>
         </div>
 
-        <button id="achievements-btn" class="challenge-btn" style="margin-top:10px;">🏆 Achievements</button>
+        <button id="how-to-play-btn" class="challenge-btn" style="margin-top:10px;">📖 How to Play</button>
+        <button id="achievements-btn" class="challenge-btn">🏆 Achievements</button>
         <button id="reset-progress-btn">Reset Progress</button>
+      </div>
+    </div>
+
+    <!-- How to Play Modal -->
+    <div id="how-to-play-modal" style="display:none;">
+      <div id="how-to-play-content">
+        <h3>📖 How to Play</h3>
+        <div class="how-step"><span class="how-icon">🔧</span><div><strong>Place Gates</strong><br>Drag logic gates from the toolbox onto the breadboard. Gates compute outputs from inputs.</div></div>
+        <div class="how-step"><span class="how-icon">🔌</span><div><strong>Draw Wires</strong><br>Click an output pin (right side) then click an input pin (left side) to connect them.</div></div>
+        <div class="how-step"><span class="how-icon">📊</span><div><strong>Match the Truth Table</strong><br>Your circuit must produce the correct output for every input combination.</div></div>
+        <div class="how-step"><span class="how-icon">▶️</span><div><strong>Run Simulation</strong><br>Press RUN to test your circuit. Green ✓ = correct, Red ✗ = wrong.</div></div>
+        <div class="how-step"><span class="how-icon">💡</span><div><strong>Use Hints</strong><br>Stuck? Click Hint for progressive clues. First hint is free!</div></div>
+        <div class="how-step"><span class="how-icon">⭐</span><div><strong>Earn Stars</strong><br>Fewer gates = more stars. ★★★ for optimal, ★★ for good, ★ for any solution.</div></div>
+        <button id="how-to-play-close">Got it!</button>
       </div>
     </div>
 
@@ -141,6 +156,7 @@
           <span id="timer-display">⏱ 0:00</span>
           <button id="mute-btn" title="Toggle sound">🔊</button>
         </div>
+        <div style="text-align:center;color:#333;font-size:9px;margin-top:4px;">v1.0</div>
       </div>
     </div>
   </div>
@@ -161,14 +177,14 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/gates.js?v=13"></script>
-  <script src="js/wires.js?v=13"></script>
-  <script src="js/simulation.js?v=13"></script>
-  <script src="js/levels.js?v=13"></script>
-  <script src="js/audio.js?v=13"></script>
-  <script src="js/achievements.js?v=13"></script>
-  <script src="js/canvas.js?v=13"></script>
-  <script src="js/ui.js?v=13"></script>
-  <script src="js/main.js?v=13"></script>
+  <script src="js/gates.js?v=14"></script>
+  <script src="js/wires.js?v=14"></script>
+  <script src="js/simulation.js?v=14"></script>
+  <script src="js/levels.js?v=14"></script>
+  <script src="js/audio.js?v=14"></script>
+  <script src="js/achievements.js?v=14"></script>
+  <script src="js/canvas.js?v=14"></script>
+  <script src="js/ui.js?v=14"></script>
+  <script src="js/main.js?v=14"></script>
 </body>
 </html>
