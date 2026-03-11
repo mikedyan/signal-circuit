@@ -29,6 +29,12 @@
 - Level select uses DOM elements (not canvas) for better text rendering and accessibility
 - Celebration particles use a separate overlay canvas with pointer-events: none
 
+## Day 8: Hint System & Caching
+- **Cache busting for development** — Python's http.server and browsers cache JS files aggressively. Always add `?v=N` query params to script tags in index.html and increment on each deploy. This prevents stale JS from being served.
+- **Progressive hint penalty** — hints 2+ reduce max stars. Track `maxHintPenalty` and cap `calculateStars()` output. First hint free incentivizes exploration before penalty kicks in.
+- **Skip appears late** — show skip button only after all hints used OR 60+ seconds. Prevents premature skipping while still being an escape hatch for stuck players.
+- **Reset hint state on level load** — clear `hintsUsed`, `maxHintPenalty`, hint display, skip button, and timers every time a level loads. Otherwise hint state leaks between levels.
+
 ## Day 6: Mobile & Responsive Patterns
 - **Resize before load** — canvas must be resized (to match new container) BEFORE loading level data that depends on canvas dimensions. `showScreen()` → `resize()` → `loadLevel()`, not the reverse.
 - **Scale positions** — hardcoded level coordinates designed for desktop (700x400) don't fit mobile screens. Use a `_scalePosition()` method that maps reference coordinates to actual canvas size. Keep reference dimensions consistent (700x400).
