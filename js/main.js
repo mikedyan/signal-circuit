@@ -204,8 +204,9 @@ class GameState {
     const level = generateChallenge(numInputs, numOutputs);
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
+    this.renderer.resize();
     this.loadChallengeLevel(level);
-    setTimeout(() => this.renderer.resize(), 50);
+    setTimeout(() => this.renderer.resize(), 100);
   }
 
   startSandbox() {
@@ -214,8 +215,9 @@ class GameState {
     const level = generateSandboxLevel();
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
+    this.renderer.resize();
     this.loadChallengeLevel(level);
-    setTimeout(() => this.renderer.resize(), 50);
+    setTimeout(() => this.renderer.resize(), 100);
   }
 
   startLevel(levelId) {
@@ -223,12 +225,21 @@ class GameState {
     this.isSandboxMode = false;
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
+
+    // Must resize canvas BEFORE loading level so positions scale correctly
+    this.renderer.resize();
     this.loadLevel(levelId);
 
-    // Need to resize canvas after showing gameplay screen
+    // Second resize after layout settles
     setTimeout(() => {
+      const oldW = this.renderer.canvas.width;
+      const oldH = this.renderer.canvas.height;
       this.renderer.resize();
-    }, 50);
+      // If size changed after layout settle, reload level positions
+      if (this.renderer.canvas.width !== oldW || this.renderer.canvas.height !== oldH) {
+        this.loadLevel(levelId);
+      }
+    }, 100);
   }
 
   // ── Game State ──
@@ -349,6 +360,26 @@ class GameState {
     this.ui.updateStatusBar('Redo');
   }
 
+  // Scale level positions to fit the actual canvas
+  _scalePosition(x, y) {
+    if (!this.renderer) return { x, y };
+    const canvas = this.renderer.canvas;
+    const cw = canvas.width || 800;
+    const ch = canvas.height || 500;
+    // Levels are designed for ~700x400 usable area
+    const refW = 700;
+    const refH = 400;
+    const sx = cw / refW;
+    const sy = ch / refH;
+    const scale = Math.min(sx, sy);
+    const offsetX = (cw - refW * scale) / 2;
+    const offsetY = (ch - refH * scale) / 2;
+    return {
+      x: Math.round(x * scale + offsetX),
+      y: Math.round(y * scale + offsetY),
+    };
+  }
+
   loadLevel(id) {
     const level = getLevel(id);
     if (!level) return;
@@ -363,12 +394,14 @@ class GameState {
     this.isAnimating = false;
 
     for (const inp of level.inputs) {
-      const node = new IONode('input', inp.label, inp.x, inp.y, this.nextId++);
+      const pos = this._scalePosition(inp.x, inp.y);
+      const node = new IONode('input', inp.label, pos.x, pos.y, this.nextId++);
       this.inputNodes.push(node);
     }
 
     for (const out of level.outputs) {
-      const node = new IONode('output', out.label, out.x, out.y, this.nextId++);
+      const pos = this._scalePosition(out.x, out.y);
+      const node = new IONode('output', out.label, pos.x, pos.y, this.nextId++);
       this.outputNodes.push(node);
     }
 
@@ -396,12 +429,14 @@ class GameState {
     this.isAnimating = false;
 
     for (const inp of level.inputs) {
-      const node = new IONode('input', inp.label, inp.x, inp.y, this.nextId++);
+      const pos = this._scalePosition(inp.x, inp.y);
+      const node = new IONode('input', inp.label, pos.x, pos.y, this.nextId++);
       this.inputNodes.push(node);
     }
 
     for (const out of level.outputs) {
-      const node = new IONode('output', out.label, out.x, out.y, this.nextId++);
+      const pos = this._scalePosition(out.x, out.y);
+      const node = new IONode('output', out.label, pos.x, pos.y, this.nextId++);
       this.outputNodes.push(node);
     }
 

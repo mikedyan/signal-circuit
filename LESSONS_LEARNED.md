@@ -29,6 +29,13 @@
 - Level select uses DOM elements (not canvas) for better text rendering and accessibility
 - Celebration particles use a separate overlay canvas with pointer-events: none
 
+## Day 6: Mobile & Responsive Patterns
+- **Resize before load** — canvas must be resized (to match new container) BEFORE loading level data that depends on canvas dimensions. `showScreen()` → `resize()` → `loadLevel()`, not the reverse.
+- **Scale positions** — hardcoded level coordinates designed for desktop (700x400) don't fit mobile screens. Use a `_scalePosition()` method that maps reference coordinates to actual canvas size. Keep reference dimensions consistent (700x400).
+- **Touch event order** — use `touchstart` → find interaction target (pin for wire, gate for drag), `touchmove` → update, `touchend` → commit. Always `preventDefault()` with `{ passive: false }` to block scrolling.
+- **Long-press for mobile right-click** — 500ms timer on touchstart, cancel on touchmove. Mobile has no right-click, so long-press is the standard alternative for contextual actions.
+- **Second resize after layout settle** — CSS flex layouts may not have their final dimensions immediately after `display: flex/block` is set. Schedule a second resize after 100ms.
+
 ## Day 5: Audio Patterns
 - **Web Audio API lazy init** — AudioContext must be created from a user gesture (click/tap). Use `_ensureContext()` pattern: create on first sound call, not on page load.
 - **AudioContext resume** — Chrome suspends AudioContext until user interaction. Always call `ctx.resume()` before playing.
