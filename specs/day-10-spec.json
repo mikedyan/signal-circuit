@@ -1,0 +1,65 @@
+{
+  "day": 10,
+  "title": "Visual Design Upgrade & Progress Tracking",
+  "summary": "Visual Design stuck at 7/10 for 5 days. This day elevates the visual quality: refined gate rendering with proper logic symbols, improved level cards with best time/stars, progress bar showing overall completion, and a polished color palette. Also adding keyboard shortcut hints.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Improve gate rendering — draw proper logic gate symbols (AND shape, OR curve, NOT triangle, XOR with double curve) instead of just text labels in boxes. Use canvas paths for clean vector rendering.",
+      "files_to_modify": ["js/gates.js"],
+      "acceptance_criteria": [
+        "AND gate rendered as D-shape with flat back",
+        "OR gate rendered as curved shield shape",
+        "NOT gate rendered as triangle with bubble",
+        "XOR gate rendered as OR shape with double input line",
+        "All gates maintain proper pin positions",
+        "Gates scale correctly at all canvas sizes"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add completion progress bar to level select — shows X/15 levels completed, percentage, total stars earned",
+      "files_to_modify": ["js/ui.js", "css/style.css", "index.html"],
+      "acceptance_criteria": [
+        "Progress bar visible at top of level select",
+        "Shows X/15 levels and total stars",
+        "Visual progress bar fills proportionally",
+        "Updates when returning from gameplay"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Show best time on completed level cards in the level select grid",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Completed level cards show best time in mm:ss format",
+        "Time appears below the star display",
+        "Styled subtly (small, grey text)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Add keyboard shortcut display — small '?' button that shows hotkeys overlay (Ctrl+Z undo, Delete remove, etc.)",
+      "files_to_modify": ["js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "? button visible in gameplay screen",
+        "Clicking shows overlay with keyboard shortcuts",
+        "Overlay dismissible by clicking or pressing Escape",
+        "Lists: Ctrl+Z undo, Ctrl+Y redo, Delete/Backspace remove, right-click delete"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Gate symbols render correctly for all types",
+    "Progress bar calculates correctly",
+    "Best time displays on level cards",
+    "Keyboard shortcuts overlay works",
+    "All existing features still work"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
