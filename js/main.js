@@ -55,6 +55,7 @@ class GameState {
     this.leaderboard = this.loadLeaderboard();
     this.isSandboxMode = false;
     this.isChallengeMode = false;
+    this.audio = new AudioEngine();
   }
 
   init() {
@@ -63,7 +64,25 @@ class GameState {
     this.ui = new UI(this);
 
     this.setupCanvasEvents(canvas);
+    this.setupMuteButton();
     this.ui.showScreen('level-select');
+  }
+
+  setupMuteButton() {
+    const btn = document.getElementById('mute-btn');
+    if (!btn) return;
+    // Set initial state
+    if (this.audio.isMuted) {
+      btn.textContent = '🔇';
+      btn.classList.add('muted');
+    }
+    btn.addEventListener('click', () => {
+      const newMuted = !this.audio.isMuted;
+      this.audio.setMute(newMuted);
+      btn.textContent = newMuted ? '🔇' : '🔊';
+      btn.classList.toggle('muted', newMuted);
+      if (!newMuted) this.audio.playButtonClick();
+    });
   }
 
   // ── Progress Persistence ──
@@ -227,6 +246,7 @@ class GameState {
     const gate = new Gate(type, x, y, this.nextId++);
     this.gates.push(gate);
     this.ui.updateStatusBar(`Placed ${type} gate`);
+    this.audio.playClick();
     if (!skipUndo) {
       this.undoManager.push({
         type: 'addGate',
@@ -247,6 +267,7 @@ class GameState {
     this.gates = this.gates.filter(g => g.id !== gate.id);
     if (this.selectedGate === gate) this.selectedGate = null;
     this.ui.updateStatusBar(`Removed ${gate.type} gate`);
+    this.audio.playWireDisconnect();
 
     if (!skipUndo) {
       this.undoManager.push({
@@ -409,6 +430,7 @@ class GameState {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
+    this.audio.playButtonClick();
     this.ui.updateResultDisplay('idle', 'Simulating...');
     this.ui.hideStarDisplay();
 
@@ -420,6 +442,7 @@ class GameState {
 
     await this.simulation.runAnimated(
       (results, rowIndex) => {
+        this.audio.playSimPulse();
         this.ui.updateTruthTable(results);
       },
       (results) => {
@@ -436,18 +459,21 @@ class GameState {
               gateCount,
               this.currentLevel.difficulty
             );
+            this.audio.playSuccess();
             this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
             this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
             this.ui.showChallengeResult(gateCount, this.currentLevel);
             this.ui.startCelebration();
           } else {
             const stars = this.completeLevel(this.currentLevel.id, gateCount);
+            this.audio.playSuccess();
             this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
             this.ui.updateStatusBar('Level complete! All truth table rows match.');
             this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
             this.ui.startCelebration();
           }
         } else {
+          this.audio.playFail();
           const passCount = results.filter(r => r.pass).length;
           this.ui.updateResultDisplay('fail', `✗ ${passCount}/${results.length} rows correct`);
           this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
@@ -500,6 +526,7 @@ class GameState {
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
+            this.audio.playWireConnect();
             this.undoManager.push({
               type: 'addWire',
               wireId: wire.id,
@@ -579,6 +606,7 @@ class GameState {
 
       const wire = this.wireManager.findWireAt(pos.x, pos.y);
       if (wire) {
+        this.audio.playWireDisconnect();
         this.undoManager.push({
           type: 'removeWire',
           fromGateId: wire.fromGateId,
@@ -601,6 +629,7 @@ class GameState {
 
       if ((e.key === 'Delete' || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey) {
         if (this.wireManager.selectedWire) {
+          this.audio.playWireDisconnect();
           const wire = this.wireManager.selectedWire;
           this.undoManager.push({
             type: 'removeWire',

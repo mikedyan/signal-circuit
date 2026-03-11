@@ -330,7 +330,12 @@ class UI {
   }
 
   updateStatusBar(text) {
-    document.getElementById('status-bar').textContent = text;
+    const el = document.getElementById('status-text');
+    if (el) {
+      el.textContent = text;
+    } else {
+      document.getElementById('status-bar').textContent = text;
+    }
   }
 
   // ── Star Display ──

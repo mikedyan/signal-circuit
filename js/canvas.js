@@ -41,6 +41,24 @@ class CanvasRenderer {
       gate.render(ctx, isSelected);
     }
 
+    // Compatible pin highlighting during wire drawing
+    if (this.gameState.wireManager.drawing && this.gameState.wireManager.drawFrom) {
+      const drawFrom = this.gameState.wireManager.drawFrom;
+      const targetType = drawFrom.pinType === 'output' ? 'input' : 'output';
+      const compatiblePins = this._getCompatiblePins(targetType);
+      const pulse = 0.4 + 0.3 * Math.sin(performance.now() / 200);
+
+      for (const cp of compatiblePins) {
+        ctx.beginPath();
+        ctx.arc(cp.x, cp.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 255, 0, ${pulse * 0.3})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(0, 255, 0, ${pulse})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
     // Hovered pin highlight
     if (this.hoveredPin) {
       ctx.beginPath();
@@ -99,6 +117,39 @@ class CanvasRenderer {
     ctx.fillText('+', 5, 34);
     ctx.fillStyle = 'rgba(50, 50, 200, 0.5)';
     ctx.fillText('−', 5, height - 26);
+  }
+
+  _getCompatiblePins(targetType) {
+    const gs = this.gameState;
+    const pins = [];
+
+    if (targetType === 'input') {
+      // Show all input pins on gates and output nodes
+      for (const gate of gs.gates) {
+        const inputPins = gate.getInputPins();
+        for (const pin of inputPins) {
+          pins.push({ x: pin.x - 12, y: pin.y });
+        }
+      }
+      for (const node of gs.outputNodes) {
+        const pin = node.getPin();
+        pins.push({ x: pin.x - 12, y: pin.y });
+      }
+    } else {
+      // Show all output pins on gates and input nodes
+      for (const gate of gs.gates) {
+        const outputPins = gate.getOutputPins();
+        for (const pin of outputPins) {
+          pins.push({ x: pin.x + 12, y: pin.y });
+        }
+      }
+      for (const node of gs.inputNodes) {
+        const pin = node.getPin();
+        pins.push({ x: pin.x + 12, y: pin.y });
+      }
+    }
+
+    return pins;
   }
 
   findPinAt(mx, my, threshold = 18) {
