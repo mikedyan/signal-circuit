@@ -1,0 +1,61 @@
+{
+  "day": 12,
+  "title": "Juice Polish & PWA",
+  "summary": "Juice at 7/10 is the weakest metric. This day focuses on micro-interactions and visual feedback: gate placement animation (pop/scale), wire drawing preview with better curve, particle sparks on wire connections, breadboard texture, favicon, and PWA manifest for installability. Also adding achievement unlock sound.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Gate placement animation — when a gate is placed, it pops in with a brief scale-up animation. Gates should animate from 0 to full size with a bounce easing.",
+      "files_to_modify": ["js/gates.js", "js/main.js"],
+      "acceptance_criteria": [
+        "New gates animate from small to full size on placement",
+        "Animation duration ~200ms with bounce easing",
+        "Existing gates render normally (no animation)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Spark particles on wire connection — when a wire connects, spawn 8-12 small orange spark particles from the connection point that fly outward and fade.",
+      "files_to_modify": ["js/canvas.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Spark particles appear at connection point when wire completes",
+        "8-12 particles with outward velocity and fade",
+        "Particles are orange/yellow themed (electric sparks)",
+        "Animation lasts ~300ms"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Add favicon (⚡ emoji as canvas-generated favicon) and basic PWA manifest for installability",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "Favicon shows ⚡ in browser tab",
+        "manifest.json exists with app name and theme color",
+        "Game can be installed as PWA on mobile (Add to Home Screen)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Achievement unlock sound — play a special chime when an achievement unlocks",
+      "files_to_modify": ["js/audio.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Distinct chime plays when achievement toast appears",
+        "Sound is different from success jingle",
+        "Respects mute setting"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Gate placement animation smooth",
+    "Spark particles render correctly",
+    "Favicon visible in browser tab",
+    "Achievement sound plays on unlock",
+    "All existing features still work"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
