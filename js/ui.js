@@ -17,6 +17,7 @@ class UI {
     this.setupChallengeConfig();
     this.setupOnboarding();
     this.setupShortcutsOverlay();
+    this.setupAchievements();
   }
 
   // ── Level Select Screen ──
@@ -523,6 +524,11 @@ class UI {
       this.gameState.showChallengeConfig();
     });
 
+    // Daily challenge button
+    document.getElementById('daily-challenge-btn').addEventListener('click', () => {
+      this.gameState.startDailyChallenge();
+    });
+
     // Sandbox button on level select
     document.getElementById('sandbox-btn').addEventListener('click', () => {
       this.gameState.startSandbox();
@@ -609,6 +615,69 @@ class UI {
       row.appendChild(date);
       container.appendChild(row);
     });
+  }
+
+  // ── Achievements ──
+  setupAchievements() {
+    const btn = document.getElementById('achievements-btn');
+    const modal = document.getElementById('achievements-modal');
+    const closeBtn = document.getElementById('achievements-close');
+
+    if (btn) {
+      btn.addEventListener('click', () => {
+        this.renderAchievements();
+        modal.style.display = 'flex';
+      });
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => modal.style.display = 'none');
+    }
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+      });
+    }
+  }
+
+  renderAchievements() {
+    const list = document.getElementById('achievements-list');
+    if (!list) return;
+    const all = this.gameState.achievements.getAll();
+    list.innerHTML = '';
+    for (const ach of all) {
+      const row = document.createElement('div');
+      row.className = 'achievement-row ' + (ach.unlocked ? 'unlocked' : 'locked');
+      row.innerHTML = `
+        <span class="achievement-icon">${ach.unlocked ? ach.icon : '🔒'}</span>
+        <div class="achievement-info">
+          <div class="achievement-name">${ach.name}</div>
+          <div class="achievement-desc">${ach.desc}</div>
+        </div>
+      `;
+      list.appendChild(row);
+    }
+  }
+
+  showAchievementToasts(newlyUnlocked) {
+    if (!newlyUnlocked || newlyUnlocked.length === 0) return;
+    const allAchs = ACHIEVEMENTS;
+    let delay = 0;
+    for (const id of newlyUnlocked) {
+      const ach = allAchs.find(a => a.id === id);
+      if (!ach) continue;
+      setTimeout(() => {
+        const toast = document.getElementById('achievement-toast');
+        if (!toast) return;
+        toast.innerHTML = `${ach.icon} <strong>${ach.name}</strong> unlocked!`;
+        toast.style.display = 'block';
+        // Reset animation
+        toast.style.animation = 'none';
+        void toast.offsetWidth;
+        toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 2.6s forwards';
+        setTimeout(() => toast.style.display = 'none', 3100);
+      }, delay);
+      delay += 3200;
+    }
   }
 
   // ── Shortcuts Overlay ──

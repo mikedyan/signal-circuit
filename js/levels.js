@@ -423,6 +423,56 @@ const LEVELS = [
   },
 ];
 
+// ── Daily Challenge Generator ──
+function generateDailyChallenge() {
+  const today = new Date();
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+
+  // Simple seeded PRNG
+  let s = seed;
+  function rand() {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return s / 0x7fffffff;
+  }
+
+  const numInputs = Math.floor(rand() * 2) + 2; // 2-3 inputs
+  const numOutputs = 1;
+  const numRows = Math.pow(2, numInputs);
+
+  // Generate random truth table
+  const truthTable = [];
+  for (let i = 0; i < numRows; i++) {
+    const inputs = [];
+    for (let j = numInputs - 1; j >= 0; j--) {
+      inputs.push((i >> j) & 1);
+    }
+    const outputs = [Math.round(rand())];
+    truthTable.push({ inputs, outputs });
+  }
+
+  const labels = ['A', 'B', 'C', 'D'];
+  const inputs = [];
+  for (let i = 0; i < numInputs; i++) {
+    inputs.push({ label: labels[i], x: 60, y: 100 + i * 120 });
+  }
+
+  const dateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  return {
+    id: 'daily',
+    title: `Daily Challenge — ${dateStr}`,
+    description: `Today's unique puzzle! Build the circuit that matches this truth table. New puzzle every day.`,
+    hints: [],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: numInputs + 1,
+    goodGates: numInputs + 3,
+    inputs,
+    outputs: [{ label: 'OUT', x: 600, y: 100 + ((numInputs - 1) * 120) / 2 }],
+    truthTable,
+    isDaily: true,
+  };
+}
+
 function getLevel(id) {
   return LEVELS.find(l => l.id === id) || null;
 }

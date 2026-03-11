@@ -23,14 +23,28 @@
         <div id="challenge-section">
           <div class="chapter-title">Challenge Mode</div>
           <div id="challenge-buttons">
+            <button id="daily-challenge-btn" class="challenge-btn daily-btn">📅 Daily Challenge</button>
             <button id="random-challenge-btn" class="challenge-btn">🎲 Random Challenge</button>
             <button id="sandbox-btn" class="challenge-btn">🔧 Sandbox</button>
           </div>
         </div>
 
+        <button id="achievements-btn" class="challenge-btn" style="margin-top:10px;">🏆 Achievements</button>
         <button id="reset-progress-btn">Reset Progress</button>
       </div>
     </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievements-modal" style="display:none;">
+      <div id="achievements-content">
+        <h3>🏆 Achievements</h3>
+        <div id="achievements-list"></div>
+        <button id="achievements-close">Close</button>
+      </div>
+    </div>
+
+    <!-- Achievement Toast -->
+    <div id="achievement-toast" style="display:none;"></div>
 
     <!-- Challenge Config Screen -->
     <div id="challenge-config-screen" style="display:none;">
@@ -136,13 +150,14 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/gates.js?v=10"></script>
-  <script src="js/wires.js?v=10"></script>
-  <script src="js/simulation.js?v=10"></script>
-  <script src="js/levels.js?v=10"></script>
-  <script src="js/audio.js?v=10"></script>
-  <script src="js/canvas.js?v=10"></script>
-  <script src="js/ui.js?v=10"></script>
-  <script src="js/main.js?v=10"></script>
+  <script src="js/gates.js?v=11"></script>
+  <script src="js/wires.js?v=11"></script>
+  <script src="js/simulation.js?v=11"></script>
+  <script src="js/levels.js?v=11"></script>
+  <script src="js/audio.js?v=11"></script>
+  <script src="js/achievements.js?v=11"></script>
+  <script src="js/canvas.js?v=11"></script>
+  <script src="js/ui.js?v=11"></script>
+  <script src="js/main.js?v=11"></script>
 </body>
 </html>

@@ -56,6 +56,7 @@ class GameState {
     this.isSandboxMode = false;
     this.isChallengeMode = false;
     this.audio = new AudioEngine();
+    this.achievements = new AchievementManager();
     this.timerStart = null;
     this.timerInterval = null;
     this.timerRunning = false;
@@ -222,6 +223,17 @@ class GameState {
     this.isChallengeMode = true;
     this.isSandboxMode = false;
     const level = generateChallenge(numInputs, numOutputs);
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.renderer.resize();
+    this.loadChallengeLevel(level);
+    setTimeout(() => this.renderer.resize(), 100);
+  }
+
+  startDailyChallenge() {
+    this.isChallengeMode = false;
+    this.isSandboxMode = false;
+    const level = generateDailyChallenge();
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
     this.renderer.resize();
@@ -631,6 +643,13 @@ class GameState {
             this.ui.updateStatusBar('Level complete! All truth table rows match.');
             this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
             this.ui.startCelebration();
+            // Check achievements
+            const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
+            const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
+            if (this.currentLevel.isDaily) {
+              if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
+            }
+            this.ui.showAchievementToasts(newAchs);
           }
         } else {
           this.audio.playFail();
