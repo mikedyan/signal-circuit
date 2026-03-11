@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## Day 15: Bezier Wires and Core Loop Polish
+- **Bezier wire hit-testing requires sampling, not math** — Unlike straight line segments, bezier curves don't have a simple "distance from point to curve" formula. Sampling 20 points along the curve with threshold=8px works well and performs fine.
+- **Wire colors need simulation state override** — The color system has two modes: unique colors when building (helps trace wires), red/blue during simulation (shows signal state). The transition needs to be clean.
+- **Gate count indicator tightens the core loop significantly** — Showing projected stars in real-time while building turns optimization into an active goal rather than a surprise at the end. This is the kind of small UX touch that moves "Core Loop" from 8→9.
+- **wireColorIndex must reset on circuit clear** — Otherwise colors keep cycling across different levels, wasting early palette slots.
+
 *This file grows over time. Every QA run adds patterns here. Every agent reads it.*
 
 ## Code Patterns

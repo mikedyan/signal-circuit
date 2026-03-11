@@ -121,6 +121,43 @@
 - [x] Highlights pulse green for visibility
 - [x] Highlights disappear on cancel/completion
 
+## Gate Count Indicator (Day 15)
+- [x] Shows "Gates: X/Y" during campaign levels
+- [x] Shows projected star rating (★★★) in gold
+- [x] Updates in real-time when gates are added/removed
+- [x] Updates on undo/redo
+- [x] Shows green border when at/below optimal gate count
+- [x] Shows yellow border when at good gate count
+- [x] Hidden in sandbox mode
+- [x] Shows for challenge/daily without optimal reference
+- [x] Resets on level load and circuit clear
+
+## Bezier Wires (Day 15)
+- [x] Placed wires render as smooth bezier curves
+- [x] Wire shadow follows the curve
+- [x] Active wire glow follows curve during simulation
+- [x] Signal pulse dots animate along bezier path
+- [x] Wire hit-testing works with curved wires
+- [x] Wire hover highlighting works
+- [x] Selected wire highlight works (yellow)
+- [x] No visual regression on any existing features
+
+## Wire Color Coding (Day 15)
+- [x] Each wire gets a unique color from rotating palette
+- [x] 10 distinguishable colors in palette
+- [x] Colors persist for wire's lifetime
+- [x] During simulation, active wires glow red, inactive show blue
+- [x] When not simulating, wires show their unique color
+- [x] Selected wire still highlighted yellow
+- [x] Colors reset on circuit clear
+
+## Row Micro-celebrations (Day 15)
+- [x] Passing rows get green flash animation
+- [x] Failing rows get red shake animation
+- [x] Animations are quick (~300ms)
+- [x] Works for campaign, challenge, and daily levels
+- [x] No animation in sandbox mode
+
 ## Browser Compatibility
 - [x] Chrome (desktop) — tested
 - [ ] Firefox (desktop)
