@@ -366,7 +366,12 @@ class UI {
     level.truthTable.forEach((row, i) => {
       const tr = document.createElement('tr');
       if (results && results[i]) {
-        tr.className = results[i].pass ? 'row-pass' : 'row-fail';
+        const isPass = results[i].pass;
+        tr.className = isPass ? 'row-pass' : 'row-fail';
+        // Micro-celebration animation (skip for sandbox)
+        if (!this.gameState.isSandboxMode) {
+          tr.classList.add(isPass ? 'row-flash-pass' : 'row-flash-fail');
+        }
       }
 
       for (const val of row.inputs) {
@@ -808,7 +813,60 @@ class UI {
     el.style.display = 'block';
   }
 
-  // ── Gate Count Display (for sandbox and challenges) ──
+  // ── Gate Count Indicator (real-time during gameplay) ──
+  updateGateIndicator() {
+    const el = document.getElementById('gate-indicator');
+    if (!el) return;
+
+    const gs = this.gameState;
+    const level = gs.currentLevel;
+    if (!level || gs.isSandboxMode) {
+      el.style.display = 'none';
+      return;
+    }
+
+    el.style.display = 'flex';
+    const count = gs.gates.length;
+    const countText = document.getElementById('gate-count-text');
+    const starsPreview = document.getElementById('gate-stars-preview');
+
+    if (level.isChallenge || level.isDaily) {
+      // Challenge/daily: show count only, no optimal
+      countText.innerHTML = `Gates: <span class="count">${count}</span>`;
+      starsPreview.innerHTML = '';
+      el.className = count > 0 ? 'optimal' : '';
+    } else {
+      // Campaign: show count vs optimal + projected stars
+      const optimal = level.optimalGates;
+      const good = level.goodGates;
+      countText.innerHTML = `Gates: <span class="count">${count}</span>/${optimal}`;
+
+      // Projected stars
+      let projectedStars = 0;
+      if (count > 0) {
+        if (count <= optimal) projectedStars = 3;
+        else if (count <= good) projectedStars = 2;
+        else projectedStars = 1;
+
+        // Apply hint penalty preview
+        if (gs.maxHintPenalty >= 2) projectedStars = Math.min(projectedStars, 1);
+        else if (gs.maxHintPenalty >= 1) projectedStars = Math.min(projectedStars, 2);
+      }
+
+      let starsHtml = '';
+      for (let i = 0; i < 3; i++) {
+        starsHtml += i < projectedStars
+          ? '<span class="star-gold">★</span>'
+          : '<span class="star-dim">★</span>';
+      }
+      starsPreview.innerHTML = starsHtml;
+
+      // Style class
+      el.className = count <= optimal ? 'optimal' : count <= good ? 'good' : 'over';
+    }
+  }
+
+  // ── Gate Count Display (legacy for sandbox) ──
   updateGateCount() {
     const el = document.getElementById('gate-count-display');
     if (el) {

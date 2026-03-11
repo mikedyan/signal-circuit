@@ -393,6 +393,7 @@ class GameState {
         x, y,
       });
     }
+    this.ui.updateGateIndicator();
     return gate;
   }
 
@@ -417,6 +418,7 @@ class GameState {
         removedWires,
       });
     }
+    this.ui.updateGateIndicator();
   }
 
   addWireFromData(fromGateId, fromPinIndex, toGateId, toPinIndex) {
@@ -454,6 +456,7 @@ class GameState {
       }
     }
     this.ui.updateStatusBar('Undo');
+    this.ui.updateGateIndicator();
   }
 
   performRedo() {
@@ -485,6 +488,7 @@ class GameState {
       }
     }
     this.ui.updateStatusBar('Redo');
+    this.ui.updateGateIndicator();
   }
 
   // Scale level positions to fit the actual canvas
@@ -554,6 +558,8 @@ class GameState {
     if (level.id === 1) {
       this.ui.showOnboarding();
     }
+
+    this.ui.updateGateIndicator();
   }
 
   loadChallengeLevel(level) {
@@ -590,6 +596,7 @@ class GameState {
     }
     this.ui.hideStarDisplay();
     this.ui.updateStatusBar(level.isSandbox ? 'Sandbox Mode' : `Challenge: ${level.title}`);
+    this.ui.updateGateIndicator();
   }
 
   clearCircuit() {
@@ -602,6 +609,7 @@ class GameState {
     for (const node of this.outputNodes) node.value = 0;
 
     this.ui.updateTruthTable(null);
+    this.ui.updateGateIndicator();
   }
 
   async runSimulation() {

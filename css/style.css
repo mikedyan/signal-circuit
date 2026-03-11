@@ -328,6 +328,29 @@ body {
   color: #f44;
 }
 
+/* ── Row micro-celebration animations ── */
+#truth-table tr.row-flash-pass {
+  animation: rowPassFlash 0.3s ease-out;
+}
+
+#truth-table tr.row-flash-fail {
+  animation: rowFailShake 0.3s ease-out;
+}
+
+@keyframes rowPassFlash {
+  0% { background: rgba(0, 255, 0, 0.5); }
+  100% { background: rgba(0, 200, 0, 0.15); }
+}
+
+@keyframes rowFailShake {
+  0% { transform: translateX(0); background: rgba(255, 0, 0, 0.5); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); background: rgba(255, 0, 0, 0.15); }
+}
+
 /* ── Controls ── */
 #controls {
   display: flex;
@@ -810,6 +833,52 @@ body {
   color: #0f0;
   font-weight: bold;
 }
+
+/* ── Gate Count Indicator ── */
+#gate-indicator {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid #333;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  transition: border-color 0.3s;
+}
+
+#gate-indicator.optimal {
+  border-color: #0a0;
+  background: rgba(0, 255, 0, 0.08);
+}
+
+#gate-indicator.good {
+  border-color: #cc0;
+  background: rgba(200, 200, 0, 0.05);
+}
+
+#gate-indicator.over {
+  border-color: #a60;
+  background: rgba(200, 100, 0, 0.05);
+}
+
+#gate-count-text {
+  color: #ccc;
+  font-weight: bold;
+}
+
+#gate-count-text .count {
+  color: #0f0;
+}
+
+#gate-stars-preview {
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+#gate-stars-preview .star-gold { color: #ffd700; }
+#gate-stars-preview .star-dim { color: #333; }
 
 /* ── Progress Bar ── */
 #progress-bar-container {

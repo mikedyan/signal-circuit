@@ -1,5 +1,21 @@
 // wires.js — Wire management, drawing, selection, and deletion
 
+// Wire color palette — breadboard jumper wire colors
+const WIRE_COLORS = [
+  '#4488ff', // blue
+  '#ff6644', // orange-red
+  '#44cc44', // green
+  '#cc44cc', // magenta
+  '#ffaa22', // amber
+  '#44cccc', // teal
+  '#ff4488', // hot pink
+  '#88aa44', // olive
+  '#aa66ff', // purple
+  '#cc8844', // brown
+];
+
+let wireColorIndex = 0;
+
 class Wire {
   constructor(fromGateId, fromPinIndex, toGateId, toPinIndex, id) {
     this.id = id;
@@ -8,6 +24,8 @@ class Wire {
     this.toGateId = toGateId;
     this.toPinIndex = toPinIndex;
     this.signalValue = 0;
+    this.color = WIRE_COLORS[wireColorIndex % WIRE_COLORS.length];
+    wireColorIndex++;
   }
 }
 
@@ -99,9 +117,42 @@ class WireManager {
     this.selectedWire = null;
     this.hoveredWire = null;
     this.cancelDrawing();
+    wireColorIndex = 0;
   }
 
-  // Find a wire near a point (for click selection)
+  // Bezier control points for a wire from (sx,sy) to (ex,ey)
+  _bezierControlPoints(sx, sy, ex, ey) {
+    const dx = Math.abs(ex - sx);
+    const cpOffset = Math.max(40, dx * 0.45);
+    return {
+      cp1x: sx + cpOffset,
+      cp1y: sy,
+      cp2x: ex - cpOffset,
+      cp2y: ey,
+    };
+  }
+
+  // Sample a point along a cubic bezier at parameter t (0..1)
+  _bezierPoint(t, sx, sy, cp1x, cp1y, cp2x, cp2y, ex, ey) {
+    const u = 1 - t;
+    const tt = t * t;
+    const uu = u * u;
+    const uuu = uu * u;
+    const ttt = tt * t;
+    return {
+      x: uuu * sx + 3 * uu * t * cp1x + 3 * u * tt * cp2x + ttt * ex,
+      y: uuu * sy + 3 * uu * t * cp1y + 3 * u * tt * cp2y + ttt * ey,
+    };
+  }
+
+  // Draw a cubic bezier path (for stroke)
+  _traceBezier(ctx, sx, sy, cp1x, cp1y, cp2x, cp2y, ex, ey) {
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, ey);
+  }
+
+  // Find a wire near a point using bezier sampling
   findWireAt(px, py, threshold = 8) {
     for (const wire of this.wires) {
       const endpoints = this.getWireEndpoints(wire);
@@ -112,12 +163,14 @@ class WireManager {
       const sy = fromPin.y;
       const ex = toPin.x + (toPin.type === 'input' ? -12 : 12);
       const ey = toPin.y;
-      const midX = (sx + ex) / 2;
+      const cp = this._bezierControlPoints(sx, sy, ex, ey);
 
-      // Check distance to each segment of the wire path
-      if (distToSegment(px, py, sx, sy, midX, sy) < threshold) return wire;
-      if (distToSegment(px, py, midX, sy, midX, ey) < threshold) return wire;
-      if (distToSegment(px, py, midX, ey, ex, ey) < threshold) return wire;
+      // Sample 20 points along the bezier and check distance
+      for (let i = 0; i <= 20; i++) {
+        const t = i / 20;
+        const pt = this._bezierPoint(t, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
+        if (Math.hypot(px - pt.x, py - pt.y) < threshold) return wire;
+      }
     }
     return null;
   }
@@ -156,7 +209,7 @@ class WireManager {
       const sy = fromPin.y;
       const ex = toPin.x + (toPin.type === 'input' ? -12 : 12);
       const ey = toPin.y;
-      const midX = (sx + ex) / 2;
+      const cp = this._bezierControlPoints(sx, sy, ex, ey);
 
       const isSelected = this.selectedWire === wire;
       const isHovered = this.hoveredWire === wire;
@@ -170,22 +223,16 @@ class WireManager {
         color = '#ff5555';
       } else if (sim.animating && !isActive) {
         color = '#334488';
-      } else if (isActive) {
-        color = '#ff4444';
       } else {
-        color = '#4466cc';
+        // Use the wire's unique color when not simulating
+        color = wire.color;
       }
 
       // Wire shadow
       ctx.strokeStyle = 'rgba(0,0,0,0.3)';
       ctx.lineWidth = 6;
       ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(sx, sy + 2);
-      ctx.lineTo(midX, sy + 2);
-      ctx.lineTo(midX, ey + 2);
-      ctx.lineTo(ex, ey + 2);
+      this._traceBezier(ctx, sx, sy + 2, cp.cp1x, cp.cp1y + 2, cp.cp2x, cp.cp2y + 2, ex, ey + 2);
       ctx.stroke();
 
       // Glow for active wires during simulation
@@ -193,33 +240,22 @@ class WireManager {
         const glowPulse = 0.15 + 0.15 * Math.sin(performance.now() / 150);
         ctx.strokeStyle = `rgba(255, 80, 80, ${glowPulse})`;
         ctx.lineWidth = 12;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(midX, sy);
-        ctx.lineTo(midX, ey);
-        ctx.lineTo(ex, ey);
+        this._traceBezier(ctx, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
         ctx.stroke();
       }
 
       // Main wire
       ctx.strokeStyle = color;
       ctx.lineWidth = isSelected || isHovered ? 4 : 3;
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(midX, sy);
-      ctx.lineTo(midX, ey);
-      ctx.lineTo(ex, ey);
+      ctx.lineCap = 'round';
+      this._traceBezier(ctx, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
       ctx.stroke();
 
       // Glow effect for selected/hovered
       if (isSelected || isHovered) {
         ctx.strokeStyle = isSelected ? 'rgba(255,255,0,0.3)' : 'rgba(100,200,255,0.2)';
         ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(midX, sy);
-        ctx.lineTo(midX, ey);
-        ctx.lineTo(ex, ey);
+        this._traceBezier(ctx, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
         ctx.stroke();
       }
 
@@ -227,7 +263,7 @@ class WireManager {
       if (sim.animating && isActive && sim.animationProgress < 1) {
         const t = sim.animationProgress;
         // Main pulse
-        const pulsePos = getPointOnWirePath(sx, sy, midX, ey, ex, ey, t);
+        const pulsePos = this._bezierPoint(t, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
         ctx.beginPath();
         ctx.arc(pulsePos.x, pulsePos.y, 7, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 100, 0.95)';
@@ -240,7 +276,7 @@ class WireManager {
         // Trailing dots
         for (let trail = 1; trail <= 3; trail++) {
           const tt = Math.max(0, t - trail * 0.08);
-          const tp = getPointOnWirePath(sx, sy, midX, ey, ex, ey, tt);
+          const tp = this._bezierPoint(tt, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
           const alpha = 0.6 - trail * 0.15;
           const size = 5 - trail;
           ctx.beginPath();
@@ -281,7 +317,7 @@ class WireManager {
   }
 }
 
-// Utility: distance from point to line segment
+// Utility: distance from point to line segment (kept for compatibility)
 function distToSegment(px, py, x1, y1, x2, y2) {
   const A = px - x1;
   const B = py - y1;
@@ -294,28 +330,4 @@ function distToSegment(px, py, x1, y1, x2, y2) {
   const xx = x1 + t * C;
   const yy = y1 + t * D;
   return Math.hypot(px - xx, py - yy);
-}
-
-// Get interpolated point along the 3-segment wire path
-function getPointOnWirePath(sx, sy, midX, ey, ex, eyEnd, t) {
-  // Three segments: (sx,sy)→(midX,sy), (midX,sy)→(midX,ey), (midX,ey)→(ex,eyEnd)
-  const seg1Len = Math.abs(midX - sx);
-  const seg2Len = Math.abs(ey - sy);
-  const seg3Len = Math.abs(ex - midX);
-  const totalLen = seg1Len + seg2Len + seg3Len;
-
-  if (totalLen === 0) return { x: sx, y: sy };
-
-  const dist = t * totalLen;
-
-  if (dist <= seg1Len) {
-    const frac = seg1Len > 0 ? dist / seg1Len : 0;
-    return { x: sx + (midX - sx) * frac, y: sy };
-  } else if (dist <= seg1Len + seg2Len) {
-    const frac = seg2Len > 0 ? (dist - seg1Len) / seg2Len : 0;
-    return { x: midX, y: sy + (ey - sy) * frac };
-  } else {
-    const frac = seg3Len > 0 ? (dist - seg1Len - seg2Len) / seg3Len : 0;
-    return { x: midX + (ex - midX) * frac, y: eyEnd };
-  }
 }
