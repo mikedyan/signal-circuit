@@ -1,0 +1,54 @@
+{
+  "day": 9,
+  "title": "Content Expansion & Timer",
+  "summary": "Review says the game needs more content for replayability. This day adds 5 new levels (Chapter 3: Multi-Output) featuring 3-input puzzles and dual-output circuits. Also adds a completion timer with best-time tracking for each level, creating a speedrun incentive. Sound improvements: richer tones with harmonics for a more electronic feel.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add Chapter 3: Multi-Output with 5 new levels (11-15). Level 11: Half Adder (SUM + CARRY from 2 inputs). Level 12: 3-input AND. Level 13: 2-of-3 Majority. Level 14: Multiplexer (select A or B using S). Level 15: Full Adder (3 inputs, 2 outputs).",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "5 new levels with correct truth tables",
+        "Each level has hints (3 progressive)",
+        "New CHAPTERS entry for Chapter 3",
+        "Level select grid shows Chapter 3",
+        "Multi-output levels work correctly with simulation"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add level completion timer — starts when level loads, stops on success, shows elapsed time, saves best time to progress.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Timer starts when gameplay screen appears",
+        "Timer displays in mm:ss format in status bar",
+        "Timer stops on level completion",
+        "Best time saved in localStorage progress",
+        "Best time shown on level select cards for completed levels"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Improve audio sounds — add harmonics to make tones feel more electronic/circuit-like. Richer click, buzzier zap, warmer success jingle.",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "Click sound has harmonic overtone (sounds like a relay click)",
+        "Wire connect has more crackle/buzz (electronic zap)",
+        "Success jingle has richer harmonics (organ-like)",
+        "Overall audio feels more thematic to circuits/electronics"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "All 5 new levels are playable and solvable",
+    "Multi-output levels simulate correctly",
+    "Timer works correctly",
+    "Audio improvements sound good",
+    "Existing levels still work"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
