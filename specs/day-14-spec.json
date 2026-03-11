@@ -1,0 +1,61 @@
+{
+  "day": 14,
+  "title": "Final Sweep & Ship",
+  "summary": "Final day. Focus on end-to-end verification, edge case fixes, and shippable polish. Test all 15 levels, verify mobile, clean up code, and leave the game in its best possible state.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Verify all 15 levels are solvable — programmatically test that each truth table can be satisfied with the available gates. Fix any issues.",
+      "files_to_modify": [],
+      "acceptance_criteria": [
+        "All 15 levels confirmed solvable with available gates",
+        "Solutions verified via browser testing"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Wire drawing improvement — smoother bezier curve preview during wire drawing instead of right-angle segments. Make wire preview follow mouse with a natural curve.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Wire preview during drawing uses smooth bezier curve",
+        "Preview follows mouse position fluidly",
+        "Completed wires still render as L-shaped segments (consistent)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Add a 'How to Play' section accessible from level select — brief illustrated guide explaining the core mechanics (place gates, draw wires, match truth table)",
+      "files_to_modify": ["index.html", "css/style.css", "js/ui.js"],
+      "acceptance_criteria": [
+        "How to Play button on level select",
+        "Shows clear instructions with emoji icons",
+        "Covers: gate placement, wire drawing, truth table matching, hints",
+        "Dismissible modal"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Code cleanup and final polish — review all files for TODOs, unused code, console.logs. Ensure cache-bust versions are consistent. Add a game version number.",
+      "files_to_modify": ["index.html", "js/main.js"],
+      "acceptance_criteria": [
+        "No console.logs left in production code",
+        "All cache-bust versions consistent",
+        "Version number displayed somewhere subtle (e.g., footer)",
+        "Code is clean and maintainable"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Complete playthrough of levels 1-15",
+    "All features work together (audio, hints, timer, achievements, share)",
+    "Mobile responsive layout verified",
+    "No console errors",
+    "Clean, shippable state"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
