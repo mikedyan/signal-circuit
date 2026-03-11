@@ -15,6 +15,7 @@ class UI {
     this.setupLevelSelect();
     this.setupBackButton();
     this.setupChallengeConfig();
+    this.setupOnboarding();
   }
 
   // ── Level Select Screen ──
@@ -156,6 +157,7 @@ class UI {
       el.appendChild(dots);
 
       el.addEventListener('mousedown', (e) => this.startToolboxDrag(e, gateType));
+      el.addEventListener('touchstart', (e) => this.startToolboxDragTouch(e, gateType), { passive: false });
       this.gateContainer.appendChild(el);
     }
   }
@@ -196,6 +198,48 @@ class UI {
 
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
+  }
+
+  startToolboxDragTouch(e, gateType) {
+    e.preventDefault();
+    this.isDragging = true;
+    this.dragType = gateType;
+
+    const touch = e.touches[0];
+    this.dragGhost.textContent = GateTypes[gateType].name;
+    this.dragGhost.style.display = 'block';
+    this.dragGhost.style.left = (touch.clientX - 30) + 'px';
+    this.dragGhost.style.top = (touch.clientY - 15) + 'px';
+
+    const onMove = (e2) => {
+      e2.preventDefault();
+      const t = e2.touches[0];
+      this.dragGhost.style.left = (t.clientX - 30) + 'px';
+      this.dragGhost.style.top = (t.clientY - 15) + 'px';
+    };
+
+    const onEnd = (e2) => {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+      this.dragGhost.style.display = 'none';
+      this.isDragging = false;
+
+      const t = e2.changedTouches[0];
+      const canvas = this.gameState.renderer.canvas;
+      const rect = canvas.getBoundingClientRect();
+      const x = t.clientX - rect.left;
+      const y = t.clientY - rect.top;
+
+      if (x >= 0 && y >= 0 && x <= canvas.width && y <= canvas.height) {
+        const gridSize = 20;
+        const snappedX = Math.round(x / gridSize) * gridSize - GateTypes[gateType].width / 2;
+        const snappedY = Math.round(y / gridSize) * gridSize - GateTypes[gateType].height / 2;
+        this.gameState.addGate(gateType, snappedX, snappedY);
+      }
+    };
+
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
   }
 
   // ── Controls ──
@@ -542,6 +586,36 @@ class UI {
       row.appendChild(date);
       container.appendChild(row);
     });
+  }
+
+  // ── Onboarding ──
+  setupOnboarding() {
+    const dismissBtn = document.getElementById('tooltip-dismiss');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => this.dismissOnboarding());
+    }
+  }
+
+  showOnboarding() {
+    try {
+      if (localStorage.getItem('signal-circuit-onboarded') === 'true') return;
+    } catch (e) {}
+
+    const tooltip = document.getElementById('onboarding-tooltip');
+    if (!tooltip) return;
+
+    const text = document.getElementById('tooltip-text');
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    text.textContent = isMobile ? 'Tap a pin to start drawing a wire' : 'Click a pin to start drawing a wire';
+    tooltip.style.display = 'block';
+  }
+
+  dismissOnboarding() {
+    const tooltip = document.getElementById('onboarding-tooltip');
+    if (tooltip) tooltip.style.display = 'none';
+    try {
+      localStorage.setItem('signal-circuit-onboarded', 'true');
+    } catch (e) {}
   }
 
   // ── Gate Count Display (for sandbox and challenges) ──

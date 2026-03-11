@@ -378,6 +378,11 @@ class GameState {
     this.ui.updateResultDisplay('idle', 'Build your circuit, then press RUN');
     this.ui.hideStarDisplay();
     this.ui.updateStatusBar(`Level ${level.id}: ${level.title}`);
+
+    // Show onboarding tooltip on Level 1
+    if (level.id === 1) {
+      this.ui.showOnboarding();
+    }
   }
 
   loadChallengeLevel(level) {
@@ -517,6 +522,104 @@ class GameState {
     let dragOffsetX = 0;
     let dragOffsetY = 0;
 
+    // ── Touch support ──
+    let longPressTimer = null;
+    let touchMoved = false;
+
+    const getTouchPos = (touch) => {
+      const rect = canvas.getBoundingClientRect();
+      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+    };
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (this.isAnimating) return;
+      const touch = e.touches[0];
+      const pos = getTouchPos(touch);
+      touchMoved = false;
+
+      // Long-press timer for deletion
+      longPressTimer = setTimeout(() => {
+        if (touchMoved) return;
+        // Delete gate or wire under finger
+        const wire = this.wireManager.findWireAt(pos.x, pos.y);
+        if (wire) {
+          this.audio.playWireDisconnect();
+          this.undoManager.push({ type: 'removeWire', fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
+          this.wireManager.removeWire(wire);
+          longPressTimer = null;
+          return;
+        }
+        const gate = this.renderer.findGateAt(pos.x, pos.y);
+        if (gate) {
+          this.removeGate(gate);
+          longPressTimer = null;
+          return;
+        }
+      }, 500);
+
+      // Pin tap for wire drawing
+      const pin = this.renderer.findPinAt(pos.x, pos.y);
+      if (pin) {
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        if (this.wireManager.drawing) {
+          const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+          if (wire) {
+            this.audio.playWireConnect();
+            this.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
+          }
+        } else {
+          this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+        }
+        this.wireManager.selectedWire = null;
+        return;
+      }
+
+      if (this.wireManager.drawing) {
+        this.wireManager.cancelDrawing();
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        return;
+      }
+
+      // Gate drag
+      const gate = this.renderer.findGateAt(pos.x, pos.y);
+      if (gate) {
+        this.selectedGate = gate;
+        isDraggingGate = true;
+        dragGate = gate;
+        dragOffsetX = pos.x - gate.x;
+        dragOffsetY = pos.y - gate.y;
+        return;
+      }
+
+      this.selectedGate = null;
+      this.wireManager.selectedWire = null;
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const pos = getTouchPos(touch);
+      touchMoved = true;
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+
+      this.wireManager.updateMouse(pos.x, pos.y);
+
+      if (isDraggingGate && dragGate) {
+        const gridSize = 20;
+        dragGate.x = Math.round((pos.x - dragOffsetX) / gridSize) * gridSize;
+        dragGate.y = Math.round((pos.y - dragOffsetY) / gridSize) * gridSize;
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      isDraggingGate = false;
+      dragGate = null;
+    }, { passive: false });
+
+    // ── Mouse support ──
     canvas.addEventListener('mousedown', (e) => {
       if (this.isAnimating) return;
       const pos = this.renderer.getMousePos(e);
