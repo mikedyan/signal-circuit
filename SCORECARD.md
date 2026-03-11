@@ -11,3 +11,4 @@
 | 10 | 82 | 82 | 82 | 82 | +2 | Addictiveness & retention |
 | 11 | 83 | 83 | 83 | 83 | +1 | Final polish & juice |
 | 12 | 84 | 84 | 84 | 84 | +1 | Push for 85+ |
+| 13 | 86 | 86 | 86 | 86 | +2 | Final sweep & ship |
