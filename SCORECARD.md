@@ -12,3 +12,4 @@
 | 11 | 83 | 83 | 83 | 83 | +1 | Final polish & juice |
 | 12 | 84 | 84 | 84 | 84 | +1 | Push for 85+ |
 | 13 | 86 | 86 | 86 | 86 | +2 | Final sweep & ship |
+| 15 | 89 | 91 | 87 | 89 | +3 | Difficulty curve (bridge levels between chapters) |
