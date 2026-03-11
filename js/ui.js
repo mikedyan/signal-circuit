@@ -630,6 +630,14 @@ class UI {
     } catch (e) {}
   }
 
+  // ── Hint Display ──
+  showHint(text, hintNum, totalHints) {
+    const el = document.getElementById('hint-display');
+    if (!el) return;
+    el.innerHTML = `<div class="hint-label">Hint ${hintNum}/${totalHints}</div>${text}`;
+    el.style.display = 'block';
+  }
+
   // ── Gate Count Display (for sandbox and challenges) ──
   updateGateCount() {
     const el = document.getElementById('gate-count-display');

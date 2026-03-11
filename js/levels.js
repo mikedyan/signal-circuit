@@ -11,6 +11,11 @@ const LEVELS = [
     id: 1,
     title: 'AND Gate Basics',
     description: 'Connect the two inputs through an AND gate to the output. Output is 1 only when BOTH inputs are 1.',
+    hints: [
+      'Drag an AND gate from the toolbox onto the breadboard.',
+      'Connect input A to the top pin of the AND gate, and B to the bottom pin.',
+      'Connect the AND gate\'s output (right side) to the OUT node.'
+    ],
     availableGates: ['AND'],
     optimalGates: 1,
     goodGates: 1,
@@ -32,6 +37,11 @@ const LEVELS = [
     id: 2,
     title: 'NOT Gate — Inversion',
     description: 'Connect the input through a NOT gate to the output. Output is the OPPOSITE of the input.',
+    hints: [
+      'NOT gates flip the signal: 0 becomes 1, and 1 becomes 0.',
+      'Place a NOT gate between input A and the output.',
+      'Wire: A → NOT input, NOT output → OUT.'
+    ],
     availableGates: ['NOT'],
     optimalGates: 1,
     goodGates: 1,
@@ -50,6 +60,11 @@ const LEVELS = [
     id: 3,
     title: 'OR Gate — Any Will Do',
     description: 'Use an OR gate. Output is 1 when ANY input is 1. Output is 0 only when both are 0.',
+    hints: [
+      'OR gate: if either input is 1, the output is 1.',
+      'Place an OR gate and connect both inputs to it.',
+      'Wire: A → OR top, B → OR bottom, OR output → OUT.'
+    ],
     availableGates: ['OR'],
     optimalGates: 1,
     goodGates: 1,
@@ -70,7 +85,12 @@ const LEVELS = [
   {
     id: 4,
     title: 'Build a NAND',
-    description: 'Combine AND and NOT to build NAND. Output is 0 ONLY when both inputs are 1.',
+    description: 'Build NAND: the opposite of AND. Look at the truth table — it\'s AND but with every output flipped! NAND = NOT(AND). You need TWO gates for this.',
+    hints: [
+      'NAND means "NOT AND" — first compute AND, then flip the result.',
+      'Place an AND gate, connect both inputs to it. Then place a NOT gate after it.',
+      'Wire: A,B → AND → NOT → OUT. The NOT flips the AND result to get NAND.'
+    ],
     availableGates: ['AND', 'NOT'],
     optimalGates: 2,
     goodGates: 3,
@@ -91,7 +111,12 @@ const LEVELS = [
   {
     id: 5,
     title: 'Build a NOR',
-    description: 'Combine OR and NOT to build NOR. Output is 1 ONLY when both inputs are 0.',
+    description: 'Build NOR: the opposite of OR. Compare the truth table to level 3 — every output is flipped! NOR = NOT(OR). Same trick as NAND, different gate.',
+    hints: [
+      'NOR means "NOT OR" — compute OR first, then invert with NOT.',
+      'Place an OR gate for the inputs, then a NOT gate on its output.',
+      'Wire: A,B → OR → NOT → OUT. Same pattern as NAND but with OR instead of AND.'
+    ],
     availableGates: ['OR', 'NOT'],
     optimalGates: 2,
     goodGates: 3,
@@ -114,7 +139,12 @@ const LEVELS = [
   {
     id: 6,
     title: 'XOR — Exclusive Or',
-    description: 'Meet the XOR gate! Output is 1 when inputs DIFFER. Connect it up.',
+    description: 'XOR (exclusive or) outputs 1 when the inputs are DIFFERENT. Same inputs = 0, different inputs = 1. Simple one-gate solution.',
+    hints: [
+      'XOR is like OR but excludes the case where both are 1.',
+      'This is a single-gate level — just connect through the XOR gate.',
+      'Wire: A → XOR top, B → XOR bottom, XOR output → OUT.'
+    ],
     availableGates: ['XOR'],
     optimalGates: 1,
     goodGates: 1,
@@ -135,7 +165,12 @@ const LEVELS = [
   {
     id: 7,
     title: 'XNOR — Same Detector',
-    description: 'Build XNOR: output 1 when both inputs are the SAME. Hint: XOR + NOT.',
+    description: 'Build XNOR: outputs 1 when both inputs are the SAME. It\'s the opposite of XOR — same pattern as NAND/NOR: combine a gate with NOT.',
+    hints: [
+      'XNOR = NOT(XOR). Same pattern you learned in levels 4 and 5!',
+      'Place a XOR gate, then invert its output with NOT.',
+      'Wire: A,B → XOR → NOT → OUT.'
+    ],
     availableGates: ['XOR', 'NOT'],
     optimalGates: 2,
     goodGates: 3,
@@ -156,7 +191,12 @@ const LEVELS = [
   {
     id: 8,
     title: 'AND from OR + NOT',
-    description: 'Build AND behavior using ONLY OR and NOT gates. Think De Morgan!',
+    description: 'Build AND using ONLY OR and NOT gates. De Morgan\'s law says: AND(A,B) = NOT(OR(NOT(A), NOT(B))). Invert both inputs, OR them, then invert the result.',
+    hints: [
+      'De Morgan\'s law: AND(A,B) = NOT(OR(NOT(A), NOT(B))).',
+      'First invert each input with NOT gates: NOT(A) and NOT(B). Then OR them together.',
+      'Finally, invert the OR result with a third NOT: NOT(A),NOT(B) → OR → NOT → OUT. Total: 4 gates.'
+    ],
     availableGates: ['OR', 'NOT'],
     optimalGates: 4,
     goodGates: 5,
@@ -177,7 +217,12 @@ const LEVELS = [
   {
     id: 9,
     title: 'OR from AND + NOT',
-    description: 'Build OR behavior using ONLY AND and NOT gates. De Morgan strikes again!',
+    description: 'Build OR using ONLY AND and NOT gates. De Morgan\'s other law: OR(A,B) = NOT(AND(NOT(A), NOT(B))). Same pattern as level 8 but swapped!',
+    hints: [
+      'De Morgan\'s law: OR(A,B) = NOT(AND(NOT(A), NOT(B))).',
+      'Invert each input with NOT gates, then AND the results together.',
+      'Finally, invert the AND result: NOT(A),NOT(B) → AND → NOT → OUT. Mirror of level 8.'
+    ],
     availableGates: ['AND', 'NOT'],
     optimalGates: 4,
     goodGates: 5,
@@ -198,7 +243,12 @@ const LEVELS = [
   {
     id: 10,
     title: 'The Implication',
-    description: 'Build A → B (material implication): output is 0 ONLY when A=1 and B=0. Use any gates!',
+    description: 'Build A → B (material implication): output is 0 ONLY when A=1 and B=0. Think: "if A then B" — it\'s false only when A is true but B isn\'t.',
+    hints: [
+      'A → B is the same as OR(NOT(A), B). If A is false, the implication is always true.',
+      'Invert A with NOT, then OR the result with B.',
+      'Wire: A → NOT → OR (top pin), B → OR (bottom pin), OR → OUT. Just 2 gates!'
+    ],
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 2,
     goodGates: 3,

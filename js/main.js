@@ -56,6 +56,10 @@ class GameState {
     this.isSandboxMode = false;
     this.isChallengeMode = false;
     this.audio = new AudioEngine();
+    this.hintsUsed = 0;
+    this.maxHintPenalty = 0; // 0 = no penalty, 1 = max 2 stars, 2 = max 1 star
+    this.levelStartTime = null;
+    this.skipVisible = false;
   }
 
   init() {
@@ -65,6 +69,7 @@ class GameState {
 
     this.setupCanvasEvents(canvas);
     this.setupMuteButton();
+    this.setupHintAndSkip();
     this.ui.showScreen('level-select');
   }
 
@@ -153,9 +158,16 @@ class GameState {
   }
 
   calculateStars(gateCount, level) {
-    if (gateCount <= level.optimalGates) return 3;
-    if (gateCount <= level.goodGates) return 2;
-    return 1;
+    let stars;
+    if (gateCount <= level.optimalGates) stars = 3;
+    else if (gateCount <= level.goodGates) stars = 2;
+    else stars = 1;
+
+    // Hint penalty reduces max stars
+    if (this.maxHintPenalty >= 2) stars = Math.min(stars, 1);
+    else if (this.maxHintPenalty >= 1) stars = Math.min(stars, 2);
+
+    return stars;
   }
 
   completeLevel(levelId, gateCount) {
@@ -240,6 +252,69 @@ class GameState {
         this.loadLevel(levelId);
       }
     }, 100);
+  }
+
+  setupHintAndSkip() {
+    document.getElementById('hint-btn').addEventListener('click', () => {
+      if (!this.currentLevel || !this.currentLevel.hints) return;
+      if (this.hintsUsed >= this.currentLevel.hints.length) return;
+      if (this.isSandboxMode || this.isChallengeMode) return;
+
+      this.hintsUsed++;
+      if (this.hintsUsed >= 2) this.maxHintPenalty = Math.max(this.maxHintPenalty, this.hintsUsed - 1);
+      this.audio.playButtonClick();
+      this.ui.showHint(this.currentLevel.hints[this.hintsUsed - 1], this.hintsUsed, this.currentLevel.hints.length);
+
+      // Update hint button text
+      const hintBtn = document.getElementById('hint-btn');
+      if (this.hintsUsed >= this.currentLevel.hints.length) {
+        hintBtn.disabled = true;
+        hintBtn.textContent = '💡 No more hints';
+        // Show skip after all hints used
+        this.showSkipButton();
+      } else {
+        hintBtn.textContent = `💡 Hint ${this.hintsUsed + 1}/${this.currentLevel.hints.length}`;
+      }
+    });
+
+    document.getElementById('skip-btn').addEventListener('click', () => {
+      if (!this.currentLevel || this.isChallengeMode || this.isSandboxMode) return;
+      if (confirm('Skip this level? You\'ll earn 0 stars.')) {
+        this.completeLevel(this.currentLevel.id, 999); // 999 gates = 0 stars
+        this.audio.playButtonClick();
+        this.showLevelSelect();
+      }
+    });
+
+    // Timer to show skip after 60 seconds
+    this._skipTimer = null;
+  }
+
+  showSkipButton() {
+    if (this.skipVisible) return;
+    this.skipVisible = true;
+    document.getElementById('skip-btn').style.display = '';
+  }
+
+  resetHintState() {
+    this.hintsUsed = 0;
+    this.maxHintPenalty = 0;
+    this.skipVisible = false;
+    this.levelStartTime = Date.now();
+
+    const hintBtn = document.getElementById('hint-btn');
+    hintBtn.disabled = false;
+    hintBtn.textContent = '💡 Hint';
+    document.getElementById('skip-btn').style.display = 'none';
+    document.getElementById('hint-display').style.display = 'none';
+
+    // Show skip after 60 seconds
+    if (this._skipTimer) clearTimeout(this._skipTimer);
+    this._skipTimer = setTimeout(() => {
+      if (this.currentScreen === 'gameplay' && !this.isChallengeMode && !this.isSandboxMode) {
+        this.showSkipButton();
+      }
+    }, 60000);
   }
 
   // ── Game State ──
@@ -411,6 +486,16 @@ class GameState {
     this.ui.updateResultDisplay('idle', 'Build your circuit, then press RUN');
     this.ui.hideStarDisplay();
     this.ui.updateStatusBar(`Level ${level.id}: ${level.title}`);
+    this.resetHintState();
+
+    // Hide hint/skip for non-story levels
+    const hintBtn = document.getElementById('hint-btn');
+    if (!level.hints || level.hints.length === 0) {
+      hintBtn.style.display = 'none';
+    } else {
+      hintBtn.style.display = '';
+      hintBtn.textContent = '💡 Hint';
+    }
 
     // Show onboarding tooltip on Level 1
     if (level.id === 1) {
