@@ -65,6 +65,7 @@ class GameState {
     this.levelStartTime = null;
     this.skipVisible = false;
     this.activeHintHighlights = null; // Array of I/O labels to highlight for visual hint
+    this.needsRender = true;
   }
 
   init() {
@@ -83,6 +84,10 @@ class GameState {
       const intro = document.getElementById('intro-screen');
       if (intro) intro.remove();
     }, 1800);
+  }
+
+  markDirty() {
+    this.needsRender = true;
   }
 
   setupMuteButton() {
@@ -403,6 +408,7 @@ class GameState {
       });
     }
     this.ui.updateGateIndicator();
+    this.markDirty();
     return gate;
   }
 
@@ -428,11 +434,13 @@ class GameState {
       });
     }
     this.ui.updateGateIndicator();
+    this.markDirty();
   }
 
   addWireFromData(fromGateId, fromPinIndex, toGateId, toPinIndex) {
     const wire = new Wire(fromGateId, fromPinIndex, toGateId, toPinIndex, this.wireManager.nextId++);
     this.wireManager.wires.push(wire);
+    this.markDirty();
     return wire;
   }
 
@@ -466,6 +474,7 @@ class GameState {
     }
     this.ui.updateStatusBar('Undo');
     this.ui.updateGateIndicator();
+    this.markDirty();
   }
 
   performRedo() {
@@ -498,6 +507,7 @@ class GameState {
     }
     this.ui.updateStatusBar('Redo');
     this.ui.updateGateIndicator();
+    this.markDirty();
   }
 
   // Scale level positions to fit the actual canvas
@@ -569,6 +579,7 @@ class GameState {
     }
 
     this.ui.updateGateIndicator();
+    this.markDirty();
   }
 
   loadChallengeLevel(level) {
@@ -606,6 +617,7 @@ class GameState {
     this.ui.hideStarDisplay();
     this.ui.updateStatusBar(level.isSandbox ? 'Sandbox Mode' : `Challenge: ${level.title}`);
     this.ui.updateGateIndicator();
+    this.markDirty();
   }
 
   clearCircuit() {
@@ -619,6 +631,7 @@ class GameState {
 
     this.ui.updateTruthTable(null);
     this.ui.updateGateIndicator();
+    this.markDirty();
   }
 
   async runSimulation() {
@@ -746,6 +759,7 @@ class GameState {
           this.audio.playWireDisconnect();
           this.undoManager.push({ type: 'removeWire', fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
           this.wireManager.removeWire(wire);
+          this.markDirty();
           longPressTimer = null;
           return;
         }
@@ -767,9 +781,11 @@ class GameState {
             this.audio.playWireConnect();
             this.renderer.spawnSparks(pin.x, pin.y);
             this.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
+            this.markDirty();
           }
         } else {
           this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+          this.markDirty();
         }
         this.wireManager.selectedWire = null;
         return;
@@ -809,6 +825,7 @@ class GameState {
         const gridSize = 20;
         dragGate.x = Math.round((pos.x - dragOffsetX) / gridSize) * gridSize;
         dragGate.y = Math.round((pos.y - dragOffsetY) / gridSize) * gridSize;
+        this.markDirty();
       }
     }, { passive: false });
 
@@ -839,9 +856,11 @@ class GameState {
               toGateId: wire.toGateId,
               toPinIndex: wire.toPinIndex,
             });
+            this.markDirty();
           }
         } else {
           this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+          this.markDirty();
         }
         this.wireManager.selectedWire = null;
         return;
@@ -885,6 +904,7 @@ class GameState {
         const gridSize = 20;
         dragGate.x = Math.round((pos.x - dragOffsetX) / gridSize) * gridSize;
         dragGate.y = Math.round((pos.y - dragOffsetY) / gridSize) * gridSize;
+        this.markDirty();
       }
 
       if (pin) {
@@ -919,6 +939,7 @@ class GameState {
           toPinIndex: wire.toPinIndex,
         });
         this.wireManager.removeWire(wire);
+        this.markDirty();
         return;
       }
 
@@ -943,6 +964,7 @@ class GameState {
             toPinIndex: wire.toPinIndex,
           });
           this.wireManager.removeWire(wire);
+          this.markDirty();
         } else if (this.selectedGate) {
           this.removeGate(this.selectedGate);
         }
@@ -969,7 +991,14 @@ class GameState {
   startRenderLoop() {
     const loop = () => {
       if (this.currentScreen === 'gameplay') {
-        this.renderer.render();
+        // Always render during animation, otherwise only when dirty
+        const sim = this.simulation;
+        if (this.needsRender || (sim && sim.animating) || 
+            this.renderer.sparkParticles.length > 0 ||
+            this.wireManager.drawing) {
+          this.renderer.render();
+          this.needsRender = false;
+        }
       }
       requestAnimationFrame(loop);
     };
