@@ -423,9 +423,9 @@ const LEVELS = [
     description: 'The boss level! Add three single-bit numbers (A + B + carry-in) and produce SUM and CARRY outputs.',
     postSolveInsight: '🔓 Full Adder: SUM = XOR(XOR(A,B), Cin), CARRY = OR(AND(A,B), AND(Cin, XOR(A,B))). Chain these together and you\'ve built a CPU\'s arithmetic unit!',
     hints: [
-      'Like the half adder but with a carry-in. Think of it as two stages of addition.',
-      'You need 5 gates. First add two inputs, then fold in the carry-in for both outputs.',
-      'The SUM uses chained same-type operations. The CARRY combines two separate "overflow" conditions.'
+      'Think of it as two half-adders chained together. What does a half adder (Level 11) produce?',
+      '5 gates total. First, add A and B (like Level 11). Then add that partial result with Cin. The carries from both additions combine.',
+      'SUM comes from XORing inputs step by step. CARRY is trickier — there are two situations that generate a carry. OR them together.'
     ],
     hintHighlights: ['A', 'B', 'Cin', 'SUM', 'CARRY'],
     availableGates: ['AND', 'OR', 'XOR'],
