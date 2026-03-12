@@ -1,0 +1,158 @@
+{
+  "day": 22,
+  "title": "Mobile, Accessibility & Social Infrastructure + Juice Polish",
+  "summary": "Addresses the Day 21 review's top priority (juice/polish visibility) while executing Day 22 ROADMAP items. First batch: dramatically amplify ripple and tension effects (review fix), then add ambient soundscape, increase mobile touch targets, add mobile delete button, add colorblind mode, improve sandbox, add service worker for offline PWA, improve daily challenge sharing, add bridge levels, and begin generative music foundations. Priority: juice fixes from review → P1 mobile/accessibility → P2 content.",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Amplify Juice Effects (Review Priority)",
+      "description": "Day 21 review scored juice at 6-7. Fix: Double gate ripple maxRadius from 80 to 160px. Increase RUN tension overlay from 0.2 opacity/350ms to 0.4 opacity/600ms. Add screen shake on simulation failure. Make celebration particles more dramatic.",
+      "files_to_modify": ["js/canvas.js", "js/main.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Gate placement ripple radius is 160px (doubled from 80)",
+        "RUN tension overlay is visibly darker (0.4 opacity) and lasts 600ms",
+        "Simulation failure triggers a brief screen shake on the canvas container",
+        "Celebration particle count increased by 50%",
+        "All effects remain smooth with no frame drops"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "title": "Add Ambient Soundscape Layer",
+      "description": "Add subtle ambient bed: lowpass-filtered noise at ~0.03 volume, barely-perceptible hum, slow LFO on filter cutoff. Activates when entering gameplay screen, stops on level select.",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Ambient sound plays during gameplay screen only",
+        "Volume is barely perceptible (~0.03 master)",
+        "Sound stops cleanly when returning to level select",
+        "Works with existing mute toggle",
+        "No audio clicks or pops on start/stop"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "title": "Increase Mobile Touch Targets",
+      "description": "Increase pin hit threshold on mobile from 26px to 36px. Make pin circles visually larger (8px radius). Add connection zone highlight matching hitbox on mobile.",
+      "files_to_modify": ["js/canvas.js", "js/gates.js"],
+      "acceptance_criteria": [
+        "Mobile pin hit threshold is 36px (up from 26px)",
+        "Pin circles render at 8px radius on mobile (vs 5px desktop)",
+        "Compatible pin highlights match the larger hitbox",
+        "No regression on desktop hit testing"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "title": "Add Explicit Mobile Delete Button",
+      "description": "When a gate or wire is selected on mobile, show a floating delete button near the selection. Keep long-press as power-user shortcut.",
+      "files_to_modify": ["js/ui.js", "js/main.js", "css/style.css", "index.html"],
+      "acceptance_criteria": [
+        "Tapping a gate on mobile shows a floating 🗑 delete button near the gate",
+        "Tapping a wire shows delete button near wire midpoint",
+        "Delete button disappears when tapping elsewhere",
+        "Desktop behavior unchanged (right-click/delete key still works)",
+        "Delete button has proper touch target (44px minimum)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "title": "Add Colorblind Mode",
+      "description": "Add shape redundancy to pass/fail indicators (✓/✗ symbols alongside colors), alternative wire palette using patterns, and a toggle in settings.",
+      "files_to_modify": ["js/ui.js", "js/canvas.js", "js/wires.js", "css/style.css", "index.html"],
+      "acceptance_criteria": [
+        "A colorblind toggle exists (gear icon or settings)",
+        "Pass/fail rows show ✓/✗ symbols regardless of mode (already present)",
+        "Wire colors use a deuteranopia-safe palette when enabled",
+        "Gate type labels remain visible (already text-based)",
+        "Setting persists in localStorage"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "title": "Improve Sandbox Mode",
+      "description": "Add configurable I/O count (2-4 inputs, 1-2 outputs) via sliders before entering sandbox. Show 'Circuit Analysis' revealing what the player built.",
+      "files_to_modify": ["js/levels.js", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "Sandbox has input/output count sliders (2-4 inputs, 1-2 outputs)",
+        "Sandbox config appears before entering sandbox",
+        "All 4 gate types available regardless of config",
+        "Truth table updates correctly for chosen I/O count"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "title": "Add Service Worker for Offline PWA",
+      "description": "Add minimal cache-first service worker. Register in index.html. Cache all JS, CSS, and HTML for true offline play.",
+      "files_to_modify": ["sw.js", "index.html"],
+      "acceptance_criteria": [
+        "sw.js exists with cache-first strategy",
+        "All game assets cached on first visit",
+        "Game works fully offline after first load",
+        "Service worker registered in index.html",
+        "Cache version incrementable for updates"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "title": "Daily Challenge Share Card Enhancement",
+      "description": "Improve the share button text format. Add gate count ranking against local history. Show streak count if player has consecutive daily completions.",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Share text includes a gate-count comparison vs personal best",
+        "Daily streak counter tracks consecutive daily completions",
+        "Streak shown in share text when > 1",
+        "Share card looks clean when pasted into messages"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "title": "Add Bridge Levels Between Chapters",
+      "description": "Add 2 transitional levels: Level 5.5 (AND+OR combo before Ch2) and Level 10.5 (2-input multi-output before Ch3). Renumber to maintain sequence.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Two new bridge levels exist in the campaign",
+        "Bridge level between Ch1 and Ch2 uses AND+OR+NOT",
+        "Bridge level between Ch2 and Ch3 introduces multi-output with 2 inputs",
+        "Star thresholds are calibrated for bridge levels",
+        "Total level count increases to 17",
+        "All existing level references still work"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "title": "Add Generative Music Foundation",
+      "description": "Create a basic music system that plays a subtle evolving pad during gameplay. Simple: low-volume chord tones that shift when simulation runs. Foundation for future expansion.",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "Subtle background music plays during gameplay (volume ~0.04)",
+        "Music uses warm pad tones (sine waves with slow attack)",
+        "Chord changes when simulation starts (tension chord) and resolves on success",
+        "Music stops on level select screen",
+        "Mute toggle controls music",
+        "Music doesn't conflict with SFX"
+      ],
+      "depends_on": ["T2"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Juice effects are dramatically more visible than Day 21",
+    "Mobile touch targets are accurate and not overlapping",
+    "Mobile delete button appears/disappears correctly",
+    "Colorblind mode toggle works and persists",
+    "Service worker caches all assets correctly",
+    "Bridge levels have appropriate difficulty",
+    "Ambient sound + music don't create audio conflicts",
+    "All existing features still work (regression)"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

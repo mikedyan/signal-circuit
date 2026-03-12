@@ -20,7 +20,120 @@ class UI {
     this.setupShortcutsOverlay();
     this.setupAchievements();
     this.setupHowToPlay();
+    this.setupColorblindToggle();
+    this.setupSandboxConfig();
+    this.setupMobileDelete();
     this.adaptCopyForPlatform();
+  }
+
+  // ── Colorblind Mode Toggle ──
+  setupColorblindToggle() {
+    const btn = document.getElementById('colorblind-toggle-btn');
+    if (!btn) return;
+
+    // Load saved state
+    let isColorblind = false;
+    try {
+      isColorblind = localStorage.getItem('signal-circuit-colorblind') === 'true';
+    } catch (e) {}
+
+    if (isColorblind) {
+      document.body.classList.add('colorblind-mode');
+      btn.textContent = '👁 Colorblind Mode: On';
+      btn.classList.add('active');
+    }
+
+    btn.addEventListener('click', () => {
+      isColorblind = !isColorblind;
+      document.body.classList.toggle('colorblind-mode', isColorblind);
+      btn.textContent = isColorblind ? '👁 Colorblind Mode: On' : '👁 Colorblind Mode: Off';
+      btn.classList.toggle('active', isColorblind);
+      try {
+        localStorage.setItem('signal-circuit-colorblind', isColorblind ? 'true' : 'false');
+      } catch (e) {}
+    });
+  }
+
+  // ── Sandbox Config ──
+  setupSandboxConfig() {
+    const backBtn = document.getElementById('sandbox-back-btn');
+    const startBtn = document.getElementById('start-sandbox-btn');
+    const inputSlider = document.getElementById('sandbox-input-slider');
+    const outputSlider = document.getElementById('sandbox-output-slider');
+    const inputLabel = document.getElementById('sandbox-input-label');
+    const outputLabel = document.getElementById('sandbox-output-label');
+
+    if (!backBtn || !startBtn) return;
+
+    if (inputSlider) {
+      inputSlider.addEventListener('input', () => {
+        inputLabel.textContent = inputSlider.value;
+      });
+    }
+    if (outputSlider) {
+      outputSlider.addEventListener('input', () => {
+        outputLabel.textContent = outputSlider.value;
+      });
+    }
+
+    backBtn.addEventListener('click', () => {
+      this.gameState.showLevelSelect();
+    });
+
+    startBtn.addEventListener('click', () => {
+      const ni = parseInt(inputSlider.value);
+      const no = parseInt(outputSlider.value);
+      this.gameState.startSandbox(ni, no);
+    });
+  }
+
+  // ── Mobile Delete Button ──
+  setupMobileDelete() {
+    if (!this.isTouchDevice) return;
+
+    const deleteBtn = document.getElementById('mobile-delete-btn');
+    if (!deleteBtn) return;
+
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const gs = this.gameState;
+
+      if (gs.wireManager.selectedWire) {
+        gs.audio.playWireDisconnect();
+        const wire = gs.wireManager.selectedWire;
+        gs.undoManager.push({
+          type: 'removeWire',
+          fromGateId: wire.fromGateId,
+          fromPinIndex: wire.fromPinIndex,
+          toGateId: wire.toGateId,
+          toPinIndex: wire.toPinIndex,
+        });
+        gs.wireManager.removeWire(wire);
+        gs.markDirty();
+      } else if (gs.selectedGate) {
+        gs.removeGate(gs.selectedGate);
+      }
+
+      this.hideMobileDelete();
+    });
+  }
+
+  showMobileDelete(x, y) {
+    if (!this.isTouchDevice) return;
+    const btn = document.getElementById('mobile-delete-btn');
+    if (!btn) return;
+
+    const canvas = this.gameState.renderer.canvas;
+    const rect = canvas.getBoundingClientRect();
+
+    btn.style.display = 'flex';
+    btn.style.left = (rect.left + x - 24) + 'px';
+    btn.style.top = (rect.top + y - 60) + 'px';
+  }
+
+  hideMobileDelete() {
+    const btn = document.getElementById('mobile-delete-btn');
+    if (btn) btn.style.display = 'none';
   }
 
   // ── Platform-Adaptive Copy ──
@@ -165,9 +278,10 @@ class UI {
   }
 
   showScreen(screen) {
-    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen'];
+    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen'];
     for (const id of screens) {
       const el = document.getElementById(id);
+      if (!el) continue;
       const shouldShow = id === screen + '-screen';
       if (shouldShow) {
         el.style.display = 'flex';
@@ -687,9 +801,9 @@ class UI {
       this.gameState.startDailyChallenge();
     });
 
-    // Sandbox button on level select
+    // Sandbox button on level select — show config screen
     document.getElementById('sandbox-btn').addEventListener('click', () => {
-      this.gameState.startSandbox();
+      this.gameState.showSandboxConfig();
     });
 
     // Challenge config back button
@@ -799,7 +913,49 @@ class UI {
       const starEmoji = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
       const mins = Math.floor(elapsed / 60);
       const secs = elapsed % 60;
-      const text = `⚡ Signal Circuit — Daily Challenge\n📅 ${dateStr}\n${starEmoji} ${gateCount} gates | ⏱ ${mins}:${secs.toString().padStart(2, '0')}\nhttps://mikedyan.github.io/signal-circuit/`;
+
+      // Daily streak tracking
+      let streak = 0;
+      try {
+        const streakData = JSON.parse(localStorage.getItem('signal-circuit-daily-streak') || '{}');
+        const todayKey = today.toISOString().slice(0, 10);
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+        if (streakData.lastDate === yesterdayKey) {
+          streak = (streakData.count || 0) + 1;
+        } else if (streakData.lastDate === todayKey) {
+          streak = streakData.count || 1;
+        } else {
+          streak = 1;
+        }
+        localStorage.setItem('signal-circuit-daily-streak', JSON.stringify({ lastDate: todayKey, count: streak }));
+      } catch (e) { streak = 1; }
+
+      // Personal best comparison
+      let pbText = '';
+      try {
+        const pb = JSON.parse(localStorage.getItem('signal-circuit-daily-pb') || '{}');
+        const todayKey = today.toISOString().slice(0, 10);
+        if (pb.date !== todayKey || !pb.gates) {
+          pb.date = todayKey;
+          pb.gates = gateCount;
+          localStorage.setItem('signal-circuit-daily-pb', JSON.stringify(pb));
+          pbText = '🆕 First attempt today!';
+        } else if (gateCount < pb.gates) {
+          pbText = `📉 New personal best! (was ${pb.gates} gates)`;
+          pb.gates = gateCount;
+          localStorage.setItem('signal-circuit-daily-pb', JSON.stringify(pb));
+        } else if (gateCount === pb.gates) {
+          pbText = '🎯 Matched personal best!';
+        } else {
+          pbText = `📊 Personal best: ${pb.gates} gates`;
+        }
+      } catch (e) {}
+
+      const streakText = streak > 1 ? `\n🔥 ${streak}-day streak` : '';
+      const text = `⚡ Signal Circuit — Daily Challenge\n📅 ${dateStr}\n${starEmoji} ${gateCount} gates | ⏱ ${mins}:${secs.toString().padStart(2, '0')}${streakText}\nhttps://mikedyan.github.io/signal-circuit/`;
       navigator.clipboard.writeText(text).then(() => {
         btn.textContent = '✓ Copied!';
         setTimeout(() => {
@@ -1166,8 +1322,8 @@ class UI {
     this.celebrationActive = true;
     this.celebrationParticles = [];
 
-    // Scale effects by star rating
-    const particleCount = stars === 3 ? 120 : stars === 2 ? 60 : 30;
+    // Scale effects by star rating (amplified for Day 22 juice)
+    const particleCount = stars === 3 ? 180 : stars === 2 ? 100 : 45;
     const useFlash = stars >= 2;
     const flashDuration = stars === 3 ? 900 : 600;
 

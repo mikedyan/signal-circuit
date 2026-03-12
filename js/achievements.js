@@ -17,9 +17,9 @@ const ACHIEVEMENTS = [
   { id: 'challenge_5', name: 'Challenger', desc: 'Complete 5 random challenges', icon: '🎲', tier: 'silver' },
 
   // Gold — Mastery
-  { id: 'circuit_master', name: 'Circuit Master', desc: 'Complete all 15 levels', icon: '🏆', tier: 'gold' },
-  { id: 'star_collector', name: 'Star Collector', desc: 'Earn 30 total stars', icon: '🌟', tier: 'gold' },
-  { id: 'perfect_campaign', name: 'Flawless', desc: '3 stars on all 15 levels', icon: '💎', tier: 'gold' },
+  { id: 'circuit_master', name: 'Circuit Master', desc: 'Complete all 17 levels', icon: '🏆', tier: 'gold' },
+  { id: 'star_collector', name: 'Star Collector', desc: 'Earn 40 total stars', icon: '🌟', tier: 'gold' },
+  { id: 'perfect_campaign', name: 'Flawless', desc: '3 stars on all 17 levels', icon: '💎', tier: 'gold' },
   { id: 'speed_run', name: 'Lightning Run', desc: 'Complete 5 levels in under 30 seconds each', icon: '⚡', tier: 'gold' },
 ];
 
@@ -112,6 +112,7 @@ class AchievementManager {
     // Chapter completion
     const chapters = getChapters();
     for (const chapter of chapters) {
+      if (chapter.isBridge) continue;
       const allComplete = chapter.levels.every(lid => {
         const p = gameState.progress.levels[lid];
         return p && p.completed;
@@ -138,7 +139,7 @@ class AchievementManager {
       totalStars += data.stars || 0;
       if (data.stars === 3) perfectCount++;
     }
-    if (totalStars >= 30) {
+    if (totalStars >= 40) {
       if (this.unlock('star_collector')) newlyUnlocked.push('star_collector');
     }
 
@@ -148,7 +149,7 @@ class AchievementManager {
     }
 
     // Perfect Campaign
-    if (perfectCount >= 15 && allLevelsComplete) {
+    if (perfectCount >= 17 && allLevelsComplete) {
       if (this.unlock('perfect_campaign')) newlyUnlocked.push('perfect_campaign');
     }
 

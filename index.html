@@ -42,6 +42,9 @@
 
         <button id="how-to-play-btn" class="challenge-btn" style="margin-top:10px;">📖 How to Play</button>
         <button id="achievements-btn" class="challenge-btn">🏆 Achievements</button>
+        <div id="settings-row">
+          <button id="colorblind-toggle-btn" class="settings-btn">👁 Colorblind Mode: Off</button>
+        </div>
         <button id="reset-progress-btn">Reset Progress</button>
       </div>
     </div>
@@ -98,6 +101,26 @@
           <div id="leaderboard-container"></div>
           <button id="clear-leaderboard-btn">Clear Scores</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Sandbox Config Screen -->
+    <div id="sandbox-config-screen" style="display:none;">
+      <div id="sandbox-config-content">
+        <button id="sandbox-back-btn" aria-label="Back to level select">← Back</button>
+        <h2 id="sandbox-config-title">🔧 Sandbox Mode</h2>
+        <p style="color:#888;font-size:12px;margin-bottom:20px;">Free build — configure your workspace and experiment freely.</p>
+        <div id="sandbox-controls">
+          <div class="slider-group">
+            <label>Inputs: <span id="sandbox-input-label">2</span></label>
+            <input type="range" id="sandbox-input-slider" min="2" max="4" value="2">
+          </div>
+          <div class="slider-group">
+            <label>Outputs: <span id="sandbox-output-label">1</span></label>
+            <input type="range" id="sandbox-output-slider" min="1" max="2" value="1">
+          </div>
+        </div>
+        <button id="start-sandbox-btn" class="challenge-btn generate-btn">🔧 Start Sandbox</button>
       </div>
     </div>
 
@@ -205,6 +228,9 @@
   <!-- RUN Tension Overlay -->
   <div id="run-tension-overlay"></div>
 
+  <!-- Mobile delete button -->
+  <div id="mobile-delete-btn" style="display:none;">🗑</div>
+
   <!-- Drag ghost element -->
   <div id="drag-ghost"></div>
   <div id="victory-flash"></div>
@@ -221,14 +247,19 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/gates.js?v=24"></script>
-  <script src="js/wires.js?v=24"></script>
-  <script src="js/simulation.js?v=24"></script>
-  <script src="js/levels.js?v=24"></script>
-  <script src="js/audio.js?v=24"></script>
-  <script src="js/achievements.js?v=24"></script>
-  <script src="js/canvas.js?v=24"></script>
-  <script src="js/ui.js?v=24"></script>
-  <script src="js/main.js?v=24"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
+  <script src="js/gates.js?v=26"></script>
+  <script src="js/wires.js?v=26"></script>
+  <script src="js/simulation.js?v=26"></script>
+  <script src="js/levels.js?v=26"></script>
+  <script src="js/audio.js?v=26"></script>
+  <script src="js/achievements.js?v=26"></script>
+  <script src="js/canvas.js?v=26"></script>
+  <script src="js/ui.js?v=26"></script>
+  <script src="js/main.js?v=26"></script>
 </body>
 </html>

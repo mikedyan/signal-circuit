@@ -10,7 +10,16 @@ const CHAPTERS = [
     color: '#00cc44',
   },
   {
-    id: 2, title: 'Chapter 2: Combinations', levels: [6, 7, 8, 9, 10],
+    id: 'bridge-1', title: 'Bridge', levels: [6],
+    narrative: 'Signal Filtering',
+    storyIntro: 'Before accessing comms, we need to filter the noise.',
+    storyComplete: '',
+    gatesMastered: [],
+    color: '#00cc44',
+    isBridge: true,
+  },
+  {
+    id: 2, title: 'Chapter 2: Combinations', levels: [7, 8, 9, 10, 11],
     narrative: 'Communications Array',
     storyIntro: 'Communications are jammed. These combination circuits route encrypted signals.',
     storyComplete: '📡 Communications restored! We can reach mission control.',
@@ -18,7 +27,16 @@ const CHAPTERS = [
     color: '#00c8e8',
   },
   {
-    id: 3, title: 'Chapter 3: Multi-Output', levels: [11, 12, 13, 14, 15],
+    id: 'bridge-2', title: 'Bridge', levels: [12],
+    narrative: 'Multi-Channel Prep',
+    storyIntro: 'Life support needs multiple outputs. Let\'s practice routing.',
+    storyComplete: '',
+    gatesMastered: [],
+    color: '#00c8e8',
+    isBridge: true,
+  },
+  {
+    id: 3, title: 'Chapter 3: Multi-Output', levels: [13, 14, 15, 16, 17],
     narrative: 'Life Support',
     storyIntro: 'Life support is failing. These multi-output circuits control oxygen, temperature, and pressure.',
     storyComplete: '🌬️ Life support fully operational! The crew is safe.',
@@ -167,12 +185,43 @@ const LEVELS = [
     ],
   },
 
-  // ── Chapter 2: Combinations ──
+  // ── Bridge: Basics → Combinations ──
   {
     id: 6,
+    title: 'Signal Selector',
+    description: 'Use AND and NOT together: output B only when A is 0. When A is 1, output 0.',
+    postSolveInsight: '🔓 You just built an "inhibit" gate — it blocks signal B when control signal A is active. Used in priority circuits!\n🛸 Signal filtering ready for comms array.',
+    hints: [
+      'When A=0, the output should equal B. When A=1, the output should always be 0.',
+      'You need to "gate" B based on A. What if you inverted A first?',
+      'NOT(A) gives you a control signal. AND that with B to get the answer.'
+    ],
+    hintHighlights: ['A', 'B', 'OUT'],
+    availableGates: ['AND', 'OR', 'NOT'],
+    optimalGates: 2,
+    goodGates: 3,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0] },
+      { inputs: [0, 1], outputs: [1] },
+      { inputs: [1, 0], outputs: [0] },
+      { inputs: [1, 1], outputs: [0] },
+    ],
+  },
+
+  // ── Chapter 2: Combinations ──
+  {
+    id: 7,
     title: 'XOR — Exclusive Or',
     description: 'Output is 1 when the inputs are DIFFERENT. Same inputs give 0, different inputs give 1.',
     postSolveInsight: '🔓 XOR (exclusive or) is the "difference detector" — fundamental to binary addition and error-checking in data transmission.\n📡 Signal differentiator back online.',
+    // renumbered from 6
     hints: [
       'Output is 1 when inputs DIFFER. Same inputs give 0, different give 1.',
       'You have one new gate that does exactly this. Single gate solution.',
@@ -197,7 +246,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 7,
+    id: 8,
     title: 'XNOR — Same Detector',
     description: 'Study this truth table. When does the output turn on?',
     postSolveInsight: '🔓 XNOR = NOT(XOR). Also called an "equivalence gate" — it checks if two signals match. Used in comparator circuits.\n📡 Signal verification module repaired.',
@@ -225,7 +274,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 8,
+    id: 9,
     title: 'AND from OR + NOT',
     description: 'You recognize this truth table from Level 1 — but your toolbox is different this time.',
     postSolveInsight: '🔓 De Morgan\'s Law: AND(A,B) = NOT(OR(NOT(A), NOT(B))). Augustus De Morgan proved these gate equivalences in the 1800s!\n📡 Encrypted channel decoder restored.',
@@ -253,7 +302,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 9,
+    id: 10,
     title: 'OR from AND + NOT',
     description: 'Another familiar truth table, another unfamiliar toolbox. What will you discover?',
     postSolveInsight: '🔓 De Morgan\'s Other Law: OR(A,B) = NOT(AND(NOT(A), NOT(B))). AND and OR are duals — each can be built from the other plus NOT.\n📡 Redundant signal path established.',
@@ -281,7 +330,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 10,
+    id: 11,
     title: 'The Implication',
     description: 'Most of this truth table outputs 1. Study the one exception carefully.',
     postSolveInsight: '🔓 A→B = OR(NOT(A), B). Material implication is the foundation of formal logic and programming conditionals. Just 2 gates!\n📡 Communications array fully operational!',
@@ -309,9 +358,40 @@ const LEVELS = [
     ],
   },
 
+  // ── Bridge: Combinations → Multi-Output ──
+  {
+    id: 12,
+    title: 'Dual Output Router',
+    description: 'Two outputs from two inputs. Route input A to output X, and compute A OR B to output Y. Your first multi-output puzzle!',
+    postSolveInsight: '🔓 Multi-output circuits share inputs but produce independent results. This is how real chips work — one input bus, many output signals!\n📡 Multi-channel router calibrated for life support.',
+    hints: [
+      'Two separate outputs need two separate circuits — but they can share the same inputs.',
+      'Output X just needs to copy A directly. Output Y combines A and B.',
+      'X = A (just wire it). Y = A OR B. Two tasks, one workspace.'
+    ],
+    hintHighlights: ['A', 'B', 'X', 'Y'],
+    availableGates: ['AND', 'OR', 'NOT'],
+    optimalGates: 1,
+    goodGates: 2,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'X', x: 600, y: 130 },
+      { label: 'Y', x: 600, y: 270 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0, 0] },
+      { inputs: [0, 1], outputs: [0, 1] },
+      { inputs: [1, 0], outputs: [1, 1] },
+      { inputs: [1, 1], outputs: [1, 1] },
+    ],
+  },
+
   // ── Chapter 3: Multi-Output ──
   {
-    id: 11,
+    id: 13,
     title: 'Half Adder',
     description: 'Add two single-bit numbers. SUM is the single-digit result, CARRY is what overflows to the next column. Two outputs!',
     postSolveInsight: '🔓 Half Adder: SUM = XOR(A,B), CARRY = AND(A,B). This is literally how computers add numbers at the hardware level!\n🌬️ Oxygen regulator calculations restored.',
@@ -340,7 +420,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 12,
+    id: 14,
     title: '3-Input AND',
     description: 'Output is 1 only when ALL THREE inputs are 1. You have three inputs but your gates only take two...',
     postSolveInsight: '🔓 Chaining 2-input gates to handle more inputs is how real CPUs scale up — daisy-chaining is everywhere in hardware design.\n🌬️ Triple-sensor safety interlock engaged.',
@@ -373,7 +453,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 13,
+    id: 15,
     title: 'Majority Vote',
     description: 'Output 1 when 2 or more of the 3 inputs are 1. Think: "at least 2 out of 3 agree."',
     postSolveInsight: '🔓 Majority(A,B,C) = OR(AND(A,B), AND(B,C), AND(A,C)). Majority voting is used in fault-tolerant systems like spacecraft computers!\n🌬️ Fault-tolerant temperature control online.',
@@ -406,7 +486,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 14,
+    id: 16,
     title: 'Multiplexer',
     description: 'Three inputs, one output. The third input changes which of the other two reaches the output.',
     postSolveInsight: '🔓 MUX = OR(AND(A, NOT(S)), AND(B, S)). Multiplexers are the "railroad switches" of digital circuits — they route data.\n🌬️ Pressure valve selector repaired.',
@@ -439,7 +519,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 15,
+    id: 17,
     title: 'Full Adder',
     description: 'The boss level! Add three single-bit numbers (A + B + carry-in) and produce SUM and CARRY outputs.',
     postSolveInsight: '🔓 Full Adder: SUM = XOR(XOR(A,B), Cin), CARRY = OR(AND(A,B), AND(Cin, XOR(A,B))). Chain these together and you\'ve built a CPU\'s arithmetic unit!\n🌬️ Life support fully operational! All systems go.',
@@ -725,27 +805,48 @@ function getDifficultyLabel(numInputs, numOutputs) {
   return labels[key] || 'Medium';
 }
 
-function generateSandboxLevel() {
+function generateSandboxLevel(numInputs, numOutputs) {
+  numInputs = numInputs || 2;
+  numOutputs = numOutputs || 1;
+  const inputLabels = ['A', 'B', 'C', 'D'].slice(0, numInputs);
+  const outputLabels = numOutputs === 1 ? ['OUT'] : ['X', 'Y'];
+
+  const canvasHeight = 500;
+  const inputSpacing = canvasHeight / (numInputs + 1);
+  const outputSpacing = canvasHeight / (numOutputs + 1);
+
+  const inputs = inputLabels.map((label, i) => ({
+    label,
+    x: 60,
+    y: Math.round(inputSpacing * (i + 1)),
+  }));
+
+  const outputs = outputLabels.slice(0, numOutputs).map((label, i) => ({
+    label,
+    x: 600,
+    y: Math.round(outputSpacing * (i + 1)),
+  }));
+
+  const numRows = Math.pow(2, numInputs);
+  const truthTable = [];
+  for (let r = 0; r < numRows; r++) {
+    const inVals = [];
+    for (let j = numInputs - 1; j >= 0; j--) {
+      inVals.push((r >> j) & 1);
+    }
+    truthTable.push({ inputs: inVals, outputs: new Array(numOutputs).fill(0) });
+  }
+
   return {
     id: 'sandbox',
     title: 'Sandbox Mode',
-    description: 'Free build — place any gates and test your circuit.',
+    description: `Free build — ${numInputs} inputs, ${numOutputs} output${numOutputs > 1 ? 's' : ''}. Place any gates and test your circuit.`,
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 0,
     goodGates: 0,
-    inputs: [
-      { label: 'A', x: 60, y: 170 },
-      { label: 'B', x: 60, y: 330 },
-    ],
-    outputs: [
-      { label: 'OUT', x: 600, y: 250 },
-    ],
-    truthTable: [
-      { inputs: [0, 0], outputs: [0] },
-      { inputs: [0, 1], outputs: [0] },
-      { inputs: [1, 0], outputs: [0] },
-      { inputs: [1, 1], outputs: [0] },
-    ],
+    inputs,
+    outputs,
+    truthTable,
     isSandbox: true,
   };
 }

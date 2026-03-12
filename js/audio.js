@@ -370,6 +370,144 @@ class AudioEngine {
     osc.stop(now + 0.1);
   }
 
+  // ── Ambient Soundscape ──
+  startAmbient() {
+    if (this.muted || !this._ensureContext()) return;
+    if (this._ambientActive) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    this._ambientActive = true;
+
+    // Noise-based ambient hum
+    const bufSize = ctx.sampleRate * 2;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    noise.loop = true;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(120, ctx.currentTime);
+
+    // Slow LFO on filter cutoff
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(0.08, ctx.currentTime);
+    lfoGain.gain.setValueAtTime(40, ctx.currentTime);
+    lfo.connect(lfoGain);
+    lfoGain.connect(filter.frequency);
+    lfo.start();
+
+    const ambientGain = ctx.createGain();
+    ambientGain.gain.setValueAtTime(0, ctx.currentTime);
+    ambientGain.gain.linearRampToValueAtTime(this.masterVolume * 0.03, ctx.currentTime + 1.5);
+
+    noise.connect(filter);
+    filter.connect(ambientGain);
+    ambientGain.connect(ctx.destination);
+    noise.start();
+
+    this._ambientNodes = { noise, filter, lfo, lfoGain, ambientGain };
+
+    // Generative music pad
+    this._startMusicPad();
+  }
+
+  stopAmbient() {
+    if (!this._ambientActive) return;
+    this._ambientActive = false;
+    const ctx = this.ctx;
+    if (this._ambientNodes) {
+      const { noise, lfo, ambientGain } = this._ambientNodes;
+      try {
+        ambientGain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        setTimeout(() => {
+          try { noise.stop(); } catch (e) {}
+          try { lfo.stop(); } catch (e) {}
+        }, 600);
+      } catch (e) {}
+      this._ambientNodes = null;
+    }
+    this._stopMusicPad();
+  }
+
+  // ── Generative Music Pad ──
+  _startMusicPad() {
+    if (!this._ensureContext()) return;
+    const ctx = this.ctx;
+    this._musicOscs = [];
+
+    // Warm ambient chord: C3, E3, G3 (subtle sine pads)
+    const freqs = [130.81, 164.81, 196.00];
+    const padGain = ctx.createGain();
+    padGain.gain.setValueAtTime(0, ctx.currentTime);
+    padGain.gain.linearRampToValueAtTime(this.masterVolume * 0.04, ctx.currentTime + 3);
+    padGain.connect(ctx.destination);
+    this._musicPadGain = padGain;
+
+    for (const freq of freqs) {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      // Subtle detuning for warmth
+      osc.detune.setValueAtTime((Math.random() - 0.5) * 6, ctx.currentTime);
+      const oscGain = ctx.createGain();
+      oscGain.gain.setValueAtTime(0.33, ctx.currentTime);
+      osc.connect(oscGain);
+      oscGain.connect(padGain);
+      osc.start();
+      this._musicOscs.push({ osc, gain: oscGain });
+    }
+  }
+
+  _stopMusicPad() {
+    if (!this._musicOscs || !this.ctx) return;
+    const ctx = this.ctx;
+    try {
+      if (this._musicPadGain) {
+        this._musicPadGain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 1);
+      }
+      setTimeout(() => {
+        for (const { osc } of (this._musicOscs || [])) {
+          try { osc.stop(); } catch (e) {}
+        }
+        this._musicOscs = null;
+        this._musicPadGain = null;
+      }, 1200);
+    } catch (e) {}
+  }
+
+  // Shift music chord during simulation (tension)
+  musicTension() {
+    if (!this._musicOscs || !this.ctx) return;
+    const ctx = this.ctx;
+    // Shift to Cm (C3, Eb3, G3) — minor tension
+    const tensionFreqs = [130.81, 155.56, 196.00];
+    this._musicOscs.forEach(({ osc }, i) => {
+      if (tensionFreqs[i]) {
+        osc.frequency.linearRampToValueAtTime(tensionFreqs[i], ctx.currentTime + 0.3);
+      }
+    });
+  }
+
+  // Resolve music chord on success
+  musicResolve() {
+    if (!this._musicOscs || !this.ctx) return;
+    const ctx = this.ctx;
+    // Back to C major
+    const resolveFreqs = [130.81, 164.81, 196.00];
+    this._musicOscs.forEach(({ osc }, i) => {
+      if (resolveFreqs[i]) {
+        osc.frequency.linearRampToValueAtTime(resolveFreqs[i], ctx.currentTime + 0.5);
+      }
+    });
+  }
+
   // ── Helper: Noise burst ──
   _playNoiseBurst(duration, volume) {
     const ctx = this.ctx;

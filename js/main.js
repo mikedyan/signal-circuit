@@ -272,6 +272,7 @@ class GameState {
   _checkChapterCompletion(levelId) {
     const chapters = getChapters();
     for (const chapter of chapters) {
+      if (chapter.isBridge) continue; // Skip bridge chapters
       if (!chapter.levels.includes(levelId)) continue;
       // Is this the last level of the chapter?
       const lastLevel = chapter.levels[chapter.levels.length - 1];
@@ -296,6 +297,7 @@ class GameState {
     this.isSandboxMode = false;
     this.isChallengeMode = false;
     this.stopTimer();
+    this.audio.stopAmbient();
     this.ui.renderLevelSelect();
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
@@ -305,11 +307,19 @@ class GameState {
   showChallengeConfig() {
     this.currentScreen = 'challenge-config';
     this.stopTimer();
+    this.audio.stopAmbient();
     this.ui.showScreen('challenge-config');
     // Trigger initial leaderboard render
     const ni = parseInt(document.getElementById('input-count-slider').value);
     const no = parseInt(document.getElementById('output-count-slider').value);
     this.ui.renderLeaderboard(ni, no);
+  }
+
+  showSandboxConfig() {
+    this.currentScreen = 'sandbox-config';
+    this.stopTimer();
+    this.audio.stopAmbient();
+    this.ui.showScreen('sandbox-config');
   }
 
   startChallenge(numInputs, numOutputs) {
@@ -318,6 +328,7 @@ class GameState {
     const level = generateChallenge(numInputs, numOutputs);
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
     this.renderer.resize();
     this.loadChallengeLevel(level);
     setTimeout(() => this.renderer.resize(), 100);
@@ -329,17 +340,19 @@ class GameState {
     const level = generateDailyChallenge();
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
     this.renderer.resize();
     this.loadChallengeLevel(level);
     setTimeout(() => this.renderer.resize(), 100);
   }
 
-  startSandbox() {
+  startSandbox(numInputs, numOutputs) {
     this.isSandboxMode = true;
     this.isChallengeMode = false;
-    const level = generateSandboxLevel();
+    const level = generateSandboxLevel(numInputs || 2, numOutputs || 1);
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
     this.renderer.resize();
     this.loadChallengeLevel(level);
     setTimeout(() => this.renderer.resize(), 100);
@@ -350,6 +363,7 @@ class GameState {
     this.isSandboxMode = false;
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
 
     // Must resize canvas BEFORE loading level so positions scale correctly
     this.renderer.resize();
@@ -741,8 +755,9 @@ class GameState {
       // RUN tension: brief charging animation
       await this._runTensionAnimation();
 
-      // Reset audio escalation pitch
+      // Reset audio escalation pitch + shift music to tension chord
       this.audio.resetSimPitch();
+      this.audio.musicTension();
 
       await this.simulation.runAnimated(
         (results, rowIndex) => {
@@ -760,6 +775,7 @@ class GameState {
           this.ui.updateTruthTable(results);
 
           if (allPass) {
+            this.audio.musicResolve();
             const gateCount = this.gates.length;
 
             if (this.isChallengeMode && this.currentLevel.isChallenge) {
@@ -802,11 +818,13 @@ class GameState {
             if (passCount / total >= 0.75) {
               // Near-miss feedback: ≥75% correct
               this.audio.playFail();
+              this._shakeScreen();
               const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
               this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
               this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
             } else {
               this.audio.playFail();
+              this._shakeScreen();
               this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
               this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
             }
@@ -868,11 +886,13 @@ class GameState {
 
       if (passCount / total >= 0.75) {
         this.audio.playFail();
+        this._shakeScreen();
         const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
         this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
         this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
       } else {
         this.audio.playFail();
+        this._shakeScreen();
         this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
         this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
       }
@@ -986,19 +1006,32 @@ class GameState {
         return;
       }
 
+      // Check for wire tap (selection + mobile delete)
+      const wire = this.wireManager.findWireAt(pos.x, pos.y);
+      if (wire) {
+        this.wireManager.selectedWire = wire;
+        this.selectedGate = null;
+        if (this.ui) this.ui.showMobileDelete(pos.x, pos.y);
+        this.markDirty();
+        return;
+      }
+
       // Gate drag
       const gate = this.renderer.findGateAt(pos.x, pos.y);
       if (gate) {
         this.selectedGate = gate;
+        this.wireManager.selectedWire = null;
         isDraggingGate = true;
         dragGate = gate;
         dragOffsetX = pos.x - gate.x;
         dragOffsetY = pos.y - gate.y;
+        if (this.ui) this.ui.showMobileDelete(pos.x, pos.y);
         return;
       }
 
       this.selectedGate = null;
       this.wireManager.selectedWire = null;
+      if (this.ui) this.ui.hideMobileDelete();
     }, { passive: false });
 
     canvas.addEventListener('touchmove', (e) => {
@@ -1217,13 +1250,22 @@ class GameState {
         node._tensionPulse = true;
       }
       this.markDirty();
-      await new Promise(r => setTimeout(r, 350));
+      await new Promise(r => setTimeout(r, 600));
       overlay.classList.remove('active');
       for (const node of this.inputNodes) {
         node._tensionPulse = false;
       }
       this.markDirty();
     }
+  }
+
+  _shakeScreen() {
+    const container = document.getElementById('canvas-container');
+    if (!container) return;
+    container.classList.remove('screen-shake');
+    void container.offsetWidth;
+    container.classList.add('screen-shake');
+    setTimeout(() => container.classList.remove('screen-shake'), 400);
   }
 
   startRenderLoop() {

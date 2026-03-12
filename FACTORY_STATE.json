@@ -1,12 +1,12 @@
 {
   "project": "signal-circuit",
   "currentPhase": 2,
-  "lastCompletedDay": 20,
-  "nextDay": 21,
+  "lastCompletedDay": 22,
+  "nextDay": 23,
   "nextItemStart": 1,
   "p0Status": "complete",
   "postP0Score": 6.2,
-  "lastRunDate": "2026-03-11",
+  "lastRunDate": "2026-03-12",
   "httpServerPort": 8901,
   "notes": "Day 19 items 6-10 and Day 20 items 1-10 all complete. Focus: bug fixes, UX polish, accessibility, wire feedback."
 }

@@ -25,6 +25,8 @@ class CanvasRenderer {
     // Store display dimensions for hit testing
     this.displayWidth = displayWidth;
     this.displayHeight = displayHeight;
+    // Setting canvas.width clears the buffer — must re-render
+    if (this.gameState) this.gameState.markDirty();
   }
 
   render() {
@@ -224,8 +226,8 @@ class CanvasRenderer {
     this.ripples.push({
       x, y,
       startTime: performance.now(),
-      duration: 400,
-      maxRadius: 80,
+      duration: 500,
+      maxRadius: 160,
     });
     this.gameState.markDirty();
   }
@@ -342,7 +344,7 @@ class CanvasRenderer {
   findPinAt(mx, my, threshold) {
     if (!threshold) {
       const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      threshold = isMobile ? 26 : 18;
+      threshold = isMobile ? 36 : 18;
     }
     const gs = this.gameState;
 

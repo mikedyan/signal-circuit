@@ -1,7 +1,7 @@
 // wires.js — Wire management, drawing, selection, and deletion
 
 // Wire color palette — breadboard jumper wire colors
-const WIRE_COLORS = [
+const WIRE_COLORS_DEFAULT = [
   '#4488ff', // blue
   '#ff6644', // orange-red
   '#44cc44', // green
@@ -14,6 +14,29 @@ const WIRE_COLORS = [
   '#cc8844', // brown
 ];
 
+// Deuteranopia-safe palette
+const WIRE_COLORS_COLORBLIND = [
+  '#0077BB', // strong blue
+  '#EE7733', // orange
+  '#CC3311', // red
+  '#009988', // teal
+  '#EE3377', // magenta
+  '#33BBEE', // cyan
+  '#BBBBBB', // grey
+  '#AA3377', // wine
+  '#004488', // dark blue
+  '#DDCC77', // sand
+];
+
+function getWireColors() {
+  try {
+    if (document.body.classList.contains('colorblind-mode')) return WIRE_COLORS_COLORBLIND;
+  } catch (e) {}
+  return WIRE_COLORS_DEFAULT;
+}
+
+const WIRE_COLORS = WIRE_COLORS_DEFAULT;
+
 let wireColorIndex = 0;
 
 class Wire {
@@ -24,7 +47,8 @@ class Wire {
     this.toGateId = toGateId;
     this.toPinIndex = toPinIndex;
     this.signalValue = 0;
-    this.color = WIRE_COLORS[wireColorIndex % WIRE_COLORS.length];
+    const colors = getWireColors();
+    this.color = colors[wireColorIndex % colors.length];
     wireColorIndex++;
   }
 }
