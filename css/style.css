@@ -1277,6 +1277,8 @@ body {
 
 /* ── Hint Display ── */
 #hint-display {
+  max-height: 80px;
+  overflow-y: auto;
   background: rgba(200, 180, 0, 0.1);
   border: 1px solid #665500;
   border-radius: 6px;
