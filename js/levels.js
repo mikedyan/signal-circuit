@@ -390,9 +390,9 @@ const LEVELS = [
     description: 'Three inputs, one output. The third input changes which of the other two reaches the output.',
     postSolveInsight: '🔓 MUX = OR(AND(A, NOT(S)), AND(B, S)). Multiplexers are the "railroad switches" of digital circuits — they route data.',
     hints: [
-      'S is the selector: when S=0, output follows A. When S=1, output follows B.',
-      'You need 4 gates. Think about creating two paths — one for each input — controlled by S.',
-      'Each data input needs its own "gatekeeper," and S controls which one opens.'
+      'Think about what happens when S=0: only A matters. When S=1: only B matters. How can you use S to "enable" one path and "disable" the other?',
+      'You need 4 gates. One gate prepares S, two gates each handle one input path, and one gate combines the results.',
+      'Each input (A and B) needs its own AND gate to be "gated" by S or its inverse. Then combine both paths.'
     ],
     hintHighlights: ['A', 'B', 'S', 'OUT'],
     availableGates: ['AND', 'OR', 'NOT'],

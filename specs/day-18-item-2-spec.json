@@ -1,0 +1,64 @@
+{
+  "day": 18,
+  "item": 2,
+  "title": "Restructure Hints as Conceptual Nudges",
+  "summary": "Replace full-wiring Hint 3 across all 15 levels with a Socratic progression: (1) general concept, (2) structural insight with gate count, (3) visual hint highlighting relevant I/O pins with a conceptual nudge — never the exact topology. Add visual pin highlighting in the canvas renderer when hint 3 is active.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Rewrite all 15 level hint arrays in js/levels.js with Socratic progression: Hint 1 = general concept/question, Hint 2 = structural insight with gate count, Hint 3 = conceptual nudge without full wiring. Add 'hintHighlights' array property to each level listing I/O labels to visually highlight when hint 3 is shown.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "No hint for any level contains exact wiring instructions (e.g., 'A → NOT → OR → OUT')",
+        "Hint 1 introduces the general concept or asks a guiding question",
+        "Hint 2 provides structural insight including the number of gates needed",
+        "Hint 3 gives a conceptual nudge about approach without specifying connections",
+        "Each level has a 'hintHighlights' array of I/O labels (e.g., ['A', 'B', 'OUT'])"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add activeHintHighlights state management in main.js: set it when hint 3 is shown, clear it on level load and circuit clear.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "gameState.activeHintHighlights is set to the level's hintHighlights array when hint 3 (index 2) is revealed",
+        "activeHintHighlights is cleared (null) on loadLevel, loadChallengeLevel, clearCircuit, and resetHintState",
+        "Hint button still works for all 3 hints with correct penalty logic"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Render pulsing gold highlights on I/O nodes in canvas.js when activeHintHighlights is set. Highlight should match the breadboard aesthetic — gold/amber pulse around the relevant input/output nodes.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "When hint 3 is active, matching I/O nodes display a pulsing gold glow",
+        "Glow uses sine-based animation for smooth pulsing",
+        "Highlights do not interfere with normal pin rendering or wire drawing",
+        "Highlights disappear when level is cleared or changed"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Update showHint in ui.js to add a visual indicator icon for hint 3 (e.g., '👁 Visual Hint' label) to signal that the canvas has visual guidance.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Hint 3 display includes a visual indicator (e.g., '👁' prefix or 'Look at the highlighted pins' suffix) distinguishing it from text-only hints",
+        "Hints 1 and 2 display normally without visual indicator"
+      ],
+      "depends_on": ["T1"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Verify no hint in any level reveals exact wiring",
+    "Verify hint 3 triggers visual highlighting on the canvas for all 15 levels",
+    "Verify highlights clear on level change and circuit clear",
+    "Verify hint penalty system still works (hint 2+ reduces max stars)",
+    "Verify hint button text updates correctly through all 3 hints",
+    "Verify skip button appears after all hints used or 60s timeout"
+  ],
+  "rollback_criteria": "If hint system breaks or visual highlights cause rendering artifacts, revert to previous commit"
+}

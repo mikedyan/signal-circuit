@@ -1,0 +1,54 @@
+{
+  "day": 18,
+  "item": 1,
+  "title": "Remove Solution Formulas from Level Descriptions",
+  "priority": "P0",
+  "summary": "Level descriptions currently give away solutions by including formulas (e.g., 'NAND = NOT(AND)'), gate counts ('You need TWO gates'), and step-by-step wiring instructions. Strip all descriptions down to truth table + conceptual framing only. Add a new 'postSolveInsight' field to each level that reveals the mathematical principle as a reward AFTER solving. Show this insight in the star display area upon level completion.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Rewrite all 15 level descriptions in js/levels.js to remove formulas, gate counts, and solution hints. Keep only truth-table-relevant conceptual framing (what the circuit does, not how to build it).",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "No level description contains an equals-sign formula (e.g., 'NAND = NOT(AND)')",
+        "No level description mentions a specific gate count (e.g., 'TWO gates', 'one-gate')",
+        "No level description tells the player which gates to chain or in what order",
+        "Each description still conveys what the output behavior should be (conceptual framing)",
+        "Levels 1-3 (single-gate teaching levels) may name the gate type since only one gate is available",
+        "Level 6 (XOR) may name XOR since it's the only available gate"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add a 'postSolveInsight' string field to each of the 15 LEVELS entries in js/levels.js. This text reveals the formula/principle after the player solves the level.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "All 15 levels have a non-empty 'postSolveInsight' string",
+        "Insights contain the formulas that were removed from descriptions (e.g., De Morgan's law for levels 8-9)",
+        "Insights feel like a reward — fun facts, real-world connections, or 'aha' moments"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Display the postSolveInsight in the star display area after level completion. Add a new DOM element below the star message in the #star-display section, and populate it in ui.js showStarDisplay().",
+      "files_to_modify": ["index.html", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "After solving a campaign level, the insight text appears below the star count",
+        "The insight has a distinct visual style (e.g., different color, icon prefix like 🔓)",
+        "The insight does NOT appear for challenge mode or sandbox mode",
+        "The insight is hidden when the star display is hidden (on new level load or clear)"
+      ],
+      "depends_on": ["T2"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Read every level description in-game and verify no solution formulas remain",
+    "Complete at least one level and verify the post-solve insight appears",
+    "Verify insights don't appear in challenge/sandbox modes",
+    "Check that level descriptions are still helpful enough to understand the goal"
+  ],
+  "rollback_criteria": "If any level becomes unsolvable or the UI breaks, revert to previous commit"
+}
