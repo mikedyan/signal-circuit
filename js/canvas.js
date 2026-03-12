@@ -13,13 +13,23 @@ class CanvasRenderer {
 
   resize() {
     const container = this.canvas.parentElement;
-    this.canvas.width = container.clientWidth;
-    this.canvas.height = container.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    const displayWidth = container.clientWidth;
+    const displayHeight = container.clientHeight;
+    this.canvas.width = displayWidth * dpr;
+    this.canvas.height = displayHeight * dpr;
+    this.canvas.style.width = displayWidth + 'px';
+    this.canvas.style.height = displayHeight + 'px';
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Store display dimensions for hit testing
+    this.displayWidth = displayWidth;
+    this.displayHeight = displayHeight;
   }
 
   render() {
     const ctx = this.ctx;
-    const { width, height } = this.canvas;
+    const width = this.displayWidth || this.canvas.width;
+    const height = this.displayHeight || this.canvas.height;
 
     ctx.clearRect(0, 0, width, height);
 
