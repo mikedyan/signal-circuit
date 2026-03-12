@@ -1,0 +1,20 @@
+{
+  "day": 20,
+  "item": 4,
+  "title": "Fix Platform-Inappropriate Copy",
+  "summary": "Instructions say 'Click' on mobile. Add a global isTouchDevice check and update How to Play copy dynamically.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add isTouchDevice utility. Update How to Play modal and shortcuts overlay text dynamically based on platform.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "On touch devices, instructions say 'Tap' instead of 'Click'",
+        "On desktop, instructions say 'Click'",
+        "Shortcuts overlay shows 'Long press' instead of 'Right-click' on mobile"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Check copy on both touch and non-touch devices"]
+}

@@ -1,0 +1,22 @@
+{
+  "item": 5,
+  "title": "Add Almost! Near-Miss Feedback",
+  "description": "When ≥75% rows pass, show 'So close! Just N row(s) off' with the failing row highlighted.",
+  "files": ["js/main.js", "css/style.css"],
+  "changes": [
+    {
+      "file": "js/main.js",
+      "what": "Near-miss feedback already implemented in runSimulation(). The block at passCount/total >= 0.75 already shows 'Almost!' message and failing rows. Already done in existing code."
+    },
+    {
+      "file": "css/style.css",
+      "what": "#result-display.almost style already exists with orange/yellow coloring. Already done."
+    }
+  ],
+  "acceptance": [
+    "≥75% rows pass → result display shows 'Almost!' with count of failing rows",
+    "Status bar shows which specific rows failed",
+    "Styling uses orange/yellow (distinct from pass green and fail red)"
+  ],
+  "notes": "This item appears to already be fully implemented in the existing codebase. Verify and confirm."
+}

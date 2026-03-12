@@ -1,0 +1,21 @@
+{
+  "day": 20,
+  "item": 6,
+  "title": "Show Star Preview Accounting for Hint Penalty",
+  "summary": "Enhance star preview to visually show hint-penalty-blocked stars with strikethrough styling.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Show stars blocked by hint penalty with a strikethrough style (star-blocked class).",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Stars blocked by hint penalty show with strikethrough",
+        "Achievable stars show gold",
+        "Unearned stars show dim",
+        "No hints used = no blocked stars"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Use hints then check star preview vs no-hint star preview"]
+}

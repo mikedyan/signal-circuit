@@ -1,0 +1,20 @@
+{
+  "day": 20,
+  "item": 7,
+  "title": "Respect prefers-reduced-motion Media Query",
+  "summary": "Reduce or disable non-essential animations when prefers-reduced-motion is active.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add @media (prefers-reduced-motion: reduce) block that disables or reduces CSS animations and transitions.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Animations disabled when prefers-reduced-motion is set",
+        "Transitions reduced to instant or minimal",
+        "Game is still fully functional without animations"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Enable reduced motion in OS and verify no jarring animations"]
+}

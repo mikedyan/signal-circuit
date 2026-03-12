@@ -1,0 +1,13 @@
+{
+  "item": 13,
+  "title": "Implement Dirty-Flag Render Loop",
+  "description": "Set needsRender = true only on state changes, skip render otherwise. Cut idle CPU by ~95%.",
+  "files": ["js/canvas.js", "js/main.js"],
+  "notes": "This is ALREADY IMPLEMENTED. GameState has needsRender flag, markDirty() method, and startRenderLoop() checks needsRender before calling render(). Also checks simulation.animating, sparkParticles, and wireManager.drawing.",
+  "acceptance": [
+    "needsRender flag exists on GameState",
+    "markDirty() sets it to true",
+    "Render loop skips when !needsRender and no animation/particles/drawing",
+    "All state mutations call markDirty()"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "day": 20,
+  "item": 9,
+  "title": "Replace Times New Roman Font Fallback",
+  "summary": "Set proper monospace fallback stack so Times New Roman never appears.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Update body font-family to include proper monospace fallback chain.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Body font has proper monospace fallback stack",
+        "Times New Roman never appears as fallback"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Disable Courier New and verify fallback is monospace"]
+}

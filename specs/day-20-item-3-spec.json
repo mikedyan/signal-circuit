@@ -1,0 +1,21 @@
+{
+  "day": 20,
+  "item": 3,
+  "title": "Add Invalid Wire Connection Feedback",
+  "summary": "Invalid wire connections (output→output, input→input, self-connection) give no feedback. Add red flash on target pin and short buzz sound.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "In WireManager.finishDrawing, when connection is invalid, trigger a red flash animation on the target pin and play an error buzz sound via AudioEngine.",
+      "files_to_modify": ["js/wires.js", "js/audio.js"],
+      "acceptance_criteria": [
+        "Connecting output→output shows red flash and plays buzz",
+        "Connecting input→input shows red flash and plays buzz",
+        "Self-connections show feedback",
+        "Valid connections still work normally"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Try invalid connections and verify feedback"]
+}

@@ -1,0 +1,21 @@
+{
+  "day": 20,
+  "item": 10,
+  "title": "Improve Wire Deletion Feedback",
+  "summary": "Wire deletion is visually abrupt. Add snap animation with wire fragment particles and sparks.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "When a wire is deleted, spawn fragment particles along the wire path and spark particles at both endpoints. Add a brief snap animation before removal.",
+      "files_to_modify": ["js/wires.js", "js/canvas.js", "js/audio.js"],
+      "acceptance_criteria": [
+        "Wire deletion shows fragment particles along the wire",
+        "Sparks appear at both wire endpoints",
+        "Animation is brief and non-blocking",
+        "Wire still gets properly removed after animation"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Delete wires by right-click, Delete key, and gate removal"]
+}

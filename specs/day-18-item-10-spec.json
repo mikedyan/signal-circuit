@@ -1,0 +1,12 @@
+{
+  "item": 10,
+  "title": "Make Truth Table Collapsible",
+  "description": "Add toggle chevron. Default expanded on first visit, collapsed on revisits and always on mobile.",
+  "files": ["js/ui.js", "index.html", "css/style.css"],
+  "notes": "The truth table toggle is already implemented — HTML has #truth-table-toggle with #truth-table-chevron, setupControls() has click handler, and auto-collapse on mobile. Need to add: collapsed on revisits (localStorage), and improve the first-visit experience.",
+  "acceptance": [
+    "Toggle chevron works to expand/collapse",
+    "Auto-collapsed on mobile (already done)",
+    "Collapsed on revisits (not first visit)"
+  ]
+}

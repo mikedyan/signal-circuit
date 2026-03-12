@@ -1,0 +1,148 @@
+{
+  "day": 21,
+  "title": "Narrative, Progression & Emotional Arc",
+  "summary": "The game gets a soul. Adds story framing (repairing a spacecraft's logic systems), overhauls achievements into a tiered Bronze/Silver/Gold system, redesigns Skip as 'Bookmark & Return', adds chapter completion screens with pacing breaks, builds tension into the RUN button moment, adds row-by-row audio escalation, improves the procedural challenge generator, enhances level select visual storytelling, makes the timer meaningful, and adds gate placement impact ripples. Transforms Signal Circuit from 'puzzle set' to 'journey.'",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Add Narrative / Story Frame",
+      "backlog": 16,
+      "description": "Add a thin narrative: the player is a technician repairing a spacecraft's logic systems. Each circuit fixed restores a ship subsystem. No cutscenes — just contextual flavor text per chapter and per level.",
+      "acceptance_criteria": [
+        "Each chapter has a story framing (e.g., Ch1: Navigation, Ch2: Communications, Ch3: Life Support)",
+        "Level descriptions include narrative context alongside technical descriptions",
+        "A brief intro/narrative line appears on the level select screen",
+        "Post-solve insights reference the narrative ('Navigation system restored!')",
+        "No blocking cutscenes or mandatory reading"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Redesign Skip as 'Bookmark & Return'",
+      "backlog": 17,
+      "description": "Replace 'Skip (0 stars)' with 'Bookmark & Move On' — bookmark icon, level stays replayable, bookmark clears once solved. Removes shame framing.",
+      "acceptance_criteria": [
+        "Skip button text changed to '🔖 Bookmark & Move On'",
+        "Bookmarked levels show a bookmark icon on level select",
+        "Bookmarking a level unlocks the next without awarding stars",
+        "Bookmark clears when the level is actually solved",
+        "No '0 stars' messaging — framing is positive"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Chapter Completion Screens",
+      "backlog": 27,
+      "description": "Add a full-screen chapter completion pause showing mastered gates and narrative progression before the next chapter.",
+      "acceptance_criteria": [
+        "Completing the last level of a chapter triggers a chapter completion modal",
+        "Modal shows which gates were mastered in that chapter",
+        "Narrative text congratulates progress ('Navigation systems online!')",
+        "A 'Continue to Chapter N' button advances to the next chapter",
+        "Modal can be dismissed to return to level select"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Improve Level Select Visual Storytelling",
+      "backlog": 30,
+      "description": "Add progressive color coding per chapter (green → cyan → purple), and shimmer on recently completed levels.",
+      "acceptance_criteria": [
+        "Chapter 1 levels have green accent color",
+        "Chapter 2 levels have cyan accent color",
+        "Chapter 3 levels have purple accent color",
+        "Recently completed levels (current session) have a subtle shimmer animation",
+        "Level cards show a small circuit icon indicating complexity"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Overhaul Achievement System",
+      "backlog": 22,
+      "description": "Replace flat achievements with tiered Bronze/Silver/Gold system. Add skill-based goals with differentiated celebration per tier.",
+      "acceptance_criteria": [
+        "Achievements have Bronze, Silver, Gold tiers",
+        "Tier-specific visual treatment in the achievements modal (bronze/silver/gold colors)",
+        "New skill-based achievements: '3-star all Ch1 without hints', 'Complete 5 levels under 30s', etc.",
+        "Achievement toast shows tier icon",
+        "At least 15 total achievements across all tiers"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Make Timer Meaningful — Time Attack Mode",
+      "backlog": 23,
+      "description": "Hide timer by default during normal play. Show post-completion as 'Your time: X:XX'. Add a Time Attack toggle in challenge mode with timer-based star criteria.",
+      "acceptance_criteria": [
+        "Timer hidden during normal campaign play (shown post-completion only)",
+        "Post-completion shows 'Your time: X:XX' in star display",
+        "Timer still visible in challenge mode",
+        "Best time shown on level select cards for completed levels"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Row-by-Row Audio Escalation",
+      "backlog": 25,
+      "description": "Fork simulation pulse sound: passing rows play ascending pitch, failing rows play descending buzz. Build momentum through audio.",
+      "acceptance_criteria": [
+        "Each passing row plays at a higher pitch than the previous",
+        "Failing rows play a distinct descending buzz",
+        "Pitch resets at the start of each simulation run",
+        "Audio escalation is noticeable but not annoying",
+        "Works with existing mute toggle"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Build Tension into RUN Button Moment",
+      "backlog": 28,
+      "description": "Add a brief charging animation when RUN is pressed — workspace dims slightly, inputs pulse, signals propagate with hidden outputs until arrival.",
+      "acceptance_criteria": [
+        "Pressing RUN triggers a brief workspace dim (0.3s)",
+        "Input nodes pulse/glow during the charging phase",
+        "The 'charging' feel is subtle, not blocking (< 500ms)",
+        "Does NOT apply to Quick Test (which remains instant)",
+        "Works smoothly without introducing lag"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Improve Procedural Challenge Generator",
+      "backlog": 29,
+      "description": "Generate challenges from known circuit patterns rather than pure random. Curate a library of interesting logic functions.",
+      "acceptance_criteria": [
+        "Challenge generator includes 20+ curated interesting truth tables",
+        "Generated challenges favor non-trivial patterns (parity, majority, threshold)",
+        "Difficulty label accurately reflects complexity",
+        "Still supports random generation as fallback",
+        "No degenerate or trivially-solvable challenges"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Gate Placement Impact Ripple",
+      "backlog": 31,
+      "description": "Add radial ripple effect across the breadboard when a gate is placed. Brightened copper traces near gate, subtle visual feedback.",
+      "acceptance_criteria": [
+        "Placing a gate triggers a radial ripple animation from the placement point",
+        "Ripple uses the breadboard color palette (copper/gold tones)",
+        "Animation is brief (~400ms) and doesn't interfere with interaction",
+        "Ripple fades naturally to zero opacity",
+        "No performance impact (< 1ms per frame additional)"
+      ]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Chapter completion screens trigger at correct times",
+    "Narrative text displays correctly across all levels",
+    "Bookmark system properly unlocks next levels",
+    "Tiered achievements display and unlock correctly",
+    "Audio escalation doesn't create harsh or clipping sounds",
+    "RUN tension animation doesn't break simulation flow",
+    "Gate ripple effect works on mobile touch",
+    "Challenge generator produces varied, interesting puzzles",
+    "All existing features still work (regression)"
+  ]
+}

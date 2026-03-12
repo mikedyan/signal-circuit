@@ -1,0 +1,27 @@
+{
+  "item": 6,
+  "title": "Add Quick-Test / Instant Evaluation Mode",
+  "description": "Add 'Quick Test' button or Shift+Enter that evaluates instantly without animation. Keep animated sim for first successful run.",
+  "files": ["js/main.js", "js/ui.js", "index.html", "css/style.css"],
+  "changes": [
+    {
+      "file": "index.html",
+      "what": "Add Quick Test button next to RUN button"
+    },
+    {
+      "file": "js/main.js",
+      "what": "Add runQuickTest() method that uses simulation.runAll() instead of runAnimated(). Wire Shift+Enter shortcut."
+    },
+    {
+      "file": "css/style.css",
+      "what": "Style the quick-test button as compact secondary action"
+    }
+  ],
+  "acceptance": [
+    "Quick Test button visible next to RUN",
+    "Shift+Enter triggers quick test",
+    "Quick test runs instantly (no animation)",
+    "Results shown in truth table same as animated run",
+    "Success/failure logic same as normal run"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "item": 12,
+  "title": "Canvas DPI / Retina Display Scaling",
+  "description": "Multiply canvas dimensions by devicePixelRatio, scale context, keep CSS size. 6-line fix.",
+  "files": ["js/canvas.js"],
+  "notes": "This is ALREADY IMPLEMENTED in canvas.js resize(). The code already uses window.devicePixelRatio, multiplies canvas width/height, scales the context, and keeps CSS display dimensions.",
+  "acceptance": [
+    "canvas.width = displayWidth * dpr",
+    "canvas.height = displayHeight * dpr",
+    "ctx.setTransform(dpr, 0, 0, dpr, 0, 0)",
+    "CSS size unchanged"
+  ]
+}

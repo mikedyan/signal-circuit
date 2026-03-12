@@ -1,0 +1,21 @@
+{
+  "day": 19,
+  "item": 9,
+  "title": "Add localStorage Schema Versioning",
+  "summary": "Add a version field to localStorage data. On schema change, migrate or reset gracefully instead of silent corruption.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add SCHEMA_VERSION constant. When loading progress, check version field. If missing or outdated, reset gracefully. Save version with every write.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Saved progress includes a 'version' field",
+        "Loading data without a version field resets gracefully (no crash)",
+        "Loading data with current version works normally",
+        "Future schema changes can bump SCHEMA_VERSION to trigger migration"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Load game with old data (no version)", "Load game with current version data"]
+}

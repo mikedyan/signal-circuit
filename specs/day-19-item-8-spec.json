@@ -1,0 +1,20 @@
+{
+  "day": 19,
+  "item": 8,
+  "title": "Add isAnimating Try/Finally Safety Reset",
+  "summary": "If animation throws an error, isAnimating stays true and locks the UI. Wrap animation code in try/finally to guarantee reset.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Wrap runSimulation and runAnimated in try/finally blocks to ensure isAnimating is always reset on any exit path.",
+      "files_to_modify": ["js/main.js", "js/simulation.js"],
+      "acceptance_criteria": [
+        "isAnimating is reset to false even if an error occurs during simulation",
+        "isAnimating is reset to false even if an error occurs during animated run",
+        "Normal operation is not affected"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Normal simulation still works", "No UI freeze after errors"]
+}

@@ -1,0 +1,22 @@
+{
+  "day": 19,
+  "item": 7,
+  "title": "Replace Browser confirm() with In-Game Modals",
+  "summary": "Replace 3 native browser confirm() dialogs with styled in-game modal components that match the game aesthetic.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add a reusable showConfirmModal(message, onConfirm) function. Add modal HTML to index.html and CSS styling. Replace all 3 confirm() calls.",
+      "files_to_modify": ["js/ui.js", "js/main.js", "css/style.css", "index.html"],
+      "acceptance_criteria": [
+        "No browser confirm() dialogs appear anywhere in the game",
+        "In-game modal appears with message and Confirm/Cancel buttons",
+        "Modal is styled to match game aesthetic (dark theme, green accents)",
+        "Clicking Cancel dismisses modal without action",
+        "Clicking Confirm triggers the original action"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Reset progress", "Clear leaderboard", "Skip level"]
+}

@@ -1,0 +1,21 @@
+{
+  "item": 9,
+  "title": "Establish Visual Hierarchy in Info Panel",
+  "description": "Make RUN button 2x size with stronger glow. Reduce secondary controls to compact icon row.",
+  "files": ["css/style.css", "index.html"],
+  "changes": [
+    {
+      "file": "css/style.css",
+      "what": "Increase RUN button padding/font-size, add stronger glow. Make Quick Test, Clear, Hint buttons more compact in a flex row."
+    },
+    {
+      "file": "index.html",
+      "what": "Wrap secondary action buttons in a flex row container"
+    }
+  ],
+  "acceptance": [
+    "RUN button is visually dominant (larger, stronger glow)",
+    "Secondary buttons (Quick Test, Clear) are compact and in a row",
+    "Visual hierarchy clear: primary action stands out"
+  ]
+}

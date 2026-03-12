@@ -1,0 +1,17 @@
+{
+  "item": 14,
+  "title": "Fix Hint Panel Overlapping Clear Circuit Button",
+  "description": "Add max-height + overflow-y: auto to hint display, or sticky-position action buttons.",
+  "files": ["css/style.css"],
+  "changes": [
+    {
+      "file": "css/style.css",
+      "what": "Check #hint-display max-height. Currently has max-height: 80px; overflow-y: auto. May need slight increase for readability while still preventing overlap."
+    }
+  ],
+  "acceptance": [
+    "Hint display doesn't overflow and overlap other controls",
+    "Hint text scrollable if too long",
+    "Action buttons remain accessible"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "day": 20,
+  "item": 8,
+  "title": "Add ARIA Labels to Icon-Only Buttons",
+  "summary": "Add aria-label to icon-only and ambiguous interactive elements for screen reader accessibility.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add aria-label to mute-btn, shortcuts-btn, prev-level, next-level, back-btn, and other icon-only elements.",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "All icon-only buttons have aria-label",
+        "Labels are descriptive and accurate"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Check all buttons have accessible names"]
+}

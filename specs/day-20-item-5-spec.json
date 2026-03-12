@@ -1,0 +1,20 @@
+{
+  "day": 20,
+  "item": 5,
+  "title": "Fix Keyboard Shortcut Mismatch (Ctrl+Y)",
+  "summary": "Ctrl+Y is shown in shortcuts overlay but not wired. Add Ctrl+Y as redo alias and update overlay text.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add Ctrl+Y keybinding as redo alias. Update shortcuts overlay to show Ctrl+Shift+Z / Ctrl+Y.",
+      "files_to_modify": ["js/main.js", "index.html"],
+      "acceptance_criteria": [
+        "Ctrl+Shift+Z triggers redo",
+        "Ctrl+Y triggers redo",
+        "Shortcuts overlay shows accurate keybindings"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Press Ctrl+Y and verify redo works"]
+}

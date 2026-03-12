@@ -1,0 +1,21 @@
+{
+  "day": 19,
+  "item": 6,
+  "title": "Fix Hint Button Counter Desync",
+  "summary": "The hint button counter can desynchronize from actual hint state when levels are reloaded or navigated. Fix the counter tracking to stay in sync with hintsUsed state.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Ensure hint button text always reflects hintsUsed state by using a single updateHintButton() method called from resetHintState, hint click handler, and loadLevel.",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Hint button text shows correct count after using hints",
+        "Hint button text resets to '💡 Hint' when loading a new level",
+        "Hint button disabled state matches actual remaining hints",
+        "No desync possible between hintsUsed and button display"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Use hints then navigate to another level and back", "Use all hints and verify disabled state persists correctly"]
+}

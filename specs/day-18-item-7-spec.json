@@ -1,0 +1,22 @@
+{
+  "item": 7,
+  "title": "Real-Time Signal Propagation During Building",
+  "description": "Click input nodes to toggle values, signals propagate through wires immediately during construction.",
+  "files": ["js/main.js", "js/canvas.js", "js/simulation.js"],
+  "changes": [
+    {
+      "file": "js/main.js",
+      "what": "Add click handler on input nodes to toggle their value (0→1, 1→0). After toggling, run simulation.evaluateOnce() to propagate signals. Mark dirty for re-render."
+    },
+    {
+      "file": "js/canvas.js",
+      "what": "During non-animated state, render wire signal values visually (color wires carrying 1 vs 0)."
+    }
+  ],
+  "acceptance": [
+    "Clicking an input node toggles its value between 0 and 1",
+    "Signal propagates through connected gates/wires immediately",
+    "Wire colors reflect signal values (green=1, gray=0)",
+    "Input node visually shows current value"
+  ]
+}

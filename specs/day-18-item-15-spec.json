@@ -1,0 +1,12 @@
+{
+  "item": 15,
+  "title": "Fix Intro Screen setTimeout Race Condition",
+  "description": "Replace setTimeout(1800) with animationend event. Skip intro for returning players.",
+  "files": ["js/main.js"],
+  "notes": "The current code in init() already uses animationend event with a setTimeout fallback at 3000ms. Need to add: skip intro entirely for returning players.",
+  "acceptance": [
+    "Intro uses animationend event (already done)",
+    "Fallback timeout exists (already done)",
+    "Returning players skip intro entirely"
+  ]
+}

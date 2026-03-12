@@ -1,0 +1,18 @@
+{
+  "item": 3,
+  "title": "Communicate Hint Star Penalty Before Click",
+  "description": "Display 'Using hints reduces max ★' next to hint button before clicking. Show '⚠ Max ★★ with hints' after use.",
+  "files": ["js/ui.js", "css/style.css"],
+  "changes": [
+    {
+      "file": "js/ui.js",
+      "what": "updateHintPenalty() already shows pre-hint warning ('💡 Hints available (may reduce ★)') and post-hint penalty. Current implementation already satisfies the requirement. Just need to refine the messaging: before click show 'Using hints reduces max ★' instead of current text, and ensure post-use shows '⚠ Max ★★ with hints' or '⚠ Max ★ with hints'."
+    }
+  ],
+  "acceptance": [
+    "Before any hint click: hint penalty area shows 'Using hints reduces max ★'",
+    "After first hint: no penalty message (first hint is free per setupHintAndSkip)",
+    "After second hint: shows '⚠ Max ★★ with hints'",
+    "After third hint: shows '⚠ Max ★ with hints'"
+  ]
+}

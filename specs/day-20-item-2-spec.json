@@ -1,0 +1,20 @@
+{
+  "day": 20,
+  "item": 2,
+  "title": "Differentiate Interactive Buttons from Info Containers",
+  "summary": "Buttons and static info containers share similar styling. Add distinct interactive affordances to buttons.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add cursor:pointer, subtle hover lift, and distinct border treatment to interactive buttons vs static containers like gate-indicator, result-display(idle), and star-display.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Interactive buttons have cursor:pointer and hover effects (lift + glow)",
+        "Static info containers have no hover effects and default cursor",
+        "Visual distinction is clear between clickable and non-clickable elements"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Hover over buttons vs info containers and verify visual distinction"]
+}

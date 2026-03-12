@@ -1,0 +1,18 @@
+{
+  "item": 11,
+  "title": "Fix Locked Level Contrast & Visibility",
+  "description": "Increase locked levels from opacity 0.3 to 0.5+ with lock icon overlay. Keep names readable.",
+  "files": ["css/style.css"],
+  "changes": [
+    {
+      "file": "css/style.css",
+      "what": "Update .level-btn.locked opacity from current 0.5 to ensure readability. Check lock icon already exists via ::after pseudo-element. Increase icon size."
+    }
+  ],
+  "notes": "Current CSS already has opacity 0.5 and lock icon. May already satisfy requirement. Verify and enhance if needed.",
+  "acceptance": [
+    "Locked levels have opacity >= 0.5",
+    "Lock icon visible",
+    "Level names still readable"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "day": 19,
+  "item": 10,
+  "title": "Fix Timer Interval Leak on Screen Transitions",
+  "summary": "Timer interval continues running when navigating away from gameplay. Clear interval on screen transitions.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Call stopTimer() when transitioning away from gameplay screen (showLevelSelect, showChallengeConfig).",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Timer interval is cleared when going back to level select",
+        "Timer interval is cleared when going to challenge config",
+        "Timer resumes correctly when starting a new level"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Start level, navigate back, check no interval leak"]
+}

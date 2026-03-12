@@ -1,0 +1,12 @@
+{
+  "item": 8,
+  "title": "Scale Celebrations Proportionally by Star Rating",
+  "description": "1★ = modest pulse; 2★ = full arpeggio + confetti; 3★ = extended fanfare, gold particles, freeze-frame.",
+  "files": ["js/ui.js", "js/audio.js"],
+  "notes": "The celebration system already scales by stars — startCelebration(stars) varies particle count (30/60/120), colors (muted/full/gold), and flash duration. Audio playSuccess(stars) already scales from single chime to extended fanfare. This is already implemented.",
+  "acceptance": [
+    "1★: modest celebration (30 particles, muted colors, no flash)",
+    "2★: standard celebration (60 particles, full colors, short flash)",
+    "3★: extended celebration (120 particles, gold colors, long flash)"
+  ]
+}

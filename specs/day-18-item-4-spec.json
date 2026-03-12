@@ -1,0 +1,22 @@
+{
+  "item": 4,
+  "title": "Show Diagnostic Failure Feedback",
+  "description": "When simulation fails, show what each output produced vs expected. Add 'Actual' column to truth table for failed rows.",
+  "files": ["js/ui.js", "css/style.css"],
+  "changes": [
+    {
+      "file": "js/ui.js",
+      "what": "In updateTruthTable(), when results exist and a row fails, add an 'Actual' column showing what the circuit actually produced vs expected."
+    },
+    {
+      "file": "css/style.css",
+      "what": "Style the actual-output column to distinguish it visually from expected"
+    }
+  ],
+  "acceptance": [
+    "When simulation has failures, truth table shows 'Actual' header column(s)",
+    "Failed rows show actual output values in red alongside expected values",
+    "Passing rows don't need actual column (they match)",
+    "Table still looks clean and readable"
+  ]
+}

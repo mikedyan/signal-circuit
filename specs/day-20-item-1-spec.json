@@ -1,0 +1,19 @@
+{
+  "day": 20,
+  "item": 1,
+  "title": "Remove Version Number from Gameplay View",
+  "summary": "Version number during gameplay is developer-facing noise. Remove from gameplay, keep visible only in How to Play modal or similar.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Remove the v1.0 div from the gameplay info panel. Optionally add it to the How to Play modal footer.",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "No version number visible during gameplay",
+        "Version number visible somewhere accessible (How to Play or settings)"
+      ],
+      "depends_on": []
+    }
+  ],
+  "testing_focus": ["Gameplay screen has no version text"]
+}
