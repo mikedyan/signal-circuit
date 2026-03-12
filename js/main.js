@@ -80,10 +80,17 @@ class GameState {
     this.ui.showScreen('level-select');
 
     // Remove intro after animation
-    setTimeout(() => {
-      const intro = document.getElementById('intro-screen');
-      if (intro) intro.remove();
-    }, 1800);
+    const intro = document.getElementById('intro-screen');
+    if (intro) {
+      const onEnd = () => {
+        intro.remove();
+      };
+      intro.addEventListener('animationend', onEnd);
+      // Fallback in case animationend doesn't fire
+      setTimeout(() => {
+        if (intro.parentNode) intro.remove();
+      }, 3000);
+    }
   }
 
   markDirty() {
