@@ -321,6 +321,10 @@ class GameState {
       } else {
         hintBtn.textContent = `💡 Hint ${this.hintsUsed + 1}/${this.currentLevel.hints.length}`;
       }
+
+      // Update hint penalty display
+      this.ui.updateHintPenalty();
+      this.ui.updateGateIndicator();
     });
 
     document.getElementById('skip-btn').addEventListener('click', () => {

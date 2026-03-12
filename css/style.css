@@ -1271,6 +1271,19 @@ body {
   cursor: default;
 }
 
+/* ── Hint Penalty Warning ── */
+#hint-penalty {
+  text-align: center;
+  font-size: 10px;
+  color: #cc0;
+  padding: 4px 6px;
+  background: rgba(200, 180, 0, 0.08);
+  border: 1px solid rgba(200, 180, 0, 0.2);
+  border-radius: 4px;
+  margin-top: -4px;
+  font-family: 'Courier New', monospace;
+}
+
 /* ── Skip Button ── */
 #skip-btn {
   background: transparent;

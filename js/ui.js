@@ -906,6 +906,44 @@ class UI {
       // Style class
       el.className = count <= optimal ? 'optimal' : count <= good ? 'good' : 'over';
     }
+
+    // Update hint penalty display
+    this.updateHintPenalty();
+  }
+
+  updateHintPenalty() {
+    const penaltyEl = document.getElementById('hint-penalty');
+    if (!penaltyEl) return;
+
+    const gs = this.gameState;
+    const level = gs.currentLevel;
+
+    // Only show for campaign levels with hints
+    if (!level || gs.isSandboxMode || gs.isChallengeMode || !level.hints || level.hints.length === 0) {
+      penaltyEl.style.display = 'none';
+      return;
+    }
+
+    if (gs.hintsUsed === 0) {
+      // Before hints used: show warning
+      penaltyEl.textContent = '💡 Hints available (may reduce ★)';
+      penaltyEl.style.display = 'block';
+      penaltyEl.style.color = '#cc0';
+      penaltyEl.style.fontSize = '10px';
+    } else {
+      // After hints used: show penalty
+      if (gs.maxHintPenalty >= 2) {
+        penaltyEl.textContent = '⚠ Max ★ with hints';
+      } else if (gs.maxHintPenalty >= 1) {
+        penaltyEl.textContent = '⚠ Max ★★ with hints';
+      } else {
+        penaltyEl.style.display = 'none';
+        return;
+      }
+      penaltyEl.style.display = 'block';
+      penaltyEl.style.color = '#f90';
+      penaltyEl.style.fontSize = '11px';
+    }
   }
 
   // ── Gate Count Display (legacy for sandbox) ──
