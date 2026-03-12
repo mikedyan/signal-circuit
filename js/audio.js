@@ -135,24 +135,59 @@ class AudioEngine {
     osc.stop(now + 0.12);
   }
 
-  // ── Sound: Simulation row pulse ──
-  playSimPulse() {
+  // ── Sound: Simulation row pulse (escalating) ──
+  resetSimPitch() {
+    this._simRowIndex = 0;
+  }
+
+  playSimPulsePass() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const row = this._simRowIndex || 0;
+    this._simRowIndex = row + 1;
+
+    // Ascending pitch for passing rows: 600 → 1400 over ~8 rows
+    const baseFreq = 600 + row * 100;
+    const freq = Math.min(baseFreq, 1400);
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.85, now + 0.06);
+    gain.gain.setValueAtTime(this.masterVolume * 0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  playSimPulseFail() {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
+    // Descending buzz for failing rows
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(1000, now);
-    osc.frequency.exponentialRampToValueAtTime(800, now + 0.04);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
     gain.gain.setValueAtTime(this.masterVolume * 0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.06);
+    osc.stop(now + 0.1);
+  }
+
+  // Legacy alias
+  playSimPulse() {
+    this.playSimPulsePass();
   }
 
   // ── Sound: Success jingle (rich ascending chord) ──
@@ -313,6 +348,26 @@ class AudioEngine {
       osc.start(t);
       osc.stop(t + 0.3);
     });
+  }
+
+  // ── Sound: Invalid connection buzz ──
+  playInvalidConnection() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    // Short harsh buzz
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, now);
+    gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.1);
   }
 
   // ── Helper: Noise burst ──

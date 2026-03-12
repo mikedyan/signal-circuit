@@ -1,9 +1,30 @@
 // levels.js — Level definitions, chapters, and star thresholds
 
 const CHAPTERS = [
-  { id: 1, title: 'Chapter 1: Basics', levels: [1, 2, 3, 4, 5] },
-  { id: 2, title: 'Chapter 2: Combinations', levels: [6, 7, 8, 9, 10] },
-  { id: 3, title: 'Chapter 3: Multi-Output', levels: [11, 12, 13, 14, 15] },
+  {
+    id: 1, title: 'Chapter 1: Basics', levels: [1, 2, 3, 4, 5],
+    narrative: 'Navigation Systems',
+    storyIntro: 'The ship\'s navigation array is dark. These basic logic circuits need repair before we can steer.',
+    storyComplete: '🛸 Navigation systems online! The ship can steer again.',
+    gatesMastered: ['AND', 'OR', 'NOT'],
+    color: '#00cc44',
+  },
+  {
+    id: 2, title: 'Chapter 2: Combinations', levels: [6, 7, 8, 9, 10],
+    narrative: 'Communications Array',
+    storyIntro: 'Communications are jammed. These combination circuits route encrypted signals.',
+    storyComplete: '📡 Communications restored! We can reach mission control.',
+    gatesMastered: ['XOR', 'De Morgan\'s Laws'],
+    color: '#00c8e8',
+  },
+  {
+    id: 3, title: 'Chapter 3: Multi-Output', levels: [11, 12, 13, 14, 15],
+    narrative: 'Life Support',
+    storyIntro: 'Life support is failing. These multi-output circuits control oxygen, temperature, and pressure.',
+    storyComplete: '🌬️ Life support fully operational! The crew is safe.',
+    gatesMastered: ['Half Adder', 'Full Adder', 'MUX', 'Majority'],
+    color: '#c050f0',
+  },
 ];
 
 const LEVELS = [
@@ -12,7 +33,7 @@ const LEVELS = [
     id: 1,
     title: 'AND Gate Basics',
     description: 'Output is 1 only when BOTH inputs are 1.',
-    postSolveInsight: '🔓 The AND gate is the foundation of digital logic — like a series circuit where both switches must be ON for current to flow.',
+    postSolveInsight: '🔓 The AND gate is the foundation of digital logic — like a series circuit where both switches must be ON for current to flow.\n🛸 Navigation sensor #1 responding.',
     hints: [
       'This gate only outputs 1 when BOTH inputs are 1. Which gate does that?',
       'You only need 1 gate for this level.',
@@ -40,7 +61,7 @@ const LEVELS = [
     id: 2,
     title: 'NOT Gate — Inversion',
     description: 'Output is the OPPOSITE of the input.',
-    postSolveInsight: '🔓 NOT (also called an inverter) is the simplest gate — built from a single transistor. It flips 0→1 and 1→0.',
+    postSolveInsight: '🔓 NOT (also called an inverter) is the simplest gate — built from a single transistor. It flips 0→1 and 1→0.\n🛸 Signal inverter calibrated.',
     hints: [
       'The output is always the opposite of the input. What operation flips a signal?',
       'A single gate is all you need here.',
@@ -65,7 +86,7 @@ const LEVELS = [
     id: 3,
     title: 'OR Gate — Any Will Do',
     description: 'Output is 1 when ANY input is 1. Only 0 when both inputs are 0.',
-    postSolveInsight: '🔓 OR is like a parallel circuit — if ANY path is active, current flows through. Fundamental to decision-making in hardware.',
+    postSolveInsight: '🔓 OR is like a parallel circuit — if ANY path is active, current flows through. Fundamental to decision-making in hardware.\n🛸 Backup navigation path established.',
     hints: [
       'The output is 1 if ANY input is 1. Only 0 when everything is 0.',
       'One gate handles this directly.',
@@ -93,7 +114,7 @@ const LEVELS = [
     id: 4,
     title: 'Build a NAND',
     description: 'Study the truth table carefully — compare it to Level 1. What\'s different about every single output?',
-    postSolveInsight: '🔓 NAND = NOT(AND). The NAND gate is special — it\'s "universal," meaning you can build ANY other gate from just NANDs!',
+    postSolveInsight: '🔓 NAND = NOT(AND). The NAND gate is special — it\'s "universal," meaning you can build ANY other gate from just NANDs!\n🛸 Course correction circuit online.',
     hints: [
       'Compare this truth table to Level 1\'s AND. What\'s different about every single output?',
       'You need 2 gates — one to compute, one to transform the result.',
@@ -121,7 +142,7 @@ const LEVELS = [
     id: 5,
     title: 'Build a NOR',
     description: 'Study the truth table carefully. What pattern do you notice when you compare each output to what you\'d expect?',
-    postSolveInsight: '🔓 NOR = NOT(OR). Like NAND, NOR is also a universal gate — all of digital logic can be built from NOR gates alone!',
+    postSolveInsight: '🔓 NOR = NOT(OR). Like NAND, NOR is also a universal gate — all of digital logic can be built from NOR gates alone!\n🛸 Navigation array fully operational!',
     hints: [
       'Compare this truth table to Level 3\'s OR. Every output is flipped!',
       'Same pattern as Level 4 — 2 gates in sequence.',
@@ -151,7 +172,7 @@ const LEVELS = [
     id: 6,
     title: 'XOR — Exclusive Or',
     description: 'Output is 1 when the inputs are DIFFERENT. Same inputs give 0, different inputs give 1.',
-    postSolveInsight: '🔓 XOR (exclusive or) is the "difference detector" — fundamental to binary addition and error-checking in data transmission.',
+    postSolveInsight: '🔓 XOR (exclusive or) is the "difference detector" — fundamental to binary addition and error-checking in data transmission.\n📡 Signal differentiator back online.',
     hints: [
       'Output is 1 when inputs DIFFER. Same inputs give 0, different give 1.',
       'You have one new gate that does exactly this. Single gate solution.',
@@ -179,7 +200,7 @@ const LEVELS = [
     id: 7,
     title: 'XNOR — Same Detector',
     description: 'Study this truth table. When does the output turn on?',
-    postSolveInsight: '🔓 XNOR = NOT(XOR). Also called an "equivalence gate" — it checks if two signals match. Used in comparator circuits.',
+    postSolveInsight: '🔓 XNOR = NOT(XOR). Also called an "equivalence gate" — it checks if two signals match. Used in comparator circuits.\n📡 Signal verification module repaired.',
     hints: [
       'The opposite of XOR — outputs 1 when inputs are the SAME.',
       'You\'ve seen this pattern before: compute something, then flip it. 2 gates.',
@@ -207,7 +228,7 @@ const LEVELS = [
     id: 8,
     title: 'AND from OR + NOT',
     description: 'You recognize this truth table from Level 1 — but your toolbox is different this time.',
-    postSolveInsight: '🔓 De Morgan\'s Law: AND(A,B) = NOT(OR(NOT(A), NOT(B))). Augustus De Morgan proved these gate equivalences in the 1800s!',
+    postSolveInsight: '🔓 De Morgan\'s Law: AND(A,B) = NOT(OR(NOT(A), NOT(B))). Augustus De Morgan proved these gate equivalences in the 1800s!\n📡 Encrypted channel decoder restored.',
     hints: [
       'De Morgan\'s insight: you can build AND using only OR and NOT gates.',
       'You need 4 gates total. Think about what needs to happen to EACH input before combining.',
@@ -235,7 +256,7 @@ const LEVELS = [
     id: 9,
     title: 'OR from AND + NOT',
     description: 'Another familiar truth table, another unfamiliar toolbox. What will you discover?',
-    postSolveInsight: '🔓 De Morgan\'s Other Law: OR(A,B) = NOT(AND(NOT(A), NOT(B))). AND and OR are duals — each can be built from the other plus NOT.',
+    postSolveInsight: '🔓 De Morgan\'s Other Law: OR(A,B) = NOT(AND(NOT(A), NOT(B))). AND and OR are duals — each can be built from the other plus NOT.\n📡 Redundant signal path established.',
     hints: [
       'De Morgan\'s other law: you can build OR using only AND and NOT gates.',
       'Same structure as Level 8 but with different gates — 4 gates total.',
@@ -263,7 +284,7 @@ const LEVELS = [
     id: 10,
     title: 'The Implication',
     description: 'Most of this truth table outputs 1. Study the one exception carefully.',
-    postSolveInsight: '🔓 A→B = OR(NOT(A), B). Material implication is the foundation of formal logic and programming conditionals. Just 2 gates!',
+    postSolveInsight: '🔓 A→B = OR(NOT(A), B). Material implication is the foundation of formal logic and programming conditionals. Just 2 gates!\n📡 Communications array fully operational!',
     hints: [
       'A→B is only false when A is true but B isn\'t. All other cases are true.',
       'Just 2 gates needed. What if you transformed one input before combining?',
@@ -293,7 +314,7 @@ const LEVELS = [
     id: 11,
     title: 'Half Adder',
     description: 'Add two single-bit numbers. SUM is the single-digit result, CARRY is what overflows to the next column. Two outputs!',
-    postSolveInsight: '🔓 Half Adder: SUM = XOR(A,B), CARRY = AND(A,B). This is literally how computers add numbers at the hardware level!',
+    postSolveInsight: '🔓 Half Adder: SUM = XOR(A,B), CARRY = AND(A,B). This is literally how computers add numbers at the hardware level!\n🌬️ Oxygen regulator calculations restored.',
     hints: [
       'Two outputs! Think of binary addition: what\'s the single-digit result, and what carries over?',
       'You need 2 gates — one for each output. Each gate type matches a different output.',
@@ -322,7 +343,7 @@ const LEVELS = [
     id: 12,
     title: '3-Input AND',
     description: 'Output is 1 only when ALL THREE inputs are 1. You have three inputs but your gates only take two...',
-    postSolveInsight: '🔓 Chaining 2-input gates to handle more inputs is how real CPUs scale up — daisy-chaining is everywhere in hardware design.',
+    postSolveInsight: '🔓 Chaining 2-input gates to handle more inputs is how real CPUs scale up — daisy-chaining is everywhere in hardware design.\n🌬️ Triple-sensor safety interlock engaged.',
     hints: [
       'All three inputs must be 1 for the output to be 1. But your gates only take 2 inputs...',
       'You need 2 gates. Chain them together to handle all 3 inputs.',
@@ -355,7 +376,7 @@ const LEVELS = [
     id: 13,
     title: 'Majority Vote',
     description: 'Output 1 when 2 or more of the 3 inputs are 1. Think: "at least 2 out of 3 agree."',
-    postSolveInsight: '🔓 Majority(A,B,C) = OR(AND(A,B), AND(B,C), AND(A,C)). Majority voting is used in fault-tolerant systems like spacecraft computers!',
+    postSolveInsight: '🔓 Majority(A,B,C) = OR(AND(A,B), AND(B,C), AND(A,C)). Majority voting is used in fault-tolerant systems like spacecraft computers!\n🌬️ Fault-tolerant temperature control online.',
     hints: [
       'Output is 1 when at least 2 of 3 inputs agree. Think about checking pairs.',
       'You need 5 gates — check each possible pair, then combine all the pair results.',
@@ -388,7 +409,7 @@ const LEVELS = [
     id: 14,
     title: 'Multiplexer',
     description: 'Three inputs, one output. The third input changes which of the other two reaches the output.',
-    postSolveInsight: '🔓 MUX = OR(AND(A, NOT(S)), AND(B, S)). Multiplexers are the "railroad switches" of digital circuits — they route data.',
+    postSolveInsight: '🔓 MUX = OR(AND(A, NOT(S)), AND(B, S)). Multiplexers are the "railroad switches" of digital circuits — they route data.\n🌬️ Pressure valve selector repaired.',
     hints: [
       'Think about what happens when S=0: only A matters. When S=1: only B matters. How can you use S to "enable" one path and "disable" the other?',
       'You need 4 gates. One gate prepares S, two gates each handle one input path, and one gate combines the results.',
@@ -421,7 +442,7 @@ const LEVELS = [
     id: 15,
     title: 'Full Adder',
     description: 'The boss level! Add three single-bit numbers (A + B + carry-in) and produce SUM and CARRY outputs.',
-    postSolveInsight: '🔓 Full Adder: SUM = XOR(XOR(A,B), Cin), CARRY = OR(AND(A,B), AND(Cin, XOR(A,B))). Chain these together and you\'ve built a CPU\'s arithmetic unit!',
+    postSolveInsight: '🔓 Full Adder: SUM = XOR(XOR(A,B), Cin), CARRY = OR(AND(A,B), AND(Cin, XOR(A,B))). Chain these together and you\'ve built a CPU\'s arithmetic unit!\n🌬️ Life support fully operational! All systems go.',
     hints: [
       'Think of it as two half-adders chained together. What does a half adder (Level 11) produce?',
       '5 gates total. First, add A and B (like Level 11). Then add that partial result with Cin. The carries from both additions combine.',
@@ -517,31 +538,94 @@ function getChapters() {
 
 // ── Procedural Challenge Generator ──
 
+// Curated challenge patterns — interesting logic functions
+const CURATED_CHALLENGES = {
+  '2x1': [
+    { name: 'NAND', table: [1,1,1,0] },
+    { name: 'NOR', table: [1,0,0,0] },
+    { name: 'XNOR', table: [1,0,0,1] },
+    { name: 'Implication', table: [1,1,0,1] },
+    { name: 'Converse', table: [1,0,1,1] },
+    { name: 'Inhibition', table: [0,0,1,0] },
+  ],
+  '2x2': [
+    { name: 'Half Adder', table: [[0,0],[1,0],[1,0],[0,1]] },
+    { name: 'Comparator', table: [[1,0],[0,1],[1,0],[1,0]] },
+    { name: 'Swap Detect', table: [[0,0],[1,1],[1,1],[0,0]] },
+    { name: 'Priority', table: [[0,0],[0,1],[1,0],[1,1]] },
+  ],
+  '3x1': [
+    { name: 'Majority', table: [0,0,0,1,0,1,1,1] },
+    { name: 'Parity', table: [0,1,1,0,1,0,0,1] },
+    { name: 'Threshold-2', table: [0,0,0,1,0,1,1,1] },
+    { name: 'Any-Two', table: [0,0,0,1,0,1,1,1] },
+    { name: 'Exactly-One', table: [0,1,1,0,1,0,0,0] },
+    { name: 'Carry-Out', table: [0,0,0,1,0,1,1,1] },
+    { name: 'Odd-Parity', table: [0,1,1,0,1,0,0,1] },
+    { name: 'Mux-Select', table: [0,0,1,1,0,1,0,1] },
+  ],
+  '3x2': [
+    { name: 'Full Adder', table: [[0,0],[1,0],[1,0],[0,1],[1,0],[0,1],[0,1],[1,1]] },
+    { name: 'Compare & Flag', table: [[0,0],[0,1],[0,1],[0,0],[1,0],[0,0],[0,0],[0,0]] },
+    { name: 'Encode', table: [[0,0],[0,1],[1,0],[1,1],[0,0],[0,1],[1,0],[1,1]] },
+  ],
+  '4x1': [
+    { name: 'Even Parity', table: [1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1] },
+    { name: 'Majority-4', table: [0,0,0,0,0,0,1,1,0,0,1,1,0,1,1,1] },
+    { name: 'At-Least-3', table: [0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,1] },
+    { name: 'Exactly-Two', table: [0,0,0,1,0,1,1,0,0,1,1,0,1,0,0,0] },
+  ],
+  '4x2': [
+    { name: '2-Bit Adder', table: [[0,0],[0,1],[1,0],[1,1],[0,1],[1,0],[1,1],[0,0],[1,0],[1,1],[0,0],[0,1],[1,1],[0,0],[0,1],[1,0]] },
+  ],
+};
+
 function generateChallenge(numInputs, numOutputs) {
   const numRows = Math.pow(2, numInputs);
   const inputLabels = ['A', 'B', 'C', 'D'].slice(0, numInputs);
   const outputLabels = numOutputs === 1 ? ['OUT'] : ['X', 'Y'];
 
-  // Generate truth table with random but non-degenerate outputs
+  // Try curated patterns first
+  const key = `${numInputs}x${numOutputs}`;
+  const curated = CURATED_CHALLENGES[key];
   let truthTable;
-  let attempts = 0;
-  do {
-    truthTable = [];
-    const outputColumns = [];
-    for (let o = 0; o < numOutputs; o++) {
-      outputColumns.push(generateNonDegenerateColumn(numRows, numInputs));
-    }
+  let challengeName = null;
 
+  if (curated && curated.length > 0 && Math.random() < 0.7) {
+    const pick = curated[Math.floor(Math.random() * curated.length)];
+    challengeName = pick.name;
+    truthTable = [];
     for (let r = 0; r < numRows; r++) {
       const inputs = [];
       for (let i = numInputs - 1; i >= 0; i--) {
         inputs.push((r >> i) & 1);
       }
-      const outputs = outputColumns.map(col => col[r]);
+      const outputs = numOutputs === 1
+        ? [pick.table[r]]
+        : pick.table[r];
       truthTable.push({ inputs, outputs });
     }
-    attempts++;
-  } while (!isValidTruthTable(truthTable, numInputs) && attempts < 100);
+  } else {
+    // Fallback to random generation
+    let attempts = 0;
+    do {
+      truthTable = [];
+      const outputColumns = [];
+      for (let o = 0; o < numOutputs; o++) {
+        outputColumns.push(generateNonDegenerateColumn(numRows, numInputs));
+      }
+
+      for (let r = 0; r < numRows; r++) {
+        const inputs = [];
+        for (let i = numInputs - 1; i >= 0; i--) {
+          inputs.push((r >> i) & 1);
+        }
+        const outputs = outputColumns.map(col => col[r]);
+        truthTable.push({ inputs, outputs });
+      }
+      attempts++;
+    } while (!isValidTruthTable(truthTable, numInputs) && attempts < 100);
+  }
 
   // Position I/O nodes based on count
   const canvasHeight = 500;
@@ -569,8 +653,10 @@ function generateChallenge(numInputs, numOutputs) {
 
   return {
     id: 'challenge',
-    title: `${difficultyLabel} Challenge`,
-    description: `Build a circuit matching this ${numInputs}-input, ${numOutputs}-output truth table.`,
+    title: challengeName ? `${difficultyLabel}: ${challengeName}` : `${difficultyLabel} Challenge`,
+    description: challengeName
+      ? `Build a "${challengeName}" circuit — ${numInputs} inputs, ${numOutputs} output${numOutputs > 1 ? 's' : ''}.`
+      : `Build a circuit matching this ${numInputs}-input, ${numOutputs}-output truth table.`,
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates,
     goodGates,

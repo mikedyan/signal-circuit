@@ -7,7 +7,7 @@
 }
 
 body {
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', 'Courier', 'Consolas', 'Monaco', 'Liberation Mono', monospace;
   background: #1a1a2e;
   color: #e0e0e0;
   overflow: hidden;
@@ -91,9 +91,10 @@ body {
 }
 
 .level-btn.locked {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
   position: relative;
+  border-color: #333;
 }
 
 .level-btn.locked::after {
@@ -101,8 +102,8 @@ body {
   position: absolute;
   top: 4px;
   right: 4px;
-  font-size: 10px;
-  opacity: 0.7;
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 .level-btn.completed {
@@ -117,7 +118,7 @@ body {
 }
 
 .level-btn.locked .level-number {
-  color: #777;
+  color: #888;
 }
 
 .level-stars {
@@ -351,6 +352,11 @@ body {
   color: #f44;
 }
 
+#truth-table .actual-col {
+  background: rgba(255, 150, 0, 0.08);
+  border-left: 2px solid rgba(255, 150, 0, 0.3);
+}
+
 /* ── Row micro-celebration animations ── */
 #truth-table tr.row-flash-pass {
   animation: rowPassFlash 0.3s ease-out;
@@ -379,28 +385,63 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 #run-btn {
   background: #0a0;
   color: #fff;
   border: 2px solid #0f0;
-  padding: 16px;
+  padding: 18px;
   font-family: 'Courier New', monospace;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
   cursor: pointer;
   border-radius: 6px;
   text-transform: uppercase;
   letter-spacing: 3px;
   transition: all 0.2s;
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.3), 0 0 30px rgba(0, 255, 0, 0.1);
+  animation: runBtnPulse 3s ease-in-out infinite;
+}
+
+@keyframes runBtnPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 0, 0.3), 0 0 30px rgba(0, 255, 0, 0.1); }
+  50% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.5), 0 0 40px rgba(0, 255, 0, 0.2); }
 }
 
 #run-btn:hover {
   background: #0c0;
-  box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.6), 0 0 50px rgba(0, 255, 0, 0.3);
   transform: translateY(-1px);
+  animation: none;
+}
+
+#secondary-controls {
+  display: flex;
+  gap: 6px;
+}
+
+#secondary-controls button {
+  flex: 1;
+}
+
+#quick-test-btn {
+  background: #1a2a1a;
+  color: #8c8;
+  border: 1px solid #4a4;
+  padding: 6px 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+#quick-test-btn:hover {
+  background: #2a3a2a;
+  color: #0f0;
+  border-color: #0f0;
 }
 
 #clear-btn {
@@ -928,6 +969,7 @@ body {
 }
 
 #gate-stars-preview .star-gold { color: #ffd700; }
+#gate-stars-preview .star-blocked { color: #664400; text-decoration: line-through; }
 #gate-stars-preview .star-dim { color: #333; }
 
 /* ── Progress Bar ── */
@@ -1311,7 +1353,7 @@ body {
 
 /* ── Hint Display ── */
 #hint-display {
-  max-height: 80px;
+  max-height: 100px;
   overflow-y: auto;
   background: rgba(200, 180, 0, 0.1);
   border: 1px solid #665500;
@@ -1321,6 +1363,7 @@ body {
   color: #cc0;
   line-height: 1.4;
   display: none;
+  flex-shrink: 0;
 }
 
 #hint-display .hint-label {
@@ -1496,6 +1539,89 @@ body {
   to { opacity: 0; pointer-events: none; }
 }
 
+/* ── Interactive Button Affordances ── */
+#back-btn, #shortcuts-btn, #hint-btn, #skip-btn, #clear-btn, #quick-test-btn,
+#prev-level, #next-level, #next-level-btn, #share-btn, #mute-btn,
+#reset-progress-btn, #how-to-play-btn, #achievements-btn,
+.challenge-btn, .level-btn:not(.locked) {
+  cursor: pointer;
+}
+
+/* Static info containers — no interactivity signals */
+#gate-indicator, #result-display.idle, #star-display, #hint-display, #hint-penalty {
+  cursor: default;
+}
+
+/* ── Confirm Modal ── */
+#confirm-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#confirm-modal-content {
+  background: #1a1a2e;
+  border: 2px solid #0f0;
+  border-radius: 12px;
+  padding: 24px 32px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+}
+
+#confirm-modal-message {
+  color: #ccc;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  font-family: 'Courier New', monospace;
+}
+
+#confirm-modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+#confirm-modal-cancel {
+  background: #333;
+  color: #aaa;
+  border: 1px solid #555;
+  padding: 10px 24px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+#confirm-modal-cancel:hover {
+  background: #444;
+  color: #fff;
+}
+
+#confirm-modal-ok {
+  background: #a00;
+  color: #fff;
+  border: 2px solid #f44;
+  padding: 10px 24px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+#confirm-modal-ok:hover {
+  background: #c00;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
 /* ── Drag ghost ── */
 #drag-ghost {
   position: fixed;
@@ -1511,6 +1637,184 @@ body {
   font-weight: bold;
   font-size: 13px;
   display: none;
+}
+
+/* ── Game Narrative ── */
+#game-narrative {
+  font-size: 11px;
+  color: #556;
+  letter-spacing: 1px;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+/* ── Chapter Colors & Narrative ── */
+.chapter-narrative {
+  float: right;
+  font-size: 11px;
+  color: #666;
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: italic;
+}
+
+/* ── Bookmark Styles ── */
+.level-btn.bookmarked {
+  border-color: #cc8800;
+  border-style: dashed;
+}
+
+.level-btn.bookmarked::after {
+  content: '🔖';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.bookmark-icon {
+  font-size: 14px;
+}
+
+/* ── Chapter Complete Modal ── */
+#chapter-complete-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#chapter-complete-content {
+  background: linear-gradient(135deg, #1a1a2e, #0a1a2a);
+  border: 2px solid #0f0;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+#chapter-complete-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+#chapter-complete-title {
+  color: #0f0;
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+#chapter-complete-story {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+#chapter-complete-gates h4 {
+  color: #888;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.chapter-gate-badge {
+  display: inline-block;
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid #0f0;
+  border-radius: 6px;
+  padding: 6px 14px;
+  margin: 4px;
+  font-size: 13px;
+  color: #0f0;
+  font-weight: bold;
+}
+
+#chapter-complete-continue {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  background: #0a0;
+  color: #fff;
+  border: 2px solid #0f0;
+  padding: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+#chapter-complete-continue:hover {
+  background: #0c0;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+}
+
+#chapter-complete-back {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  background: transparent;
+  color: #666;
+  border: 1px solid #444;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+#chapter-complete-back:hover {
+  color: #aaa;
+  border-color: #666;
+}
+
+/* ── RUN Tension Overlay ── */
+#run-tension-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  z-index: 50;
+  transition: background 0.15s ease;
+}
+
+#run-tension-overlay.active {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ── Achievement Tier Headers ── */
+.achievement-tier-header {
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 16px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #333;
+}
+
+.achievement-row {
+  border-left: 3px solid transparent;
 }
 
 /* ── Responsive / Mobile ── */
@@ -1613,6 +1917,41 @@ body {
 
   #reset-progress-btn {
     min-height: 44px;
+  }
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  #intro-screen {
+    animation: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #run-btn {
+    animation: none;
+  }
+
+  #victory-flash {
+    display: none;
+  }
+
+  .level-btn:hover:not(.locked) {
+    transform: none;
+  }
+
+  .challenge-btn:hover {
+    transform: none;
+  }
+
+  #run-btn:hover {
+    transform: none;
   }
 }
 

@@ -75,6 +75,8 @@ class WireManager {
       toGate = from.gateId;
       toPin = from.pinIndex;
     } else {
+      // Invalid: same pin type (output→output or input→input)
+      this._showInvalidFeedback(x, y);
       this.cancelDrawing();
       return null;
     }
@@ -86,6 +88,8 @@ class WireManager {
     }
 
     if (fromGate === toGate) {
+      // Invalid: self-connection
+      this._showInvalidFeedback(x, y);
       this.cancelDrawing();
       return null;
     }
@@ -97,15 +101,69 @@ class WireManager {
     return wire;
   }
 
+  _showInvalidFeedback(x, y) {
+    // Play buzz sound
+    if (this.gameState.audio) {
+      this.gameState.audio.playInvalidConnection();
+    }
+    // Spawn red flash particles at the target pin
+    if (this.gameState.renderer) {
+      this.invalidFlash = { x, y, time: performance.now(), duration: 300 };
+      this.gameState.markDirty();
+    }
+  }
+
   cancelDrawing() {
     this.drawing = false;
     this.drawFrom = null;
   }
 
   removeWire(wire) {
+    // Spawn deletion particles before removing
+    this._spawnDeletionParticles(wire);
     this.wires = this.wires.filter(w => w.id !== wire.id);
     if (this.selectedWire === wire) this.selectedWire = null;
     if (this.hoveredWire === wire) this.hoveredWire = null;
+  }
+
+  _spawnDeletionParticles(wire) {
+    const endpoints = this.getWireEndpoints(wire);
+    if (!endpoints) return;
+
+    const { fromPin, toPin } = endpoints;
+    const sx = fromPin.x + (fromPin.type === 'output' ? 12 : -12);
+    const sy = fromPin.y;
+    const ex = toPin.x + (toPin.type === 'input' ? -12 : 12);
+    const ey = toPin.y;
+    const cp = this._bezierControlPoints(sx, sy, ex, ey);
+
+    if (!this.deletionParticles) this.deletionParticles = [];
+
+    // Spawn fragment particles along the wire path
+    const numFragments = 8;
+    for (let i = 0; i <= numFragments; i++) {
+      const t = i / numFragments;
+      const pt = this._bezierPoint(t, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.5 + Math.random() * 3;
+      this.deletionParticles.push({
+        x: pt.x,
+        y: pt.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1,
+        life: 1,
+        decay: 0.025 + Math.random() * 0.015,
+        size: 2 + Math.random() * 3,
+        color: wire.color,
+      });
+    }
+
+    // Sparks at both endpoints
+    if (this.gameState.renderer) {
+      this.gameState.renderer.spawnSparks(sx, sy);
+      this.gameState.renderer.spawnSparks(ex, ey);
+    }
+    this.gameState.markDirty();
   }
 
   removeWiresForGate(gateId) {
@@ -223,6 +281,9 @@ class WireManager {
         color = '#ff5555';
       } else if (sim.animating && !isActive) {
         color = '#334488';
+      } else if (isActive) {
+        // Live signal propagation: green for active wires
+        color = '#00cc66';
       } else {
         // Use the wire's unique color when not simulating
         color = wire.color;
@@ -284,6 +345,53 @@ class WireManager {
           ctx.fillStyle = `rgba(255, 200, 80, ${alpha})`;
           ctx.fill();
         }
+      }
+    }
+
+    // Deletion fragment particles
+    if (this.deletionParticles && this.deletionParticles.length > 0) {
+      for (let i = this.deletionParticles.length - 1; i >= 0; i--) {
+        const p = this.deletionParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.15; // gravity
+        p.life -= p.decay;
+        if (p.life <= 0) {
+          this.deletionParticles.splice(i, 1);
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fillStyle = p.color.replace(')', `, ${p.life})`).replace('rgb', 'rgba');
+        // Fallback for hex colors
+        if (p.color.startsWith('#')) {
+          const r = parseInt(p.color.slice(1, 3), 16);
+          const g = parseInt(p.color.slice(3, 5), 16);
+          const b = parseInt(p.color.slice(5, 7), 16);
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.life})`;
+        }
+        ctx.fill();
+      }
+      if (this.deletionParticles.length > 0) {
+        this.gameState.markDirty();
+      }
+    }
+
+    // Invalid connection flash
+    if (this.invalidFlash) {
+      const elapsed = performance.now() - this.invalidFlash.time;
+      if (elapsed < this.invalidFlash.duration) {
+        const alpha = 1 - elapsed / this.invalidFlash.duration;
+        const radius = 15 + elapsed / this.invalidFlash.duration * 10;
+        ctx.beginPath();
+        ctx.arc(this.invalidFlash.x, this.invalidFlash.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 50, 50, ${alpha * 0.5})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255, 50, 50, ${alpha})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        this.invalidFlash = null;
       }
     }
 

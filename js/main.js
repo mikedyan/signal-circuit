@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = 'signal-circuit-progress';
 const LEADERBOARD_KEY = 'signal-circuit-leaderboard';
+const SCHEMA_VERSION = 1;
 
 class UndoManager {
   constructor() {
@@ -79,17 +80,25 @@ class GameState {
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
 
-    // Remove intro after animation
+    // Remove intro after animation (skip for returning players)
     const intro = document.getElementById('intro-screen');
     if (intro) {
-      const onEnd = () => {
+      let isReturning = false;
+      try { isReturning = localStorage.getItem('signal-circuit-visited') === 'true'; } catch (e) {}
+
+      if (isReturning) {
+        // Skip intro entirely for returning players
         intro.remove();
-      };
-      intro.addEventListener('animationend', onEnd);
-      // Fallback in case animationend doesn't fire
-      setTimeout(() => {
-        if (intro.parentNode) intro.remove();
-      }, 3000);
+      } else {
+        const onEnd = () => {
+          intro.remove();
+        };
+        intro.addEventListener('animationend', onEnd);
+        // Fallback in case animationend doesn't fire
+        setTimeout(() => {
+          if (intro.parentNode) intro.remove();
+        }, 3000);
+      }
     }
   }
 
@@ -119,20 +128,32 @@ class GameState {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const data = JSON.parse(saved);
+        // Schema version check — migrate or reset if version mismatch
+        if (!data.version || data.version < SCHEMA_VERSION) {
+          // For version 1: old data without version is compatible, just add version
+          data.version = SCHEMA_VERSION;
+          if (!data.levels) data.levels = {};
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+        return data;
       }
-    } catch (e) {}
-    return { levels: {} };
+    } catch (e) {
+      // Corrupted data — reset gracefully
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e2) {}
+    }
+    return { levels: {}, version: SCHEMA_VERSION };
   }
 
   saveProgress() {
     try {
+      this.progress.version = SCHEMA_VERSION;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
     } catch (e) {}
   }
 
   resetProgress() {
-    this.progress = { levels: {} };
+    this.progress = { levels: {}, version: SCHEMA_VERSION };
     this.saveProgress();
   }
 
@@ -178,7 +199,28 @@ class GameState {
   isLevelUnlocked(levelId) {
     if (levelId === 1) return true;
     const prev = this.progress.levels[levelId - 1];
-    return prev && prev.completed;
+    return prev && (prev.completed || prev.bookmarked);
+  }
+
+  bookmarkLevel(levelId) {
+    const existing = this.progress.levels[levelId];
+    if (existing && existing.completed) return; // Already solved
+    this.progress.levels[levelId] = {
+      ...(existing || {}),
+      bookmarked: true,
+      completed: existing ? existing.completed : false,
+    };
+    // Unlock next level
+    const nextId = levelId + 1;
+    if (nextId <= getLevelCount() && !this.progress.levels[nextId]) {
+      // Next level becomes unlockable
+    }
+    this.saveProgress();
+  }
+
+  isLevelBookmarked(levelId) {
+    const data = this.progress.levels[levelId];
+    return data && data.bookmarked && !data.completed;
   }
 
   calculateStars(gateCount, level) {
@@ -214,8 +256,38 @@ class GameState {
       if (elapsed < (existing.bestTime || Infinity)) existing.bestTime = elapsed;
     }
 
+    // Clear bookmark if it was bookmarked
+    if (this.progress.levels[levelId].bookmarked) {
+      delete this.progress.levels[levelId].bookmarked;
+    }
+
     this.saveProgress();
+
+    // Check for chapter completion
+    this._checkChapterCompletion(levelId);
+
     return stars;
+  }
+
+  _checkChapterCompletion(levelId) {
+    const chapters = getChapters();
+    for (const chapter of chapters) {
+      if (!chapter.levels.includes(levelId)) continue;
+      // Is this the last level of the chapter?
+      const lastLevel = chapter.levels[chapter.levels.length - 1];
+      if (levelId !== lastLevel) continue;
+      // Are all levels in this chapter completed?
+      const allComplete = chapter.levels.every(lid => {
+        const p = this.progress.levels[lid];
+        return p && p.completed;
+      });
+      if (allComplete) {
+        // Trigger chapter completion modal after a short delay
+        setTimeout(() => {
+          if (this.ui) this.ui.showChapterCompleteModal(chapter);
+        }, 2000);
+      }
+    }
   }
 
   // ── Screen Management ──
@@ -223,6 +295,7 @@ class GameState {
     this.currentScreen = 'level-select';
     this.isSandboxMode = false;
     this.isChallengeMode = false;
+    this.stopTimer();
     this.ui.renderLevelSelect();
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
@@ -231,6 +304,7 @@ class GameState {
 
   showChallengeConfig() {
     this.currentScreen = 'challenge-config';
+    this.stopTimer();
     this.ui.showScreen('challenge-config');
     // Trigger initial leaderboard render
     const ni = parseInt(document.getElementById('input-count-slider').value);
@@ -311,15 +385,10 @@ class GameState {
 
       this.ui.showHint(this.currentLevel.hints[this.hintsUsed - 1], this.hintsUsed, this.currentLevel.hints.length, isVisualHint);
 
-      // Update hint button text
-      const hintBtn = document.getElementById('hint-btn');
+      // Update hint button via centralized method
+      this.ui.updateHintButton();
       if (this.hintsUsed >= this.currentLevel.hints.length) {
-        hintBtn.disabled = true;
-        hintBtn.textContent = '💡 No more hints';
-        // Show skip after all hints used
         this.showSkipButton();
-      } else {
-        hintBtn.textContent = `💡 Hint ${this.hintsUsed + 1}/${this.currentLevel.hints.length}`;
       }
 
       // Update hint penalty display
@@ -329,11 +398,11 @@ class GameState {
 
     document.getElementById('skip-btn').addEventListener('click', () => {
       if (!this.currentLevel || this.isChallengeMode || this.isSandboxMode) return;
-      if (confirm('Skip this level? You\'ll earn 0 stars.')) {
-        this.completeLevel(this.currentLevel.id, 999); // 999 gates = 0 stars
+      this.ui.showConfirmModal('Bookmark this level and move on? You can come back anytime.', () => {
+        this.bookmarkLevel(this.currentLevel.id);
         this.audio.playButtonClick();
         this.showLevelSelect();
-      }
+      });
     });
 
     // Timer to show skip after 60 seconds
@@ -353,11 +422,9 @@ class GameState {
     this.activeHintHighlights = null;
     this.levelStartTime = Date.now();
 
-    const hintBtn = document.getElementById('hint-btn');
-    hintBtn.disabled = false;
-    hintBtn.textContent = '💡 Hint';
     document.getElementById('skip-btn').style.display = 'none';
     document.getElementById('hint-display').style.display = 'none';
+    if (this.ui) this.ui.updateHintButton();
 
     // Show skip after 60 seconds
     if (this._skipTimer) clearTimeout(this._skipTimer);
@@ -371,6 +438,11 @@ class GameState {
   startTimer() {
     this.timerStart = Date.now();
     this.timerRunning = true;
+    const timerEl = document.getElementById('timer-display');
+    if (timerEl) {
+      // Hide timer during campaign play, show in challenge mode
+      timerEl.style.display = (this.isChallengeMode || this.isSandboxMode) ? '' : 'none';
+    }
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => this.updateTimerDisplay(), 1000);
     this.updateTimerDisplay();
@@ -410,6 +482,10 @@ class GameState {
     this.gates.push(gate);
     this.ui.updateStatusBar(`Placed ${type} gate`);
     this.audio.playClick();
+    // Impact ripple effect
+    if (this.renderer) {
+      this.renderer.spawnRipple(x + (GateTypes[type].width / 2), y + (GateTypes[type].height / 2));
+    }
     if (!skipUndo) {
       this.undoManager.push({
         type: 'addGate',
@@ -525,8 +601,8 @@ class GameState {
   _scalePosition(x, y) {
     if (!this.renderer) return { x, y };
     const canvas = this.renderer.canvas;
-    const cw = canvas.width || 800;
-    const ch = canvas.height || 500;
+    const cw = this.renderer.displayWidth || canvas.clientWidth || 800;
+    const ch = this.renderer.displayHeight || canvas.clientHeight || 500;
     // Levels are designed for ~700x400 usable area
     const refW = 700;
     const refH = 400;
@@ -575,14 +651,8 @@ class GameState {
     this.resetHintState();
     this.startTimer();
 
-    // Hide hint/skip for non-story levels
-    const hintBtn = document.getElementById('hint-btn');
-    if (!level.hints || level.hints.length === 0) {
-      hintBtn.style.display = 'none';
-    } else {
-      hintBtn.style.display = '';
-      hintBtn.textContent = '💡 Hint';
-    }
+    // Sync hint button state
+    this.ui.updateHintButton();
 
     // Show onboarding tooltip on Level 1
     if (level.id === 1) {
@@ -631,6 +701,13 @@ class GameState {
     this.markDirty();
   }
 
+  _propagateLiveSignals() {
+    // Propagate current input node values through the circuit in real-time
+    const inputValues = this.inputNodes.map(n => n.value);
+    this.simulation.evaluateOnce(inputValues);
+    this.markDirty();
+  }
+
   clearCircuit() {
     this.gates = [];
     this.wireManager.clear();
@@ -649,78 +726,156 @@ class GameState {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
+    try {
+      this.audio.playButtonClick();
+      this.ui.updateResultDisplay('idle', 'Simulating...');
+      this.ui.hideStarDisplay();
+
+      // Sandbox mode: just evaluate and show actual truth table
+      if (this.isSandboxMode) {
+        await this.runSandboxTest();
+        return;
+      }
+
+      // RUN tension: brief charging animation
+      await this._runTensionAnimation();
+
+      // Reset audio escalation pitch
+      this.audio.resetSimPitch();
+
+      await this.simulation.runAnimated(
+        (results, rowIndex) => {
+          // Escalating audio: pass vs fail
+          const lastResult = results[results.length - 1];
+          if (lastResult && lastResult.pass) {
+            this.audio.playSimPulsePass();
+          } else {
+            this.audio.playSimPulseFail();
+          }
+          this.ui.updateTruthTable(results);
+        },
+        (results) => {
+          const allPass = results.every(r => r.pass);
+          this.ui.updateTruthTable(results);
+
+          if (allPass) {
+            const gateCount = this.gates.length;
+
+            if (this.isChallengeMode && this.currentLevel.isChallenge) {
+              // Challenge mode completion
+              this.addLeaderboardEntry(
+                this.currentLevel.difficultyKey,
+                gateCount,
+                this.currentLevel.difficulty
+              );
+              this.audio.playSuccess(2);
+              this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
+              this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
+              this.ui.showChallengeResult(gateCount, this.currentLevel);
+              this.ui.startCelebration(2);
+              // Track challenge achievements
+              const chAchs = this.achievements.trackChallengeComplete();
+              this.ui.showAchievementToasts(chAchs);
+            } else {
+              const stars = this.completeLevel(this.currentLevel.id, gateCount);
+              this.audio.playSuccess(stars);
+              this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
+              this.ui.updateStatusBar('Level complete! All truth table rows match.');
+              this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
+              this.ui.startCelebration(stars);
+              // Check achievements
+              const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
+              const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
+              if (this.currentLevel.isDaily) {
+                if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
+                // Show share button for daily challenge
+                this.ui.showShareButton(gateCount, stars, elapsed);
+              }
+              this.ui.showAchievementToasts(newAchs);
+            }
+          } else {
+            const passCount = results.filter(r => r.pass).length;
+            const total = results.length;
+            const failCount = total - passCount;
+            
+            if (passCount / total >= 0.75) {
+              // Near-miss feedback: ≥75% correct
+              this.audio.playFail();
+              const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
+              this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
+              this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+            } else {
+              this.audio.playFail();
+              this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
+              this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+            }
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Simulation error:', err);
+      this.ui.updateResultDisplay('fail', 'Error during simulation');
+    } finally {
+      this.isAnimating = false;
+    }
+  }
+
+  runQuickTest() {
+    if (this.isAnimating) return;
+
     this.audio.playButtonClick();
-    this.ui.updateResultDisplay('idle', 'Simulating...');
     this.ui.hideStarDisplay();
 
-    // Sandbox mode: just evaluate and show actual truth table
     if (this.isSandboxMode) {
-      await this.runSandboxTest();
+      this.runSandboxTest();
       return;
     }
 
-    await this.simulation.runAnimated(
-      (results, rowIndex) => {
-        this.audio.playSimPulse();
-        this.ui.updateTruthTable(results);
-      },
-      (results) => {
-        const allPass = results.every(r => r.pass);
-        this.ui.updateTruthTable(results);
+    const results = this.simulation.runAll();
+    const allPass = results.every(r => r.pass);
+    this.ui.updateTruthTable(results);
 
-        if (allPass) {
-          const gateCount = this.gates.length;
+    if (allPass) {
+      const gateCount = this.gates.length;
 
-          if (this.isChallengeMode && this.currentLevel.isChallenge) {
-            // Challenge mode completion
-            this.addLeaderboardEntry(
-              this.currentLevel.difficultyKey,
-              gateCount,
-              this.currentLevel.difficulty
-            );
-            this.audio.playSuccess(2);
-            this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
-            this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
-            this.ui.showChallengeResult(gateCount, this.currentLevel);
-            this.ui.startCelebration(2);
-          } else {
-            const stars = this.completeLevel(this.currentLevel.id, gateCount);
-            this.audio.playSuccess(stars);
-            this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
-            this.ui.updateStatusBar('Level complete! All truth table rows match.');
-            this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
-            this.ui.startCelebration(stars);
-            // Check achievements
-            const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
-            const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
-            if (this.currentLevel.isDaily) {
-              if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
-              // Show share button for daily challenge
-              this.ui.showShareButton(gateCount, stars, elapsed);
-            }
-            this.ui.showAchievementToasts(newAchs);
-          }
-        } else {
-          const passCount = results.filter(r => r.pass).length;
-          const total = results.length;
-          const failCount = total - passCount;
-          
-          if (passCount / total >= 0.75) {
-            // Near-miss feedback: ≥75% correct
-            this.audio.playFail();
-            const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
-            this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
-            this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
-          } else {
-            this.audio.playFail();
-            this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
-            this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
-          }
+      if (this.isChallengeMode && this.currentLevel.isChallenge) {
+        this.addLeaderboardEntry(this.currentLevel.difficultyKey, gateCount, this.currentLevel.difficulty);
+        this.audio.playSuccess(2);
+        this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
+        this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
+        this.ui.showChallengeResult(gateCount, this.currentLevel);
+        this.ui.startCelebration(2);
+      } else {
+        const stars = this.completeLevel(this.currentLevel.id, gateCount);
+        this.audio.playSuccess(stars);
+        this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
+        this.ui.updateStatusBar('Level complete! All truth table rows match.');
+        this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
+        this.ui.startCelebration(stars);
+        const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
+        const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
+        if (this.currentLevel.isDaily) {
+          if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
+          this.ui.showShareButton(gateCount, stars, elapsed);
         }
-
-        this.isAnimating = false;
+        this.ui.showAchievementToasts(newAchs);
       }
-    );
+    } else {
+      const passCount = results.filter(r => r.pass).length;
+      const total = results.length;
+      const failCount = total - passCount;
+
+      if (passCount / total >= 0.75) {
+        this.audio.playFail();
+        const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
+        this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
+        this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+      } else {
+        this.audio.playFail();
+        this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
+        this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+      }
+    }
   }
 
   async runSandboxTest() {
@@ -747,7 +902,7 @@ class GameState {
     this.ui.updateSandboxTruthTable(results);
     this.ui.updateResultDisplay('pass', `Circuit tested — ${this.gates.length} gates`);
     this.ui.updateStatusBar('Sandbox: circuit evaluated');
-    this.isAnimating = false;
+    // isAnimating reset handled by runSimulation's finally block
   }
 
   setupCanvasEvents(canvas) {
@@ -819,6 +974,17 @@ class GameState {
         return;
       }
 
+      // Check for input node tap to toggle value
+      const tappedInput = this.inputNodes.find(n => n.containsPoint(pos.x, pos.y));
+      if (tappedInput) {
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        tappedInput.value = tappedInput.value ? 0 : 1;
+        this._propagateLiveSignals();
+        this.audio.playClick();
+        this.markDirty();
+        return;
+      }
+
       // Gate drag
       const gate = this.renderer.findGateAt(pos.x, pos.y);
       if (gate) {
@@ -878,6 +1044,9 @@ class GameState {
               toGateId: wire.toGateId,
               toPinIndex: wire.toPinIndex,
             });
+            // Track first wire achievement
+            const wireAchs = this.achievements.trackFirstWire();
+            this.ui.showAchievementToasts(wireAchs);
             this.markDirty();
           }
         } else {
@@ -897,6 +1066,16 @@ class GameState {
       if (wire) {
         this.wireManager.selectedWire = wire;
         this.selectedGate = null;
+        return;
+      }
+
+      // Check for input node click to toggle value (real-time propagation)
+      const clickedInput = this.inputNodes.find(n => n.containsPoint(pos.x, pos.y));
+      if (clickedInput) {
+        clickedInput.value = clickedInput.value ? 0 : 1;
+        this._propagateLiveSignals();
+        this.audio.playClick();
+        this.markDirty();
         return;
       }
 
@@ -1007,7 +1186,43 @@ class GameState {
         e.preventDefault();
         this.performRedo();
       }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y' && !e.shiftKey) {
+        e.preventDefault();
+        this.performRedo();
+      }
+
+      // Shift+Enter: Quick Test (instant, no animation)
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        this.runQuickTest();
+      }
+
+      // Enter: Normal run
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        this.runSimulation();
+      }
     });
+  }
+
+  async _runTensionAnimation() {
+    // Brief workspace dim + input pulse before simulation starts
+    const overlay = document.getElementById('run-tension-overlay');
+    if (overlay) {
+      overlay.classList.add('active');
+      // Pulse input nodes
+      for (const node of this.inputNodes) {
+        node._tensionPulse = true;
+      }
+      this.markDirty();
+      await new Promise(r => setTimeout(r, 350));
+      overlay.classList.remove('active');
+      for (const node of this.inputNodes) {
+        node._tensionPulse = false;
+      }
+      this.markDirty();
+    }
   }
 
   startRenderLoop() {
@@ -1017,6 +1232,7 @@ class GameState {
         const sim = this.simulation;
         if (this.needsRender || (sim && sim.animating) || 
             this.renderer.sparkParticles.length > 0 ||
+            this.renderer.ripples.length > 0 ||
             this.wireManager.drawing) {
           this.renderer.render();
           this.needsRender = false;

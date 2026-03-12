@@ -23,6 +23,7 @@
       <div id="level-select-content">
         <h1 id="game-title">⚡ Signal Circuit</h1>
         <p id="game-subtitle">Logic Gate Puzzle Game</p>
+        <p id="game-narrative">Repair the ship's logic systems. One circuit at a time.</p>
         <div id="progress-bar-container">
           <div id="progress-info"><span id="progress-text">0/15 Levels</span><span id="progress-stars">⭐ 0</span></div>
           <div id="progress-track"><div id="progress-fill"></div></div>
@@ -56,6 +57,7 @@
         <div class="how-step"><span class="how-icon">💡</span><div><strong>Use Hints</strong><br>Stuck? Click Hint for progressive clues. First hint is free!</div></div>
         <div class="how-step"><span class="how-icon">⭐</span><div><strong>Earn Stars</strong><br>Fewer gates = more stars. ★★★ for optimal, ★★ for good, ★ for any solution.</div></div>
         <button id="how-to-play-close">Got it!</button>
+        <div style="text-align:center;color:#444;font-size:9px;margin-top:12px;">Signal Circuit v1.0</div>
       </div>
     </div>
 
@@ -74,7 +76,7 @@
     <!-- Challenge Config Screen -->
     <div id="challenge-config-screen" style="display:none;">
       <div id="challenge-config-content">
-        <button id="challenge-back-btn">← Back</button>
+        <button id="challenge-back-btn" aria-label="Back to level select">← Back</button>
         <h2 id="challenge-config-title">⚡ Random Challenge</h2>
 
         <div id="difficulty-controls">
@@ -103,14 +105,14 @@
     <div id="gameplay-screen" style="display:none;">
       <!-- Toolbox Sidebar -->
       <div id="toolbox">
-        <button id="back-btn">← Back</button>
-        <button id="shortcuts-btn" title="Keyboard shortcuts">?</button>
+        <button id="back-btn" aria-label="Back to level select">← Back</button>
+        <button id="shortcuts-btn" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">?</button>
         <h2>Parts</h2>
       </div>
 
       <!-- Canvas Area -->
       <div id="canvas-container">
-        <canvas id="game-canvas"></canvas>
+        <canvas id="game-canvas" aria-label="Circuit board - place gates and draw wires" role="application"></canvas>
         <canvas id="celebration-canvas"></canvas>
         <div id="onboarding-tooltip" style="display:none;">
           <span id="tooltip-text">Click a pin to start drawing a wire</span>
@@ -130,8 +132,8 @@
         </div>
 
         <div id="level-nav">
-          <button id="prev-level">◀ Prev</button>
-          <button id="next-level">Next ▶</button>
+          <button id="prev-level" aria-label="Previous level">◀ Prev</button>
+          <button id="next-level" aria-label="Next level">Next ▶</button>
         </div>
 
         <div id="truth-table-section">
@@ -145,11 +147,14 @@
 
         <div id="controls">
           <button id="run-btn">▶ RUN</button>
-          <button id="clear-btn">Clear Circuit</button>
+          <div id="secondary-controls">
+            <button id="quick-test-btn" title="Shift+Enter: Instant test without animation">⚡ Quick Test</button>
+            <button id="clear-btn">Clear Circuit</button>
+          </div>
         <button id="hint-btn">💡 Hint</button>
         <div id="hint-penalty" style="display:none;"></div>
         <div id="hint-display"></div>
-        <button id="skip-btn" style="display:none;">⏭ Skip Level</button>
+        <button id="skip-btn" style="display:none;">🔖 Bookmark & Move On</button>
           <div id="result-display" class="idle">Build your circuit, then press RUN</div>
         </div>
 
@@ -164,12 +169,41 @@
         <div id="status-bar">
           <span id="status-text">Ready</span>
           <span id="timer-display">⏱ 0:00</span>
-          <button id="mute-btn" title="Toggle sound">🔊</button>
+          <button id="mute-btn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
         </div>
-        <div style="text-align:center;color:#333;font-size:9px;margin-top:4px;">v1.0</div>
+
       </div>
     </div>
   </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirm-modal" style="display:none;">
+    <div id="confirm-modal-content">
+      <p id="confirm-modal-message"></p>
+      <div id="confirm-modal-buttons">
+        <button id="confirm-modal-cancel">Cancel</button>
+        <button id="confirm-modal-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chapter Complete Modal -->
+  <div id="chapter-complete-modal" style="display:none;">
+    <div id="chapter-complete-content">
+      <div id="chapter-complete-icon">🛸</div>
+      <h3 id="chapter-complete-title"></h3>
+      <p id="chapter-complete-story"></p>
+      <div id="chapter-complete-gates">
+        <h4>Gates Mastered</h4>
+        <div id="chapter-gates-list"></div>
+      </div>
+      <button id="chapter-complete-continue">Continue →</button>
+      <button id="chapter-complete-back">Back to Levels</button>
+    </div>
+  </div>
+
+  <!-- RUN Tension Overlay -->
+  <div id="run-tension-overlay"></div>
 
   <!-- Drag ghost element -->
   <div id="drag-ghost"></div>
@@ -178,7 +212,7 @@
     <div id="shortcuts-content">
       <h3>⌨️ Keyboard Shortcuts</h3>
       <div class="shortcut-row"><kbd>Ctrl+Z</kbd> Undo</div>
-      <div class="shortcut-row"><kbd>Ctrl+Y</kbd> Redo</div>
+      <div class="shortcut-row"><kbd>Ctrl+Shift+Z</kbd> Redo (or Ctrl+Y)</div>
       <div class="shortcut-row"><kbd>Delete</kbd> Remove selected</div>
       <div class="shortcut-row"><kbd>Right-click</kbd> Delete gate/wire</div>
       <div class="shortcut-row"><kbd>Esc</kbd> Cancel wire drawing</div>
@@ -187,14 +221,14 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/gates.js?v=21"></script>
-  <script src="js/wires.js?v=21"></script>
-  <script src="js/simulation.js?v=21"></script>
-  <script src="js/levels.js?v=21"></script>
-  <script src="js/audio.js?v=21"></script>
-  <script src="js/achievements.js?v=21"></script>
-  <script src="js/canvas.js?v=21"></script>
-  <script src="js/ui.js?v=21"></script>
-  <script src="js/main.js?v=21"></script>
+  <script src="js/gates.js?v=24"></script>
+  <script src="js/wires.js?v=24"></script>
+  <script src="js/simulation.js?v=24"></script>
+  <script src="js/levels.js?v=24"></script>
+  <script src="js/audio.js?v=24"></script>
+  <script src="js/achievements.js?v=24"></script>
+  <script src="js/canvas.js?v=24"></script>
+  <script src="js/ui.js?v=24"></script>
+  <script src="js/main.js?v=24"></script>
 </body>
 </html>

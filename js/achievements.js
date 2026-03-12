@@ -1,34 +1,63 @@
-// achievements.js — Achievement definitions and tracking
+// achievements.js — Tiered achievement system (Bronze / Silver / Gold)
 
 const ACHIEVEMENTS = [
-  { id: 'first_steps', name: 'First Steps', desc: 'Complete your first level', icon: '🎯' },
-  { id: 'perfect_score', name: 'Perfect Score', desc: 'Earn 3 stars on any level', icon: '⭐' },
-  { id: 'speed_demon', name: 'Speed Demon', desc: 'Complete any level in under 30 seconds', icon: '⚡' },
-  { id: 'chapter1_master', name: 'Chapter 1 Master', desc: 'Complete all Chapter 1 levels', icon: '📗' },
-  { id: 'chapter2_master', name: 'Chapter 2 Master', desc: 'Complete all Chapter 2 levels', icon: '📘' },
-  { id: 'chapter3_master', name: 'Chapter 3 Master', desc: 'Complete all Chapter 3 levels', icon: '📙' },
-  { id: 'circuit_master', name: 'Circuit Master', desc: 'Complete all 15 levels', icon: '🏆' },
-  { id: 'star_collector', name: 'Star Collector', desc: 'Earn 30 total stars', icon: '🌟' },
-  { id: 'no_hints', name: 'Pure Logic', desc: 'Complete level 4+ without using hints', icon: '🧠' },
-  { id: 'daily_solver', name: 'Daily Solver', desc: 'Complete a daily challenge', icon: '📅' },
+  // Bronze — Getting started
+  { id: 'first_steps', name: 'First Steps', desc: 'Complete your first level', icon: '🎯', tier: 'bronze' },
+  { id: 'first_wire', name: 'Connected', desc: 'Draw your first wire', icon: '🔌', tier: 'bronze' },
+  { id: 'perfect_score', name: 'Perfect Score', desc: 'Earn 3 stars on any level', icon: '⭐', tier: 'bronze' },
+  { id: 'no_hints', name: 'Pure Logic', desc: 'Complete level 4+ without using hints', icon: '🧠', tier: 'bronze' },
+  { id: 'daily_solver', name: 'Daily Solver', desc: 'Complete a daily challenge', icon: '📅', tier: 'bronze' },
+
+  // Silver — Building skills
+  { id: 'speed_demon', name: 'Speed Demon', desc: 'Complete any level in under 30 seconds', icon: '⚡', tier: 'silver' },
+  { id: 'chapter1_master', name: 'Chapter 1 Master', desc: 'Complete all Chapter 1 levels', icon: '📗', tier: 'silver' },
+  { id: 'chapter2_master', name: 'Chapter 2 Master', desc: 'Complete all Chapter 2 levels', icon: '📘', tier: 'silver' },
+  { id: 'chapter3_master', name: 'Chapter 3 Master', desc: 'Complete all Chapter 3 levels', icon: '📙', tier: 'silver' },
+  { id: 'five_perfect', name: 'Sharpshooter', desc: 'Earn 3 stars on 5 different levels', icon: '🎯', tier: 'silver' },
+  { id: 'challenge_5', name: 'Challenger', desc: 'Complete 5 random challenges', icon: '🎲', tier: 'silver' },
+
+  // Gold — Mastery
+  { id: 'circuit_master', name: 'Circuit Master', desc: 'Complete all 15 levels', icon: '🏆', tier: 'gold' },
+  { id: 'star_collector', name: 'Star Collector', desc: 'Earn 30 total stars', icon: '🌟', tier: 'gold' },
+  { id: 'perfect_campaign', name: 'Flawless', desc: '3 stars on all 15 levels', icon: '💎', tier: 'gold' },
+  { id: 'speed_run', name: 'Lightning Run', desc: 'Complete 5 levels in under 30 seconds each', icon: '⚡', tier: 'gold' },
 ];
+
+const TIER_COLORS = {
+  bronze: '#cd7f32',
+  silver: '#c0c0c0',
+  gold: '#ffd700',
+};
 
 class AchievementManager {
   constructor() {
     this.unlocked = {};
+    this.stats = { challengesCompleted: 0, speedLevels: 0 };
     this.load();
   }
 
   load() {
     try {
       const saved = localStorage.getItem('signal-circuit-achievements');
-      if (saved) this.unlocked = JSON.parse(saved);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.unlocked) {
+          this.unlocked = data.unlocked;
+          this.stats = data.stats || { challengesCompleted: 0, speedLevels: 0 };
+        } else {
+          // Legacy format: flat object
+          this.unlocked = data;
+        }
+      }
     } catch (e) {}
   }
 
   save() {
     try {
-      localStorage.setItem('signal-circuit-achievements', JSON.stringify(this.unlocked));
+      localStorage.setItem('signal-circuit-achievements', JSON.stringify({
+        unlocked: this.unlocked,
+        stats: this.stats,
+      }));
     } catch (e) {}
   }
 
@@ -48,6 +77,7 @@ class AchievementManager {
       ...a,
       unlocked: !!this.unlocked[a.id],
       unlockedDate: this.unlocked[a.id] ? this.unlocked[a.id].date : null,
+      tierColor: TIER_COLORS[a.tier] || '#888',
     }));
   }
 
@@ -71,6 +101,7 @@ class AchievementManager {
     // Speed Demon
     if (elapsed < 30) {
       if (this.unlock('speed_demon')) newlyUnlocked.push('speed_demon');
+      this.stats.speedLevels = (this.stats.speedLevels || 0) + 1;
     }
 
     // No Hints on level 4+
@@ -102,13 +133,48 @@ class AchievementManager {
 
     // Star Collector
     let totalStars = 0;
+    let perfectCount = 0;
     for (const [, data] of Object.entries(gameState.progress.levels)) {
       totalStars += data.stars || 0;
+      if (data.stars === 3) perfectCount++;
     }
     if (totalStars >= 30) {
       if (this.unlock('star_collector')) newlyUnlocked.push('star_collector');
     }
 
+    // Five Perfect
+    if (perfectCount >= 5) {
+      if (this.unlock('five_perfect')) newlyUnlocked.push('five_perfect');
+    }
+
+    // Perfect Campaign
+    if (perfectCount >= 15 && allLevelsComplete) {
+      if (this.unlock('perfect_campaign')) newlyUnlocked.push('perfect_campaign');
+    }
+
+    // Speed Run (5 levels under 30s)
+    if (this.stats.speedLevels >= 5) {
+      if (this.unlock('speed_run')) newlyUnlocked.push('speed_run');
+    }
+
+    this.save();
     return newlyUnlocked;
+  }
+
+  // Track challenge completions
+  trackChallengeComplete() {
+    this.stats.challengesCompleted = (this.stats.challengesCompleted || 0) + 1;
+    const newlyUnlocked = [];
+    if (this.stats.challengesCompleted >= 5) {
+      if (this.unlock('challenge_5')) newlyUnlocked.push('challenge_5');
+    }
+    this.save();
+    return newlyUnlocked;
+  }
+
+  // Track first wire
+  trackFirstWire() {
+    if (this.unlock('first_wire')) return ['first_wire'];
+    return [];
   }
 }

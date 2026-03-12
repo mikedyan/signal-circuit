@@ -9,6 +9,7 @@ class UI {
     this.celebrationParticles = [];
     this.celebrationActive = false;
 
+    this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.setupToolbox();
     this.setupControls();
     this.setupLevelNav();
@@ -19,16 +20,61 @@ class UI {
     this.setupShortcutsOverlay();
     this.setupAchievements();
     this.setupHowToPlay();
+    this.adaptCopyForPlatform();
+  }
+
+  // ── Platform-Adaptive Copy ──
+  adaptCopyForPlatform() {
+    if (!this.isTouchDevice) return;
+
+    // Update How to Play steps
+    const howSteps = document.querySelectorAll('#how-to-play-content .how-step div');
+    for (const div of howSteps) {
+      div.innerHTML = div.innerHTML
+        .replace(/Click an output pin \(right side\) then click an input pin/g, 'Tap an output pin (right side) then tap an input pin')
+        .replace(/Click Hint/g, 'Tap Hint');
+    }
+
+    // Update shortcuts overlay for touch
+    const shortcutRows = document.querySelectorAll('.shortcut-row');
+    for (const row of shortcutRows) {
+      if (row.textContent.includes('Right-click')) {
+        row.innerHTML = '<kbd>Long press</kbd> Delete gate/wire';
+      }
+    }
+  }
+
+  // ── Confirm Modal ──
+  showConfirmModal(message, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    const msgEl = document.getElementById('confirm-modal-message');
+    const cancelBtn = document.getElementById('confirm-modal-cancel');
+    const okBtn = document.getElementById('confirm-modal-ok');
+
+    msgEl.textContent = message;
+    modal.style.display = 'flex';
+
+    const cleanup = () => {
+      modal.style.display = 'none';
+      cancelBtn.onclick = null;
+      okBtn.onclick = null;
+    };
+
+    cancelBtn.onclick = cleanup;
+    okBtn.onclick = () => {
+      cleanup();
+      onConfirm();
+    };
   }
 
   // ── Level Select Screen ──
   setupLevelSelect() {
     const container = document.getElementById('chapters-container');
     document.getElementById('reset-progress-btn').addEventListener('click', () => {
-      if (confirm('Reset all progress? This cannot be undone.')) {
+      this.showConfirmModal('Reset all progress? This cannot be undone.', () => {
         this.gameState.resetProgress();
         this.renderLevelSelect();
-      }
+      });
     });
     this.renderLevelSelect();
   }
@@ -45,7 +91,8 @@ class UI {
 
       const title = document.createElement('div');
       title.className = 'chapter-title';
-      title.textContent = chapter.title;
+      title.style.borderBottomColor = chapter.color || '#333';
+      title.innerHTML = `${chapter.title} <span class="chapter-narrative">${chapter.narrative || ''}</span>`;
       chapterDiv.appendChild(title);
 
       const grid = document.createElement('div');
@@ -60,7 +107,11 @@ class UI {
         const levelProgress = progress.levels[levelId];
         const isCompleted = levelProgress && levelProgress.completed;
 
-        btn.className = 'level-btn' + (isCompleted ? ' completed' : '') + (!isUnlocked ? ' locked' : '');
+        const isBookmarked = this.gameState.isLevelBookmarked(levelId);
+        btn.className = 'level-btn' + (isCompleted ? ' completed' : '') + (!isUnlocked ? ' locked' : '') + (isBookmarked ? ' bookmarked' : '');
+        if (chapter.color && isUnlocked) {
+          btn.style.borderColor = isCompleted ? chapter.color : '';
+        }
 
         const num = document.createElement('span');
         num.className = 'level-number';
@@ -69,7 +120,12 @@ class UI {
 
         const stars = document.createElement('span');
         stars.className = 'level-stars';
-        if (isCompleted && levelProgress.stars) {
+        if (isBookmarked && !isCompleted) {
+          const bm = document.createElement('span');
+          bm.className = 'bookmark-icon';
+          bm.textContent = '🔖';
+          stars.appendChild(bm);
+        } else if (isCompleted && levelProgress.stars) {
           for (let i = 0; i < 3; i++) {
             const s = document.createElement('span');
             s.className = i < levelProgress.stars ? 'star-filled' : 'star-empty';
@@ -273,6 +329,10 @@ class UI {
       this.gameState.runSimulation();
     });
 
+    document.getElementById('quick-test-btn').addEventListener('click', () => {
+      this.gameState.runQuickTest();
+    });
+
     document.getElementById('clear-btn').addEventListener('click', () => {
       this.gameState.clearCircuit();
       this.updateResultDisplay('idle', 'Build your circuit, then press RUN');
@@ -296,15 +356,25 @@ class UI {
         if (wrapper.style.display === 'none') {
           wrapper.style.display = '';
           chevron.textContent = '▼';
+          try { localStorage.setItem('signal-circuit-tt-collapsed', 'false'); } catch (e) {}
         } else {
           wrapper.style.display = 'none';
           chevron.textContent = '▶';
+          try { localStorage.setItem('signal-circuit-tt-collapsed', 'true'); } catch (e) {}
         }
       });
     }
 
-    // Auto-collapse truth table on mobile
-    if (window.innerWidth < 768) {
+    // Auto-collapse truth table on mobile or revisits
+    const isMobile = window.innerWidth < 768;
+    let isRevisit = false;
+    try {
+      isRevisit = localStorage.getItem('signal-circuit-visited') === 'true';
+      localStorage.setItem('signal-circuit-visited', 'true');
+    } catch (e) {}
+
+    const shouldCollapse = isMobile || (isRevisit && localStorage.getItem('signal-circuit-tt-collapsed') !== 'false');
+    if (shouldCollapse) {
       const wrapper = document.getElementById('truth-table-wrapper');
       const chevron = document.getElementById('truth-table-chevron');
       if (wrapper && chevron) {
@@ -380,6 +450,17 @@ class UI {
       th.style.color = '#f88';
       headerRow.appendChild(th);
     }
+    // Check if there are any failures to show "Actual" columns
+    const hasFailures = results && results.some(r => !r.pass);
+    if (hasFailures) {
+      for (const out of level.outputs) {
+        const th = document.createElement('th');
+        th.textContent = 'Got';
+        th.style.color = '#f90';
+        th.className = 'actual-col';
+        headerRow.appendChild(th);
+      }
+    }
     if (results) {
       const th = document.createElement('th');
       th.textContent = '✓';
@@ -409,6 +490,25 @@ class UI {
         const td = document.createElement('td');
         td.textContent = val;
         tr.appendChild(td);
+      }
+
+      // Show actual outputs when failures exist
+      if (hasFailures) {
+        const actual = results && results[i] ? results[i].actualOutputs : [];
+        for (let j = 0; j < level.outputs.length; j++) {
+          const td = document.createElement('td');
+          td.className = 'actual-col';
+          const actualVal = actual[j] !== undefined ? actual[j] : '?';
+          td.textContent = actualVal;
+          if (results && results[i] && !results[i].pass) {
+            const expected = row.outputs[j];
+            td.style.color = actualVal !== expected ? '#f44' : '#0f0';
+            td.style.fontWeight = actualVal !== expected ? 'bold' : 'normal';
+          } else {
+            td.style.color = '#555';
+          }
+          tr.appendChild(td);
+        }
       }
 
       if (results && results[i]) {
@@ -457,12 +557,22 @@ class UI {
     }
 
     const msg = document.getElementById('star-message');
+    // Show completion time
+    const gs = this.gameState;
+    const elapsed = gs.timerStart ? Math.floor((Date.now() - gs.timerStart) / 1000) : 0;
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const timeStr = ` · ⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+    // Show timer now that we're done
+    const timerEl = document.getElementById('timer-display');
+    if (timerEl) timerEl.style.display = '';
+
     if (stars === 3) {
-      msg.textContent = `Perfect! ${gateCount} gates (optimal)`;
+      msg.textContent = `Perfect! ${gateCount} gates (optimal)${timeStr}`;
     } else if (stars === 2) {
-      msg.textContent = `Good! ${gateCount} gates (optimal: ${level.optimalGates})`;
+      msg.textContent = `Good! ${gateCount} gates (optimal: ${level.optimalGates})${timeStr}`;
     } else {
-      msg.textContent = `Solved with ${gateCount} gates (optimal: ${level.optimalGates})`;
+      msg.textContent = `Solved with ${gateCount} gates (optimal: ${level.optimalGates})${timeStr}`;
     }
 
     // Show post-solve insight for campaign levels
@@ -617,12 +727,12 @@ class UI {
 
     // Clear leaderboard
     document.getElementById('clear-leaderboard-btn').addEventListener('click', () => {
-      if (confirm('Clear all challenge scores?')) {
+      this.showConfirmModal('Clear all challenge scores?', () => {
         this.gameState.clearLeaderboard();
         const ni = parseInt(inputSlider.value);
         const no = parseInt(outputSlider.value);
         this.renderLeaderboard(ni, no);
-      }
+      });
     });
   }
 
@@ -728,18 +838,79 @@ class UI {
     if (!list) return;
     const all = this.gameState.achievements.getAll();
     list.innerHTML = '';
-    for (const ach of all) {
-      const row = document.createElement('div');
-      row.className = 'achievement-row ' + (ach.unlocked ? 'unlocked' : 'locked');
-      row.innerHTML = `
-        <span class="achievement-icon">${ach.unlocked ? ach.icon : '🔒'}</span>
-        <div class="achievement-info">
-          <div class="achievement-name">${ach.name}</div>
-          <div class="achievement-desc">${ach.desc}</div>
-        </div>
-      `;
-      list.appendChild(row);
+
+    // Group by tier
+    const tiers = ['gold', 'silver', 'bronze'];
+    const tierLabels = { gold: '🥇 Gold', silver: '🥈 Silver', bronze: '🥉 Bronze' };
+
+    for (const tier of tiers) {
+      const tierAchs = all.filter(a => a.tier === tier);
+      if (tierAchs.length === 0) continue;
+
+      const header = document.createElement('div');
+      header.className = 'achievement-tier-header';
+      header.style.color = TIER_COLORS[tier] || '#888';
+      header.textContent = tierLabels[tier];
+      list.appendChild(header);
+
+      for (const ach of tierAchs) {
+        const row = document.createElement('div');
+        row.className = 'achievement-row ' + (ach.unlocked ? 'unlocked' : 'locked');
+        row.style.borderLeftColor = ach.tierColor;
+        row.innerHTML = `
+          <span class="achievement-icon">${ach.unlocked ? ach.icon : '🔒'}</span>
+          <div class="achievement-info">
+            <div class="achievement-name">${ach.name}</div>
+            <div class="achievement-desc">${ach.desc}</div>
+          </div>
+        `;
+        list.appendChild(row);
+      }
     }
+  }
+
+  // ── Chapter Complete Modal ──
+  showChapterCompleteModal(chapter) {
+    const modal = document.getElementById('chapter-complete-modal');
+    if (!modal) return;
+
+    const icons = { 1: '🛸', 2: '📡', 3: '🌬️' };
+    document.getElementById('chapter-complete-icon').textContent = icons[chapter.id] || '⚡';
+    document.getElementById('chapter-complete-title').textContent = `${chapter.title} Complete!`;
+    document.getElementById('chapter-complete-story').textContent = chapter.storyComplete || 'Chapter complete!';
+
+    const gatesList = document.getElementById('chapter-gates-list');
+    gatesList.innerHTML = '';
+    if (chapter.gatesMastered) {
+      for (const g of chapter.gatesMastered) {
+        const badge = document.createElement('span');
+        badge.className = 'chapter-gate-badge';
+        badge.textContent = g;
+        gatesList.appendChild(badge);
+      }
+    }
+
+    modal.style.display = 'flex';
+
+    const continueBtn = document.getElementById('chapter-complete-continue');
+    const backBtn = document.getElementById('chapter-complete-back');
+
+    const cleanup = () => { modal.style.display = 'none'; };
+
+    continueBtn.onclick = () => {
+      cleanup();
+      // Start next chapter's first level if available
+      const nextChapter = getChapters().find(c => c.id === chapter.id + 1);
+      if (nextChapter && nextChapter.levels.length > 0) {
+        this.gameState.startLevel(nextChapter.levels[0]);
+      } else {
+        this.gameState.showLevelSelect();
+      }
+    };
+    backBtn.onclick = () => {
+      cleanup();
+      this.gameState.showLevelSelect();
+    };
   }
 
   showAchievementToasts(newlyUnlocked) {
@@ -846,6 +1017,31 @@ class UI {
     } catch (e) {}
   }
 
+  // ── Hint Button Sync ──
+  updateHintButton() {
+    const gs = this.gameState;
+    const level = gs.currentLevel;
+    const hintBtn = document.getElementById('hint-btn');
+    if (!hintBtn) return;
+
+    if (!level || !level.hints || level.hints.length === 0 || gs.isSandboxMode || gs.isChallengeMode) {
+      hintBtn.style.display = 'none';
+      return;
+    }
+
+    hintBtn.style.display = '';
+    if (gs.hintsUsed >= level.hints.length) {
+      hintBtn.disabled = true;
+      hintBtn.textContent = '💡 No more hints';
+    } else if (gs.hintsUsed === 0) {
+      hintBtn.disabled = false;
+      hintBtn.textContent = '💡 Hint';
+    } else {
+      hintBtn.disabled = false;
+      hintBtn.textContent = `💡 Hint ${gs.hintsUsed + 1}/${level.hints.length}`;
+    }
+  }
+
   // ── Hint Display ──
   showHint(text, hintNum, totalHints, isVisualHint) {
     const el = document.getElementById('hint-display');
@@ -884,12 +1080,14 @@ class UI {
       countText.innerHTML = `Gates: <span class="count">${count}</span>/${optimal}`;
 
       // Projected stars
+      let rawStars = 0;
       let projectedStars = 0;
       if (count > 0) {
-        if (count <= optimal) projectedStars = 3;
-        else if (count <= good) projectedStars = 2;
-        else projectedStars = 1;
+        if (count <= optimal) rawStars = 3;
+        else if (count <= good) rawStars = 2;
+        else rawStars = 1;
 
+        projectedStars = rawStars;
         // Apply hint penalty preview
         if (gs.maxHintPenalty >= 2) projectedStars = Math.min(projectedStars, 1);
         else if (gs.maxHintPenalty >= 1) projectedStars = Math.min(projectedStars, 2);
@@ -897,9 +1095,14 @@ class UI {
 
       let starsHtml = '';
       for (let i = 0; i < 3; i++) {
-        starsHtml += i < projectedStars
-          ? '<span class="star-gold">★</span>'
-          : '<span class="star-dim">★</span>';
+        if (i < projectedStars) {
+          starsHtml += '<span class="star-gold">★</span>';
+        } else if (i < rawStars) {
+          // Would have earned this star but hint penalty blocks it
+          starsHtml += '<span class="star-blocked">★</span>';
+        } else {
+          starsHtml += '<span class="star-dim">★</span>';
+        }
       }
       starsPreview.innerHTML = starsHtml;
 
@@ -925,8 +1128,8 @@ class UI {
     }
 
     if (gs.hintsUsed === 0) {
-      // Before hints used: show warning
-      penaltyEl.textContent = '💡 Hints available (may reduce ★)';
+      // Before hints used: show clear warning
+      penaltyEl.textContent = '💡 Using hints reduces max ★';
       penaltyEl.style.display = 'block';
       penaltyEl.style.color = '#cc0';
       penaltyEl.style.fontSize = '10px';
@@ -937,7 +1140,11 @@ class UI {
       } else if (gs.maxHintPenalty >= 1) {
         penaltyEl.textContent = '⚠ Max ★★ with hints';
       } else {
-        penaltyEl.style.display = 'none';
+        // First hint is free — show mild reminder
+        penaltyEl.textContent = '💡 First hint free — next reduces ★';
+        penaltyEl.style.display = 'block';
+        penaltyEl.style.color = '#aa0';
+        penaltyEl.style.fontSize = '10px';
         return;
       }
       penaltyEl.style.display = 'block';

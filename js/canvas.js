@@ -7,6 +7,7 @@ class CanvasRenderer {
     this.gameState = gameState;
     this.hoveredPin = null;
     this.sparkParticles = [];
+    this.ripples = [];
     this.resize();
     window.addEventListener('resize', () => this.resize());
   }
@@ -124,6 +125,9 @@ class CanvasRenderer {
       }
     }
 
+    // Ripple effects
+    this._renderRipples(ctx);
+
     // Spark particles
     this._renderSparks(ctx);
 
@@ -214,6 +218,51 @@ class CanvasRenderer {
     ctx.fillText('+', 5, 34);
     ctx.fillStyle = 'rgba(50, 50, 200, 0.5)';
     ctx.fillText('−', 5, height - 26);
+  }
+
+  spawnRipple(x, y) {
+    this.ripples.push({
+      x, y,
+      startTime: performance.now(),
+      duration: 400,
+      maxRadius: 80,
+    });
+    this.gameState.markDirty();
+  }
+
+  _renderRipples(ctx) {
+    const now = performance.now();
+    for (let i = this.ripples.length - 1; i >= 0; i--) {
+      const r = this.ripples[i];
+      const elapsed = now - r.startTime;
+      if (elapsed > r.duration) {
+        this.ripples.splice(i, 1);
+        continue;
+      }
+      const t = elapsed / r.duration;
+      const radius = r.maxRadius * t;
+      const alpha = 0.3 * (1 - t);
+
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(200, 170, 100, ${alpha})`;
+      ctx.lineWidth = 2 * (1 - t) + 0.5;
+      ctx.stroke();
+
+      // Inner ring
+      if (t < 0.6) {
+        const innerR = radius * 0.5;
+        const innerA = 0.2 * (1 - t / 0.6);
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, innerR, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(220, 190, 120, ${innerA})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+    if (this.ripples.length > 0) {
+      this.gameState.markDirty();
+    }
   }
 
   spawnSparks(x, y) {
