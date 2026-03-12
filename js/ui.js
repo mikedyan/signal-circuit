@@ -917,17 +917,24 @@ class UI {
   }
 
   // ── Celebration Particles ──
-  startCelebration() {
+  startCelebration(stars = 2) {
     this.celebrationActive = true;
     this.celebrationParticles = [];
 
+    // Scale effects by star rating
+    const particleCount = stars === 3 ? 120 : stars === 2 ? 60 : 30;
+    const useFlash = stars >= 2;
+    const flashDuration = stars === 3 ? 900 : 600;
+
     // Victory flash
-    const flash = document.getElementById('victory-flash');
-    if (flash) {
-      flash.classList.remove('flash-active');
-      void flash.offsetWidth;
-      flash.classList.add('flash-active');
-      setTimeout(() => flash.classList.remove('flash-active'), 600);
+    if (useFlash) {
+      const flash = document.getElementById('victory-flash');
+      if (flash) {
+        flash.classList.remove('flash-active');
+        void flash.offsetWidth;
+        flash.classList.add('flash-active');
+        setTimeout(() => flash.classList.remove('flash-active'), flashDuration);
+      }
     }
 
     // Animate star display
@@ -951,11 +958,23 @@ class UI {
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
 
-    const colors = ['#ffd700', '#ff4444', '#0f0', '#00c8e8', '#c050f0', '#ff8800', '#fff'];
+    // Star-based color palettes
+    let colors;
+    if (stars === 3) {
+      // Gold-heavy for 3 stars
+      colors = ['#ffd700', '#ffa500', '#ffcc00', '#fff4a3', '#ffe066', '#ffd700', '#ffd700'];
+    } else if (stars === 2) {
+      // Full colors for 2 stars
+      colors = ['#ffd700', '#ff4444', '#0f0', '#00c8e8', '#c050f0', '#ff8800', '#fff'];
+    } else {
+      // Muted colors for 1 star
+      colors = ['#999', '#777', '#aaa', '#ffd700', '#888'];
+    }
+
     const shapes = ['rect', 'circle', 'triangle'];
 
-    // Create more particles with varied shapes
-    for (let i = 0; i < 90; i++) {
+    // Create particles with varied shapes
+    for (let i = 0; i < particleCount; i++) {
       this.celebrationParticles.push({
         x: canvas.width / 2 + (Math.random() - 0.5) * 300,
         y: canvas.height / 2 + (Math.random() - 0.5) * 100,

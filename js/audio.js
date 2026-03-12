@@ -156,45 +156,94 @@ class AudioEngine {
   }
 
   // ── Sound: Success jingle (rich ascending chord) ──
-  playSuccess() {
+  playSuccess(stars = 2) {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
-    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
 
-    notes.forEach((freq, i) => {
-      const t = now + i * 0.12;
-      // Main tone
-      ['sine', 'triangle'].forEach((type, j) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq * (j === 1 ? 2 : 1), t); // Octave harmonic
-        gain.gain.setValueAtTime(0, t);
-        const vol = j === 0 ? this.masterVolume * 0.4 : this.masterVolume * 0.15;
-        gain.gain.linearRampToValueAtTime(vol, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.3);
+    if (stars === 1) {
+      // 1 star: single modest chime (just C5)
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.3, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (stars === 2) {
+      // 2 stars: standard arpeggio (C5-E5-G5)
+      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+      notes.forEach((freq, i) => {
+        const t = now + i * 0.12;
+        ['sine', 'triangle'].forEach((type, j) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq * (j === 1 ? 2 : 1), t);
+          gain.gain.setValueAtTime(0, t);
+          const vol = j === 0 ? this.masterVolume * 0.4 : this.masterVolume * 0.15;
+          gain.gain.linearRampToValueAtTime(vol, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        });
       });
-    });
 
-    // Final chord shimmer with multiple harmonics
-    [1046.5, 1318.5].forEach((freq, i) => {
-      const shimmer = ctx.createOscillator();
-      const sGain = ctx.createGain();
-      shimmer.type = i === 0 ? 'triangle' : 'sine';
-      shimmer.frequency.setValueAtTime(freq, now + 0.36);
-      sGain.gain.setValueAtTime(this.masterVolume * (0.25 - i * 0.1), now + 0.36);
-      sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
-      shimmer.connect(sGain);
-      sGain.connect(ctx.destination);
-      shimmer.start(now + 0.36);
-      shimmer.stop(now + 1.0);
-    });
+      // Final chord shimmer
+      [1046.5, 1318.5].forEach((freq, i) => {
+        const shimmer = ctx.createOscillator();
+        const sGain = ctx.createGain();
+        shimmer.type = i === 0 ? 'triangle' : 'sine';
+        shimmer.frequency.setValueAtTime(freq, now + 0.36);
+        sGain.gain.setValueAtTime(this.masterVolume * (0.25 - i * 0.1), now + 0.36);
+        sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+        shimmer.connect(sGain);
+        sGain.connect(ctx.destination);
+        shimmer.start(now + 0.36);
+        shimmer.stop(now + 1.0);
+      });
+    } else {
+      // 3 stars: extended fanfare with high octave sustain
+      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+      notes.forEach((freq, i) => {
+        const t = now + i * 0.12;
+        ['sine', 'triangle'].forEach((type, j) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq * (j === 1 ? 2 : 1), t);
+          gain.gain.setValueAtTime(0, t);
+          const vol = j === 0 ? this.masterVolume * 0.5 : this.masterVolume * 0.2;
+          gain.gain.linearRampToValueAtTime(vol, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.4);
+        });
+      });
+
+      // Extended shimmer with more harmonics
+      [1046.5, 1318.5, 1567.98].forEach((freq, i) => {
+        const shimmer = ctx.createOscillator();
+        const sGain = ctx.createGain();
+        shimmer.type = i === 0 ? 'triangle' : 'sine';
+        shimmer.frequency.setValueAtTime(freq, now + 0.36);
+        sGain.gain.setValueAtTime(this.masterVolume * (0.3 - i * 0.08), now + 0.36);
+        sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+        shimmer.connect(sGain);
+        sGain.connect(ctx.destination);
+        shimmer.start(now + 0.36);
+        shimmer.stop(now + 1.4);
+      });
+    }
   }
 
   // ── Sound: Fail buzz ──

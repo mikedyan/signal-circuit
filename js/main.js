@@ -674,18 +674,18 @@ class GameState {
               gateCount,
               this.currentLevel.difficulty
             );
-            this.audio.playSuccess();
+            this.audio.playSuccess(2);
             this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
             this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
             this.ui.showChallengeResult(gateCount, this.currentLevel);
-            this.ui.startCelebration();
+            this.ui.startCelebration(2);
           } else {
             const stars = this.completeLevel(this.currentLevel.id, gateCount);
-            this.audio.playSuccess();
+            this.audio.playSuccess(stars);
             this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
             this.ui.updateStatusBar('Level complete! All truth table rows match.');
             this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
-            this.ui.startCelebration();
+            this.ui.startCelebration(stars);
             // Check achievements
             const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
             const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
