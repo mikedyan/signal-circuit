@@ -28,12 +28,20 @@
 | **Lowest** | 3 (Audio/Emotional/Retention) | 4 (Audio) | +1 |
 | **Highest** | 6 (UX/Technical) | 8 (UX) | +2 |
 
+## 10-Metric Gameplay Reviews
+
+| Day | Gameplay | Design | Fresh Eyes | Avg | Δ | Top Priority |
+|-----|----------|--------|------------|-----|---|-------------|
+| 15 | 89 | 89 | 90 | 89 | — | Difficulty curve bridge levels |
+| 21 | 77 | 76 | 76 | 76 | -13 | Juice: make ripple/tension effects dramatically more visible |
+
 ## Score History
 
 | Phase | Date | Avg | Total | Top Priority |
 |-------|------|-----|-------|--------------|
 | Baseline (Day 17) | 2026-03-11 | 4.2 | 59/140 | Everything |
 | Post-P0 (15 items) | 2026-03-11 | 6.2 | 87/140 | Audio, Retention, Content depth |
+| Day 21 Review | 2026-03-12 | 76/100 (10-metric) | — | Juice/polish visibility |
 
 ## Key Findings Post-P0
 - **Biggest wins**: Teaching (+3), Emotional Arc (+3), then consistent +2 across most dimensions
