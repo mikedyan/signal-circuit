@@ -444,6 +444,12 @@ body {
   color: #f44;
 }
 
+#result-display.almost {
+  background: rgba(255, 200, 0, 0.2);
+  border: 1px solid #ffa500;
+  color: #ffa500;
+}
+
 #result-display.idle {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid #444;

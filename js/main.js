@@ -701,10 +701,21 @@ class GameState {
             this.ui.showAchievementToasts(newAchs);
           }
         } else {
-          this.audio.playFail();
           const passCount = results.filter(r => r.pass).length;
-          this.ui.updateResultDisplay('fail', `✗ ${passCount}/${results.length} rows correct`);
-          this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+          const total = results.length;
+          const failCount = total - passCount;
+          
+          if (passCount / total >= 0.75) {
+            // Near-miss feedback: ≥75% correct
+            this.audio.playFail();
+            const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
+            this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
+            this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+          } else {
+            this.audio.playFail();
+            this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
+            this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+          }
         }
 
         this.isAnimating = false;
