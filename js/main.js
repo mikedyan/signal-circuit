@@ -411,6 +411,7 @@ class GameState {
 
   showSkipButton() {
     if (this.skipVisible) return;
+    if (this.isChallengeMode || this.isSandboxMode) return;
     this.skipVisible = true;
     document.getElementById('skip-btn').style.display = '';
   }

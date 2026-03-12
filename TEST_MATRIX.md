@@ -158,6 +158,56 @@
 - [x] Works for campaign, challenge, and daily levels
 - [x] No animation in sandbox mode
 
+## Narrative System (Day 21)
+- [x] Level select shows "Repair the ship's logic systems" subtitle
+- [x] Chapter 1 shows "Navigation Systems" narrative label
+- [x] Chapter 2 shows "Communications Array" narrative label
+- [x] Chapter 3 shows "Life Support" narrative label
+- [x] Post-solve insights include narrative context
+- [x] Chapter colors: green (Ch1), cyan (Ch2), purple (Ch3)
+
+## Bookmark System (Day 21)
+- [x] Skip button shows "🔖 Bookmark & Move On"
+- [x] Bookmark button hidden in challenge/sandbox mode
+- [x] bookmarkLevel/isLevelBookmarked methods work
+
+## Chapter Completion (Day 21)
+- [x] Chapter complete modal exists with icon, title, story, gates
+- [x] Triggers after completing last level of a chapter
+
+## Tiered Achievements (Day 21)
+- [x] 15 achievements: Bronze (5), Silver (6), Gold (4)
+- [x] Tier headers displayed (🥇🥈🥉)
+- [x] First Steps and Perfect Score unlock correctly
+- [x] Achievement modal shows tiers in order: Gold → Silver → Bronze
+
+## Timer Improvements (Day 21)
+- [x] Timer hidden during campaign play
+- [x] Timer shown post-completion with time
+- [x] Timer visible in challenge mode
+- [x] Best time on level select cards
+
+## Audio Escalation (Day 21)
+- [x] Ascending pitch for passing rows
+- [x] Descending buzz for failing rows
+- [x] Pitch resets at start of each simulation
+
+## RUN Tension (Day 21)
+- [x] Tension overlay exists
+- [x] 350ms dim before simulation
+- [x] Not applied to Quick Test
+
+## Challenge Generator (Day 21)
+- [x] 26 curated patterns across 6 key types
+- [x] Named challenges (e.g., "Easy: NAND")
+- [x] 70% curated / 30% random fallback
+- [x] Non-degenerate tables maintained
+
+## Gate Ripple (Day 21)
+- [x] spawnRipple method on canvas renderer
+- [x] Ripple on gate placement
+- [x] Copper/gold colors, ~400ms duration
+
 ## Browser Compatibility
 - [x] Chrome (desktop) — tested
 - [ ] Firefox (desktop)

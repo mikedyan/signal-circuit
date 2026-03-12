@@ -1,5 +1,13 @@
 # Lessons Learned
 
+## Day 21: Narrative, Progression & Emotional Arc
+- **Thin narrative > no narrative** — Adding a spacecraft repair theme with per-chapter subsystems (Navigation, Communications, Life Support) creates emotional investment without blocking gameplay. No cutscenes needed — just contextual flavor text.
+- **Curated challenge library beats pure random** — 26 curated truth table patterns (NAND, Parity, Majority, etc.) with named titles makes challenges feel designed rather than arbitrary. 70/30 curated/random split keeps variety.
+- **Tiered achievements create aspiration** — Bronze/Silver/Gold tiers with increasing difficulty give players something to work toward. Flat achievement lists feel like checklists; tiers feel like progression.
+- **Timer visibility matters for mood** — Hiding the timer during campaign play removes pressure; showing it post-completion as "Your time: X:XX" makes it informational rather than stressful. Timer in challenge mode where speed matters.
+- **Guard ALL state-dependent UI against mode switches** — The skip button bug (showing in challenge mode) happened because timer-based display logic didn't check game mode. Every UI toggle needs mode awareness.
+- **Audio escalation adds unconscious tension** — Ascending pitch for passing rows builds momentum; descending buzz for failures creates "try again" motivation. Small but impactful.
+
 ## Day 15: Bezier Wires and Core Loop Polish
 - **Bezier wire hit-testing requires sampling, not math** — Unlike straight line segments, bezier curves don't have a simple "distance from point to curve" formula. Sampling 20 points along the curve with threshold=8px works well and performs fine.
 - **Wire colors need simulation state override** — The color system has two modes: unique colors when building (helps trace wires), red/blue during simulation (shows signal state). The transition needs to be clean.
