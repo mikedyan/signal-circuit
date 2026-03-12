@@ -298,6 +298,19 @@ body {
   margin-bottom: 8px;
 }
 
+#truth-table-toggle {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#truth-table-chevron {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
 #truth-table {
   width: 100%;
   border-collapse: collapse;

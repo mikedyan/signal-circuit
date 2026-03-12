@@ -286,6 +286,32 @@ class UI {
         this.hideStarDisplay();
       }
     });
+
+    // Truth table collapse toggle
+    const toggle = document.getElementById('truth-table-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        const wrapper = document.getElementById('truth-table-wrapper');
+        const chevron = document.getElementById('truth-table-chevron');
+        if (wrapper.style.display === 'none') {
+          wrapper.style.display = '';
+          chevron.textContent = '▼';
+        } else {
+          wrapper.style.display = 'none';
+          chevron.textContent = '▶';
+        }
+      });
+    }
+
+    // Auto-collapse truth table on mobile
+    if (window.innerWidth < 768) {
+      const wrapper = document.getElementById('truth-table-wrapper');
+      const chevron = document.getElementById('truth-table-chevron');
+      if (wrapper && chevron) {
+        wrapper.style.display = 'none';
+        chevron.textContent = '▶';
+      }
+    }
   }
 
   setupLevelNav() {
