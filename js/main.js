@@ -64,6 +64,7 @@ class GameState {
     this.maxHintPenalty = 0; // 0 = no penalty, 1 = max 2 stars, 2 = max 1 star
     this.levelStartTime = null;
     this.skipVisible = false;
+    this.activeHintHighlights = null; // Array of I/O labels to highlight for visual hint
   }
 
   init() {
@@ -289,7 +290,14 @@ class GameState {
       this.hintsUsed++;
       if (this.hintsUsed >= 2) this.maxHintPenalty = Math.max(this.maxHintPenalty, this.hintsUsed - 1);
       this.audio.playButtonClick();
-      this.ui.showHint(this.currentLevel.hints[this.hintsUsed - 1], this.hintsUsed, this.currentLevel.hints.length);
+
+      // Activate visual highlights on hint 3 (the final hint)
+      const isVisualHint = this.hintsUsed === 3 && this.currentLevel.hintHighlights;
+      if (isVisualHint) {
+        this.activeHintHighlights = this.currentLevel.hintHighlights;
+      }
+
+      this.ui.showHint(this.currentLevel.hints[this.hintsUsed - 1], this.hintsUsed, this.currentLevel.hints.length, isVisualHint);
 
       // Update hint button text
       const hintBtn = document.getElementById('hint-btn');
@@ -326,6 +334,7 @@ class GameState {
     this.hintsUsed = 0;
     this.maxHintPenalty = 0;
     this.skipVisible = false;
+    this.activeHintHighlights = null;
     this.levelStartTime = Date.now();
 
     const hintBtn = document.getElementById('hint-btn');

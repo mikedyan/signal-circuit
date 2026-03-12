@@ -11,12 +11,14 @@ const LEVELS = [
   {
     id: 1,
     title: 'AND Gate Basics',
-    description: 'Connect the two inputs through an AND gate to the output. Output is 1 only when BOTH inputs are 1.',
+    description: 'Output is 1 only when BOTH inputs are 1.',
+    postSolveInsight: '🔓 The AND gate is the foundation of digital logic — like a series circuit where both switches must be ON for current to flow.',
     hints: [
-      'Drag an AND gate from the toolbox onto the breadboard.',
-      'Connect input A to the top pin of the AND gate, and B to the bottom pin.',
-      'Connect the AND gate\'s output (right side) to the OUT node.'
+      'This gate only outputs 1 when BOTH inputs are 1. Which gate does that?',
+      'You only need 1 gate for this level.',
+      'Focus on connecting both inputs to your gate and routing the result out.'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['AND'],
     optimalGates: 1,
     goodGates: 1,
@@ -37,12 +39,14 @@ const LEVELS = [
   {
     id: 2,
     title: 'NOT Gate — Inversion',
-    description: 'Connect the input through a NOT gate to the output. Output is the OPPOSITE of the input.',
+    description: 'Output is the OPPOSITE of the input.',
+    postSolveInsight: '🔓 NOT (also called an inverter) is the simplest gate — built from a single transistor. It flips 0→1 and 1→0.',
     hints: [
-      'NOT gates flip the signal: 0 becomes 1, and 1 becomes 0.',
-      'Place a NOT gate between input A and the output.',
-      'Wire: A → NOT input, NOT output → OUT.'
+      'The output is always the opposite of the input. What operation flips a signal?',
+      'A single gate is all you need here.',
+      'The signal flows from left to right — input to output, through one gate.'
     ],
+    hintHighlights: ['A', 'OUT'],
     availableGates: ['NOT'],
     optimalGates: 1,
     goodGates: 1,
@@ -60,12 +64,14 @@ const LEVELS = [
   {
     id: 3,
     title: 'OR Gate — Any Will Do',
-    description: 'Use an OR gate. Output is 1 when ANY input is 1. Output is 0 only when both are 0.',
+    description: 'Output is 1 when ANY input is 1. Only 0 when both inputs are 0.',
+    postSolveInsight: '🔓 OR is like a parallel circuit — if ANY path is active, current flows through. Fundamental to decision-making in hardware.',
     hints: [
-      'OR gate: if either input is 1, the output is 1.',
-      'Place an OR gate and connect both inputs to it.',
-      'Wire: A → OR top, B → OR bottom, OR output → OUT.'
+      'The output is 1 if ANY input is 1. Only 0 when everything is 0.',
+      'One gate handles this directly.',
+      'Both inputs need to reach the same gate, and its result goes to the output.'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['OR'],
     optimalGates: 1,
     goodGates: 1,
@@ -86,12 +92,14 @@ const LEVELS = [
   {
     id: 4,
     title: 'Build a NAND',
-    description: 'Build NAND: the opposite of AND. Look at the truth table — it\'s AND but with every output flipped! NAND = NOT(AND). You need TWO gates for this.',
+    description: 'Study the truth table carefully — compare it to Level 1. What\'s different about every single output?',
+    postSolveInsight: '🔓 NAND = NOT(AND). The NAND gate is special — it\'s "universal," meaning you can build ANY other gate from just NANDs!',
     hints: [
-      'NAND means "NOT AND" — first compute AND, then flip the result.',
-      'Place an AND gate, connect both inputs to it. Then place a NOT gate after it.',
-      'Wire: A,B → AND → NOT → OUT. The NOT flips the AND result to get NAND.'
+      'Compare this truth table to Level 1\'s AND. What\'s different about every single output?',
+      'You need 2 gates — one to compute, one to transform the result.',
+      'Think about what happens when you chain two operations in sequence.'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['AND', 'NOT'],
     optimalGates: 2,
     goodGates: 3,
@@ -112,12 +120,14 @@ const LEVELS = [
   {
     id: 5,
     title: 'Build a NOR',
-    description: 'Build NOR: the opposite of OR. Compare the truth table to level 3 — every output is flipped! NOR = NOT(OR). Same trick as NAND, different gate.',
+    description: 'Study the truth table carefully. What pattern do you notice when you compare each output to what you\'d expect?',
+    postSolveInsight: '🔓 NOR = NOT(OR). Like NAND, NOR is also a universal gate — all of digital logic can be built from NOR gates alone!',
     hints: [
-      'NOR means "NOT OR" — compute OR first, then invert with NOT.',
-      'Place an OR gate for the inputs, then a NOT gate on its output.',
-      'Wire: A,B → OR → NOT → OUT. Same pattern as NAND but with OR instead of AND.'
+      'Compare this truth table to Level 3\'s OR. Every output is flipped!',
+      'Same pattern as Level 4 — 2 gates in sequence.',
+      'Apply the same chaining trick you used before, but with a different starting gate.'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['OR', 'NOT'],
     optimalGates: 2,
     goodGates: 3,
@@ -140,12 +150,14 @@ const LEVELS = [
   {
     id: 6,
     title: 'XOR — Exclusive Or',
-    description: 'XOR (exclusive or) outputs 1 when the inputs are DIFFERENT. Same inputs = 0, different inputs = 1. Simple one-gate solution.',
+    description: 'Output is 1 when the inputs are DIFFERENT. Same inputs give 0, different inputs give 1.',
+    postSolveInsight: '🔓 XOR (exclusive or) is the "difference detector" — fundamental to binary addition and error-checking in data transmission.',
     hints: [
-      'XOR is like OR but excludes the case where both are 1.',
-      'This is a single-gate level — just connect through the XOR gate.',
-      'Wire: A → XOR top, B → XOR bottom, XOR output → OUT.'
+      'Output is 1 when inputs DIFFER. Same inputs give 0, different give 1.',
+      'You have one new gate that does exactly this. Single gate solution.',
+      'Just connect both inputs through your gate to the output — straightforward routing.'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['XOR'],
     optimalGates: 1,
     goodGates: 1,
@@ -166,12 +178,14 @@ const LEVELS = [
   {
     id: 7,
     title: 'XNOR — Same Detector',
-    description: 'Build XNOR: outputs 1 when both inputs are the SAME. It\'s the opposite of XOR — same pattern as NAND/NOR: combine a gate with NOT.',
+    description: 'Study this truth table. When does the output turn on?',
+    postSolveInsight: '🔓 XNOR = NOT(XOR). Also called an "equivalence gate" — it checks if two signals match. Used in comparator circuits.',
     hints: [
-      'XNOR = NOT(XOR). Same pattern you learned in levels 4 and 5!',
-      'Place a XOR gate, then invert its output with NOT.',
-      'Wire: A,B → XOR → NOT → OUT.'
+      'The opposite of XOR — outputs 1 when inputs are the SAME.',
+      'You\'ve seen this pattern before: compute something, then flip it. 2 gates.',
+      'Remember what you learned in Levels 4 and 5 about inverting a gate\'s result.'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['XOR', 'NOT'],
     optimalGates: 2,
     goodGates: 3,
@@ -192,12 +206,14 @@ const LEVELS = [
   {
     id: 8,
     title: 'AND from OR + NOT',
-    description: 'Build AND using ONLY OR and NOT gates. De Morgan\'s law says: AND(A,B) = NOT(OR(NOT(A), NOT(B))). Invert both inputs, OR them, then invert the result.',
+    description: 'You recognize this truth table from Level 1 — but your toolbox is different this time.',
+    postSolveInsight: '🔓 De Morgan\'s Law: AND(A,B) = NOT(OR(NOT(A), NOT(B))). Augustus De Morgan proved these gate equivalences in the 1800s!',
     hints: [
-      'De Morgan\'s law: AND(A,B) = NOT(OR(NOT(A), NOT(B))).',
-      'First invert each input with NOT gates: NOT(A) and NOT(B). Then OR them together.',
-      'Finally, invert the OR result with a third NOT: NOT(A),NOT(B) → OR → NOT → OUT. Total: 4 gates.'
+      'De Morgan\'s insight: you can build AND using only OR and NOT gates.',
+      'You need 4 gates total. Think about what needs to happen to EACH input before combining.',
+      'What if you transformed both inputs individually, combined the results, then transformed one more time?'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['OR', 'NOT'],
     optimalGates: 4,
     goodGates: 5,
@@ -218,12 +234,14 @@ const LEVELS = [
   {
     id: 9,
     title: 'OR from AND + NOT',
-    description: 'Build OR using ONLY AND and NOT gates. De Morgan\'s other law: OR(A,B) = NOT(AND(NOT(A), NOT(B))). Same pattern as level 8 but swapped!',
+    description: 'Another familiar truth table, another unfamiliar toolbox. What will you discover?',
+    postSolveInsight: '🔓 De Morgan\'s Other Law: OR(A,B) = NOT(AND(NOT(A), NOT(B))). AND and OR are duals — each can be built from the other plus NOT.',
     hints: [
-      'De Morgan\'s law: OR(A,B) = NOT(AND(NOT(A), NOT(B))).',
-      'Invert each input with NOT gates, then AND the results together.',
-      'Finally, invert the AND result: NOT(A),NOT(B) → AND → NOT → OUT. Mirror of level 8.'
+      'De Morgan\'s other law: you can build OR using only AND and NOT gates.',
+      'Same structure as Level 8 but with different gates — 4 gates total.',
+      'Mirror what you did in Level 8, swapping the combining gate type.'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['AND', 'NOT'],
     optimalGates: 4,
     goodGates: 5,
@@ -244,12 +262,14 @@ const LEVELS = [
   {
     id: 10,
     title: 'The Implication',
-    description: 'Build A → B (material implication): output is 0 ONLY when A=1 and B=0. Think: "if A then B" — it\'s false only when A is true but B isn\'t.',
+    description: 'Most of this truth table outputs 1. Study the one exception carefully.',
+    postSolveInsight: '🔓 A→B = OR(NOT(A), B). Material implication is the foundation of formal logic and programming conditionals. Just 2 gates!',
     hints: [
-      'A → B is the same as OR(NOT(A), B). If A is false, the implication is always true.',
-      'Invert A with NOT, then OR the result with B.',
-      'Wire: A → NOT → OR (top pin), B → OR (bottom pin), OR → OUT. Just 2 gates!'
+      'A→B is only false when A is true but B isn\'t. All other cases are true.',
+      'Just 2 gates needed. What if you transformed one input before combining?',
+      'Only one of the two inputs needs modification — which one makes the pattern work?'
     ],
+    hintHighlights: ['A', 'B', 'OUT'],
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 2,
     goodGates: 3,
@@ -272,12 +292,14 @@ const LEVELS = [
   {
     id: 11,
     title: 'Half Adder',
-    description: 'Build a half adder: compute SUM (XOR) and CARRY (AND) from two input bits. This is how computers add numbers!',
+    description: 'Add two single-bit numbers. SUM is the single-digit result, CARRY is what overflows to the next column. Two outputs!',
+    postSolveInsight: '🔓 Half Adder: SUM = XOR(A,B), CARRY = AND(A,B). This is literally how computers add numbers at the hardware level!',
     hints: [
-      'A half adder has two outputs: SUM = A XOR B, CARRY = A AND B.',
-      'You need two gates: one XOR for the sum, one AND for the carry.',
-      'Wire A,B → XOR → SUM. Also wire A,B → AND → CARRY.'
+      'Two outputs! Think of binary addition: what\'s the single-digit result, and what carries over?',
+      'You need 2 gates — one for each output. Each gate type matches a different output.',
+      'Both gates share the same two inputs but produce different aspects of addition.'
     ],
+    hintHighlights: ['A', 'B', 'SUM', 'CARRY'],
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 2,
     goodGates: 3,
@@ -299,12 +321,14 @@ const LEVELS = [
   {
     id: 12,
     title: '3-Input AND',
-    description: 'Build a 3-input AND gate. Output is 1 only when ALL THREE inputs are 1. Chain two AND gates together!',
+    description: 'Output is 1 only when ALL THREE inputs are 1. You have three inputs but your gates only take two...',
+    postSolveInsight: '🔓 Chaining 2-input gates to handle more inputs is how real CPUs scale up — daisy-chaining is everywhere in hardware design.',
     hints: [
-      'With 2-input gates, you need to chain: AND(A, B) first, then AND that result with C.',
-      'Place two AND gates. Wire A,B into the first AND.',
-      'Wire first AND output + C into second AND → OUT.'
+      'All three inputs must be 1 for the output to be 1. But your gates only take 2 inputs...',
+      'You need 2 gates. Chain them together to handle all 3 inputs.',
+      'Combine two inputs first, then combine that intermediate result with the third.'
     ],
+    hintHighlights: ['A', 'B', 'C', 'OUT'],
     availableGates: ['AND'],
     optimalGates: 2,
     goodGates: 3,
@@ -330,12 +354,14 @@ const LEVELS = [
   {
     id: 13,
     title: 'Majority Vote',
-    description: 'Build a majority detector: output 1 when 2 or more of the 3 inputs are 1. Think: "at least 2 out of 3."',
+    description: 'Output 1 when 2 or more of the 3 inputs are 1. Think: "at least 2 out of 3 agree."',
+    postSolveInsight: '🔓 Majority(A,B,C) = OR(AND(A,B), AND(B,C), AND(A,C)). Majority voting is used in fault-tolerant systems like spacecraft computers!',
     hints: [
-      'Majority(A,B,C) = (A AND B) OR (B AND C) OR (A AND C).',
-      'Check each pair: AND(A,B), AND(B,C), AND(A,C). If ANY pair is both 1, majority passes.',
-      'Wire: A,B→AND₁, B,C→AND₂, A,C→AND₃, then OR all three results together.'
+      'Output is 1 when at least 2 of 3 inputs agree. Think about checking pairs.',
+      'You need 5 gates — check each possible pair, then combine all the pair results.',
+      'Three pairs exist among three inputs. If any pair is both 1, the majority passes.'
     ],
+    hintHighlights: ['A', 'B', 'C', 'OUT'],
     availableGates: ['AND', 'OR'],
     optimalGates: 5,
     goodGates: 7,
@@ -361,12 +387,14 @@ const LEVELS = [
   {
     id: 14,
     title: 'Multiplexer',
-    description: 'Build a 2:1 multiplexer: when S=0 output A, when S=1 output B. The selector S chooses which input passes through.',
+    description: 'Three inputs, one output. The third input changes which of the other two reaches the output.',
+    postSolveInsight: '🔓 MUX = OR(AND(A, NOT(S)), AND(B, S)). Multiplexers are the "railroad switches" of digital circuits — they route data.',
     hints: [
-      'MUX = (A AND NOT(S)) OR (B AND S). When S=0, A passes; when S=1, B passes.',
-      'You need: NOT(S), AND(A, NOT(S)), AND(B, S), then OR the two AND results.',
-      'Wire: S→NOT. A+NOT(S)→AND₁. B+S→AND₂. AND₁+AND₂→OR→OUT.'
+      'S is the selector: when S=0, output follows A. When S=1, output follows B.',
+      'You need 4 gates. Think about creating two paths — one for each input — controlled by S.',
+      'Each data input needs its own "gatekeeper," and S controls which one opens.'
     ],
+    hintHighlights: ['A', 'B', 'S', 'OUT'],
     availableGates: ['AND', 'OR', 'NOT'],
     optimalGates: 4,
     goodGates: 5,
@@ -392,12 +420,14 @@ const LEVELS = [
   {
     id: 15,
     title: 'Full Adder',
-    description: 'The boss level! Build a full adder: add A + B + Cin and produce SUM and CARRY outputs. This is the building block of all CPU arithmetic.',
+    description: 'The boss level! Add three single-bit numbers (A + B + carry-in) and produce SUM and CARRY outputs.',
+    postSolveInsight: '🔓 Full Adder: SUM = XOR(XOR(A,B), Cin), CARRY = OR(AND(A,B), AND(Cin, XOR(A,B))). Chain these together and you\'ve built a CPU\'s arithmetic unit!',
     hints: [
-      'Full adder: SUM = A XOR B XOR Cin. CARRY = (A AND B) OR (Cin AND (A XOR B)).',
-      'First compute A XOR B. Then XOR that with Cin for SUM. For CARRY, AND(A,B) OR AND(Cin, A XOR B).',
-      'Wire: A,B→XOR₁. XOR₁+Cin→XOR₂→SUM. A,B→AND₁. XOR₁+Cin→AND₂. AND₁+AND₂→OR→CARRY.'
+      'Like the half adder but with a carry-in. Think of it as two stages of addition.',
+      'You need 5 gates. First add two inputs, then fold in the carry-in for both outputs.',
+      'The SUM uses chained same-type operations. The CARRY combines two separate "overflow" conditions.'
     ],
+    hintHighlights: ['A', 'B', 'Cin', 'SUM', 'CARRY'],
     availableGates: ['AND', 'OR', 'XOR'],
     optimalGates: 5,
     goodGates: 7,

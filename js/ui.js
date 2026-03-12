@@ -439,6 +439,15 @@ class UI {
       msg.textContent = `Solved with ${gateCount} gates (optimal: ${level.optimalGates})`;
     }
 
+    // Show post-solve insight for campaign levels
+    const insightEl = document.getElementById('post-solve-insight');
+    if (insightEl && level.postSolveInsight) {
+      insightEl.textContent = level.postSolveInsight;
+      insightEl.style.display = 'block';
+    } else if (insightEl) {
+      insightEl.style.display = 'none';
+    }
+
     // Show next level button if there's a next level
     const nextBtn = document.getElementById('next-level-btn');
     if (level.id < getLevelCount()) {
@@ -451,6 +460,8 @@ class UI {
   hideStarDisplay() {
     document.getElementById('star-display').style.display = 'none';
     document.getElementById('share-btn').style.display = 'none';
+    const insightEl = document.getElementById('post-solve-insight');
+    if (insightEl) insightEl.style.display = 'none';
   }
 
   showChallengeResult(gateCount, level) {
@@ -468,6 +479,10 @@ class UI {
 
     const msg = document.getElementById('star-message');
     msg.textContent = `${level.difficulty} challenge solved with ${gateCount} gates!`;
+
+    // Hide insight for challenge mode
+    const insightEl = document.getElementById('post-solve-insight');
+    if (insightEl) insightEl.style.display = 'none';
 
     // Show "New Challenge" button instead of "Next Level"
     const nextBtn = document.getElementById('next-level-btn');
@@ -806,10 +821,11 @@ class UI {
   }
 
   // ── Hint Display ──
-  showHint(text, hintNum, totalHints) {
+  showHint(text, hintNum, totalHints, isVisualHint) {
     const el = document.getElementById('hint-display');
     if (!el) return;
-    el.innerHTML = `<div class="hint-label">Hint ${hintNum}/${totalHints}</div>${text}`;
+    const visualTag = isVisualHint ? '<div class="hint-visual-tag">👁 Look at the highlighted pins on the board</div>' : '';
+    el.innerHTML = `<div class="hint-label">Hint ${hintNum}/${totalHints}</div>${text}${visualTag}`;
     el.style.display = 'block';
   }
 

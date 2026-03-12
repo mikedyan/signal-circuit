@@ -36,6 +36,33 @@ class CanvasRenderer {
       node.render(ctx);
     }
 
+    // Hint highlight glow on I/O nodes
+    if (this.gameState.activeHintHighlights) {
+      const labels = this.gameState.activeHintHighlights;
+      const allNodes = [...this.gameState.inputNodes, ...this.gameState.outputNodes];
+      const pulse = 0.4 + 0.4 * Math.sin(performance.now() / 400);
+      for (const node of allNodes) {
+        if (labels.includes(node.label)) {
+          const cx = node.x + node.width / 2;
+          const cy = node.y + node.height / 2;
+          // Outer glow ring
+          ctx.beginPath();
+          ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+          const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 32);
+          grad.addColorStop(0, `rgba(255, 200, 50, ${pulse * 0.35})`);
+          grad.addColorStop(1, `rgba(255, 180, 0, 0)`);
+          ctx.fillStyle = grad;
+          ctx.fill();
+          // Inner ring
+          ctx.beginPath();
+          ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255, 200, 50, ${pulse * 0.8})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+    }
+
     // Gate glow during simulation
     const sim = this.gameState.simulation;
     if (sim && sim.animating) {

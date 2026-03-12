@@ -466,6 +466,25 @@ body {
   margin-bottom: 8px;
 }
 
+/* ── Post-Solve Insight ── */
+#post-solve-insight {
+  background: rgba(0, 200, 255, 0.08);
+  border: 1px solid rgba(0, 200, 255, 0.3);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-size: 11px;
+  color: #88ddff;
+  line-height: 1.5;
+  text-align: left;
+  animation: insightReveal 0.5s ease;
+}
+
+@keyframes insightReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 #next-level-btn {
   background: #0a0;
   color: #fff;
@@ -1264,6 +1283,17 @@ body {
   font-size: 10px;
   text-transform: uppercase;
   margin-bottom: 4px;
+}
+
+#hint-display .hint-visual-tag {
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: rgba(255, 200, 50, 0.15);
+  border: 1px solid rgba(255, 200, 50, 0.4);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #daa520;
+  font-style: italic;
 }
 
 /* ── Onboarding Tooltip ── */
