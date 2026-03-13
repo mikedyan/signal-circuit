@@ -1,0 +1,73 @@
+{
+  "day": 23,
+  "title": "Content Architecture & Progression Systems",
+  "summary": "Day 23 focuses on three high-impact features that address our weakest scorecard areas: a Gate Encyclopedia (Content Depth +, Teaching +), a Progress Analytics Dashboard (Retention +, Progression +), and Milestone Celebrations (Emotional Arc +, Feedback +). These are self-contained features that don't risk regression on existing gameplay. The Gate Encyclopedia gives players a reference they can access anytime, the Analytics Dashboard creates a reason to keep playing ('check your stats'), and Milestone Celebrations make key moments (all levels done, all stars earned) feel special. We also scope a small Difficulty Curve improvement by adding a subtle difficulty label to each level card on the level select screen.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Gate Encyclopedia — Add a new modal accessible from level select ('📖 Gate Encyclopedia' button) and during gameplay (via a small '📚' button in the toolbox). Shows all 4 gate types (AND, OR, NOT, XOR) with: gate symbol, truth table, plain-English explanation, real-world analogy, and 'Pro tip' for circuit building. The encyclopedia should have a clean card-based layout matching the game's dark aesthetic. Gates the player hasn't encountered yet (based on progress) should show as 'locked/mysterious' with just the name visible.",
+      "files_to_modify": ["index.html", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Encyclopedia button visible on level select screen",
+        "Encyclopedia button visible in toolbox during gameplay",
+        "Modal opens with all 4 gate types displayed as cards",
+        "Each card shows: gate name, symbol/icon, mini truth table, description, real-world analogy, pro tip",
+        "Gates not yet encountered in campaign show as locked (just name + lock icon)",
+        "Modal closes with close button or clicking backdrop",
+        "Styling matches game aesthetic (dark background, green accents, Courier font)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Progress Analytics Dashboard — Add a '📊 Stats' button on the level select screen that opens a modal showing player statistics: total levels completed, total stars earned (with progress bar to max), total gates placed (lifetime counter), total time played (lifetime counter), average completion time per level, number of achievements unlocked, challenge mode stats (games played, best scores). Store lifetime counters in localStorage. The dashboard should feel like a mission control readout.",
+      "files_to_modify": ["index.html", "js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Stats button visible on level select screen",
+        "Stats modal opens showing: levels completed, stars earned, lifetime gates placed, total playtime, achievements unlocked count",
+        "Lifetime gate counter increments when gates are placed (persisted in localStorage)",
+        "Total playtime accumulates across sessions (persisted in localStorage)",
+        "Challenge stats shown: total completed, best score per difficulty",
+        "Stats modal has clean 'mission control' aesthetic with green text on dark background",
+        "Modal closes properly"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Milestone Celebrations — Add special celebration effects for three key milestones: (1) Completing ALL 17 levels — full-screen fireworks burst with 'ALL SYSTEMS ONLINE' message and ship departure narrative, (2) Earning ALL 51 stars (17×3) — golden rain effect with 'PERFECT ENGINEER' message, (3) First 3-star rating — extra sparkle and encouraging message. These should be triggered once per milestone (tracked in localStorage) and feel significantly more impactful than standard level celebrations.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "css/style.css", "index.html"],
+      "acceptance_criteria": [
+        "Completing all 17 levels triggers a special 'ALL SYSTEMS ONLINE' celebration with enhanced particles",
+        "Earning all 51 stars triggers a 'PERFECT ENGINEER' golden celebration",
+        "First time earning 3 stars on any level shows an encouraging extra message",
+        "Each milestone only triggers once (stored in localStorage)",
+        "Milestone celebrations are visually distinct from and more impactful than standard celebrations",
+        "A milestone modal shows with narrative text and a dismiss button"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Level Difficulty Labels — Add a subtle difficulty indicator to each level card on the level select screen. Show a small colored dot or text label: green='Easy', yellow='Medium', orange='Hard'. Based on the optimal gate count relative to inputs: 1-2 gates = Easy, 3-4 = Medium, 5+ = Hard. This helps players know what they're getting into.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Each level card on the level select shows a small difficulty indicator",
+        "Difficulty is color-coded: green for Easy, yellow for Medium, orange for Hard",
+        "Difficulty is based on optimal gate count (1-2=Easy, 3-4=Medium, 5+=Hard)",
+        "Labels don't clutter the existing level card design"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Gate Encyclopedia modal opens/closes correctly from both level select and gameplay",
+    "Stats dashboard shows accurate data matching actual progress in localStorage",
+    "Milestone celebrations don't interfere with normal gameplay flow",
+    "Level difficulty labels render correctly on all level cards",
+    "No regression on existing features: level completion, achievements, challenge mode",
+    "All new modals are properly styled and match game aesthetic"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced or core gameplay breaks, revert to previous commit"
+}

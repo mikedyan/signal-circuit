@@ -2,6 +2,8 @@
 
 const STORAGE_KEY = 'signal-circuit-progress';
 const LEADERBOARD_KEY = 'signal-circuit-leaderboard';
+const STATS_KEY = 'signal-circuit-stats';
+const MILESTONES_KEY = 'signal-circuit-milestones';
 const SCHEMA_VERSION = 1;
 
 class UndoManager {
@@ -79,6 +81,7 @@ class GameState {
     this.setupHintAndSkip();
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
+    this.trackPlaytimeStart();
 
     // Remove intro after animation (skip for returning players)
     const intro = document.getElementById('intro-screen');
@@ -196,6 +199,57 @@ class GameState {
     this.saveLeaderboard();
   }
 
+  // ── Lifetime Stats ──
+  loadLifetimeStats() {
+    try {
+      const saved = localStorage.getItem(STATS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { totalGatesPlaced: 0, totalPlaytime: 0, sessionStart: null };
+  }
+
+  saveLifetimeStats(stats) {
+    try {
+      localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    } catch (e) {}
+  }
+
+  trackGatePlaced() {
+    const stats = this.loadLifetimeStats();
+    stats.totalGatesPlaced = (stats.totalGatesPlaced || 0) + 1;
+    this.saveLifetimeStats(stats);
+  }
+
+  trackPlaytimeStart() {
+    this._sessionStart = Date.now();
+  }
+
+  trackPlaytimeEnd() {
+    if (!this._sessionStart) return;
+    const elapsed = Math.floor((Date.now() - this._sessionStart) / 1000);
+    if (elapsed > 0 && elapsed < 86400) { // Sanity cap at 24h
+      const stats = this.loadLifetimeStats();
+      stats.totalPlaytime = (stats.totalPlaytime || 0) + elapsed;
+      this.saveLifetimeStats(stats);
+    }
+    this._sessionStart = Date.now(); // Reset for next interval
+  }
+
+  // ── Milestones ──
+  loadMilestones() {
+    try {
+      const saved = localStorage.getItem(MILESTONES_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {};
+  }
+
+  saveMilestones(milestones) {
+    try {
+      localStorage.setItem(MILESTONES_KEY, JSON.stringify(milestones));
+    } catch (e) {}
+  }
+
   isLevelUnlocked(levelId) {
     if (levelId === 1) return true;
     const prev = this.progress.levels[levelId - 1];
@@ -266,6 +320,11 @@ class GameState {
     // Check for chapter completion
     this._checkChapterCompletion(levelId);
 
+    // Check for milestones
+    if (this.ui) {
+      this.ui.checkMilestones(stars, levelId);
+    }
+
     return stars;
   }
 
@@ -297,6 +356,7 @@ class GameState {
     this.isSandboxMode = false;
     this.isChallengeMode = false;
     this.stopTimer();
+    this.trackPlaytimeEnd();
     this.audio.stopAmbient();
     this.ui.renderLevelSelect();
     this.ui.updateProgressBar(this.progress);
@@ -509,6 +569,7 @@ class GameState {
         x, y,
       });
     }
+    this.trackGatePlaced();
     this.ui.updateGateIndicator();
     this.markDirty();
     return gate;
@@ -1293,4 +1354,9 @@ window.addEventListener('DOMContentLoaded', () => {
   game.init();
   game.startRenderLoop();
   window.game = game;
+
+  // Save playtime on page unload
+  window.addEventListener('beforeunload', () => {
+    game.trackPlaytimeEnd();
+  });
 });

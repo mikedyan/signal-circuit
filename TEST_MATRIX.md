@@ -208,6 +208,43 @@
 - [x] Ripple on gate placement
 - [x] Copper/gold colors, ~400ms duration
 
+## Gate Encyclopedia (Day 23)
+- [x] Encyclopedia button visible on level select screen
+- [x] Encyclopedia button visible in toolbox during gameplay (📚 icon)
+- [x] Modal opens with all 4 gate types as cards
+- [x] Each card shows: gate name, symbol, mini truth table, description, analogy, pro tip
+- [x] Gates not yet encountered show as locked (just name + lock icon)
+- [x] Gate unlock state updates correctly as levels are unlocked
+- [x] Modal closes with close button
+- [x] Modal closes by clicking backdrop
+- [x] Styling matches game aesthetic
+
+## Stats Dashboard (Day 23)
+- [x] Stats button visible on level select screen
+- [x] Stats modal opens showing 7 stat cards
+- [x] Levels completed count is accurate
+- [x] Stars earned with progress bar
+- [x] Lifetime gate counter increments and persists in localStorage
+- [x] Total playtime accumulates and persists
+- [x] Achievements count matches unlocked count
+- [x] Challenge mode stats shown
+- [x] Modal closes properly
+
+## Milestone Celebrations (Day 23)
+- [x] First 3-star rating triggers "PERFECT LOGIC!" milestone modal
+- [x] Milestone has golden border, large icon, narrative text
+- [x] Milestone only triggers once (stored in localStorage)
+- [x] Milestone modal closes with dismiss button
+- [x] Milestone modal closes by clicking backdrop
+- [x] Milestone persistence survives page reload
+
+## Level Difficulty Labels (Day 23)
+- [x] Each level card shows Easy/Med/Hard difficulty label
+- [x] Easy levels (1-2 optimal gates) show green label
+- [x] Medium levels (3-4 optimal gates) show yellow label
+- [x] Hard levels (5+ optimal gates) show orange label
+- [x] Labels visible on all level cards including locked ones
+
 ## Browser Compatibility
 - [x] Chrome (desktop) — tested
 - [ ] Firefox (desktop)

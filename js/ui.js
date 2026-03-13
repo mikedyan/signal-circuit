@@ -24,6 +24,119 @@ class UI {
     this.setupSandboxConfig();
     this.setupMobileDelete();
     this.adaptCopyForPlatform();
+    this.setupEncyclopedia();
+    this.setupStatsDashboard();
+    this.setupMilestoneModal();
+  }
+
+  // ── Colorblind Mode Toggle ──
+  setupColorblindToggle() {
+    const btn = document.getElementById('colorblind-toggle-btn');
+    if (!btn) return;
+
+    // Load saved state
+    let isColorblind = false;
+    try {
+      isColorblind = localStorage.getItem('signal-circuit-colorblind') === 'true';
+    } catch (e) {}
+
+    if (isColorblind) {
+      document.body.classList.add('colorblind-mode');
+      btn.textContent = '👁 Colorblind Mode: On';
+      btn.classList.add('active');
+    }
+
+    btn.addEventListener('click', () => {
+      isColorblind = !isColorblind;
+      document.body.classList.toggle('colorblind-mode', isColorblind);
+      btn.textContent = isColorblind ? '👁 Colorblind Mode: On' : '👁 Colorblind Mode: Off';
+      btn.classList.toggle('active', isColorblind);
+      try {
+        localStorage.setItem('signal-circuit-colorblind', isColorblind ? 'true' : 'false');
+      } catch (e) {}
+    });
+  }
+
+  // ── Sandbox Config ──
+  setupSandboxConfig() {
+    const backBtn = document.getElementById('sandbox-back-btn');
+    const startBtn = document.getElementById('start-sandbox-btn');
+    const inputSlider = document.getElementById('sandbox-input-slider');
+    const outputSlider = document.getElementById('sandbox-output-slider');
+    const inputLabel = document.getElementById('sandbox-input-label');
+    const outputLabel = document.getElementById('sandbox-output-label');
+
+    if (!backBtn || !startBtn) return;
+
+    if (inputSlider) {
+      inputSlider.addEventListener('input', () => {
+        inputLabel.textContent = inputSlider.value;
+      });
+    }
+    if (outputSlider) {
+      outputSlider.addEventListener('input', () => {
+        outputLabel.textContent = outputSlider.value;
+      });
+    }
+
+    backBtn.addEventListener('click', () => {
+      this.gameState.showLevelSelect();
+    });
+
+    startBtn.addEventListener('click', () => {
+      const ni = parseInt(inputSlider.value);
+      const no = parseInt(outputSlider.value);
+      this.gameState.startSandbox(ni, no);
+    });
+  }
+
+  // ── Mobile Delete Button ──
+  setupMobileDelete() {
+    if (!this.isTouchDevice) return;
+
+    const deleteBtn = document.getElementById('mobile-delete-btn');
+    if (!deleteBtn) return;
+
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const gs = this.gameState;
+
+      if (gs.wireManager.selectedWire) {
+        gs.audio.playWireDisconnect();
+        const wire = gs.wireManager.selectedWire;
+        gs.undoManager.push({
+          type: 'removeWire',
+          fromGateId: wire.fromGateId,
+          fromPinIndex: wire.fromPinIndex,
+          toGateId: wire.toGateId,
+          toPinIndex: wire.toPinIndex,
+        });
+        gs.wireManager.removeWire(wire);
+        gs.markDirty();
+      } else if (gs.selectedGate) {
+        gs.removeGate(gs.selectedGate);
+      }
+
+      this.hideMobileDelete();
+    });
+  }
+
+  showMobileDelete(x, y) {
+    if (!this.isTouchDevice) return;
+    const btn = document.getElementById('mobile-delete-btn');
+    if (!btn) return;
+
+    const canvas = this.gameState.renderer.canvas;
+    const rect = canvas.getBoundingClientRect();
+
+    btn.style.display = 'flex';
+    btn.style.left = (rect.left + x - 24) + 'px';
+    btn.style.top = (rect.top + y - 60) + 'px';
+  }
+
+  hideMobileDelete() {
+    const btn = document.getElementById('mobile-delete-btn');
+    if (btn) btn.style.display = 'none';
   }
 
   // ── Colorblind Mode Toggle ──
@@ -262,6 +375,22 @@ class UI {
           timeSpan.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
           btn.appendChild(timeSpan);
         }
+
+        // Difficulty label
+        const diffLabel = document.createElement('span');
+        diffLabel.className = 'level-difficulty';
+        const optGates = level.optimalGates || 1;
+        if (optGates <= 2) {
+          diffLabel.textContent = 'Easy';
+          diffLabel.classList.add('diff-easy');
+        } else if (optGates <= 4) {
+          diffLabel.textContent = 'Med';
+          diffLabel.classList.add('diff-medium');
+        } else {
+          diffLabel.textContent = 'Hard';
+          diffLabel.classList.add('diff-hard');
+        }
+        btn.appendChild(diffLabel);
 
         if (isUnlocked) {
           btn.addEventListener('click', () => {
@@ -1314,6 +1443,298 @@ class UI {
     const el = document.getElementById('gate-count-display');
     if (el) {
       el.innerHTML = `Gates used: <span>${this.gameState.gates.length}</span>`;
+    }
+  }
+
+  // ── Gate Encyclopedia ──
+  setupEncyclopedia() {
+    const modal = document.getElementById('encyclopedia-modal');
+    const closeBtn = document.getElementById('encyclopedia-close');
+    const levelSelectBtn = document.getElementById('encyclopedia-btn');
+    const gameplayBtn = document.getElementById('encyclopedia-gameplay-btn');
+
+    const openEncyclopedia = () => {
+      this.renderEncyclopedia();
+      if (modal) modal.style.display = 'flex';
+    };
+
+    if (levelSelectBtn) levelSelectBtn.addEventListener('click', openEncyclopedia);
+    if (gameplayBtn) gameplayBtn.addEventListener('click', openEncyclopedia);
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  renderEncyclopedia() {
+    const container = document.getElementById('encyclopedia-cards');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // Determine which gates the player has encountered
+    const progress = this.gameState.progress;
+    const encounteredGates = new Set();
+    for (const [levelId, data] of Object.entries(progress.levels || {})) {
+      const level = getLevel(parseInt(levelId));
+      if (level && level.availableGates) {
+        level.availableGates.forEach(g => encounteredGates.add(g));
+      }
+    }
+    // Also include gates from unlocked levels
+    const allLevels = LEVELS;
+    for (const level of allLevels) {
+      if (this.gameState.isLevelUnlocked(level.id)) {
+        level.availableGates.forEach(g => encounteredGates.add(g));
+      }
+    }
+
+    const gateInfo = [
+      {
+        type: 'AND',
+        symbol: '∧',
+        desc: 'Outputs 1 only when ALL inputs are 1. Like a series circuit — both switches must be ON.',
+        analogy: '🔌 Two light switches in series: both must be flipped for the light to turn on.',
+        tip: 'AND is great for "require both conditions" logic. Chain two ANDs to handle 3+ inputs.',
+        table: [[0,0,0],[0,1,0],[1,0,0],[1,1,1]],
+      },
+      {
+        type: 'OR',
+        symbol: '∨',
+        desc: 'Outputs 1 when ANY input is 1. Like a parallel circuit — any path lets current through.',
+        analogy: '🚪 Two doors to a room: either one being open means you can enter.',
+        tip: 'OR handles "at least one" conditions. Useful for combining multiple signal sources.',
+        table: [[0,0,0],[0,1,1],[1,0,1],[1,1,1]],
+      },
+      {
+        type: 'NOT',
+        symbol: '¬',
+        desc: 'Flips the input: 0 becomes 1, 1 becomes 0. The simplest gate — just one transistor.',
+        analogy: '🔄 A toggle switch: whatever state the input is in, the output is the opposite.',
+        tip: 'NOT is the key to De Morgan\'s Laws: combine with AND/OR to build any other gate.',
+        table: [[0,1],[1,0]],
+      },
+      {
+        type: 'XOR',
+        symbol: '⊕',
+        desc: 'Outputs 1 when inputs are DIFFERENT. Same inputs → 0, different inputs → 1.',
+        analogy: '🤝 Two-way light switch: either switch alone turns the light on, but both together cancel out.',
+        tip: 'XOR is the foundation of binary addition (half adder). Also used in parity checks and encryption.',
+        table: [[0,0,0],[0,1,1],[1,0,1],[1,1,0]],
+      },
+    ];
+
+    for (const info of gateInfo) {
+      const def = GateTypes[info.type];
+      const isLocked = !encounteredGates.has(info.type);
+
+      const card = document.createElement('div');
+      card.className = 'enc-card' + (isLocked ? ' enc-locked' : '');
+
+      if (isLocked) {
+        card.innerHTML = `
+          <div class="enc-header">
+            <span class="enc-gate-name" style="color: ${def.color}">${info.type}</span>
+            <span class="enc-lock">🔒</span>
+          </div>
+          <div class="enc-locked-msg">Complete more levels to unlock</div>
+        `;
+      } else {
+        // Mini truth table
+        const isUnary = info.type === 'NOT';
+        let tableHtml = '<table class="enc-truth-table"><thead><tr>';
+        if (isUnary) {
+          tableHtml += '<th>IN</th><th>OUT</th>';
+        } else {
+          tableHtml += '<th>A</th><th>B</th><th>OUT</th>';
+        }
+        tableHtml += '</tr></thead><tbody>';
+        for (const row of info.table) {
+          tableHtml += '<tr>';
+          for (const val of row) {
+            tableHtml += `<td>${val}</td>`;
+          }
+          tableHtml += '</tr>';
+        }
+        tableHtml += '</tbody></table>';
+
+        card.innerHTML = `
+          <div class="enc-header">
+            <span class="enc-gate-name" style="color: ${def.color}">${info.type}</span>
+            <span class="enc-symbol" style="color: ${def.color}">${info.symbol}</span>
+          </div>
+          <div class="enc-body">
+            <div class="enc-desc">${info.desc}</div>
+            ${tableHtml}
+            <div class="enc-analogy">${info.analogy}</div>
+            <div class="enc-tip">💡 <strong>Pro tip:</strong> ${info.tip}</div>
+          </div>
+        `;
+      }
+
+      container.appendChild(card);
+    }
+  }
+
+  // ── Stats Dashboard ──
+  setupStatsDashboard() {
+    const btn = document.getElementById('stats-btn');
+    const modal = document.getElementById('stats-modal');
+    const closeBtn = document.getElementById('stats-close');
+
+    if (btn) btn.addEventListener('click', () => {
+      this.renderStatsDashboard();
+      if (modal) modal.style.display = 'flex';
+    });
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  renderStatsDashboard() {
+    const container = document.getElementById('stats-grid');
+    if (!container) return;
+
+    const gs = this.gameState;
+    const progress = gs.progress;
+    const stats = gs.loadLifetimeStats();
+
+    // Calculate derived stats
+    const totalLevels = getLevelCount();
+    let completed = 0;
+    let totalStars = 0;
+    const maxStars = totalLevels * 3;
+    let totalBestTime = 0;
+    let levelsWithTime = 0;
+
+    for (const [id, data] of Object.entries(progress.levels || {})) {
+      if (data.completed) completed++;
+      totalStars += data.stars || 0;
+      if (data.bestTime) {
+        totalBestTime += data.bestTime;
+        levelsWithTime++;
+      }
+    }
+
+    const avgTime = levelsWithTime > 0 ? Math.round(totalBestTime / levelsWithTime) : 0;
+    const achCount = gs.achievements.getUnlockedCount();
+    const achTotal = ACHIEVEMENTS.length;
+
+    // Challenge stats
+    const challengeStats = gs.achievements.stats || {};
+    const challengesPlayed = challengeStats.challengesCompleted || 0;
+
+    // Format playtime
+    const playtimeSec = stats.totalPlaytime || 0;
+    const playMin = Math.floor(playtimeSec / 60);
+    const playHour = Math.floor(playMin / 60);
+    const playMinRemainder = playMin % 60;
+    const playtimeStr = playHour > 0 ? `${playHour}h ${playMinRemainder}m` : `${playMin}m`;
+
+    const starPct = maxStars > 0 ? Math.round((totalStars / maxStars) * 100) : 0;
+
+    container.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-value">${completed}/${totalLevels}</div>
+        <div class="stat-label">Levels Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-value">${totalStars}/${maxStars}</div>
+        <div class="stat-label">Stars Earned</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:${starPct}%"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔧</div>
+        <div class="stat-value">${stats.totalGatesPlaced || 0}</div>
+        <div class="stat-label">Gates Placed (Lifetime)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-value">${playtimeStr}</div>
+        <div class="stat-label">Total Play Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value">${avgTime > 0 ? Math.floor(avgTime / 60) + ':' + (avgTime % 60).toString().padStart(2, '0') : '—'}</div>
+        <div class="stat-label">Avg Completion Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value">${achCount}/${achTotal}</div>
+        <div class="stat-label">Achievements</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎲</div>
+        <div class="stat-value">${challengesPlayed}</div>
+        <div class="stat-label">Challenges Completed</div>
+      </div>
+    `;
+  }
+
+  // ── Milestone Modal ──
+  setupMilestoneModal() {
+    const modal = document.getElementById('milestone-modal');
+    const dismissBtn = document.getElementById('milestone-dismiss');
+    if (dismissBtn) dismissBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  showMilestoneModal(icon, title, story) {
+    const modal = document.getElementById('milestone-modal');
+    if (!modal) return;
+    document.getElementById('milestone-icon').textContent = icon;
+    document.getElementById('milestone-title').textContent = title;
+    document.getElementById('milestone-story').textContent = story;
+    modal.style.display = 'flex';
+  }
+
+  checkMilestones(stars, levelId) {
+    const gs = this.gameState;
+    const progress = gs.progress;
+    const milestones = gs.loadMilestones();
+
+    // Milestone 1: First 3-star rating
+    if (stars === 3 && !milestones.first3Star) {
+      milestones.first3Star = true;
+      gs.saveMilestones(milestones);
+      setTimeout(() => {
+        this.showMilestoneModal('🌟', 'Perfect Logic!', 'Your first 3-star solution! You\'re thinking like a real circuit designer. Keep optimizing — fewer gates means more elegant circuits.');
+      }, 2500);
+    }
+
+    // Milestone 2: All 17 levels completed
+    const totalLevels = getLevelCount();
+    let allComplete = true;
+    for (let i = 1; i <= totalLevels; i++) {
+      const p = progress.levels[i];
+      if (!p || !p.completed) { allComplete = false; break; }
+    }
+    if (allComplete && !milestones.allLevelsComplete) {
+      milestones.allLevelsComplete = true;
+      gs.saveMilestones(milestones);
+      setTimeout(() => {
+        this.startCelebration(3);
+        this.showMilestoneModal('🛸', 'ALL SYSTEMS ONLINE', 'Navigation, Communications, Life Support — every system on the ship is repaired. The crew is safe. You did it, Engineer. The ship can fly home.');
+      }, 2500);
+    }
+
+    // Milestone 3: All 51 stars
+    let totalStars = 0;
+    for (const [, data] of Object.entries(progress.levels || {})) {
+      totalStars += data.stars || 0;
+    }
+    const maxStars = totalLevels * 3;
+    if (totalStars >= maxStars && !milestones.perfectEngineer) {
+      milestones.perfectEngineer = true;
+      gs.saveMilestones(milestones);
+      setTimeout(() => {
+        this.startCelebration(3);
+        this.showMilestoneModal('💎', 'PERFECT ENGINEER', 'Every circuit optimized to perfection. Every gate placed with precision. You\'ve mastered the art of digital logic. There is nothing left to teach you.');
+      }, 3000);
     }
   }
 

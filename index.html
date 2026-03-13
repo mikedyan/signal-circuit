@@ -41,7 +41,11 @@
         </div>
 
         <button id="how-to-play-btn" class="challenge-btn" style="margin-top:10px;">📖 How to Play</button>
-        <button id="achievements-btn" class="challenge-btn">🏆 Achievements</button>
+        <div id="info-buttons-row">
+          <button id="encyclopedia-btn" class="challenge-btn info-btn">📚 Gate Encyclopedia</button>
+          <button id="achievements-btn" class="challenge-btn info-btn">🏆 Achievements</button>
+          <button id="stats-btn" class="challenge-btn info-btn">📊 Stats</button>
+        </div>
         <div id="settings-row">
           <button id="colorblind-toggle-btn" class="settings-btn">👁 Colorblind Mode: Off</button>
         </div>
@@ -70,6 +74,34 @@
         <h3>🏆 Achievements</h3>
         <div id="achievements-list"></div>
         <button id="achievements-close">Close</button>
+      </div>
+    </div>
+
+    <!-- Gate Encyclopedia Modal -->
+    <div id="encyclopedia-modal" style="display:none;">
+      <div id="encyclopedia-content">
+        <h3>📚 Gate Encyclopedia</h3>
+        <div id="encyclopedia-cards"></div>
+        <button id="encyclopedia-close">Close</button>
+      </div>
+    </div>
+
+    <!-- Stats Dashboard Modal -->
+    <div id="stats-modal" style="display:none;">
+      <div id="stats-content">
+        <h3>📊 Mission Control — Stats</h3>
+        <div id="stats-grid"></div>
+        <button id="stats-close">Close</button>
+      </div>
+    </div>
+
+    <!-- Milestone Modal -->
+    <div id="milestone-modal" style="display:none;">
+      <div id="milestone-content">
+        <div id="milestone-icon"></div>
+        <h3 id="milestone-title"></h3>
+        <p id="milestone-story"></p>
+        <button id="milestone-dismiss">Continue →</button>
       </div>
     </div>
 
@@ -129,7 +161,10 @@
       <!-- Toolbox Sidebar -->
       <div id="toolbox">
         <button id="back-btn" aria-label="Back to level select">← Back</button>
-        <button id="shortcuts-btn" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">?</button>
+        <div id="toolbox-top-row">
+          <button id="shortcuts-btn" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">?</button>
+          <button id="encyclopedia-gameplay-btn" title="Gate Encyclopedia" aria-label="Gate Encyclopedia">📚</button>
+        </div>
         <h2>Parts</h2>
       </div>
 
@@ -252,14 +287,14 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=26"></script>
-  <script src="js/wires.js?v=26"></script>
-  <script src="js/simulation.js?v=26"></script>
-  <script src="js/levels.js?v=26"></script>
-  <script src="js/audio.js?v=26"></script>
-  <script src="js/achievements.js?v=26"></script>
-  <script src="js/canvas.js?v=26"></script>
-  <script src="js/ui.js?v=26"></script>
-  <script src="js/main.js?v=26"></script>
+  <script src="js/gates.js?v=27"></script>
+  <script src="js/wires.js?v=27"></script>
+  <script src="js/simulation.js?v=27"></script>
+  <script src="js/levels.js?v=27"></script>
+  <script src="js/audio.js?v=27"></script>
+  <script src="js/achievements.js?v=27"></script>
+  <script src="js/canvas.js?v=27"></script>
+  <script src="js/ui.js?v=27"></script>
+  <script src="js/main.js?v=27"></script>
 </body>
 </html>

@@ -1,5 +1,11 @@
 # Lessons Learned
 
+## Day 23 — Content Architecture
+- **Encyclopedia unlock logic**: Using `isLevelUnlocked()` catches both completed AND available levels, giving a broader view of what the player has access to — better UX than only unlocking gates for completed levels.
+- **Lifetime stats**: Simple counter pattern (load → increment → save) works well for localStorage-based analytics. Key insight: track on actual action (gate placement) not on UI event.
+- **Milestone timing**: Using `setTimeout` with 2500ms delay for milestones ensures they don't compete with the standard level completion celebration. Stagger your celebrations.
+- **Stats modal grid**: CSS grid with 2 columns works well for stat cards. Using emoji as icons keeps it lightweight and thematic.
+
 ## Day 21: Narrative, Progression & Emotional Arc
 - **Thin narrative > no narrative** — Adding a spacecraft repair theme with per-chapter subsystems (Navigation, Communications, Life Support) creates emotional investment without blocking gameplay. No cutscenes needed — just contextual flavor text.
 - **Curated challenge library beats pure random** — 26 curated truth table patterns (NAND, Parity, Majority, etc.) with named titles makes challenges feel designed rather than arbitrary. 70/30 curated/random split keeps variety.
