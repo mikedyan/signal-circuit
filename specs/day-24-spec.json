@@ -1,0 +1,135 @@
+{
+  "day": 24,
+  "title": "Audio Engine & Replay Systems",
+  "summary": "Transforms audio from weakest dimension (4/10) into a distinctive identity. Adds audio effects processing (reverb, compression), gate-specific sound signatures, wire pitch escalation, breadboard environmental reactivity, gate-colored simulation glow, wire drawing progressive reveal, auto-save mid-puzzle, par benchmarks, pure logic badge (replacing hint penalty), and replay ghost overlay for optimization.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add audio effects processing chain: create a master bus with convolver reverb (impulse response), compressor, and subtle delay. All existing sounds route through this chain for spatial depth.",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "All sounds play through reverb + compressor chain",
+        "Reverb is subtle (short decay ~0.3s) not cavernous",
+        "Compressor tames loud peaks without killing dynamics",
+        "No audible artifacts or clicks"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Gate-type sound signatures: AND=clean sine click, OR=warm saw click, NOT=sharp square snap, XOR=bell-like FM tone. Replace generic playClick() with playGatePlace(type).",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Each gate type produces a distinct sound when placed",
+        "Players can identify gate types by sound alone",
+        "Sounds are pleasant and not jarring"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Wire connection sound pitch escalation: each successive wire in a session plays at a slightly higher pitch (semitone steps), creating musical progression. Reset on level load/clear.",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "First wire plays base pitch, each subsequent wire is ~1 semitone higher",
+        "Pitch resets on level load and circuit clear",
+        "Escalation caps at reasonable limit (12 semitones / 1 octave)"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T4",
+      "description": "Wire drawing progressive reveal: when a wire is first drawn successfully, a bright energy dot animates from source to destination along the bezier path over ~300ms.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Bright dot animates along new wire path on connection",
+        "Animation completes in ~300ms",
+        "Dot has glow trail effect",
+        "Does not interfere with normal wire rendering"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Breadboard environmental reactivity: during simulation, breadboard copper traces near active wires glow. Draw glowing trace segments near high-signal wires.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "Copper traces glow near active wires during simulation",
+        "Glow fades when simulation ends",
+        "Effect is subtle and atmospheric, not distracting"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Gate-colored glow during simulation: gates glow their type-specific color (AND=yellow, OR=cyan, NOT=red-orange, XOR=purple) instead of uniform green.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "Each active gate glows its own type color during simulation",
+        "Colors match GateTypes definitions",
+        "Glow pulses subtly for alive feel"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Auto-save circuit state mid-puzzle: save gates, wires, and level ID to localStorage on every gate/wire change. Restore on return to same level.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Circuit state persists across page reload",
+        "Loading a level restores saved circuit if available",
+        "Clearing circuit also clears saved state",
+        "Completing a level clears saved state for that level"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Remove hint star penalty, add 'Pure Logic' badge: hints no longer reduce max stars. Track 'pure logic' (no hints used) as a separate bronze badge icon on level select.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Hints no longer reduce star rating",
+        "Level select shows a small brain emoji badge on levels completed without hints",
+        "Hint penalty UI elements are removed",
+        "Pure Logic achievement still works"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Par benchmarks display: after completing a level, show par gate count (optimal from level data) and a simulated community average. Display as 'You: X gates | Par: Y | Avg: Z'.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Post-completion star display shows par comparison",
+        "Par = level.optimalGates",
+        "Community avg = optimalGates + random 0-2 (seeded by level ID for consistency)",
+        "Text is clear and motivates optimization"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Replay ghost overlay: when replaying a solved level, show translucent outlines of your previous solution's gates and wires. Toggle-able with a button.",
+      "files_to_modify": ["js/main.js", "js/canvas.js", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "Ghost overlay appears when loading a previously-solved level",
+        "Ghost gates/wires are translucent (30% opacity)",
+        "Toggle button shows/hides ghost",
+        "Ghost does not interfere with interaction"
+      ],
+      "depends_on": ["T7"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "All audio sounds play correctly through effects chain",
+    "Gate placement sounds are distinct per type",
+    "Wire pitch escalation resets properly",
+    "Auto-save works across page reload",
+    "Hints no longer reduce stars",
+    "Pure logic badge appears on level select",
+    "Ghost overlay toggles correctly",
+    "All existing features still work (regression)"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

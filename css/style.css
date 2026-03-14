@@ -1319,17 +1319,62 @@ body {
   cursor: default;
 }
 
-/* ── Hint Penalty Warning ── */
-#hint-penalty {
+/* ── Hint Info (T8 — no longer penalty) ── */
+#hint-info {
   text-align: center;
   font-size: 10px;
-  color: #cc0;
+  color: #888;
   padding: 4px 6px;
-  background: rgba(200, 180, 0, 0.08);
-  border: 1px solid rgba(200, 180, 0, 0.2);
+  background: rgba(100, 100, 100, 0.08);
+  border: 1px solid rgba(100, 100, 100, 0.15);
   border-radius: 4px;
   margin-top: -4px;
   font-family: 'Courier New', monospace;
+}
+
+/* ── Pure Logic Badge (T8) ── */
+.pure-logic-badge {
+  font-size: 10px;
+  margin-left: 2px;
+  vertical-align: top;
+}
+
+/* ── Par Display (T9) ── */
+#par-display {
+  font-size: 11px;
+  color: #8ac;
+  text-align: center;
+  padding: 6px 8px;
+  background: rgba(100, 150, 200, 0.08);
+  border: 1px solid rgba(100, 150, 200, 0.2);
+  border-radius: 4px;
+  margin: 6px 0;
+}
+
+/* ── Ghost Toggle Button (T10) ── */
+#ghost-toggle-btn {
+  background: transparent;
+  color: #666;
+  border: 1px dashed #444;
+  padding: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+#ghost-toggle-btn:hover {
+  color: #999;
+  border-color: #666;
+}
+
+#ghost-toggle-btn.ghost-active {
+  color: #88aacc;
+  border-color: #4488aa;
+  border-style: solid;
+  background: rgba(68, 136, 170, 0.08);
 }
 
 /* ── Skip Button ── */

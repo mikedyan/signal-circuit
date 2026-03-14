@@ -76,15 +76,25 @@ class CanvasRenderer {
       }
     }
 
-    // Gate glow during simulation
+    // T10: Ghost overlay rendering (behind active gates)
+    if (this.gameState.showGhost && this.gameState.ghostOverlay) {
+      this._renderGhostOverlay(ctx);
+    }
+
+    // T6: Gate-colored glow during simulation
     const sim = this.gameState.simulation;
     if (sim && sim.animating) {
       for (const gate of this.gameState.gates) {
         if (gate.outputValues && gate.outputValues.some(v => v === 1)) {
           const pulse = 0.2 + 0.15 * Math.sin(performance.now() / 200);
-          ctx.shadowColor = 'rgba(0, 255, 100, 0.8)';
+          // Use gate's type-specific color instead of uniform green
+          const glowColor = gate.def.color || '#00ff64';
+          const r = parseInt(glowColor.slice(1, 3), 16) || 0;
+          const g = parseInt(glowColor.slice(3, 5), 16) || 255;
+          const b = parseInt(glowColor.slice(5, 7), 16) || 100;
+          ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
           ctx.shadowBlur = 15;
-          ctx.fillStyle = `rgba(0, 255, 100, ${pulse})`;
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${pulse})`;
           ctx.fillRect(gate.x - 4, gate.y - 4, gate.def.width + 8, gate.def.height + 8);
           ctx.shadowColor = 'transparent';
           ctx.shadowBlur = 0;
@@ -220,6 +230,57 @@ class CanvasRenderer {
     ctx.fillText('+', 5, 34);
     ctx.fillStyle = 'rgba(50, 50, 200, 0.5)';
     ctx.fillText('−', 5, height - 26);
+
+    // T5: Breadboard environmental reactivity — copper traces glow near active wires
+    const sim = this.gameState.simulation;
+    if (sim && sim.animating) {
+      this._renderActiveTraces(ctx, width, height);
+    }
+  }
+
+  // T5: Draw glowing copper traces near active wires during simulation
+  _renderActiveTraces(ctx, width, height) {
+    const wires = this.gameState.wireManager.wires;
+    const pulse = 0.15 + 0.1 * Math.sin(performance.now() / 300);
+
+    for (const wire of wires) {
+      if (wire.signalValue !== 1) continue;
+      const endpoints = this.gameState.wireManager.getWireEndpoints(wire);
+      if (!endpoints) continue;
+
+      const { fromPin, toPin } = endpoints;
+      const sx = fromPin.x + (fromPin.type === 'output' ? 12 : -12);
+      const sy = fromPin.y;
+      const ex = toPin.x + (toPin.type === 'input' ? -12 : 12);
+      const ey = toPin.y;
+
+      // Sample points along the wire path and glow nearby traces
+      const midX = (sx + ex) / 2;
+      const midY = (sy + ey) / 2;
+      const points = [
+        { x: sx, y: sy },
+        { x: (sx + midX) / 2, y: (sy + midY) / 2 },
+        { x: midX, y: midY },
+        { x: (midX + ex) / 2, y: (midY + ey) / 2 },
+        { x: ex, y: ey },
+      ];
+
+      for (const pt of points) {
+        // Glow on nearest horizontal trace
+        const nearestTraceY = Math.round(pt.y / 40) * 40;
+        const nearestTraceX = Math.round(pt.x / 40) * 40;
+        const dist = Math.abs(pt.y - nearestTraceY);
+        if (dist < 30) {
+          const alpha = pulse * (1 - dist / 30);
+          ctx.strokeStyle = `rgba(200, 170, 100, ${alpha})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(Math.max(0, nearestTraceX - 40), nearestTraceY);
+          ctx.lineTo(Math.min(width, nearestTraceX + 40), nearestTraceY);
+          ctx.stroke();
+        }
+      }
+    }
   }
 
   spawnRipple(x, y) {
@@ -339,6 +400,62 @@ class CanvasRenderer {
     }
 
     return pins;
+  }
+
+  // T10: Render ghost overlay of previous solution
+  _renderGhostOverlay(ctx) {
+    const ghost = this.gameState.ghostOverlay;
+    if (!ghost) return;
+
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+
+    // Draw ghost gates
+    for (const g of ghost.gates) {
+      const def = GateTypes[g.type];
+      if (!def) continue;
+      // Simple ghost rectangle
+      ctx.fillStyle = def.color || '#888';
+      ctx.strokeStyle = def.color || '#888';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      roundRect(ctx, g.x, g.y, def.width, def.height, 3);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Gate label
+      ctx.font = 'bold 10px Courier New';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(def.name, g.x + def.width / 2, g.y + def.height / 2);
+    }
+
+    // Draw ghost wires (simplified straight lines between approximate positions)
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+    // We can't easily resolve pin positions for ghost gates without full node reconstruction,
+    // so we draw simplified connections between gate centers
+    for (const w of ghost.wires) {
+      const fromGate = ghost.gates.find(g => g.id === w.fromGateId);
+      const toGate = ghost.gates.find(g => g.id === w.toGateId);
+      // Skip I/O node wires (they won't match ghost gate IDs)
+      if (!fromGate && !toGate) continue;
+      const fromDef = fromGate ? GateTypes[fromGate.type] : null;
+      const toDef = toGate ? GateTypes[toGate.type] : null;
+      const fx = fromGate ? fromGate.x + (fromDef ? fromDef.width : 40) : 70;
+      const fy = fromGate ? fromGate.y + (fromDef ? fromDef.height / 2 : 20) : 200;
+      const tx = toGate ? toGate.x : 600;
+      const ty = toGate ? toGate.y + (toDef ? toDef.height / 2 : 20) : 200;
+
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      const cpOffset = Math.abs(tx - fx) * 0.4;
+      ctx.bezierCurveTo(fx + cpOffset, fy, tx - cpOffset, ty, tx, ty);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    ctx.restore();
   }
 
   findPinAt(mx, my, threshold) {

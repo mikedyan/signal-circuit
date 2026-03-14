@@ -4,6 +4,8 @@ const STORAGE_KEY = 'signal-circuit-progress';
 const LEADERBOARD_KEY = 'signal-circuit-leaderboard';
 const STATS_KEY = 'signal-circuit-stats';
 const MILESTONES_KEY = 'signal-circuit-milestones';
+const AUTOSAVE_KEY = 'signal-circuit-autosave';
+const GHOST_KEY = 'signal-circuit-ghost';
 const SCHEMA_VERSION = 1;
 
 class UndoManager {
@@ -69,6 +71,8 @@ class GameState {
     this.skipVisible = false;
     this.activeHintHighlights = null; // Array of I/O labels to highlight for visual hint
     this.needsRender = true;
+    this.ghostOverlay = null; // {gates: [...], wires: [...]} for replay ghost (T10)
+    this.showGhost = false;
   }
 
   init() {
@@ -283,10 +287,7 @@ class GameState {
     else if (gateCount <= level.goodGates) stars = 2;
     else stars = 1;
 
-    // Hint penalty reduces max stars
-    if (this.maxHintPenalty >= 2) stars = Math.min(stars, 1);
-    else if (this.maxHintPenalty >= 1) stars = Math.min(stars, 2);
-
+    // T8: Hints no longer reduce stars. Pure Logic badge tracked separately.
     return stars;
   }
 
@@ -297,6 +298,7 @@ class GameState {
     const stars = this.calculateStars(gateCount, level);
     const elapsed = this.stopTimer();
     const existing = this.progress.levels[levelId];
+    const pureLogic = this.hintsUsed === 0; // T8: Pure Logic tracking
 
     if (!existing || stars > existing.stars) {
       this.progress.levels[levelId] = {
@@ -304,10 +306,12 @@ class GameState {
         stars: stars,
         bestGateCount: existing ? Math.min(existing.bestGateCount || gateCount, gateCount) : gateCount,
         bestTime: existing ? Math.min(existing.bestTime || elapsed, elapsed) : elapsed,
+        pureLogic: pureLogic || (existing && existing.pureLogic), // Once earned, keep it
       };
     } else {
       if (gateCount < (existing.bestGateCount || Infinity)) existing.bestGateCount = gateCount;
       if (elapsed < (existing.bestTime || Infinity)) existing.bestTime = elapsed;
+      if (pureLogic) existing.pureLogic = true;
     }
 
     // Clear bookmark if it was bookmarked
@@ -316,6 +320,8 @@ class GameState {
     }
 
     this.saveProgress();
+    this._saveGhost(levelId); // T10: save solution as ghost for replay
+    this._clearAutoSave(); // Clear auto-save on completion
 
     // Check for chapter completion
     this._checkChapterCompletion(levelId);
@@ -556,7 +562,7 @@ class GameState {
     const gate = new Gate(type, x, y, this.nextId++);
     this.gates.push(gate);
     this.ui.updateStatusBar(`Placed ${type} gate`);
-    this.audio.playClick();
+    this.audio.playGatePlace(type);
     // Impact ripple effect
     if (this.renderer) {
       this.renderer.spawnRipple(x + (GateTypes[type].width / 2), y + (GateTypes[type].height / 2));
@@ -572,6 +578,7 @@ class GameState {
     this.trackGatePlaced();
     this.ui.updateGateIndicator();
     this.markDirty();
+    this._autoSave();
     return gate;
   }
 
@@ -598,12 +605,14 @@ class GameState {
     }
     this.ui.updateGateIndicator();
     this.markDirty();
+    this._autoSave();
   }
 
   addWireFromData(fromGateId, fromPinIndex, toGateId, toPinIndex) {
     const wire = new Wire(fromGateId, fromPinIndex, toGateId, toPinIndex, this.wireManager.nextId++);
     this.wireManager.wires.push(wire);
     this.markDirty();
+    this._autoSave();
     return wire;
   }
 
@@ -736,6 +745,16 @@ class GameState {
     }
 
     this.ui.updateGateIndicator();
+
+    // T3: Reset wire pitch escalation
+    this.audio.resetWireCount();
+
+    // T10: Load ghost overlay if this level was previously solved
+    this._loadGhost(id);
+
+    // T7: Restore auto-saved circuit state
+    this._restoreAutoSave(id);
+
     this.markDirty();
   }
 
@@ -795,6 +814,8 @@ class GameState {
 
     this.ui.updateTruthTable(null);
     this.ui.updateGateIndicator();
+    this.audio.resetWireCount(); // T3: Reset pitch escalation
+    this._clearAutoSave(); // T7: Clear auto-save
     this.markDirty();
   }
 
@@ -1327,6 +1348,114 @@ class GameState {
     void container.offsetWidth;
     container.classList.add('screen-shake');
     setTimeout(() => container.classList.remove('screen-shake'), 400);
+  }
+
+  // ── T7: Auto-Save Circuit State ──
+  _autoSave() {
+    if (!this.currentLevel || this.currentLevel.isSandbox) return;
+    const levelId = this.currentLevel.id;
+    if (!levelId || levelId === 'challenge' || levelId === 'daily') return;
+
+    const data = {
+      levelId,
+      gates: this.gates.map(g => ({ type: g.type, x: g.x, y: g.y, id: g.id })),
+      wires: this.wireManager.wires.map(w => ({
+        fromGateId: w.fromGateId,
+        fromPinIndex: w.fromPinIndex,
+        toGateId: w.toGateId,
+        toPinIndex: w.toPinIndex,
+      })),
+      nextId: this.nextId,
+      timestamp: Date.now(),
+    };
+    try {
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  _restoreAutoSave(levelId) {
+    try {
+      const raw = localStorage.getItem(AUTOSAVE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data.levelId !== levelId) return;
+      // Check not too stale (24 hours)
+      if (Date.now() - data.timestamp > 24 * 60 * 60 * 1000) {
+        this._clearAutoSave();
+        return;
+      }
+
+      // Restore gates
+      for (const g of data.gates) {
+        const gate = new Gate(g.type, g.x, g.y, g.id);
+        this.gates.push(gate);
+      }
+      // Update nextId
+      if (data.nextId) this.nextId = Math.max(this.nextId, data.nextId);
+
+      // Restore wires
+      for (const w of data.wires) {
+        const wire = new Wire(w.fromGateId, w.fromPinIndex, w.toGateId, w.toPinIndex, this.wireManager.nextId++);
+        this.wireManager.wires.push(wire);
+      }
+
+      if (data.gates.length > 0 || data.wires.length > 0) {
+        this.ui.updateStatusBar('Circuit restored from auto-save');
+        this.ui.updateGateIndicator();
+      }
+    } catch (e) {
+      // Corrupt autosave — ignore
+    }
+  }
+
+  _clearAutoSave() {
+    try {
+      localStorage.removeItem(AUTOSAVE_KEY);
+    } catch (e) {}
+  }
+
+  // ── T10: Replay Ghost ──
+  _saveGhost(levelId) {
+    if (!levelId || typeof levelId !== 'number') return;
+    const data = {
+      levelId,
+      gates: this.gates.map(g => ({ type: g.type, x: g.x, y: g.y })),
+      wires: this.wireManager.wires.map(w => ({
+        fromGateId: w.fromGateId,
+        fromPinIndex: w.fromPinIndex,
+        toGateId: w.toGateId,
+        toPinIndex: w.toPinIndex,
+      })),
+    };
+    try {
+      const all = JSON.parse(localStorage.getItem(GHOST_KEY) || '{}');
+      all[levelId] = data;
+      localStorage.setItem(GHOST_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
+  _loadGhost(levelId) {
+    this.ghostOverlay = null;
+    this.showGhost = false;
+    try {
+      const all = JSON.parse(localStorage.getItem(GHOST_KEY) || '{}');
+      const data = all[levelId];
+      if (data && (data.gates.length > 0 || data.wires.length > 0)) {
+        this.ghostOverlay = data;
+        this.showGhost = true;
+        this.ui.updateGhostButton(true);
+      } else {
+        this.ui.updateGhostButton(false);
+      }
+    } catch (e) {
+      this.ui.updateGhostButton(false);
+    }
+  }
+
+  toggleGhost() {
+    if (!this.ghostOverlay) return;
+    this.showGhost = !this.showGhost;
+    this.markDirty();
   }
 
   startRenderLoop() {

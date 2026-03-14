@@ -50,6 +50,9 @@ class Wire {
     const colors = getWireColors();
     this.color = colors[wireColorIndex % colors.length];
     wireColorIndex++;
+    // T4: Wire drawing progressive reveal
+    this.birthTime = performance.now();
+    this.revealDuration = 300; // ms
   }
 }
 
@@ -342,6 +345,35 @@ class WireManager {
         ctx.lineWidth = 8;
         this._traceBezier(ctx, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
         ctx.stroke();
+      }
+
+      // T4: Wire drawing progressive reveal — energy dot on new wire
+      const wireAge = performance.now() - wire.birthTime;
+      if (wireAge < wire.revealDuration && !sim.animating) {
+        const t = wireAge / wire.revealDuration;
+        const dotPos = this._bezierPoint(t, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
+        // Bright energy dot
+        ctx.beginPath();
+        ctx.arc(dotPos.x, dotPos.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 200, 0.95)';
+        ctx.fill();
+        // Outer glow
+        ctx.beginPath();
+        ctx.arc(dotPos.x, dotPos.y, 12, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 200, 0.25)';
+        ctx.fill();
+        // Trail
+        for (let trail = 1; trail <= 4; trail++) {
+          const tt = Math.max(0, t - trail * 0.06);
+          const tp = this._bezierPoint(tt, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
+          const alpha = 0.5 - trail * 0.1;
+          ctx.beginPath();
+          ctx.arc(tp.x, tp.y, 4 - trail * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 220, 100, ${alpha})`;
+          ctx.fill();
+        }
+        // Mark dirty to keep animating
+        if (this.gameState) this.gameState.markDirty();
       }
 
       // Animated pulse dots during simulation (multiple trailing dots)

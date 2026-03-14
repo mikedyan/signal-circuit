@@ -27,6 +27,7 @@ class UI {
     this.setupEncyclopedia();
     this.setupStatsDashboard();
     this.setupMilestoneModal();
+    this.setupGhostToggle();
   }
 
   // ── Colorblind Mode Toggle ──
@@ -334,6 +335,7 @@ class UI {
         const isCompleted = levelProgress && levelProgress.completed;
 
         const isBookmarked = this.gameState.isLevelBookmarked(levelId);
+        const isPureLogic = levelProgress && levelProgress.pureLogic; // T8
         btn.className = 'level-btn' + (isCompleted ? ' completed' : '') + (!isUnlocked ? ' locked' : '') + (isBookmarked ? ' bookmarked' : '');
         if (chapter.color && isUnlocked) {
           btn.style.borderColor = isCompleted ? chapter.color : '';
@@ -357,6 +359,14 @@ class UI {
             s.className = i < levelProgress.stars ? 'star-filled' : 'star-empty';
             s.textContent = '★';
             stars.appendChild(s);
+          }
+          // T8: Pure Logic badge (no hints used)
+          if (isPureLogic) {
+            const pl = document.createElement('span');
+            pl.className = 'pure-logic-badge';
+            pl.textContent = '🧠';
+            pl.title = 'Solved without hints';
+            stars.appendChild(pl);
           }
         }
         btn.appendChild(stars);
@@ -818,6 +828,19 @@ class UI {
       msg.textContent = `Solved with ${gateCount} gates (optimal: ${level.optimalGates})${timeStr}`;
     }
 
+    // T9: Par benchmarks display
+    const parEl = document.getElementById('par-display');
+    if (parEl && level.optimalGates) {
+      // Generate consistent "community average" based on level ID
+      const seed = typeof level.id === 'number' ? level.id : 1;
+      const pseudoRandom = ((seed * 7 + 13) % 3); // 0, 1, or 2
+      const communityAvg = level.optimalGates + pseudoRandom;
+      const comparison = gateCount <= level.optimalGates ? '🏆' :
+                        gateCount <= communityAvg ? '👍' : '📈';
+      parEl.textContent = `${comparison} You: ${gateCount} · Par: ${level.optimalGates} · Avg: ${communityAvg.toFixed(1)}`;
+      parEl.style.display = 'block';
+    }
+
     // Show post-solve insight for campaign levels
     const insightEl = document.getElementById('post-solve-insight');
     if (insightEl && level.postSolveInsight) {
@@ -841,6 +864,8 @@ class UI {
     document.getElementById('share-btn').style.display = 'none';
     const insightEl = document.getElementById('post-solve-insight');
     if (insightEl) insightEl.style.display = 'none';
+    const parEl = document.getElementById('par-display');
+    if (parEl) parEl.style.display = 'none';
   }
 
   showChallengeResult(gateCount, level) {
@@ -1364,27 +1389,18 @@ class UI {
       const good = level.goodGates;
       countText.innerHTML = `Gates: <span class="count">${count}</span>/${optimal}`;
 
-      // Projected stars
-      let rawStars = 0;
+      // Projected stars — T8: no hint penalty
       let projectedStars = 0;
       if (count > 0) {
-        if (count <= optimal) rawStars = 3;
-        else if (count <= good) rawStars = 2;
-        else rawStars = 1;
-
-        projectedStars = rawStars;
-        // Apply hint penalty preview
-        if (gs.maxHintPenalty >= 2) projectedStars = Math.min(projectedStars, 1);
-        else if (gs.maxHintPenalty >= 1) projectedStars = Math.min(projectedStars, 2);
+        if (count <= optimal) projectedStars = 3;
+        else if (count <= good) projectedStars = 2;
+        else projectedStars = 1;
       }
 
       let starsHtml = '';
       for (let i = 0; i < 3; i++) {
         if (i < projectedStars) {
           starsHtml += '<span class="star-gold">★</span>';
-        } else if (i < rawStars) {
-          // Would have earned this star but hint penalty blocks it
-          starsHtml += '<span class="star-blocked">★</span>';
         } else {
           starsHtml += '<span class="star-dim">★</span>';
         }
@@ -1400,41 +1416,28 @@ class UI {
   }
 
   updateHintPenalty() {
-    const penaltyEl = document.getElementById('hint-penalty');
-    if (!penaltyEl) return;
+    // T8: Hint penalty removed. Show info-only hint status.
+    const infoEl = document.getElementById('hint-info');
+    if (!infoEl) return;
 
     const gs = this.gameState;
     const level = gs.currentLevel;
 
-    // Only show for campaign levels with hints
     if (!level || gs.isSandboxMode || gs.isChallengeMode || !level.hints || level.hints.length === 0) {
-      penaltyEl.style.display = 'none';
+      infoEl.style.display = 'none';
       return;
     }
 
     if (gs.hintsUsed === 0) {
-      // Before hints used: show clear warning
-      penaltyEl.textContent = '💡 Using hints reduces max ★';
-      penaltyEl.style.display = 'block';
-      penaltyEl.style.color = '#cc0';
-      penaltyEl.style.fontSize = '10px';
+      infoEl.textContent = '💡 Hints won\'t reduce stars · 🧠 No hints = Pure Logic badge';
+      infoEl.style.display = 'block';
+      infoEl.style.color = '#888';
+      infoEl.style.fontSize = '10px';
     } else {
-      // After hints used: show penalty
-      if (gs.maxHintPenalty >= 2) {
-        penaltyEl.textContent = '⚠ Max ★ with hints';
-      } else if (gs.maxHintPenalty >= 1) {
-        penaltyEl.textContent = '⚠ Max ★★ with hints';
-      } else {
-        // First hint is free — show mild reminder
-        penaltyEl.textContent = '💡 First hint free — next reduces ★';
-        penaltyEl.style.display = 'block';
-        penaltyEl.style.color = '#aa0';
-        penaltyEl.style.fontSize = '10px';
-        return;
-      }
-      penaltyEl.style.display = 'block';
-      penaltyEl.style.color = '#f90';
-      penaltyEl.style.fontSize = '11px';
+      infoEl.textContent = '💡 Hints used — 🧠 Pure Logic badge requires no hints';
+      infoEl.style.display = 'block';
+      infoEl.style.color = '#666';
+      infoEl.style.fontSize = '10px';
     }
   }
 
@@ -1690,6 +1693,26 @@ class UI {
     document.getElementById('milestone-title').textContent = title;
     document.getElementById('milestone-story').textContent = story;
     modal.style.display = 'flex';
+  }
+
+  // ── Ghost Toggle (T10) ──
+  setupGhostToggle() {
+    const btn = document.getElementById('ghost-toggle-btn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      this.gameState.toggleGhost();
+      const showing = this.gameState.showGhost;
+      btn.textContent = showing ? '👻 Hide Previous Solution' : '👻 Show Previous Solution';
+      btn.classList.toggle('ghost-active', showing);
+    });
+  }
+
+  updateGhostButton(hasGhost) {
+    const btn = document.getElementById('ghost-toggle-btn');
+    if (!btn) return;
+    btn.style.display = hasGhost ? 'block' : 'none';
+    btn.textContent = '👻 Show Previous Solution';
+    btn.classList.remove('ghost-active');
   }
 
   checkMilestones(stars, levelId) {

@@ -1,4 +1,5 @@
 // audio.js — Procedural sound engine using Web Audio API
+// Day 24: Audio effects chain, gate-type signatures, wire pitch escalation
 
 class AudioEngine {
   constructor() {
@@ -6,6 +7,7 @@ class AudioEngine {
     this.muted = false;
     this.masterVolume = 0.3;
     this._initialized = false;
+    this._wireConnectionCount = 0; // For pitch escalation
 
     // Load mute state from localStorage
     try {
@@ -20,10 +22,69 @@ class AudioEngine {
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this._initialized = true;
+      this._buildEffectsChain();
       return true;
     } catch (e) {
       return false;
     }
+  }
+
+  // ── Effects Processing Chain (T1) ──
+  _buildEffectsChain() {
+    const ctx = this.ctx;
+
+    // Compressor — tame peaks without killing dynamics
+    this._compressor = ctx.createDynamicsCompressor();
+    this._compressor.threshold.setValueAtTime(-24, ctx.currentTime);
+    this._compressor.knee.setValueAtTime(12, ctx.currentTime);
+    this._compressor.ratio.setValueAtTime(4, ctx.currentTime);
+    this._compressor.attack.setValueAtTime(0.003, ctx.currentTime);
+    this._compressor.release.setValueAtTime(0.15, ctx.currentTime);
+
+    // Convolver reverb — short room impulse response
+    this._reverbGain = ctx.createGain();
+    this._reverbGain.gain.setValueAtTime(0.15, ctx.currentTime); // Subtle mix
+    this._convolver = ctx.createConvolver();
+    this._generateImpulseResponse();
+
+    // Dry/wet mix
+    this._dryGain = ctx.createGain();
+    this._dryGain.gain.setValueAtTime(0.85, ctx.currentTime);
+
+    // Master output
+    this._masterGain = ctx.createGain();
+    this._masterGain.gain.setValueAtTime(1, ctx.currentTime);
+
+    // Routing: source → compressor → dry + wet → master → destination
+    this._compressor.connect(this._dryGain);
+    this._compressor.connect(this._convolver);
+    this._convolver.connect(this._reverbGain);
+    this._dryGain.connect(this._masterGain);
+    this._reverbGain.connect(this._masterGain);
+    this._masterGain.connect(ctx.destination);
+  }
+
+  _generateImpulseResponse() {
+    const ctx = this.ctx;
+    const sampleRate = ctx.sampleRate;
+    const length = Math.floor(sampleRate * 0.35); // 350ms decay
+    const impulse = ctx.createBuffer(2, length, sampleRate);
+
+    for (let channel = 0; channel < 2; channel++) {
+      const data = impulse.getChannelData(channel);
+      for (let i = 0; i < length; i++) {
+        // Exponential decay with slight randomization
+        const decay = Math.exp(-i / (sampleRate * 0.08));
+        data[i] = (Math.random() * 2 - 1) * decay;
+      }
+    }
+
+    this._convolver.buffer = impulse;
+  }
+
+  // Get the effects chain output node (use instead of ctx.destination)
+  get _output() {
+    return this._compressor || this.ctx.destination;
   }
 
   _resumeIfNeeded() {
@@ -43,58 +104,171 @@ class AudioEngine {
     return this.muted;
   }
 
-  // ── Sound: Gate placement click (relay click feel) ──
+  // ── Micro-randomization helper ──
+  _randomize(value, variance) {
+    return value * (1 + (Math.random() - 0.5) * 2 * variance);
+  }
+
+  // ── Wire connection count for pitch escalation ──
+  resetWireCount() {
+    this._wireConnectionCount = 0;
+  }
+
+  // ── Sound: Gate placement (T2 — gate-type specific) ──
+  playGatePlace(gateType) {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const vol = this.masterVolume;
+
+    switch (gateType) {
+      case 'AND': {
+        // Clean sine — precise, digital feel
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(this._randomize(880, 0.03), now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.06);
+        gain.gain.setValueAtTime(vol * 0.45, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.08);
+        break;
+      }
+      case 'OR': {
+        // Warm sawtooth — fuller, inclusive feel
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(this._randomize(660, 0.03), now);
+        osc.frequency.exponentialRampToValueAtTime(330, now + 0.07);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, now);
+        gain.gain.setValueAtTime(vol * 0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.09);
+        break;
+      }
+      case 'NOT': {
+        // Sharp square snap — decisive, inverted
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(this._randomize(1200, 0.03), now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.03);
+        gain.gain.setValueAtTime(vol * 0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.05);
+        // Add a tiny click at start
+        const click = ctx.createOscillator();
+        const clickGain = ctx.createGain();
+        click.type = 'sine';
+        click.frequency.setValueAtTime(3000, now);
+        clickGain.gain.setValueAtTime(vol * 0.15, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+        click.connect(clickGain);
+        clickGain.connect(this._output);
+        click.start(now);
+        click.stop(now + 0.015);
+        break;
+      }
+      case 'XOR': {
+        // Bell-like FM synthesis — distinctive, complex
+        const carrier = ctx.createOscillator();
+        const modulator = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const gain = ctx.createGain();
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(this._randomize(700, 0.03), now);
+        modulator.type = 'sine';
+        modulator.frequency.setValueAtTime(1400, now); // 2:1 ratio for bell
+        modGain.gain.setValueAtTime(300, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.15);
+        gain.gain.setValueAtTime(vol * 0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(gain);
+        gain.connect(this._output);
+        carrier.start(now);
+        modulator.start(now);
+        carrier.stop(now + 0.18);
+        modulator.stop(now + 0.18);
+        break;
+      }
+      default:
+        this.playClick();
+    }
+  }
+
+  // Legacy: generic click (relay click feel)
   playClick() {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Main click
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.setValueAtTime(this._randomize(1200, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
     gain.gain.setValueAtTime(this.masterVolume * 0.5, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.05);
 
-    // Harmonic overtone for "relay click" feel
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(2400, now);
+    osc2.frequency.setValueAtTime(this._randomize(2400, 0.05), now);
     osc2.frequency.exponentialRampToValueAtTime(600, now + 0.02);
     gain2.gain.setValueAtTime(this.masterVolume * 0.2, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
     osc2.connect(gain2);
-    gain2.connect(ctx.destination);
+    gain2.connect(this._output);
     osc2.start(now);
     osc2.stop(now + 0.04);
   }
 
-  // ── Sound: Wire connection zap (electric crackle) ──
+  // ── Sound: Wire connection zap with pitch escalation (T3) ──
   playWireConnect() {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
+    // Pitch escalation: each wire is ~1 semitone higher, capped at 1 octave
+    const semitones = Math.min(this._wireConnectionCount, 12);
+    const pitchMult = Math.pow(2, semitones / 12);
+    this._wireConnectionCount++;
+
+    const baseFreq = 150 * pitchMult;
+
     // Primary zap: rising sawtooth
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(1500, now + 0.04);
-    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+    osc.frequency.setValueAtTime(this._randomize(baseFreq, 0.05), now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 10, now + 0.04);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 5, now + 0.1);
     gain.gain.setValueAtTime(this.masterVolume * 0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.12);
 
@@ -102,17 +276,17 @@ class AudioEngine {
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'square';
-    osc2.frequency.setValueAtTime(300, now);
-    osc2.frequency.exponentialRampToValueAtTime(2000, now + 0.03);
+    osc2.frequency.setValueAtTime(this._randomize(baseFreq * 2, 0.05), now);
+    osc2.frequency.exponentialRampToValueAtTime(baseFreq * 13, now + 0.03);
     gain2.gain.setValueAtTime(this.masterVolume * 0.15, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc2.connect(gain2);
-    gain2.connect(ctx.destination);
+    gain2.connect(this._output);
     osc2.start(now);
     osc2.stop(now + 0.08);
 
     // Noise crackle layer
-    this._playNoiseBurst(0.08, this.masterVolume * 0.2);
+    this._playNoiseBurst(this._randomize(0.08, 0.1), this.masterVolume * 0.2);
   }
 
   // ── Sound: Wire/gate disconnection ──
@@ -125,12 +299,12 @@ class AudioEngine {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(500, now);
+    osc.frequency.setValueAtTime(this._randomize(500, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
     gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.12);
   }
@@ -148,8 +322,7 @@ class AudioEngine {
     const row = this._simRowIndex || 0;
     this._simRowIndex = row + 1;
 
-    // Ascending pitch for passing rows: 600 → 1400 over ~8 rows
-    const baseFreq = 600 + row * 100;
+    const baseFreq = this._randomize(600 + row * 100, 0.03);
     const freq = Math.min(baseFreq, 1400);
 
     const osc = ctx.createOscillator();
@@ -160,7 +333,7 @@ class AudioEngine {
     gain.gain.setValueAtTime(this.masterVolume * 0.22, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.08);
   }
@@ -171,21 +344,19 @@ class AudioEngine {
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Descending buzz for failing rows
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.setValueAtTime(this._randomize(400, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
     gain.gain.setValueAtTime(this.masterVolume * 0.2, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.1);
   }
 
-  // Legacy alias
   playSimPulse() {
     this.playSimPulsePass();
   }
@@ -196,9 +367,9 @@ class AudioEngine {
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
+    const out = this._output;
 
     if (stars === 1) {
-      // 1 star: single modest chime (just C5)
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -207,12 +378,11 @@ class AudioEngine {
       gain.gain.linearRampToValueAtTime(this.masterVolume * 0.3, now + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(out);
       osc.start(now);
       osc.stop(now + 0.3);
     } else if (stars === 2) {
-      // 2 stars: standard arpeggio (C5-E5-G5)
-      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+      const notes = [523.25, 659.25, 783.99];
       notes.forEach((freq, i) => {
         const t = now + i * 0.12;
         ['sine', 'triangle'].forEach((type, j) => {
@@ -225,13 +395,12 @@ class AudioEngine {
           gain.gain.linearRampToValueAtTime(vol, t + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
           osc.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(out);
           osc.start(t);
           osc.stop(t + 0.3);
         });
       });
 
-      // Final chord shimmer
       [1046.5, 1318.5].forEach((freq, i) => {
         const shimmer = ctx.createOscillator();
         const sGain = ctx.createGain();
@@ -240,13 +409,12 @@ class AudioEngine {
         sGain.gain.setValueAtTime(this.masterVolume * (0.25 - i * 0.1), now + 0.36);
         sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
         shimmer.connect(sGain);
-        sGain.connect(ctx.destination);
+        sGain.connect(out);
         shimmer.start(now + 0.36);
         shimmer.stop(now + 1.0);
       });
     } else {
-      // 3 stars: extended fanfare with high octave sustain
-      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+      const notes = [523.25, 659.25, 783.99];
       notes.forEach((freq, i) => {
         const t = now + i * 0.12;
         ['sine', 'triangle'].forEach((type, j) => {
@@ -259,13 +427,12 @@ class AudioEngine {
           gain.gain.linearRampToValueAtTime(vol, t + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
           osc.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(out);
           osc.start(t);
           osc.stop(t + 0.4);
         });
       });
 
-      // Extended shimmer with more harmonics
       [1046.5, 1318.5, 1567.98].forEach((freq, i) => {
         const shimmer = ctx.createOscillator();
         const sGain = ctx.createGain();
@@ -274,7 +441,7 @@ class AudioEngine {
         sGain.gain.setValueAtTime(this.masterVolume * (0.3 - i * 0.08), now + 0.36);
         sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
         shimmer.connect(sGain);
-        sGain.connect(ctx.destination);
+        sGain.connect(out);
         shimmer.start(now + 0.36);
         shimmer.stop(now + 1.4);
       });
@@ -288,18 +455,17 @@ class AudioEngine {
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Two descending tones for a "wrong" feel
     const freqs = [300, 200];
     freqs.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'square';
       const t = now + i * 0.15;
-      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.setValueAtTime(this._randomize(freq, 0.05), t);
       gain.gain.setValueAtTime(this.masterVolume * 0.3, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this._output);
       osc.start(t);
       osc.stop(t + 0.2);
     });
@@ -315,12 +481,12 @@ class AudioEngine {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.setValueAtTime(this._randomize(600, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(500, now + 0.03);
     gain.gain.setValueAtTime(this.masterVolume * 0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.05);
   }
@@ -332,7 +498,6 @@ class AudioEngine {
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Sparkle arpeggio: G5, B5, D6, G6
     const notes = [783.99, 987.77, 1174.66, 1567.98];
     notes.forEach((freq, i) => {
       const t = now + i * 0.08;
@@ -344,7 +509,7 @@ class AudioEngine {
       gain.gain.linearRampToValueAtTime(this.masterVolume * 0.35, t + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this._output);
       osc.start(t);
       osc.stop(t + 0.3);
     });
@@ -357,15 +522,14 @@ class AudioEngine {
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // Short harsh buzz
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'square';
-    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.setValueAtTime(this._randomize(150, 0.05), now);
     gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.1);
   }
@@ -378,7 +542,6 @@ class AudioEngine {
     const ctx = this.ctx;
     this._ambientActive = true;
 
-    // Noise-based ambient hum
     const bufSize = ctx.sampleRate * 2;
     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -393,7 +556,6 @@ class AudioEngine {
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(120, ctx.currentTime);
 
-    // Slow LFO on filter cutoff
     const lfo = ctx.createOscillator();
     const lfoGain = ctx.createGain();
     lfo.type = 'sine';
@@ -409,12 +571,10 @@ class AudioEngine {
 
     noise.connect(filter);
     filter.connect(ambientGain);
-    ambientGain.connect(ctx.destination);
+    ambientGain.connect(this._output);
     noise.start();
 
     this._ambientNodes = { noise, filter, lfo, lfoGain, ambientGain };
-
-    // Generative music pad
     this._startMusicPad();
   }
 
@@ -442,19 +602,17 @@ class AudioEngine {
     const ctx = this.ctx;
     this._musicOscs = [];
 
-    // Warm ambient chord: C3, E3, G3 (subtle sine pads)
     const freqs = [130.81, 164.81, 196.00];
     const padGain = ctx.createGain();
     padGain.gain.setValueAtTime(0, ctx.currentTime);
     padGain.gain.linearRampToValueAtTime(this.masterVolume * 0.04, ctx.currentTime + 3);
-    padGain.connect(ctx.destination);
+    padGain.connect(this._output);
     this._musicPadGain = padGain;
 
     for (const freq of freqs) {
       const osc = ctx.createOscillator();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      // Subtle detuning for warmth
       osc.detune.setValueAtTime((Math.random() - 0.5) * 6, ctx.currentTime);
       const oscGain = ctx.createGain();
       oscGain.gain.setValueAtTime(0.33, ctx.currentTime);
@@ -482,11 +640,9 @@ class AudioEngine {
     } catch (e) {}
   }
 
-  // Shift music chord during simulation (tension)
   musicTension() {
     if (!this._musicOscs || !this.ctx) return;
     const ctx = this.ctx;
-    // Shift to Cm (C3, Eb3, G3) — minor tension
     const tensionFreqs = [130.81, 155.56, 196.00];
     this._musicOscs.forEach(({ osc }, i) => {
       if (tensionFreqs[i]) {
@@ -495,11 +651,9 @@ class AudioEngine {
     });
   }
 
-  // Resolve music chord on success
   musicResolve() {
     if (!this._musicOscs || !this.ctx) return;
     const ctx = this.ctx;
-    // Back to C major
     const resolveFreqs = [130.81, 164.81, 196.00];
     this._musicOscs.forEach(({ osc }, i) => {
       if (resolveFreqs[i]) {
@@ -524,7 +678,7 @@ class AudioEngine {
     gain.gain.setValueAtTime(volume, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
     source.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this._output);
     source.start(now);
   }
 }
