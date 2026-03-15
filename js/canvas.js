@@ -198,15 +198,14 @@ class CanvasRenderer {
       }
     }
 
-    // Central channel groove
+    // Central channel groove (subtle divider)
     const channelY = height / 2;
-    ctx.fillStyle = '#c8c4b4';
-    ctx.fillRect(0, channelY - 4, width, 8);
-    // Channel shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-    ctx.fillRect(0, channelY - 4, width, 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.fillRect(0, channelY + 2, width, 2);
+    ctx.fillStyle = 'rgba(180, 176, 164, 0.3)';
+    ctx.fillRect(0, channelY - 2, width, 4);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    ctx.fillRect(0, channelY - 2, width, 1);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.fillRect(0, channelY + 1, width, 1);
 
     // Power rails
     ctx.strokeStyle = 'rgba(200, 50, 50, 0.4)';
