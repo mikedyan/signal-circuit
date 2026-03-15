@@ -337,7 +337,7 @@ class GameState {
   _checkChapterCompletion(levelId) {
     const chapters = getChapters();
     for (const chapter of chapters) {
-      if (chapter.isBridge) continue; // Skip bridge chapters
+
       if (!chapter.levels.includes(levelId)) continue;
       // Is this the last level of the chapter?
       const lastLevel = chapter.levels[chapter.levels.length - 1];

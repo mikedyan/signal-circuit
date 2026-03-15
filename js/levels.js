@@ -2,7 +2,7 @@
 
 const CHAPTERS = [
   {
-    id: 1, title: 'Chapter 1: Basics', levels: [1, 2, 3, 4, 5],
+    id: 1, title: 'Chapter 1: Basics', levels: [1, 2, 3, 4, 5, 6],
     narrative: 'Navigation Systems',
     storyIntro: 'The ship\'s navigation array is dark. These basic logic circuits need repair before we can steer.',
     storyComplete: '🛸 Navigation systems online! The ship can steer again.',
@@ -10,30 +10,12 @@ const CHAPTERS = [
     color: '#00cc44',
   },
   {
-    id: 'bridge-1', title: 'Bridge', levels: [6],
-    narrative: 'Signal Filtering',
-    storyIntro: 'Before accessing comms, we need to filter the noise.',
-    storyComplete: '',
-    gatesMastered: [],
-    color: '#00cc44',
-    isBridge: true,
-  },
-  {
-    id: 2, title: 'Chapter 2: Combinations', levels: [7, 8, 9, 10, 11],
+    id: 2, title: 'Chapter 2: Combinations', levels: [7, 8, 9, 10, 11, 12],
     narrative: 'Communications Array',
     storyIntro: 'Communications are jammed. These combination circuits route encrypted signals.',
     storyComplete: '📡 Communications restored! We can reach mission control.',
     gatesMastered: ['XOR', 'De Morgan\'s Laws'],
     color: '#00c8e8',
-  },
-  {
-    id: 'bridge-2', title: 'Bridge', levels: [12],
-    narrative: 'Multi-Channel Prep',
-    storyIntro: 'Life support needs multiple outputs. Let\'s practice routing.',
-    storyComplete: '',
-    gatesMastered: [],
-    color: '#00c8e8',
-    isBridge: true,
   },
   {
     id: 3, title: 'Chapter 3: Multi-Output', levels: [13, 14, 15, 16, 17],
@@ -42,6 +24,14 @@ const CHAPTERS = [
     storyComplete: '🌬️ Life support fully operational! The crew is safe.',
     gatesMastered: ['Half Adder', 'Full Adder', 'MUX', 'Majority'],
     color: '#c050f0',
+  },
+  {
+    id: 4, title: 'Chapter 4: Advanced Systems', levels: [18, 19, 20, 21, 22],
+    narrative: 'Warp Drive',
+    storyIntro: 'The warp drive controller needs advanced logic. Decoders, comparators, and arithmetic — the heart of faster-than-light travel.',
+    storyComplete: '🚀 Warp drive online! The ship is ready for interstellar travel.',
+    gatesMastered: ['Decoder', 'Comparator', 'MUX', 'Ripple Adder'],
+    color: '#ff6644',
   },
 ];
 
@@ -550,6 +540,230 @@ const LEVELS = [
       { inputs: [1, 0, 1], outputs: [0, 1] },
       { inputs: [1, 1, 0], outputs: [0, 1] },
       { inputs: [1, 1, 1], outputs: [1, 1] },
+    ],
+  },
+
+  // ── Chapter 4: Advanced Systems (Warp Drive) ──
+  {
+    id: 18,
+    title: '2-to-4 Decoder',
+    description: 'Route a 2-bit address to exactly one of four output channels. Only the selected channel fires.',
+    postSolveInsight: '🔓 Decoders convert binary addresses into one-hot signals. Every memory chip uses them to select which storage cell to read.\n🚀 Warp channel routing initialized.',
+    hints: [
+      'Each output should be 1 for exactly one combination of inputs. Y0 fires when both inputs are 0.',
+      'You need to create both the normal and inverted versions of each input. Start with two NOT gates.',
+      'Y0 = NOT(A) AND NOT(B). Y1 = NOT(A) AND B. Y2 = A AND NOT(B). Y3 = A AND B. Share the NOT outputs!'
+    ],
+    hintHighlights: ['A', 'B', 'Y0', 'Y1', 'Y2', 'Y3'],
+    availableGates: ['AND', 'OR', 'NOT'],
+    optimalGates: 6,
+    goodGates: 8,
+    inputs: [
+      { label: 'A', x: 60, y: 160 },
+      { label: 'B', x: 60, y: 240 },
+    ],
+    outputs: [
+      { label: 'Y0', x: 600, y: 70 },
+      { label: 'Y1', x: 600, y: 160 },
+      { label: 'Y2', x: 600, y: 250 },
+      { label: 'Y3', x: 600, y: 340 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [1, 0, 0, 0] },
+      { inputs: [0, 1], outputs: [0, 1, 0, 0] },
+      { inputs: [1, 0], outputs: [0, 0, 1, 0] },
+      { inputs: [1, 1], outputs: [0, 0, 0, 1] },
+    ],
+  },
+  {
+    id: 19,
+    title: 'Equality Comparator',
+    description: 'Compare two 2-bit numbers. Output 1 if they\'re equal, 0 if they\'re different.',
+    postSolveInsight: '🔓 Equality comparison is the backbone of conditional logic — every "if (x == y)" in code compiles down to circuits like this one.\n🚀 Sensor calibration comparator online.',
+    hints: [
+      'Two numbers are equal when EVERY bit matches. Compare bit-by-bit, then combine the results.',
+      'XOR outputs 1 when bits differ. So NOT(XOR) tells you when two bits match.',
+      'EQ = NOT(XOR(A1,B1)) AND NOT(XOR(A0,B0)). Five gates total.'
+    ],
+    hintHighlights: ['A1', 'A0', 'B1', 'B0', 'EQ'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 5,
+    goodGates: 7,
+    inputs: [
+      { label: 'A1', x: 60, y: 80 },
+      { label: 'A0', x: 60, y: 160 },
+      { label: 'B1', x: 60, y: 250 },
+      { label: 'B0', x: 60, y: 330 },
+    ],
+    outputs: [
+      { label: 'EQ', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0, 0], outputs: [1] },
+      { inputs: [0, 0, 0, 1], outputs: [0] },
+      { inputs: [0, 0, 1, 0], outputs: [0] },
+      { inputs: [0, 0, 1, 1], outputs: [0] },
+      { inputs: [0, 1, 0, 0], outputs: [0] },
+      { inputs: [0, 1, 0, 1], outputs: [1] },
+      { inputs: [0, 1, 1, 0], outputs: [0] },
+      { inputs: [0, 1, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 0, 1], outputs: [0] },
+      { inputs: [1, 0, 1, 0], outputs: [1] },
+      { inputs: [1, 0, 1, 1], outputs: [0] },
+      { inputs: [1, 1, 0, 0], outputs: [0] },
+      { inputs: [1, 1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1, 1], outputs: [1] },
+    ],
+  },
+  {
+    id: 20,
+    title: 'Greater-Than Comparator',
+    description: 'Compare two 2-bit numbers A and B. Output GT=1 when A is strictly greater than B.',
+    postSolveInsight: '🔓 Magnitude comparators chain bit-by-bit from most significant to least. CPUs use cascaded comparators for sorting and branching.\n🚀 Power level comparator calibrated.',
+    hints: [
+      'A > B happens in two cases: the high bit of A wins (A1=1, B1=0), OR the high bits match and the low bit of A wins.',
+      'First check the high bits: A1 AND NOT(B1) means A\'s MSB is bigger. For the "tie" case, use XNOR on the high bits.',
+      'GT = (A1 AND NOT(B1)) OR (NOT(XOR(A1,B1)) AND A0 AND NOT(B0)). Eight gates.'
+    ],
+    hintHighlights: ['A1', 'A0', 'B1', 'B0', 'GT'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 8,
+    goodGates: 11,
+    inputs: [
+      { label: 'A1', x: 60, y: 80 },
+      { label: 'A0', x: 60, y: 160 },
+      { label: 'B1', x: 60, y: 250 },
+      { label: 'B0', x: 60, y: 330 },
+    ],
+    outputs: [
+      { label: 'GT', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 0, 1], outputs: [0] },
+      { inputs: [0, 0, 1, 0], outputs: [0] },
+      { inputs: [0, 0, 1, 1], outputs: [0] },
+      { inputs: [0, 1, 0, 0], outputs: [1] },
+      { inputs: [0, 1, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 1, 0], outputs: [0] },
+      { inputs: [0, 1, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0, 0], outputs: [1] },
+      { inputs: [1, 0, 0, 1], outputs: [1] },
+      { inputs: [1, 0, 1, 0], outputs: [0] },
+      { inputs: [1, 0, 1, 1], outputs: [0] },
+      { inputs: [1, 1, 0, 0], outputs: [1] },
+      { inputs: [1, 1, 0, 1], outputs: [1] },
+      { inputs: [1, 1, 1, 0], outputs: [1] },
+      { inputs: [1, 1, 1, 1], outputs: [0] },
+    ],
+  },
+  {
+    id: 21,
+    title: '2-Bit Multiplexer',
+    description: 'Select between two 2-bit numbers. When SEL=0, output A. When SEL=1, output B.',
+    postSolveInsight: '🔓 Wide multiplexers route entire data buses based on a control signal. This is how CPUs choose between register values, memory paths, and ALU results.\n🚀 Warp field data bus selector active.',
+    hints: [
+      'Each output bit follows the same pattern: pass A\'s bit when SEL=0, pass B\'s bit when SEL=1.',
+      'For each output: (NOT(SEL) AND A_bit) OR (SEL AND B_bit). You can share the NOT(SEL) signal.',
+      'Y1 = (NOT(SEL) AND A1) OR (SEL AND B1). Same pattern for Y0. Seven gates total — share the NOT.'
+    ],
+    hintHighlights: ['A1', 'A0', 'B1', 'B0', 'SEL', 'Y1', 'Y0'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 7,
+    goodGates: 9,
+    inputs: [
+      { label: 'A1', x: 60, y: 60 },
+      { label: 'A0', x: 60, y: 130 },
+      { label: 'B1', x: 60, y: 210 },
+      { label: 'B0', x: 60, y: 280 },
+      { label: 'SEL', x: 60, y: 360 },
+    ],
+    outputs: [
+      { label: 'Y1', x: 600, y: 130 },
+      { label: 'Y0', x: 600, y: 270 },
+    ],
+    truthTable: [
+      // SEL=0: output A (A1,A0). SEL=1: output B (B1,B0)
+      // Inputs: A1, A0, B1, B0, SEL
+      { inputs: [0, 0, 0, 0, 0], outputs: [0, 0] },
+      { inputs: [0, 0, 0, 0, 1], outputs: [0, 0] },
+      { inputs: [0, 0, 0, 1, 0], outputs: [0, 0] },
+      { inputs: [0, 0, 0, 1, 1], outputs: [0, 1] },
+      { inputs: [0, 0, 1, 0, 0], outputs: [0, 0] },
+      { inputs: [0, 0, 1, 0, 1], outputs: [1, 0] },
+      { inputs: [0, 0, 1, 1, 0], outputs: [0, 0] },
+      { inputs: [0, 0, 1, 1, 1], outputs: [1, 1] },
+      { inputs: [0, 1, 0, 0, 0], outputs: [0, 1] },
+      { inputs: [0, 1, 0, 0, 1], outputs: [0, 0] },
+      { inputs: [0, 1, 0, 1, 0], outputs: [0, 1] },
+      { inputs: [0, 1, 0, 1, 1], outputs: [0, 1] },
+      { inputs: [0, 1, 1, 0, 0], outputs: [0, 1] },
+      { inputs: [0, 1, 1, 0, 1], outputs: [1, 0] },
+      { inputs: [0, 1, 1, 1, 0], outputs: [0, 1] },
+      { inputs: [0, 1, 1, 1, 1], outputs: [1, 1] },
+      { inputs: [1, 0, 0, 0, 0], outputs: [1, 0] },
+      { inputs: [1, 0, 0, 0, 1], outputs: [0, 0] },
+      { inputs: [1, 0, 0, 1, 0], outputs: [1, 0] },
+      { inputs: [1, 0, 0, 1, 1], outputs: [0, 1] },
+      { inputs: [1, 0, 1, 0, 0], outputs: [1, 0] },
+      { inputs: [1, 0, 1, 0, 1], outputs: [1, 0] },
+      { inputs: [1, 0, 1, 1, 0], outputs: [1, 0] },
+      { inputs: [1, 0, 1, 1, 1], outputs: [1, 1] },
+      { inputs: [1, 1, 0, 0, 0], outputs: [1, 1] },
+      { inputs: [1, 1, 0, 0, 1], outputs: [0, 0] },
+      { inputs: [1, 1, 0, 1, 0], outputs: [1, 1] },
+      { inputs: [1, 1, 0, 1, 1], outputs: [0, 1] },
+      { inputs: [1, 1, 1, 0, 0], outputs: [1, 1] },
+      { inputs: [1, 1, 1, 0, 1], outputs: [1, 0] },
+      { inputs: [1, 1, 1, 1, 0], outputs: [1, 1] },
+      { inputs: [1, 1, 1, 1, 1], outputs: [1, 1] },
+    ],
+  },
+  {
+    id: 22,
+    title: '2-Bit Ripple Adder',
+    description: 'The ultimate challenge! Add two 2-bit numbers (A1:A0 + B1:B0) and produce the 3-bit result (Cout:S1:S0).',
+    postSolveInsight: '🔓 You just built a 2-bit ripple carry adder — chain four of these together and you have an 8-bit adder, the arithmetic heart of early CPUs like the Intel 8080.\n🚀 Warp drive arithmetic unit operational! Ready for light speed.',
+    hints: [
+      'Break it into two stages: add the low bits first (A0 + B0 → S0 and carry), then add the high bits with that carry.',
+      'Stage 1 is a half adder: S0 = XOR(A0,B0), C0 = AND(A0,B0). Stage 2 is a full adder on A1, B1, and C0.',
+      'Full adder: S1 = XOR(XOR(A1,B1), C0). Cout = OR(AND(A1,B1), AND(C0, XOR(A1,B1))). Seven gates total.'
+    ],
+    hintHighlights: ['A1', 'A0', 'B1', 'B0', 'S1', 'S0', 'Cout'],
+    availableGates: ['AND', 'OR', 'XOR'],
+    optimalGates: 7,
+    goodGates: 10,
+    inputs: [
+      { label: 'A1', x: 60, y: 80 },
+      { label: 'A0', x: 60, y: 170 },
+      { label: 'B1', x: 60, y: 260 },
+      { label: 'B0', x: 60, y: 350 },
+    ],
+    outputs: [
+      { label: 'S0', x: 600, y: 310 },
+      { label: 'S1', x: 600, y: 200 },
+      { label: 'Cout', x: 600, y: 90 },
+    ],
+    truthTable: [
+      // A1 A0 B1 B0 → S1 S0 Cout  (outputs ordered: S0, S1, Cout)
+      { inputs: [0, 0, 0, 0], outputs: [0, 0, 0] },  // 0+0=000
+      { inputs: [0, 0, 0, 1], outputs: [1, 0, 0] },  // 0+1=001
+      { inputs: [0, 0, 1, 0], outputs: [0, 1, 0] },  // 0+2=010
+      { inputs: [0, 0, 1, 1], outputs: [1, 1, 0] },  // 0+3=011
+      { inputs: [0, 1, 0, 0], outputs: [1, 0, 0] },  // 1+0=001
+      { inputs: [0, 1, 0, 1], outputs: [0, 1, 0] },  // 1+1=010
+      { inputs: [0, 1, 1, 0], outputs: [1, 1, 0] },  // 1+2=011
+      { inputs: [0, 1, 1, 1], outputs: [0, 0, 1] },  // 1+3=100
+      { inputs: [1, 0, 0, 0], outputs: [0, 1, 0] },  // 2+0=010
+      { inputs: [1, 0, 0, 1], outputs: [1, 1, 0] },  // 2+1=011
+      { inputs: [1, 0, 1, 0], outputs: [0, 0, 1] },  // 2+2=100
+      { inputs: [1, 0, 1, 1], outputs: [1, 0, 1] },  // 2+3=101
+      { inputs: [1, 1, 0, 0], outputs: [1, 1, 0] },  // 3+0=011
+      { inputs: [1, 1, 0, 1], outputs: [0, 0, 1] },  // 3+1=100
+      { inputs: [1, 1, 1, 0], outputs: [1, 0, 1] },  // 3+2=101
+      { inputs: [1, 1, 1, 1], outputs: [0, 1, 1] },  // 3+3=110
     ],
   },
 ];

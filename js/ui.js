@@ -1184,7 +1184,7 @@ class UI {
     const modal = document.getElementById('chapter-complete-modal');
     if (!modal) return;
 
-    const icons = { 1: '🛸', 2: '📡', 3: '🌬️' };
+    const icons = { 1: '🛸', 2: '📡', 3: '🌬️', 4: '🚀' };
     document.getElementById('chapter-complete-icon').textContent = icons[chapter.id] || '⚡';
     document.getElementById('chapter-complete-title').textContent = `${chapter.title} Complete!`;
     document.getElementById('chapter-complete-story').textContent = chapter.storyComplete || 'Chapter complete!';
