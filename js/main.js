@@ -655,6 +655,14 @@ class GameState {
         this.addWireFromData(action.fromGateId, action.fromPinIndex, action.toGateId, action.toPinIndex);
         break;
       }
+      case 'moveIONode': {
+        const undoNode = this.findNode(action.nodeId);
+        if (undoNode) {
+          undoNode.x = action.fromX;
+          undoNode.y = action.fromY;
+        }
+        break;
+      }
       case 'clearCircuit': {
         // Restore all gates and wires from before the clear
         for (const g of action.gates) {
@@ -698,6 +706,14 @@ class GameState {
                w.toGateId === action.toGateId && w.toPinIndex === action.toPinIndex
         );
         if (wire) this.wireManager.removeWire(wire);
+        break;
+      }
+      case 'moveIONode': {
+        const redoNode = this.findNode(action.nodeId);
+        if (redoNode) {
+          redoNode.x = action.toX;
+          redoNode.y = action.toY;
+        }
         break;
       }
       case 'clearCircuit': {
@@ -1079,6 +1095,14 @@ class GameState {
     let longPressTimer = null;
     let touchMoved = false;
 
+    // ── I/O node drag ──
+    let isDraggingIONode = false;
+    let dragIONode = null;
+    let dragIOOffsetX = 0;
+    let dragIOOffsetY = 0;
+    let dragIOStartX = 0;
+    let dragIOStartY = 0;
+
     // ── Pinch-to-zoom + pan ──
     let pinchState = null;
     let isTwoFingerGesture = false;
@@ -1099,6 +1123,8 @@ class GameState {
         if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
         isDraggingGate = false;
         dragGate = null;
+        isDraggingIONode = false;
+        dragIONode = null;
         this.wireManager.cancelDrawing();
 
         const t1 = getTouchPos(e.touches[0]);
@@ -1183,14 +1209,17 @@ class GameState {
         return;
       }
 
-      // Check for input node tap to toggle value
-      const tappedInput = this.inputNodes.find(n => n.containsPoint(pos.x, pos.y));
-      if (tappedInput) {
+      // Check for I/O node — start drag (toggle on tap in touchend)
+      const tappedIO = this.inputNodes.find(n => n.containsPoint(pos.x, pos.y)) ||
+                       this.outputNodes.find(n => n.containsPoint(pos.x, pos.y));
+      if (tappedIO) {
         if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-        tappedInput.value = tappedInput.value ? 0 : 1;
-        this._propagateLiveSignals();
-        this.audio.playClick();
-        this.markDirty();
+        isDraggingIONode = true;
+        dragIONode = tappedIO;
+        dragIOOffsetX = pos.x - tappedIO.x;
+        dragIOOffsetY = pos.y - tappedIO.y;
+        dragIOStartX = tappedIO.x;
+        dragIOStartY = tappedIO.y;
         return;
       }
 
@@ -1265,6 +1294,13 @@ class GameState {
         dragGate.y = Math.round((pos.y - dragOffsetY) / gridSize) * gridSize;
         this.markDirty();
       }
+
+      if (isDraggingIONode && dragIONode) {
+        const gridSize = 20;
+        dragIONode.x = Math.round((pos.x - dragIOOffsetX) / gridSize) * gridSize;
+        dragIONode.y = Math.round((pos.y - dragIOOffsetY) / gridSize) * gridSize;
+        this.markDirty();
+      }
     }, { passive: false });
 
     canvas.addEventListener('touchend', (e) => {
@@ -1279,6 +1315,30 @@ class GameState {
         return;
       }
       if (isTwoFingerGesture) return;
+
+      // I/O node: tap = toggle input value, drag = reposition
+      if (isDraggingIONode && dragIONode) {
+        if (!touchMoved) {
+          if (dragIONode.type === 'input') {
+            dragIONode.value = dragIONode.value ? 0 : 1;
+            this._propagateLiveSignals();
+            this.audio.playClick();
+          }
+        } else if (dragIONode.x !== dragIOStartX || dragIONode.y !== dragIOStartY) {
+          this.undoManager.push({
+            type: 'moveIONode',
+            nodeId: dragIONode.id,
+            fromX: dragIOStartX,
+            fromY: dragIOStartY,
+            toX: dragIONode.x,
+            toY: dragIONode.y,
+          });
+          this._autoSave();
+        }
+        isDraggingIONode = false;
+        dragIONode = null;
+        this.markDirty();
+      }
 
       isDraggingGate = false;
       dragGate = null;
@@ -1330,13 +1390,16 @@ class GameState {
         return;
       }
 
-      // Check for input node click to toggle value (real-time propagation)
-      const clickedInput = this.inputNodes.find(n => n.containsPoint(pos.x, pos.y));
-      if (clickedInput) {
-        clickedInput.value = clickedInput.value ? 0 : 1;
-        this._propagateLiveSignals();
-        this.audio.playClick();
-        this.markDirty();
+      // Check for I/O node — start drag (toggle on click-without-move in mouseup)
+      const clickedIO = this.inputNodes.find(n => n.containsPoint(pos.x, pos.y)) ||
+                        this.outputNodes.find(n => n.containsPoint(pos.x, pos.y));
+      if (clickedIO) {
+        isDraggingIONode = true;
+        dragIONode = clickedIO;
+        dragIOOffsetX = pos.x - clickedIO.x;
+        dragIOOffsetY = pos.y - clickedIO.y;
+        dragIOStartX = clickedIO.x;
+        dragIOStartY = clickedIO.y;
         return;
       }
 
@@ -1370,11 +1433,21 @@ class GameState {
         this.markDirty();
       }
 
+      if (isDraggingIONode && dragIONode) {
+        const gridSize = 20;
+        dragIONode.x = Math.round((pos.x - dragIOOffsetX) / gridSize) * gridSize;
+        dragIONode.y = Math.round((pos.y - dragIOOffsetY) / gridSize) * gridSize;
+        this.markDirty();
+      }
+
       if (pin) {
         canvas.style.cursor = 'pointer';
       } else if (this.wireManager.hoveredWire) {
         canvas.style.cursor = 'pointer';
       } else if (this.renderer.findGateAt(pos.x, pos.y)) {
+        canvas.style.cursor = 'grab';
+      } else if (this.inputNodes.find(n => n.containsPoint(pos.x, pos.y)) ||
+                 this.outputNodes.find(n => n.containsPoint(pos.x, pos.y))) {
         canvas.style.cursor = 'grab';
       } else {
         canvas.style.cursor = 'crosshair';
@@ -1382,6 +1455,29 @@ class GameState {
     });
 
     canvas.addEventListener('mouseup', () => {
+      // I/O node: click-without-drag = toggle input, drag = reposition
+      if (isDraggingIONode && dragIONode) {
+        if (dragIONode.x === dragIOStartX && dragIONode.y === dragIOStartY) {
+          if (dragIONode.type === 'input') {
+            dragIONode.value = dragIONode.value ? 0 : 1;
+            this._propagateLiveSignals();
+            this.audio.playClick();
+            this.markDirty();
+          }
+        } else {
+          this.undoManager.push({
+            type: 'moveIONode',
+            nodeId: dragIONode.id,
+            fromX: dragIOStartX,
+            fromY: dragIOStartY,
+            toX: dragIONode.x,
+            toY: dragIONode.y,
+          });
+          this._autoSave();
+        }
+        isDraggingIONode = false;
+        dragIONode = null;
+      }
       isDraggingGate = false;
       dragGate = null;
     });
@@ -1521,6 +1617,10 @@ class GameState {
         toGateId: w.toGateId,
         toPinIndex: w.toPinIndex,
       })),
+      ioPositions: [
+        ...this.inputNodes.map(n => ({ id: n.id, x: n.x, y: n.y })),
+        ...this.outputNodes.map(n => ({ id: n.id, x: n.x, y: n.y })),
+      ],
       nextId: this.nextId,
       timestamp: Date.now(),
     };
@@ -1553,6 +1653,17 @@ class GameState {
       for (const w of data.wires) {
         const wire = new Wire(w.fromGateId, w.fromPinIndex, w.toGateId, w.toPinIndex, this.wireManager.nextId++);
         this.wireManager.wires.push(wire);
+      }
+
+      // Restore I/O node positions
+      if (data.ioPositions) {
+        for (const pos of data.ioPositions) {
+          const node = this.findNode(pos.id);
+          if (node) {
+            node.x = pos.x;
+            node.y = pos.y;
+          }
+        }
       }
 
       if (data.gates.length > 0 || data.wires.length > 0) {
