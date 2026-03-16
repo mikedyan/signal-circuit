@@ -8,6 +8,9 @@ class CanvasRenderer {
     this.hoveredPin = null;
     this.sparkParticles = [];
     this.ripples = [];
+    this.viewTransform = { x: 0, y: 0, scale: 1 };
+    this.minScale = 0.3;
+    this.maxScale = 3.0;
     this.resize();
     window.addEventListener('resize', () => this.resize());
   }
@@ -29,6 +32,69 @@ class CanvasRenderer {
     if (this.gameState) this.gameState.markDirty();
   }
 
+  // ── View Transform (Zoom/Pan) ──
+
+  screenToWorld(sx, sy) {
+    const vt = this.viewTransform;
+    return {
+      x: (sx - vt.x) / vt.scale,
+      y: (sy - vt.y) / vt.scale,
+    };
+  }
+
+  worldToScreen(wx, wy) {
+    const vt = this.viewTransform;
+    return {
+      x: wx * vt.scale + vt.x,
+      y: wy * vt.scale + vt.y,
+    };
+  }
+
+  zoomAt(newScale, screenX, screenY) {
+    const vt = this.viewTransform;
+    const clamped = Math.min(this.maxScale, Math.max(this.minScale, newScale));
+    const worldX = (screenX - vt.x) / vt.scale;
+    const worldY = (screenY - vt.y) / vt.scale;
+    vt.scale = clamped;
+    vt.x = screenX - worldX * clamped;
+    vt.y = screenY - worldY * clamped;
+    this.gameState.markDirty();
+    this._updateZoomButton();
+  }
+
+  pan(dx, dy) {
+    this.viewTransform.x += dx;
+    this.viewTransform.y += dy;
+    this.gameState.markDirty();
+    this._updateZoomButton();
+  }
+
+  resetView() {
+    this.viewTransform = { x: 0, y: 0, scale: 1 };
+    this.gameState.markDirty();
+    this._updateZoomButton();
+  }
+
+  isDefaultView() {
+    const vt = this.viewTransform;
+    return Math.abs(vt.scale - 1) < 0.01 && Math.abs(vt.x) < 1 && Math.abs(vt.y) < 1;
+  }
+
+  getZoomPercent() {
+    return Math.round(this.viewTransform.scale * 100);
+  }
+
+  _updateZoomButton() {
+    const btn = document.getElementById('zoom-reset-btn');
+    if (!btn) return;
+    if (this.isDefaultView()) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+      btn.textContent = '↺ ' + this.getZoomPercent() + '%';
+    }
+  }
+
   render() {
     const ctx = this.ctx;
     const width = this.displayWidth || this.canvas.width;
@@ -36,7 +102,20 @@ class CanvasRenderer {
 
     ctx.clearRect(0, 0, width, height);
 
-    this.drawBreadboard(ctx, width, height);
+    // Apply view transform (zoom/pan)
+    const vt = this.viewTransform;
+    ctx.save();
+    ctx.translate(vt.x, vt.y);
+    ctx.scale(vt.scale, vt.scale);
+
+    // Visible world rect for breadboard tiling
+    const visWorld = {
+      left: -vt.x / vt.scale,
+      top: -vt.y / vt.scale,
+      right: (-vt.x + width) / vt.scale,
+      bottom: (-vt.y + height) / vt.scale,
+    };
+    this.drawBreadboard(ctx, visWorld);
 
     // Wires (behind gates)
     this.gameState.wireManager.render(ctx);
@@ -153,80 +232,109 @@ class CanvasRenderer {
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
+
+    // End world-space rendering
+    ctx.restore();
+
+    // Screen-space UI: zoom level badge
+    if (!this.isDefaultView()) {
+      const pct = this.getZoomPercent() + '%';
+      ctx.font = 'bold 11px Courier New';
+      const tw = ctx.measureText(pct).width;
+      const bw = tw + 16;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      roundRect(ctx, width - bw - 8, 8, bw, 24, 6);
+      ctx.fill();
+      ctx.fillStyle = '#0f0';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pct, width - bw / 2 - 8, 20);
+    }
   }
 
-  drawBreadboard(ctx, width, height) {
+  drawBreadboard(ctx, vw) {
+    // vw = { left, top, right, bottom } in world coords
+    const left = vw.left;
+    const top = vw.top;
+    const right = vw.right;
+    const bottom = vw.bottom;
+    const w = right - left;
+    const h = bottom - top;
+
     // Background gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    const bgGrad = ctx.createLinearGradient(left, top, left, bottom);
     bgGrad.addColorStop(0, '#ece8d8');
     bgGrad.addColorStop(1, '#e0dcd0');
     ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(left, top, w, h);
 
-    // Subtle copper trace lines (horizontal)
+    // Subtle copper trace lines (horizontal) — snap to 40px grid
     ctx.strokeStyle = 'rgba(180, 160, 120, 0.15)';
     ctx.lineWidth = 1;
-    for (let y = 40; y < height; y += 40) {
+    const gridStartY = Math.floor(top / 40) * 40;
+    for (let y = gridStartY; y <= bottom; y += 40) {
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
+      ctx.moveTo(left, y);
+      ctx.lineTo(right, y);
       ctx.stroke();
     }
 
     // Subtle copper trace lines (vertical)
-    for (let x = 40; x < width; x += 40) {
+    const gridStartX = Math.floor(left / 40) * 40;
+    for (let x = gridStartX; x <= right; x += 40) {
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
+      ctx.moveTo(x, top);
+      ctx.lineTo(x, bottom);
       ctx.stroke();
     }
 
-    // Grid holes with metallic sheen
-    const gridSize = 20;
-    for (let x = gridSize; x < width; x += gridSize) {
-      for (let y = gridSize; y < height; y += gridSize) {
-        // Outer ring
-        ctx.beginPath();
-        ctx.arc(x, y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#c8c4b4';
-        ctx.fill();
-        // Inner hole
-        ctx.beginPath();
-        ctx.arc(x, y, 1, 0, Math.PI * 2);
-        ctx.fillStyle = '#b8b4a8';
-        ctx.fill();
+    // Grid holes — skip at extreme zoom-out for performance
+    const scale = this.viewTransform.scale;
+    if (scale > 0.4) {
+      const gridSize = 20;
+      const holeStartX = Math.ceil(left / gridSize) * gridSize;
+      const holeStartY = Math.ceil(top / gridSize) * gridSize;
+      for (let x = holeStartX; x < right; x += gridSize) {
+        for (let y = holeStartY; y < bottom; y += gridSize) {
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#c8c4b4';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x, y, 1, 0, Math.PI * 2);
+          ctx.fillStyle = '#b8b4a8';
+          ctx.fill();
+        }
       }
     }
 
-
-
-    // Power rails
+    // Power rails — fixed world positions (designed for ~400px ref height)
     ctx.strokeStyle = 'rgba(200, 50, 50, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, 30);
-    ctx.lineTo(width, 30);
+    ctx.moveTo(left, 30);
+    ctx.lineTo(right, 30);
     ctx.stroke();
 
     ctx.strokeStyle = 'rgba(50, 50, 200, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(0, height - 30);
-    ctx.lineTo(width, height - 30);
+    ctx.moveTo(left, 370);
+    ctx.lineTo(right, 370);
     ctx.stroke();
 
     // Rail labels
     ctx.font = 'bold 10px Courier New';
     ctx.fillStyle = 'rgba(200, 50, 50, 0.5)';
     ctx.textAlign = 'left';
-    ctx.fillText('+', 5, 34);
+    ctx.fillText('+', Math.max(left + 5, 5), 34);
     ctx.fillStyle = 'rgba(50, 50, 200, 0.5)';
-    ctx.fillText('−', 5, height - 26);
+    ctx.fillText('−', Math.max(left + 5, 5), 374);
 
     // T5: Breadboard environmental reactivity — copper traces glow near active wires
     const sim = this.gameState.simulation;
     if (sim && sim.animating) {
-      this._renderActiveTraces(ctx, width, height);
+      this._renderActiveTraces(ctx, right, bottom);
     }
   }
 
@@ -453,7 +561,10 @@ class CanvasRenderer {
   findPinAt(mx, my, threshold) {
     if (!threshold) {
       const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      threshold = isMobile ? 36 : 18;
+      const base = isMobile ? 36 : 18;
+      // Adjust for zoom: keep consistent screen-space touch target
+      const scale = this.viewTransform ? this.viewTransform.scale : 1;
+      threshold = Math.min(base / scale, 60);
     }
     const gs = this.gameState;
 

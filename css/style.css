@@ -46,6 +46,15 @@ body {
   text-shadow: 0 0 20px rgba(0, 255, 0, 0.4), 0 0 40px rgba(0, 255, 0, 0.2);
   margin-bottom: 5px;
   letter-spacing: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+#brand-logo {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 0, 0.5));
+  flex-shrink: 0;
 }
 
 #game-subtitle {
@@ -216,21 +225,23 @@ body {
 .tool-gate {
   background: #1a1a1a;
   border: 2px solid #555;
+  border-left: 4px solid #555;
   border-radius: 4px;
   padding: 10px 8px;
   text-align: center;
   cursor: grab;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
   color: #fff;
   user-select: none;
   position: relative;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .tool-gate:hover {
   border-color: #0f0;
   box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+  background: #222;
 }
 
 .tool-gate:active {
@@ -289,14 +300,14 @@ body {
 }
 
 #level-info p {
-  font-size: 12px;
+  font-size: 14px;
   color: #aaa;
   line-height: 1.4;
 }
 
 /* ── Truth Table ── */
 #truth-table-section h3 {
-  font-size: 12px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #888;
@@ -436,7 +447,7 @@ body {
   border: 1px solid #4a4;
   padding: 6px 8px;
   font-family: 'Courier New', monospace;
-  font-size: 11px;
+  font-size: 14px;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -454,7 +465,7 @@ body {
   border: 1px solid #555;
   padding: 6px 8px;
   font-family: 'Courier New', monospace;
-  font-size: 11px;
+  font-size: 14px;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -609,7 +620,7 @@ body {
 
 /* ── Status Bar ── */
 #status-bar {
-  font-size: 11px;
+  font-size: 14px;
   color: #666;
   padding: 5px 0;
   border-top: 1px solid #333;
@@ -625,7 +636,7 @@ body {
 
 #timer-display {
   color: #888;
-  font-size: 11px;
+  font-size: 14px;
   font-family: 'Courier New', monospace;
   margin: 0 8px;
 }
@@ -1437,17 +1448,18 @@ body {
 /* ── Onboarding Tooltip ── */
 #onboarding-tooltip {
   position: absolute;
-  top: 50%;
+  bottom: 16px;
   left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.85);
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.88);
   border: 2px solid #0f0;
   border-radius: 8px;
-  padding: 16px 24px;
+  padding: 12px 20px;
   text-align: center;
   z-index: 6;
   animation: tooltipFadeIn 0.3s ease;
   pointer-events: auto;
+  max-width: 350px;
 }
 
 #onboarding-tooltip #tooltip-text {
@@ -1475,8 +1487,8 @@ body {
 }
 
 @keyframes tooltipFadeIn {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* ── Screen Transitions ── */
@@ -1672,6 +1684,34 @@ body {
 }
 
 /* ── Mobile Delete Button ── */
+/* ── Zoom Reset Button ── */
+#zoom-reset-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.7);
+  color: #0f0;
+  border: 1px solid #0f0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, transform 0.1s;
+  touch-action: manipulation;
+}
+
+#zoom-reset-btn:hover {
+  background: rgba(0, 255, 0, 0.15);
+}
+
+#zoom-reset-btn:active {
+  transform: scale(0.95);
+}
+
 #mobile-delete-btn {
   position: fixed;
   width: 48px;
@@ -2545,4 +2585,81 @@ body.colorblind-mode #result-display.fail {
   .stat-value {
     font-size: 18px;
   }
+}
+
+/* ── Font Size Toggle ── */
+body.fontsize-normal {
+  /* Default: normal sizes, 14px floor enforced below */
+}
+
+body.fontsize-large {
+  font-size: 16px;
+}
+
+body.fontsize-large #truth-table,
+body.fontsize-large #truth-table th,
+body.fontsize-large #truth-table td {
+  font-size: 15px;
+}
+
+body.fontsize-large #level-info p,
+body.fontsize-large #level-desc {
+  font-size: 14px;
+}
+
+body.fontsize-large #status-text,
+body.fontsize-large #timer-display {
+  font-size: 14px;
+}
+
+body.fontsize-large .tool-gate {
+  font-size: 15px;
+}
+
+body.fontsize-x-large {
+  font-size: 18px;
+}
+
+body.fontsize-x-large #truth-table,
+body.fontsize-x-large #truth-table th,
+body.fontsize-x-large #truth-table td {
+  font-size: 16px;
+}
+
+body.fontsize-x-large #level-info p,
+body.fontsize-x-large #level-desc {
+  font-size: 16px;
+}
+
+body.fontsize-x-large #status-text,
+body.fontsize-x-large #timer-display {
+  font-size: 16px;
+}
+
+body.fontsize-x-large .tool-gate {
+  font-size: 16px;
+}
+
+body.fontsize-x-large #level-info h2 {
+  font-size: 16px;
+}
+
+/* 14px floor: ensure key text stays readable */
+
+/* Level transition choreography */
+.level-power-down {
+  animation: powerDown 200ms ease-out forwards;
+}
+.level-power-up {
+  animation: powerUp 200ms ease-in forwards;
+}
+
+@keyframes powerDown {
+  0% { opacity: 1; filter: brightness(1); }
+  100% { opacity: 0.3; filter: brightness(0.4); }
+}
+
+@keyframes powerUp {
+  0% { opacity: 0.3; filter: brightness(0.4); }
+  100% { opacity: 1; filter: brightness(1); }
 }

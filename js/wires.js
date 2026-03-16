@@ -39,6 +39,25 @@ const WIRE_COLORS = WIRE_COLORS_DEFAULT;
 
 let wireColorIndex = 0;
 
+// Semantic color map: source pin key → color
+const _semanticColorMap = {};
+let _semanticColorNext = 0;
+
+function _getSemanticColor(fromGateId, fromPinIndex) {
+  const key = `${fromGateId}:${fromPinIndex}`;
+  if (!_semanticColorMap[key]) {
+    const colors = getWireColors();
+    _semanticColorMap[key] = colors[_semanticColorNext % colors.length];
+    _semanticColorNext++;
+  }
+  return _semanticColorMap[key];
+}
+
+function _resetSemanticColors() {
+  for (const k of Object.keys(_semanticColorMap)) delete _semanticColorMap[k];
+  _semanticColorNext = 0;
+}
+
 class Wire {
   constructor(fromGateId, fromPinIndex, toGateId, toPinIndex, id) {
     this.id = id;
@@ -47,9 +66,8 @@ class Wire {
     this.toGateId = toGateId;
     this.toPinIndex = toPinIndex;
     this.signalValue = 0;
-    const colors = getWireColors();
-    this.color = colors[wireColorIndex % colors.length];
-    wireColorIndex++;
+    // Semantic color: all wires from same source pin share a color
+    this.color = _getSemanticColor(fromGateId, fromPinIndex);
     // T4: Wire drawing progressive reveal
     this.birthTime = performance.now();
     this.revealDuration = 300; // ms
@@ -203,6 +221,7 @@ class WireManager {
     this.hoveredWire = null;
     this.cancelDrawing();
     wireColorIndex = 0;
+    _resetSemanticColors();
   }
 
   // Bezier control points for a wire from (sx,sy) to (ex,ey)
@@ -238,7 +257,13 @@ class WireManager {
   }
 
   // Find a wire near a point using bezier sampling
-  findWireAt(px, py, threshold = 8) {
+  findWireAt(px, py, threshold) {
+    if (threshold === undefined) {
+      const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const base = isMobile ? 16 : 8;
+      const scale = this.gameState.renderer ? this.gameState.renderer.viewTransform.scale : 1;
+      threshold = Math.min(base / scale, 40);
+    }
     for (const wire of this.wires) {
       const endpoints = this.getWireEndpoints(wire);
       if (!endpoints) continue;

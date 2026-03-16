@@ -82,6 +82,14 @@ class GameState {
 
     this.setupCanvasEvents(canvas);
     this.setupMuteButton();
+
+    // Zoom reset button
+    const zoomResetBtn = document.getElementById('zoom-reset-btn');
+    if (zoomResetBtn) {
+      zoomResetBtn.addEventListener('click', () => {
+        this.renderer.resetView();
+      });
+    }
     this.setupHintAndSkip();
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
@@ -396,6 +404,7 @@ class GameState {
     this.ui.showScreen('gameplay');
     this.audio.startAmbient();
     this.renderer.resize();
+    this.renderer.resetView();
     this.loadChallengeLevel(level);
     setTimeout(() => this.renderer.resize(), 100);
   }
@@ -408,6 +417,7 @@ class GameState {
     this.ui.showScreen('gameplay');
     this.audio.startAmbient();
     this.renderer.resize();
+    this.renderer.resetView();
     this.loadChallengeLevel(level);
     setTimeout(() => this.renderer.resize(), 100);
   }
@@ -420,6 +430,7 @@ class GameState {
     this.ui.showScreen('gameplay');
     this.audio.startAmbient();
     this.renderer.resize();
+    this.renderer.resetView();
     this.loadChallengeLevel(level);
     setTimeout(() => this.renderer.resize(), 100);
   }
@@ -433,6 +444,7 @@ class GameState {
 
     // Must resize canvas BEFORE loading level so positions scale correctly
     this.renderer.resize();
+    this.renderer.resetView();
     this.loadLevel(levelId);
 
     // Second resize after layout settles
@@ -643,6 +655,18 @@ class GameState {
         this.addWireFromData(action.fromGateId, action.fromPinIndex, action.toGateId, action.toPinIndex);
         break;
       }
+      case 'clearCircuit': {
+        // Restore all gates and wires from before the clear
+        for (const g of action.gates) {
+          const gate = new Gate(g.type, g.x, g.y, g.id);
+          this.gates.push(gate);
+        }
+        if (action.nextId) this.nextId = Math.max(this.nextId, action.nextId);
+        for (const w of action.wires) {
+          this.addWireFromData(w.fromGateId, w.fromPinIndex, w.toGateId, w.toPinIndex);
+        }
+        break;
+      }
     }
     this.ui.updateStatusBar('Undo');
     this.ui.updateGateIndicator();
@@ -676,6 +700,16 @@ class GameState {
         if (wire) this.wireManager.removeWire(wire);
         break;
       }
+      case 'clearCircuit': {
+        // Re-clear the circuit
+        this.gates = [];
+        this.wireManager.wires = [];
+        this.wireManager.selectedWire = null;
+        this.selectedGate = null;
+        for (const node of this.inputNodes) node.value = 0;
+        for (const node of this.outputNodes) node.value = 0;
+        break;
+      }
     }
     this.ui.updateStatusBar('Redo');
     this.ui.updateGateIndicator();
@@ -705,6 +739,18 @@ class GameState {
   loadLevel(id) {
     const level = getLevel(id);
     if (!level) return;
+
+    // Level transition choreography: power-down/up
+    const canvasContainer = document.getElementById('canvas-container');
+    if (canvasContainer && this.currentLevel && this.currentLevel.id !== id) {
+      canvasContainer.classList.remove('level-power-up');
+      canvasContainer.classList.add('level-power-down');
+      setTimeout(() => {
+        canvasContainer.classList.remove('level-power-down');
+        canvasContainer.classList.add('level-power-up');
+        setTimeout(() => canvasContainer.classList.remove('level-power-up'), 200);
+      }, 200);
+    }
 
     this.currentLevel = level;
     this.gates = [];
@@ -804,10 +850,25 @@ class GameState {
   }
 
   clearCircuit() {
+    // Save current state for undo
+    const savedGates = this.gates.map(g => ({ type: g.type, x: g.x, y: g.y, id: g.id }));
+    const savedWires = this.wireManager.wires.map(w => ({
+      fromGateId: w.fromGateId, fromPinIndex: w.fromPinIndex,
+      toGateId: w.toGateId, toPinIndex: w.toPinIndex,
+    }));
+
+    if (savedGates.length > 0 || savedWires.length > 0) {
+      this.undoManager.push({
+        type: 'clearCircuit',
+        gates: savedGates,
+        wires: savedWires,
+        nextId: this.nextId,
+      });
+    }
+
     this.gates = [];
     this.wireManager.clear();
     this.selectedGate = null;
-    this.undoManager.clear();
 
     for (const node of this.inputNodes) node.value = 0;
     for (const node of this.outputNodes) node.value = 0;
@@ -1018,6 +1079,11 @@ class GameState {
     let longPressTimer = null;
     let touchMoved = false;
 
+    // ── Pinch-to-zoom + pan ──
+    let pinchState = null;
+    let isTwoFingerGesture = false;
+    let lastTapTime = 0;
+
     const getTouchPos = (touch) => {
       const rect = canvas.getBoundingClientRect();
       return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
@@ -1026,14 +1092,54 @@ class GameState {
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (this.isAnimating) return;
+
+      // Two-finger gesture: start pinch-to-zoom + pan
+      if (e.touches.length >= 2) {
+        isTwoFingerGesture = true;
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        isDraggingGate = false;
+        dragGate = null;
+        this.wireManager.cancelDrawing();
+
+        const t1 = getTouchPos(e.touches[0]);
+        const t2 = getTouchPos(e.touches[1]);
+        const dist = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+        const midX = (t1.x + t2.x) / 2;
+        const midY = (t1.y + t2.y) / 2;
+        const vt = this.renderer.viewTransform;
+        pinchState = {
+          initialDist: dist,
+          initialScale: vt.scale,
+          initialMidX: midX,
+          initialMidY: midY,
+          initialVtX: vt.x,
+          initialVtY: vt.y,
+        };
+        return;
+      }
+
+      if (isTwoFingerGesture) return;
+
       const touch = e.touches[0];
-      const pos = getTouchPos(touch);
+      const screenPos = getTouchPos(touch);
+      const pos = this.renderer.screenToWorld(screenPos.x, screenPos.y);
       touchMoved = false;
+
+      // Double-tap to reset zoom
+      const now = Date.now();
+      if (now - lastTapTime < 300) {
+        if (!this.renderer.isDefaultView()) {
+          this.renderer.resetView();
+          lastTapTime = 0;
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+          return;
+        }
+      }
+      lastTapTime = now;
 
       // Long-press timer for deletion
       longPressTimer = setTimeout(() => {
         if (touchMoved) return;
-        // Delete gate or wire under finger
         const wire = this.wireManager.findWireAt(pos.x, pos.y);
         if (wire) {
           this.audio.playWireDisconnect();
@@ -1093,7 +1199,7 @@ class GameState {
       if (wire) {
         this.wireManager.selectedWire = wire;
         this.selectedGate = null;
-        if (this.ui) this.ui.showMobileDelete(pos.x, pos.y);
+        if (this.ui) this.ui.showMobileDelete(screenPos.x, screenPos.y);
         this.markDirty();
         return;
       }
@@ -1107,7 +1213,7 @@ class GameState {
         dragGate = gate;
         dragOffsetX = pos.x - gate.x;
         dragOffsetY = pos.y - gate.y;
-        if (this.ui) this.ui.showMobileDelete(pos.x, pos.y);
+        if (this.ui) this.ui.showMobileDelete(screenPos.x, screenPos.y);
         return;
       }
 
@@ -1118,8 +1224,36 @@ class GameState {
 
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
+
+      // Two-finger pinch-to-zoom + pan
+      if (e.touches.length >= 2 && pinchState) {
+        const t1 = getTouchPos(e.touches[0]);
+        const t2 = getTouchPos(e.touches[1]);
+        const dist = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+        const midX = (t1.x + t2.x) / 2;
+        const midY = (t1.y + t2.y) / 2;
+
+        const scaleRatio = dist / pinchState.initialDist;
+        const newScale = Math.min(this.renderer.maxScale, Math.max(this.renderer.minScale, pinchState.initialScale * scaleRatio));
+
+        const worldX = (pinchState.initialMidX - pinchState.initialVtX) / pinchState.initialScale;
+        const worldY = (pinchState.initialMidY - pinchState.initialVtY) / pinchState.initialScale;
+
+        const vt = this.renderer.viewTransform;
+        vt.scale = newScale;
+        vt.x = midX - worldX * newScale;
+        vt.y = midY - worldY * newScale;
+        this.renderer._updateZoomButton();
+
+        this.markDirty();
+        return;
+      }
+
+      if (isTwoFingerGesture) return;
+
       const touch = e.touches[0];
-      const pos = getTouchPos(touch);
+      const screenPos = getTouchPos(touch);
+      const pos = this.renderer.screenToWorld(screenPos.x, screenPos.y);
       touchMoved = true;
       if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
 
@@ -1136,6 +1270,16 @@ class GameState {
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
       if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+
+      if (e.touches.length < 2) {
+        pinchState = null;
+      }
+      if (isTwoFingerGesture && e.touches.length === 0) {
+        isTwoFingerGesture = false;
+        return;
+      }
+      if (isTwoFingerGesture) return;
+
       isDraggingGate = false;
       dragGate = null;
     }, { passive: false });
@@ -1143,7 +1287,8 @@ class GameState {
     // ── Mouse support ──
     canvas.addEventListener('mousedown', (e) => {
       if (this.isAnimating) return;
-      const pos = this.renderer.getMousePos(e);
+      const screenPos = this.renderer.getMousePos(e);
+      const pos = this.renderer.screenToWorld(screenPos.x, screenPos.y);
 
       const pin = this.renderer.findPinAt(pos.x, pos.y);
       if (pin) {
@@ -1211,7 +1356,8 @@ class GameState {
     });
 
     canvas.addEventListener('mousemove', (e) => {
-      const pos = this.renderer.getMousePos(e);
+      const screenPos = this.renderer.getMousePos(e);
+      const pos = this.renderer.screenToWorld(screenPos.x, screenPos.y);
       this.wireManager.updateMouse(pos.x, pos.y);
 
       const pin = this.renderer.findPinAt(pos.x, pos.y);
@@ -1243,7 +1389,8 @@ class GameState {
     canvas.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       if (this.isAnimating) return;
-      const pos = this.renderer.getMousePos(e);
+      const screenPos = this.renderer.getMousePos(e);
+      const pos = this.renderer.screenToWorld(screenPos.x, screenPos.y);
 
       const wire = this.wireManager.findWireAt(pos.x, pos.y);
       if (wire) {
@@ -1265,6 +1412,15 @@ class GameState {
         this.removeGate(gate);
       }
     });
+
+    // Mouse wheel zoom (desktop)
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const screenPos = this.renderer.getMousePos(e);
+      const zoomFactor = e.deltaY > 0 ? 0.92 : 1.08;
+      const vt = this.renderer.viewTransform;
+      this.renderer.zoomAt(vt.scale * zoomFactor, screenPos.x, screenPos.y);
+    }, { passive: false });
 
     document.addEventListener('keydown', (e) => {
       if (this.isAnimating || this.currentScreen !== 'gameplay') return;

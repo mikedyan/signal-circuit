@@ -28,6 +28,7 @@ class UI {
     this.setupStatsDashboard();
     this.setupMilestoneModal();
     this.setupGhostToggle();
+    this.setupFontSizeToggle();
   }
 
   // ── Colorblind Mode Toggle ──
@@ -165,6 +166,36 @@ class UI {
       try {
         localStorage.setItem('signal-circuit-colorblind', isColorblind ? 'true' : 'false');
       } catch (e) {}
+    });
+  }
+
+  // ── Font Size Toggle ──
+  setupFontSizeToggle() {
+    const btn = document.getElementById('fontsize-toggle-btn');
+    if (!btn) return;
+
+    const sizes = ['normal', 'large', 'x-large'];
+    const labels = { normal: '🔤 Text: Normal', large: '🔤 Text: Large', 'x-large': '🔤 Text: X-Large' };
+
+    let currentSize = 'normal';
+    try {
+      const saved = localStorage.getItem('signal-circuit-fontsize');
+      if (saved && sizes.includes(saved)) currentSize = saved;
+    } catch (e) {}
+
+    const applySize = (size) => {
+      document.body.classList.remove('fontsize-normal', 'fontsize-large', 'fontsize-x-large');
+      document.body.classList.add('fontsize-' + size);
+      btn.textContent = labels[size];
+    };
+
+    applySize(currentSize);
+
+    btn.addEventListener('click', () => {
+      const idx = sizes.indexOf(currentSize);
+      currentSize = sizes[(idx + 1) % sizes.length];
+      applySize(currentSize);
+      try { localStorage.setItem('signal-circuit-fontsize', currentSize); } catch (e) {}
     });
   }
 
@@ -469,6 +500,8 @@ class UI {
       el.className = 'tool-gate';
       el.textContent = def.name;
       el.dataset.gateType = gateType;
+      el.style.borderLeftColor = def.color;
+      el.style.color = def.color;
 
       const dots = document.createElement('div');
       dots.className = 'pin-dots';
@@ -519,13 +552,14 @@ class UI {
 
       const canvas = this.gameState.renderer.canvas;
       const rect = canvas.getBoundingClientRect();
-      const x = e2.clientX - rect.left;
-      const y = e2.clientY - rect.top;
+      const sx = e2.clientX - rect.left;
+      const sy = e2.clientY - rect.top;
 
-      if (x >= 0 && y >= 0 && x <= canvas.width && y <= canvas.height) {
+      if (sx >= 0 && sy >= 0 && sx <= rect.width && sy <= rect.height) {
+        const world = this.gameState.renderer.screenToWorld(sx, sy);
         const gridSize = 20;
-        const snappedX = Math.round(x / gridSize) * gridSize - GateTypes[gateType].width / 2;
-        const snappedY = Math.round(y / gridSize) * gridSize - GateTypes[gateType].height / 2;
+        const snappedX = Math.round(world.x / gridSize) * gridSize - GateTypes[gateType].width / 2;
+        const snappedY = Math.round(world.y / gridSize) * gridSize - GateTypes[gateType].height / 2;
         this.gameState.addGate(gateType, snappedX, snappedY);
       }
     };
@@ -561,13 +595,14 @@ class UI {
       const t = e2.changedTouches[0];
       const canvas = this.gameState.renderer.canvas;
       const rect = canvas.getBoundingClientRect();
-      const x = t.clientX - rect.left;
-      const y = t.clientY - rect.top;
+      const sx = t.clientX - rect.left;
+      const sy = t.clientY - rect.top;
 
-      if (x >= 0 && y >= 0 && x <= canvas.width && y <= canvas.height) {
+      if (sx >= 0 && sy >= 0 && sx <= rect.width && sy <= rect.height) {
+        const world = this.gameState.renderer.screenToWorld(sx, sy);
         const gridSize = 20;
-        const snappedX = Math.round(x / gridSize) * gridSize - GateTypes[gateType].width / 2;
-        const snappedY = Math.round(y / gridSize) * gridSize - GateTypes[gateType].height / 2;
+        const snappedX = Math.round(world.x / gridSize) * gridSize - GateTypes[gateType].width / 2;
+        const snappedY = Math.round(world.y / gridSize) * gridSize - GateTypes[gateType].height / 2;
         this.gameState.addGate(gateType, snappedX, snappedY);
       }
     };
@@ -986,6 +1021,11 @@ class UI {
     inputSlider.addEventListener('input', updateDifficulty);
     outputSlider.addEventListener('input', updateDifficulty);
 
+    // Gate challenge difficulty based on campaign progress
+    this._updateChallengeGating(inputSlider, outputSlider);
+    inputSlider.addEventListener('input', () => this._updateChallengeGating(inputSlider, outputSlider));
+    outputSlider.addEventListener('input', () => this._updateChallengeGating(inputSlider, outputSlider));
+
     // Generate button
     document.getElementById('generate-challenge-btn').addEventListener('click', () => {
       const ni = parseInt(inputSlider.value);
@@ -1002,6 +1042,39 @@ class UI {
         this.renderLeaderboard(ni, no);
       });
     });
+  }
+
+  _updateChallengeGating(inputSlider, outputSlider) {
+    if (!inputSlider || !outputSlider) return;
+    const gs = this.gameState;
+    const progress = gs.progress;
+    const chapters = getChapters();
+
+    // Check chapter completion
+    const isChapterComplete = (chapterIdx) => {
+      const chapter = chapters[chapterIdx];
+      if (!chapter) return false;
+      return chapter.levels.every(lid => {
+        const p = progress.levels[lid];
+        return p && p.completed;
+      });
+    };
+
+    const ch1Done = isChapterComplete(0);
+    const ch2Done = isChapterComplete(1);
+
+    // Gate input slider: 2 (default), 3 after Ch1, 4 after Ch2
+    let maxInputs = 2;
+    if (ch1Done) maxInputs = 3;
+    if (ch2Done) maxInputs = 4;
+    inputSlider.max = maxInputs;
+    if (parseInt(inputSlider.value) > maxInputs) inputSlider.value = maxInputs;
+
+    // Gate output slider: 1 (default), 2 after Ch2
+    let maxOutputs = 1;
+    if (ch2Done) maxOutputs = 2;
+    outputSlider.max = maxOutputs;
+    if (parseInt(outputSlider.value) > maxOutputs) outputSlider.value = maxOutputs;
   }
 
   renderLeaderboard(numInputs, numOutputs) {
@@ -1301,8 +1374,18 @@ class UI {
   setupOnboarding() {
     const dismissBtn = document.getElementById('tooltip-dismiss');
     if (dismissBtn) {
-      dismissBtn.addEventListener('click', () => this.dismissOnboarding());
+      dismissBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.dismissOnboarding();
+      });
     }
+    // Click anywhere to dismiss (non-blocking)
+    document.addEventListener('click', (e) => {
+      const tooltip = document.getElementById('onboarding-tooltip');
+      if (tooltip && tooltip.style.display !== 'none') {
+        this.dismissOnboarding();
+      }
+    });
   }
 
   showOnboarding() {
@@ -1317,11 +1400,17 @@ class UI {
     const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     text.textContent = isMobile ? 'Tap a pin to start drawing a wire' : 'Click a pin to start drawing a wire';
     tooltip.style.display = 'block';
+    // Auto-dismiss after 8 seconds
+    this._onboardingTimer = setTimeout(() => this.dismissOnboarding(), 8000);
   }
 
   dismissOnboarding() {
     const tooltip = document.getElementById('onboarding-tooltip');
     if (tooltip) tooltip.style.display = 'none';
+    if (this._onboardingTimer) {
+      clearTimeout(this._onboardingTimer);
+      this._onboardingTimer = null;
+    }
     try {
       localStorage.setItem('signal-circuit-onboarded', 'true');
     } catch (e) {}

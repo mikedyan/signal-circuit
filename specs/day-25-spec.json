@@ -1,0 +1,138 @@
+{
+  "day": 25,
+  "title": "Visual Identity & Interaction Polish",
+  "summary": "Strengthens visual identity, improves accessibility, and polishes interactions. The game gets a brand mark, better pin visibility, semantic wire colors, and smoother transitions between levels. Toolbox gates get color-coded to match canvas, font sizing gets a 14px floor with toggle, onboarding becomes non-blocking, clear circuit becomes undoable, sound gets micro-randomization, and challenge mode gates based on campaign progress.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Color-code toolbox gates to match their canvas gate type colors (AND=yellow, OR=cyan, NOT=red-orange, XOR=purple). Currently toolbox gates are all white text on dark background.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Each toolbox gate element has a colored left border or text matching its GateTypes color",
+        "Toolbox AND gate shows yellow accent, OR shows cyan, NOT shows red-orange, XOR shows purple",
+        "Hover state still works and is visible against the new colors"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Create a minimal brand mark / logo for Signal Circuit. SVG-based circuit icon that appears on splash screen, level select header, and could be used for share cards.",
+      "files_to_modify": ["index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "A distinctive SVG logo replaces or augments the ⚡ emoji in the game title",
+        "Logo appears on level select screen header",
+        "Logo is clean, minimal, and circuit/signal themed",
+        "Logo renders crisp at all sizes"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Improve pin visibility: larger pins (radius 5→7px), subtle breathing animation on unconnected pins, better contrast against breadboard background.",
+      "files_to_modify": ["js/gates.js"],
+      "acceptance_criteria": [
+        "Pin circles are visibly larger (7px radius instead of 5px)",
+        "Unconnected pins show a subtle pulsing/breathing animation",
+        "Pins are clearly visible against the breadboard background",
+        "Connected pins look distinct from unconnected pins"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Set a global minimum font size of 14px and add a font size toggle (Normal/Large/Extra Large) in settings on level select screen.",
+      "files_to_modify": ["index.html", "css/style.css", "js/ui.js"],
+      "acceptance_criteria": [
+        "No text element in the game is below 14px (verify key elements)",
+        "A font size toggle appears in the settings row on level select",
+        "Toggle cycles through Normal/Large/Extra Large",
+        "Selection persists via localStorage",
+        "Truth table, level descriptions, and status bar scale appropriately"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Make onboarding tooltips non-blocking: click anywhere to dismiss (not just the dismiss button), non-modal so players can interact with the circuit while tooltip is visible.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Clicking anywhere on the page dismisses the onboarding tooltip",
+        "Players can interact with the circuit (place gates, draw wires) while tooltip is visible",
+        "Tooltip does not block canvas interaction",
+        "Dismiss button still works as before"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Implement semantic wire color assignment: all wires carrying the same signal (from the same source pin) share a color, instead of colors assigned by creation order.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Wires from the same output pin share the same color",
+        "Wires from different output pins get different colors",
+        "Colors reset properly on level load / circuit clear",
+        "Wire colors still override to signal colors during simulation"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Make Clear Circuit a single undoable action. Ctrl+Z after clear should restore the entire circuit (all gates and wires).",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Pressing Clear Circuit, then Ctrl+Z restores all gates and wires",
+        "The undo action correctly restores wire connections",
+        "Multiple undos after clear don't cause errors",
+        "Redo after undo-of-clear re-clears the circuit"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Add level transition choreography: when loading a new level, brief power-down effect on old circuit (fade out), then power-up on new level (fade in with initialization animation).",
+      "files_to_modify": ["js/main.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Transitioning between levels shows a brief visual transition",
+        "Power-down: canvas fades/dims briefly",
+        "Power-up: new level fades in with a subtle initialization effect",
+        "Transition is fast (~400ms total) and doesn't feel sluggish"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Sound micro-randomization is already partially implemented (_randomize method exists). Extend it: apply ±5% frequency variance and ±10% duration variance to ALL sound effects that don't already use it.",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "playClick, playWireDisconnect, playButtonClick, playFail, playSuccess all use _randomize for key frequency params",
+        "No two consecutive plays of the same sound are identical",
+        "Sounds still feel correct and recognizable despite variance"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Challenge mode difficulty should scale based on campaign progress. Don't show 4-input challenges to players who haven't completed Chapter 2. Gate the input slider max.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Input slider max is 2 until Chapter 1 is complete",
+        "Input slider max increases to 3 after Chapter 1 complete",
+        "Input slider max increases to 4 after Chapter 2 complete",
+        "Output slider similarly gated (max 1 until Chapter 2 complete)",
+        "If player has full progress, all options available"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Toolbox gate colors match canvas gate colors visually",
+    "Pin breathing animation runs smoothly and doesn't kill performance",
+    "Font size toggle persists and applies globally",
+    "Clear Circuit undo restores exact circuit state",
+    "Level transitions feel smooth not janky",
+    "Challenge mode gating works correctly based on progress",
+    "Semantic wire colors group correctly by source pin"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

@@ -218,24 +218,26 @@ class AudioEngine {
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
+    const dur1 = this._randomize(0.03, 0.1);
+    const dur2 = this._randomize(0.05, 0.1);
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'square';
     osc.frequency.setValueAtTime(this._randomize(1200, 0.05), now);
-    osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+    osc.frequency.exponentialRampToValueAtTime(this._randomize(300, 0.05), now + dur1);
     gain.gain.setValueAtTime(this.masterVolume * 0.5, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur2);
     osc.connect(gain);
     gain.connect(this._output);
     osc.start(now);
-    osc.stop(now + 0.05);
+    osc.stop(now + dur2);
 
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'sine';
     osc2.frequency.setValueAtTime(this._randomize(2400, 0.05), now);
-    osc2.frequency.exponentialRampToValueAtTime(600, now + 0.02);
+    osc2.frequency.exponentialRampToValueAtTime(this._randomize(600, 0.05), now + 0.02);
     gain2.gain.setValueAtTime(this.masterVolume * 0.2, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
     osc2.connect(gain2);
@@ -295,18 +297,19 @@ class AudioEngine {
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
+    const dur = this._randomize(0.12, 0.1);
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(this._randomize(500, 0.05), now);
-    osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+    osc.frequency.exponentialRampToValueAtTime(this._randomize(200, 0.05), now + dur * 0.8);
     gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(gain);
     gain.connect(this._output);
     osc.start(now);
-    osc.stop(now + 0.12);
+    osc.stop(now + dur);
   }
 
   // ── Sound: Simulation row pulse (escalating) ──
@@ -460,14 +463,15 @@ class AudioEngine {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'square';
-      const t = now + i * 0.15;
+      const t = now + i * this._randomize(0.15, 0.1);
+      const dur = this._randomize(0.2, 0.1);
       osc.frequency.setValueAtTime(this._randomize(freq, 0.05), t);
       gain.gain.setValueAtTime(this.masterVolume * 0.3, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
       osc.connect(gain);
       gain.connect(this._output);
       osc.start(t);
-      osc.stop(t + 0.2);
+      osc.stop(t + dur);
     });
   }
 
@@ -477,18 +481,19 @@ class AudioEngine {
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
+    const dur = this._randomize(0.05, 0.1);
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(this._randomize(600, 0.05), now);
-    osc.frequency.exponentialRampToValueAtTime(500, now + 0.03);
+    osc.frequency.exponentialRampToValueAtTime(this._randomize(500, 0.05), now + dur * 0.6);
     gain.gain.setValueAtTime(this.masterVolume * 0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(gain);
     gain.connect(this._output);
     osc.start(now);
-    osc.stop(now + 0.05);
+    osc.stop(now + dur);
   }
 
   // ── Sound: Achievement unlock chime ──

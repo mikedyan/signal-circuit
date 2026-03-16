@@ -199,10 +199,14 @@ class Gate {
     ctx.textBaseline = 'top';
     ctx.fillText(name, x + sw / 2, y + sh / 2 + 6 * scale);
 
+    // Pin breathing animation helper
+    const breathe = 0.6 + 0.4 * Math.sin(performance.now() / 600);
+    const pinRadius = 7;
+
     // Input pins
     const inputPins = this.getInputPins();
     inputPins.forEach((pin, i) => {
-      ctx.strokeStyle = '#888';
+      ctx.strokeStyle = '#999';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(pin.x - 12, pin.y);
@@ -210,17 +214,24 @@ class Gate {
       ctx.stroke();
 
       const val = this.inputValues[i];
+      // Outer glow for unconnected pins (breathing)
+      if (!val) {
+        ctx.beginPath();
+        ctx.arc(pin.x - 12, pin.y, pinRadius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(60, 80, 140, ${breathe * 0.15})`;
+        ctx.fill();
+      }
       ctx.beginPath();
-      ctx.arc(pin.x - 12, pin.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = val ? '#ff3333' : '#336';
+      ctx.arc(pin.x - 12, pin.y, pinRadius, 0, Math.PI * 2);
+      ctx.fillStyle = val ? '#ff3333' : '#3a5588';
       ctx.fill();
-      ctx.strokeStyle = '#888';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = val ? '#ff6666' : '#667';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       if (val) {
         ctx.beginPath();
-        ctx.arc(pin.x - 12, pin.y, 9, 0, Math.PI * 2);
+        ctx.arc(pin.x - 12, pin.y, pinRadius + 5, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 50, 50, 0.25)';
         ctx.fill();
       }
@@ -229,7 +240,7 @@ class Gate {
     // Output pins
     const outputPins = this.getOutputPins();
     outputPins.forEach((pin, i) => {
-      ctx.strokeStyle = '#888';
+      ctx.strokeStyle = '#999';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(pin.x, pin.y);
@@ -237,17 +248,24 @@ class Gate {
       ctx.stroke();
 
       const val = this.outputValues[i];
+      // Outer glow for unconnected pins (breathing)
+      if (!val) {
+        ctx.beginPath();
+        ctx.arc(pin.x + 12, pin.y, pinRadius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(60, 80, 140, ${breathe * 0.15})`;
+        ctx.fill();
+      }
       ctx.beginPath();
-      ctx.arc(pin.x + 12, pin.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = val ? '#ff3333' : '#336';
+      ctx.arc(pin.x + 12, pin.y, pinRadius, 0, Math.PI * 2);
+      ctx.fillStyle = val ? '#ff3333' : '#3a5588';
       ctx.fill();
-      ctx.strokeStyle = '#888';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = val ? '#ff6666' : '#667';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       if (val) {
         ctx.beginPath();
-        ctx.arc(pin.x + 12, pin.y, 9, 0, Math.PI * 2);
+        ctx.arc(pin.x + 12, pin.y, pinRadius + 5, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 50, 50, 0.25)';
         ctx.fill();
       }
@@ -314,33 +332,34 @@ class IONode {
     ctx.fillText(value.toString(), x + width / 2, y + height - 4);
 
     const pin = this.getPin();
+    const ioPinRadius = 7;
     if (type === 'input') {
-      ctx.strokeStyle = '#888';
+      ctx.strokeStyle = '#999';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(pin.x, pin.y);
       ctx.lineTo(pin.x + 12, pin.y);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(pin.x + 12, pin.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = value ? '#ff3333' : '#336';
+      ctx.arc(pin.x + 12, pin.y, ioPinRadius, 0, Math.PI * 2);
+      ctx.fillStyle = value ? '#ff3333' : '#3a5588';
       ctx.fill();
-      ctx.strokeStyle = '#888';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = value ? '#ff6666' : '#667';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     } else {
-      ctx.strokeStyle = '#888';
+      ctx.strokeStyle = '#999';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(pin.x - 12, pin.y);
       ctx.lineTo(pin.x, pin.y);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(pin.x - 12, pin.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = value ? '#ff3333' : '#336';
+      ctx.arc(pin.x - 12, pin.y, ioPinRadius, 0, Math.PI * 2);
+      ctx.fillStyle = value ? '#ff3333' : '#3a5588';
       ctx.fill();
-      ctx.strokeStyle = '#888';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = value ? '#ff6666' : '#667';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
   }
