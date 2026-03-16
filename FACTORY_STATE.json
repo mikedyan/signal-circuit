@@ -1,10 +1,10 @@
 {
   "project": "signal-circuit",
-  "currentDay": 24,
-  "lastCompletedDay": 24,
-  "lastRunDate": "2026-03-14",
+  "currentDay": 25,
+  "lastCompletedDay": 25,
+  "lastRunDate": "2026-03-16",
   "status": "green",
-  "totalItemsShipped": 98,
+  "totalItemsShipped": 108,
   "dayHistory": {
     "1": { "date": "2026-02-19", "items": 1, "status": "green", "summary": "Initial scaffolding: HTML/CSS/JS structure, canvas, basic gate rendering" },
     "2": { "date": "2026-02-20", "items": 3, "status": "green", "summary": "Gate drag-drop, wire drawing, circuit simulation engine" },
@@ -29,6 +29,7 @@
     "21": { "date": "2026-03-12", "items": 5, "status": "green", "summary": "Juice & Polish: breadboard sparkle, celebration particles overhaul, failure screen shake, truth table checkmarks, ambient music pad" },
     "22": { "date": "2026-03-12", "items": 5, "status": "green", "summary": "Gameplay Review + Fixes: 10-metric gameplay review, victory flash, run tension ramp, celebration canvas, level card stars fix" },
     "23": { "date": "2026-03-13", "items": 4, "status": "green", "summary": "Content Architecture: Gate Encyclopedia, Stats Dashboard, Milestone Celebrations, Level Difficulty Labels" },
-    "24": { "date": "2026-03-14", "items": 10, "status": "green", "summary": "Audio Engine & Replay Systems: effects chain (reverb+compressor), gate-specific sound signatures, wire pitch escalation, progressive wire reveal, breadboard reactivity, gate-colored glow, auto-save mid-puzzle, Pure Logic badge (no hint penalty), par benchmarks, replay ghost overlay" }
+    "24": { "date": "2026-03-14", "items": 10, "status": "green", "summary": "Audio Engine & Replay Systems: effects chain (reverb+compressor), gate-specific sound signatures, wire pitch escalation, progressive wire reveal, breadboard reactivity, gate-colored glow, auto-save mid-puzzle, Pure Logic badge (no hint penalty), par benchmarks, replay ghost overlay" },
+    "25": { "date": "2026-03-16", "items": 10, "status": "green", "summary": "Visual Identity & Interaction Polish: color-coded toolbox gates, brand mark SVG, pin visibility improved, font size toggle, non-blocking onboarding, semantic wire colors, clear circuit undo, level transition choreography, sound micro-randomization, challenge mode gating" }
   }
 }

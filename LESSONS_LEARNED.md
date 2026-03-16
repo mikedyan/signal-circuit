@@ -1,5 +1,9 @@
 # Lessons Learned
 
+## Day 25
+- **Duplicate method definitions are silent bugs in JS**: The Builder concatenated new methods below existing ones without removing originals. JavaScript overwrites the first with the last definition, so it _works_ but accumulates dead code. QA should check for duplicate method/function names after each build.
+- **Semantic wire colors dramatically improve readability**: Assigning wire colors by source pin (instead of incrementing globally) makes complex circuits immediately more parseable. Worth doing early in any circuit builder.
+
 ## Day 23 — Content Architecture
 - **Encyclopedia unlock logic**: Using `isLevelUnlocked()` catches both completed AND available levels, giving a broader view of what the player has access to — better UX than only unlocking gates for completed levels.
 - **Lifetime stats**: Simple counter pattern (load → increment → save) works well for localStorage-based analytics. Key insight: track on actual action (gate placement) not on UI event.
