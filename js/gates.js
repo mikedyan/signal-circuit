@@ -8,7 +8,7 @@ const GateTypes = {
     logic: (a, b) => a & b,
     color: '#e8e800',
     width: 80,
-    height: 90,
+    height: 60,
   },
   OR: {
     name: 'OR',
@@ -17,7 +17,7 @@ const GateTypes = {
     logic: (a, b) => a | b,
     color: '#00c8e8',
     width: 80,
-    height: 90,
+    height: 60,
   },
   NOT: {
     name: 'NOT',
@@ -35,7 +35,7 @@ const GateTypes = {
     logic: (a, b) => a ^ b,
     color: '#c050f0',
     width: 80,
-    height: 90,
+    height: 60,
   },
 };
 
@@ -54,15 +54,22 @@ class Gate {
 
   getInputPins() {
     const pins = [];
-    const spacing = this.def.height / (this.def.inputs + 1);
-    for (let i = 0; i < this.def.inputs; i++) {
-      pins.push({
-        x: this.x,
-        y: this.y + spacing * (i + 1),
-        index: i,
-        gateId: this.id,
-        type: 'input',
-      });
+    const edgePad = 6;
+    if (this.def.inputs === 2) {
+      // Place pins near opposite edges for easy tapping
+      pins.push({ x: this.x, y: this.y + edgePad, index: 0, gateId: this.id, type: 'input' });
+      pins.push({ x: this.x, y: this.y + this.def.height - edgePad, index: 1, gateId: this.id, type: 'input' });
+    } else {
+      const spacing = this.def.height / (this.def.inputs + 1);
+      for (let i = 0; i < this.def.inputs; i++) {
+        pins.push({
+          x: this.x,
+          y: this.y + spacing * (i + 1),
+          index: i,
+          gateId: this.id,
+          type: 'input',
+        });
+      }
     }
     return pins;
   }
