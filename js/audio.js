@@ -496,6 +496,46 @@ class AudioEngine {
     osc.stop(now + dur);
   }
 
+  // ── Sound: Star reveal chime (ascending per star) ──
+  playStarReveal(starIndex, totalStars) {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const out = this._output;
+
+    // Ascending notes: C5, E5, G5 — each star gets higher pitch
+    const notes = [523.25, 659.25, 783.99];
+    const freq = notes[Math.min(starIndex, 2)];
+    const vol = this.masterVolume * (starIndex === totalStars - 1 ? 0.5 : 0.35);
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.connect(gain);
+    gain.connect(out);
+    osc.start(now);
+    osc.stop(now + 0.35);
+
+    // Extra shimmer on final star
+    if (starIndex === totalStars - 1 && totalStars === 3) {
+      const shimmer = ctx.createOscillator();
+      const sGain = ctx.createGain();
+      shimmer.type = 'triangle';
+      shimmer.frequency.setValueAtTime(freq * 2, now + 0.05);
+      sGain.gain.setValueAtTime(this.masterVolume * 0.2, now + 0.05);
+      sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      shimmer.connect(sGain);
+      sGain.connect(out);
+      shimmer.start(now + 0.05);
+      shimmer.stop(now + 0.6);
+    }
+  }
+
   // ── Sound: Achievement unlock chime ──
   playAchievement() {
     if (this.muted || !this._ensureContext()) return;
@@ -665,6 +705,60 @@ class AudioEngine {
         osc.frequency.linearRampToValueAtTime(resolveFreqs[i], ctx.currentTime + 0.5);
       }
     });
+  }
+
+  // ── Sound: UI hover tick (subtle) ──
+  playHoverTick() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(this._randomize(1800, 0.05), now);
+    gain.gain.setValueAtTime(this.masterVolume * 0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+    osc.connect(gain);
+    gain.connect(this._output);
+    osc.start(now);
+    osc.stop(now + 0.025);
+  }
+
+  // ── Sound: Screen transition whoosh ──
+  playTransitionWhoosh() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const dur = 0.2;
+
+    // Filtered noise sweep
+    const bufSize = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buf;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(300, now);
+    filter.frequency.exponentialRampToValueAtTime(2000, now + dur * 0.3);
+    filter.frequency.exponentialRampToValueAtTime(400, now + dur);
+    filter.Q.setValueAtTime(2, now);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(this.masterVolume * 0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this._output);
+    source.start(now);
   }
 
   // ── Helper: Noise burst ──

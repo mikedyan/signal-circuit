@@ -222,6 +222,42 @@ class CanvasRenderer {
     // Spark particles
     this._renderSparks(ctx);
 
+    // Grid snap overlay during gate drag
+    if (this._dragSnapOverlay) {
+      const snap = this._dragSnapOverlay;
+      const gridSize = 20;
+      const range = 3; // Show grid points within 3 cells of the drag position
+      const nearestX = Math.round(snap.x / gridSize) * gridSize;
+      const nearestY = Math.round(snap.y / gridSize) * gridSize;
+
+      for (let dx = -range; dx <= range; dx++) {
+        for (let dy = -range; dy <= range; dy++) {
+          const gx = nearestX + dx * gridSize;
+          const gy = nearestY + dy * gridSize;
+          const dist = Math.hypot(gx - snap.x, gy - snap.y);
+          const isNearest = dx === 0 && dy === 0;
+          const alpha = isNearest ? 0.6 : Math.max(0.08, 0.3 - dist / 120);
+
+          ctx.beginPath();
+          ctx.arc(gx, gy, isNearest ? 4 : 2, 0, Math.PI * 2);
+          ctx.fillStyle = isNearest ? `rgba(0, 255, 0, ${alpha})` : `rgba(150, 180, 150, ${alpha})`;
+          ctx.fill();
+
+          if (isNearest) {
+            // Crosshair at snap point
+            ctx.strokeStyle = `rgba(0, 255, 0, 0.35)`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(gx - 8, gy);
+            ctx.lineTo(gx + 8, gy);
+            ctx.moveTo(gx, gy - 8);
+            ctx.lineTo(gx, gy + 8);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
     // Hovered pin highlight
     if (this.hoveredPin) {
       ctx.beginPath();

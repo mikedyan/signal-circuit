@@ -1,0 +1,152 @@
+{
+  "day": 26,
+  "title": "Onboarding, Animations & Reward Systems",
+  "summary": "Polishes moment-to-moment feel with distributed onboarding across levels 1-4, idle circuit animations, improved star reveal anticipation, RUN button press depth, grid snap overlay during drag, menu/UI navigation sounds, timer visual feedback, a daily play streak system with freeze tokens, a post-completion circuit journey summary, and a perfect retry button after hint-penalized completions.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Distribute onboarding tooltips across Levels 1-4 instead of concentrating on Level 1. Level 1: 'Drag a gate from the toolbox onto the board'. Level 2: 'Click output pins then input pins to draw wires'. Level 3: 'Match the truth table — each row must be correct'. Level 4: 'Use hints if stuck. Fewer gates = more stars!'",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Level 1 shows tooltip about dragging gates",
+        "Level 2 shows tooltip about drawing wires",
+        "Level 3 shows tooltip about truth tables",
+        "Level 4 shows tooltip about hints and stars",
+        "Each tooltip only shows once (localStorage flag per level)",
+        "Tooltips auto-dismiss after 8 seconds",
+        "Returning players who already completed those levels don't see tooltips"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add idle circuit animation — slow-moving dots travel along completed wires when no simulation is running. Gives the circuit a 'living' feel while the player thinks.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "After wires are placed and no simulation running, subtle dots travel along wire paths",
+        "Dots move at a slow, gentle pace (not distracting)",
+        "Animation pauses during simulation",
+        "Animation restarts when simulation completes",
+        "Performance is acceptable with 10+ wires"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Improve star reveal with 400ms stagger, anticipation drum-roll sound per star, and scale bounce animation per star reveal.",
+      "files_to_modify": ["js/ui.js", "js/audio.js"],
+      "acceptance_criteria": [
+        "Stars reveal one at a time with 400ms delay between each",
+        "Each star has a scale bounce (0 → 1.3 → 1.0) animation",
+        "A brief ascending chime plays as each star appears",
+        "3-star reveal feels celebratory with the final star having extra emphasis"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Add physical press-depth feel to the RUN button. On mousedown/touchstart, button visually depresses (translateY, darker shade, reduced shadow). On mouseup/touchend, it springs back. Add a mechanical click sound on press.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "RUN button depresses visually on mousedown (2-3px translateY, darker background, reduced box-shadow)",
+        "RUN button springs back on mouseup with a quick ease-out transition",
+        "Effect works on both mouse and touch",
+        "Existing click/simulation behavior is not affected"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Show grid snap overlay when dragging a gate. Render a subtle grid of crosshairs/dots near the drag position. Highlight the nearest snap point.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "When a gate is being dragged, nearby grid snap points become visible",
+        "The nearest snap point is highlighted more brightly",
+        "Grid overlay disappears when drag ends",
+        "Does not interfere with existing drag behavior"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Add menu/UI navigation sounds: hover blip on buttons, screen transition whoosh, level-select card hover tick.",
+      "files_to_modify": ["js/audio.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Hovering over level select buttons plays a subtle tick",
+        "Screen transitions (level select → gameplay, back, etc.) play a whoosh sound",
+        "Sounds respect mute setting",
+        "Sounds are subtle and not annoying on repeated interaction"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Add timer visual feedback with color changes at thresholds: green (< 60s), yellow (60-120s), orange (120s+). Timer text color transitions smoothly.",
+      "files_to_modify": ["js/main.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Timer text is green for first 60 seconds",
+        "Timer text transitions to yellow between 60-120 seconds",
+        "Timer text turns orange after 120 seconds",
+        "Color transitions are smooth",
+        "Timer hidden during campaign mode still (only visible in challenge/sandbox per existing behavior)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Implement daily play streak system with freeze tokens. Track consecutive days played, award freeze tokens (1 per 3-day streak), freeze tokens auto-consumed if a day is missed. Show streak on level select screen.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "Streak counter displayed on level select screen",
+        "Playing on consecutive days increments streak",
+        "Missing a day consumes a freeze token instead of resetting",
+        "Freeze tokens earned every 3 consecutive days",
+        "Streak persists in localStorage",
+        "Missing a day without freeze tokens resets streak to 0"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Show a 'Your Circuit Journey' summary modal after completing all campaign levels. Displays: total gates placed, favorite gate type (most used), fastest level, total stars, total play time, achievements unlocked.",
+      "files_to_modify": ["js/ui.js", "js/main.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Modal appears after completing the final campaign level",
+        "Shows total gates placed lifetime stat",
+        "Shows total stars earned",
+        "Shows total play time",
+        "Shows achievements unlocked count",
+        "Has a 'Back to Levels' button",
+        "Does not block normal completion flow (shows after chapter complete modal)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "After completing a level where hints were used (no Pure Logic badge), show a 'Try for 🧠 Pure Logic?' retry button. Clicking it reloads the level with a clean slate.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Button appears only when hints were used during the completion",
+        "Button text is 'Try for 🧠 Pure Logic?'",
+        "Clicking reloads the current level (clean slate)",
+        "Button does not appear in challenge/sandbox modes",
+        "Button does not appear if level was already solved with Pure Logic"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Onboarding tooltips show correct message per level and don't show for returning players",
+    "Idle wire dots render smoothly and don't interfere with simulation",
+    "Star reveal timing and sound play correctly for 1, 2, and 3 star results",
+    "RUN button press depth works on desktop and mobile",
+    "Grid snap overlay appears during drag and disappears after",
+    "UI sounds respect mute toggle",
+    "Timer colors change at correct thresholds",
+    "Streak system handles edge cases (same day revisit, freeze token consumption)",
+    "Journey summary shows correct stats after all levels complete",
+    "Perfect retry button only shows when appropriate"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced that breaks core gameplay (gate placement, wire drawing, simulation), revert to previous commit"
+}

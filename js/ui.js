@@ -29,6 +29,7 @@ class UI {
     this.setupMilestoneModal();
     this.setupGhostToggle();
     this.setupFontSizeToggle();
+    this.setupJourneyModal();
   }
 
   // ── Colorblind Mode Toggle ──
@@ -327,6 +328,10 @@ class UI {
           btn.addEventListener('click', () => {
             this.gameState.startLevel(levelId);
           });
+          // T6: Hover tick on level buttons
+          btn.addEventListener('mouseenter', () => {
+            this.gameState.audio.playHoverTick();
+          });
         }
 
         grid.appendChild(btn);
@@ -339,6 +344,8 @@ class UI {
 
   showScreen(screen) {
     const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen'];
+    // T6: Play transition whoosh on screen change
+    if (this.gameState.audio) this.gameState.audio.playTransitionWhoosh();
     for (const id of screens) {
       const el = document.getElementById(id);
       if (!el) continue;
@@ -729,8 +736,15 @@ class UI {
       star.className = 'star' + (i < stars ? ' filled' : ' empty');
       star.textContent = '★';
 
-      // Stagger animation
-      setTimeout(() => star.classList.add('visible'), 200 + i * 300);
+      // Stagger with 400ms delay — builds anticipation
+      const delay = 300 + i * 400;
+      setTimeout(() => {
+        star.classList.add('visible');
+        // Play ascending chime for each earned star
+        if (i < stars) {
+          this.gameState.audio.playStarReveal(i, stars);
+        }
+      }, delay);
       container.appendChild(star);
     }
 
@@ -782,6 +796,27 @@ class UI {
     } else {
       nextBtn.style.display = 'none';
     }
+
+    // T10: Show "Perfect Retry" button if hints were used and level doesn't have Pure Logic badge yet
+    const retryBtn = document.getElementById('perfect-retry-btn');
+    if (retryBtn) {
+      const gs = this.gameState;
+      const levelProgress = gs.progress.levels[level.id];
+      const hasPureLogic = levelProgress && levelProgress.pureLogic;
+      const usedHints = gs.hintsUsed > 0;
+      const isCampaign = !level.isChallenge && !level.isSandbox && !level.isDaily;
+
+      if (usedHints && !hasPureLogic && isCampaign) {
+        retryBtn.style.display = 'inline-block';
+        retryBtn.onclick = () => {
+          retryBtn.style.display = 'none';
+          this.hideStarDisplay();
+          gs.loadLevel(level.id);
+        };
+      } else {
+        retryBtn.style.display = 'none';
+      }
+    }
   }
 
   hideStarDisplay() {
@@ -791,6 +826,8 @@ class UI {
     if (insightEl) insightEl.style.display = 'none';
     const parEl = document.getElementById('par-display');
     if (parEl) parEl.style.display = 'none';
+    const retryBtn = document.getElementById('perfect-retry-btn');
+    if (retryBtn) retryBtn.style.display = 'none';
   }
 
   showChallengeResult(gateCount, level) {
@@ -1260,6 +1297,20 @@ class UI {
     if (fillEl) fillEl.style.width = pctComplete + '%';
   }
 
+  // ── Streak Display (T8) ──
+  updateStreakDisplay(streakData) {
+    const el = document.getElementById('streak-display');
+    if (!el) return;
+    if (!streakData || streakData.streak <= 0) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = '';
+    const freeze = streakData.freezeTokens > 0 ? ` 🧊${streakData.freezeTokens}` : '';
+    el.textContent = `🔥${streakData.streak}${freeze}`;
+    el.title = `${streakData.streak}-day streak${streakData.freezeTokens > 0 ? ` · ${streakData.freezeTokens} freeze token${streakData.freezeTokens > 1 ? 's' : ''}` : ''}`;
+  }
+
   // ── Onboarding ──
   setupOnboarding() {
     const dismissBtn = document.getElementById('tooltip-dismiss');
@@ -1269,28 +1320,49 @@ class UI {
         this.dismissOnboarding();
       });
     }
-    // Click anywhere to dismiss (non-blocking)
+    // Click anywhere to dismiss (non-blocking) — with grace period
     document.addEventListener('click', (e) => {
       const tooltip = document.getElementById('onboarding-tooltip');
-      if (tooltip && tooltip.style.display !== 'none') {
+      if (tooltip && tooltip.style.display !== 'none' && this._onboardingShownAt && Date.now() - this._onboardingShownAt > 500) {
         this.dismissOnboarding();
       }
     });
   }
 
-  showOnboarding() {
-    try {
-      if (localStorage.getItem('signal-circuit-onboarded') === 'true') return;
-    } catch (e) {}
-
+  showOnboarding(levelId) {
     const tooltip = document.getElementById('onboarding-tooltip');
     if (!tooltip) return;
 
-    const text = document.getElementById('tooltip-text');
     const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    text.textContent = isMobile ? 'Tap a pin to start drawing a wire' : 'Click a pin to start drawing a wire';
+    const tap = isMobile ? 'Tap' : 'Click';
+    const drag = isMobile ? 'Drag' : 'Drag';
+
+    // Distributed onboarding: different tips for levels 1-4
+    const onboardingMessages = {
+      1: `${drag} a gate from the Parts toolbox onto the board`,
+      2: `${tap} an output pin (right) then an input pin (left) to draw wires`,
+      3: 'Match every row in the Truth Table — your circuit must handle all input combinations',
+      4: 'Use 💡 Hints if stuck. Fewer gates = more ⭐ stars!',
+    };
+
+    const message = onboardingMessages[levelId];
+    if (!message) return;
+
+    // Check if this specific onboarding tip was already shown
+    const storageKey = `signal-circuit-onboarded-${levelId}`;
+    try {
+      if (localStorage.getItem(storageKey) === 'true') return;
+      // Don't show if level is already completed
+      const progress = this.gameState.progress.levels[levelId];
+      if (progress && progress.completed) return;
+    } catch (e) {}
+
+    const text = document.getElementById('tooltip-text');
+    text.textContent = message;
     tooltip.style.display = 'block';
+    this._currentOnboardingLevel = levelId;
     // Auto-dismiss after 8 seconds
+    if (this._onboardingTimer) clearTimeout(this._onboardingTimer);
     this._onboardingTimer = setTimeout(() => this.dismissOnboarding(), 8000);
   }
 
@@ -1301,9 +1373,13 @@ class UI {
       clearTimeout(this._onboardingTimer);
       this._onboardingTimer = null;
     }
-    try {
-      localStorage.setItem('signal-circuit-onboarded', 'true');
-    } catch (e) {}
+    // Mark the specific level's onboarding as shown
+    if (this._currentOnboardingLevel) {
+      try {
+        localStorage.setItem(`signal-circuit-onboarded-${this._currentOnboardingLevel}`, 'true');
+      } catch (e) {}
+      this._currentOnboardingLevel = null;
+    }
   }
 
   // ── Hint Button Sync ──
@@ -1674,6 +1750,73 @@ class UI {
     modal.style.display = 'flex';
   }
 
+  // ── Journey Summary Modal (T9) ──
+  setupJourneyModal() {
+    const modal = document.getElementById('journey-modal');
+    const dismissBtn = document.getElementById('journey-dismiss');
+    if (dismissBtn) dismissBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  showJourneySummary() {
+    const modal = document.getElementById('journey-modal');
+    if (!modal) return;
+
+    const gs = this.gameState;
+    const progress = gs.progress;
+    const stats = gs.loadLifetimeStats();
+    const achCount = gs.achievements.getUnlockedCount();
+    const achTotal = ACHIEVEMENTS.length;
+
+    let totalStars = 0;
+    let fastestLevel = null;
+    let fastestTime = Infinity;
+    const gateCounts = {};
+
+    for (const [id, data] of Object.entries(progress.levels || {})) {
+      totalStars += data.stars || 0;
+      if (data.bestTime && data.bestTime < fastestTime) {
+        fastestTime = data.bestTime;
+        fastestLevel = parseInt(id);
+      }
+    }
+
+    // Favorite gate: most placed by type from lifetime stats
+    const totalGates = stats.totalGatesPlaced || 0;
+
+    // Playtime
+    const playtimeSec = stats.totalPlaytime || 0;
+    const playMin = Math.floor(playtimeSec / 60);
+    const playHour = Math.floor(playMin / 60);
+    const playMinRemainder = playMin % 60;
+    const playtimeStr = playHour > 0 ? `${playHour}h ${playMinRemainder}m` : `${playMin}m`;
+
+    // Fastest level string
+    let fastestStr = '—';
+    if (fastestLevel) {
+      const level = getLevel(fastestLevel);
+      const fMins = Math.floor(fastestTime / 60);
+      const fSecs = fastestTime % 60;
+      fastestStr = `L${fastestLevel} (${fMins}:${fSecs.toString().padStart(2, '0')})`;
+    }
+
+    const maxStars = getLevelCount() * 3;
+
+    const container = document.getElementById('journey-stats');
+    container.innerHTML = `
+      <div class="journey-stat"><div class="journey-stat-icon">⭐</div><div class="journey-stat-value">${totalStars}/${maxStars}</div><div class="journey-stat-label">Stars Earned</div></div>
+      <div class="journey-stat"><div class="journey-stat-icon">🔧</div><div class="journey-stat-value">${totalGates}</div><div class="journey-stat-label">Gates Placed</div></div>
+      <div class="journey-stat"><div class="journey-stat-icon">⏱</div><div class="journey-stat-value">${playtimeStr}</div><div class="journey-stat-label">Total Play Time</div></div>
+      <div class="journey-stat"><div class="journey-stat-icon">⚡</div><div class="journey-stat-value">${fastestStr}</div><div class="journey-stat-label">Fastest Level</div></div>
+      <div class="journey-stat"><div class="journey-stat-icon">🏆</div><div class="journey-stat-value">${achCount}/${achTotal}</div><div class="journey-stat-label">Achievements</div></div>
+      <div class="journey-stat"><div class="journey-stat-icon">🔥</div><div class="journey-stat-value">${gs.streakData ? gs.streakData.streak : 0}</div><div class="journey-stat-label">Day Streak</div></div>
+    `;
+
+    modal.style.display = 'flex';
+  }
+
   // ── Ghost Toggle (T10) ──
   setupGhostToggle() {
     const btn = document.getElementById('ghost-toggle-btn');
@@ -1721,6 +1864,16 @@ class UI {
       setTimeout(() => {
         this.startCelebration(3);
         this.showMilestoneModal('🛸', 'ALL SYSTEMS ONLINE', 'Navigation, Communications, Life Support — every system on the ship is repaired. The crew is safe. You did it, Engineer. The ship can fly home.');
+        // T9: Show journey summary after milestone is dismissed
+        const milestoneBtn = document.getElementById('milestone-dismiss');
+        if (milestoneBtn) {
+          const origClick = milestoneBtn.onclick;
+          milestoneBtn.onclick = () => {
+            if (origClick) origClick();
+            document.getElementById('milestone-modal').style.display = 'none';
+            setTimeout(() => this.showJourneySummary(), 400);
+          };
+        }
       }, 2500);
     }
 

@@ -476,6 +476,39 @@ class WireManager {
       }
     }
 
+    // Idle circuit animation: slow-moving dots along wires when not simulating
+    if (!sim.animating && this.wires.length > 0) {
+      const now = performance.now();
+      for (const wire of this.wires) {
+        const endpoints = this.getWireEndpoints(wire);
+        if (!endpoints) continue;
+        const wireAge = now - wire.birthTime;
+        if (wireAge < wire.revealDuration) continue; // Skip wires still revealing
+
+        const { fromPin, toPin } = endpoints;
+        const sx = fromPin.x + (fromPin.type === 'output' ? 12 : -12);
+        const sy = fromPin.y;
+        const ex = toPin.x + (toPin.type === 'input' ? -12 : 12);
+        const ey = toPin.y;
+        const cp = this._bezierControlPoints(sx, sy, ex, ey);
+
+        // Two dots per wire, offset by half a cycle
+        for (let d = 0; d < 2; d++) {
+          const t = ((now / 4000 + d * 0.5 + wire.id * 0.17) % 1);
+          const pt = this._bezierPoint(t, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
+          const alpha = 0.25 * Math.sin(t * Math.PI); // Fade at endpoints
+          if (alpha > 0.02) {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(180, 200, 255, ${alpha})`;
+            ctx.fill();
+          }
+        }
+      }
+      // Keep rendering for idle animation
+      if (this.gameState) this.gameState.markDirty();
+    }
+
     // Wire being drawn
     if (this.drawing && this.drawFrom) {
       const sx = this.drawFrom.x;

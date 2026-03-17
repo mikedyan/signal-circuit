@@ -1,10 +1,10 @@
 {
   "project": "signal-circuit",
-  "currentDay": 25,
-  "lastCompletedDay": 25,
-  "lastRunDate": "2026-03-16",
+  "currentDay": 26,
+  "lastCompletedDay": 26,
+  "lastRunDate": "2026-03-17",
   "status": "green",
-  "totalItemsShipped": 108,
+  "totalItemsShipped": 118,
   "dayHistory": {
     "1": { "date": "2026-02-19", "items": 1, "status": "green", "summary": "Initial scaffolding: HTML/CSS/JS structure, canvas, basic gate rendering" },
     "2": { "date": "2026-02-20", "items": 3, "status": "green", "summary": "Gate drag-drop, wire drawing, circuit simulation engine" },
@@ -30,6 +30,7 @@
     "22": { "date": "2026-03-12", "items": 5, "status": "green", "summary": "Gameplay Review + Fixes: 10-metric gameplay review, victory flash, run tension ramp, celebration canvas, level card stars fix" },
     "23": { "date": "2026-03-13", "items": 4, "status": "green", "summary": "Content Architecture: Gate Encyclopedia, Stats Dashboard, Milestone Celebrations, Level Difficulty Labels" },
     "24": { "date": "2026-03-14", "items": 10, "status": "green", "summary": "Audio Engine & Replay Systems: effects chain (reverb+compressor), gate-specific sound signatures, wire pitch escalation, progressive wire reveal, breadboard reactivity, gate-colored glow, auto-save mid-puzzle, Pure Logic badge (no hint penalty), par benchmarks, replay ghost overlay" },
-    "25": { "date": "2026-03-16", "items": 10, "status": "green", "summary": "Visual Identity & Interaction Polish: color-coded toolbox gates, brand mark SVG, pin visibility improved, font size toggle, non-blocking onboarding, semantic wire colors, clear circuit undo, level transition choreography, sound micro-randomization, challenge mode gating" }
+    "25": { "date": "2026-03-16", "items": 10, "status": "green", "summary": "Visual Identity & Interaction Polish: color-coded toolbox gates, brand mark SVG, pin visibility improved, font size toggle, non-blocking onboarding, semantic wire colors, clear circuit undo, level transition choreography, sound micro-randomization, challenge mode gating" },
+    "26": { "date": "2026-03-17", "items": 10, "status": "green", "summary": "Onboarding & Reward Systems: distributed onboarding (L1–4), idle wire animation, staggered star reveal + chime, RUN button press depth, grid snap overlay, UI navigation sounds, timer color thresholds, daily streak with freeze tokens, Circuit Journey graduation modal, Perfect Retry button" }
   }
 }

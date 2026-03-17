@@ -432,6 +432,14 @@ body {
   animation: none;
 }
 
+#run-btn:active {
+  background: #080;
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transform: translateY(2px);
+  transition: transform 0.05s ease, box-shadow 0.05s ease, background 0.05s ease;
+  animation: none;
+}
+
 #secondary-controls {
   display: flex;
   gap: 6px;
@@ -528,14 +536,19 @@ body {
 
 #stars-container .star {
   display: inline-block;
-  transition: all 0.3s;
   opacity: 0;
   transform: scale(0);
 }
 
 #stars-container .star.visible {
-  opacity: 1;
-  transform: scale(1);
+  animation: starRevealBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes starRevealBounce {
+  0% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1.4); }
+  75% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 #stars-container .star.filled {
@@ -590,6 +603,27 @@ body {
   box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
 }
 
+/* ── Perfect Retry Button (T10 Day 26) ── */
+#perfect-retry-btn {
+  background: rgba(200, 180, 0, 0.1);
+  color: #cc0;
+  border: 2px solid #665500;
+  padding: 10px 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-top: 6px;
+}
+
+#perfect-retry-btn:hover {
+  background: rgba(200, 180, 0, 0.2);
+  border-color: #cc0;
+  box-shadow: 0 0 10px rgba(200, 180, 0, 0.3);
+}
+
 /* ── Level Navigation ── */
 #level-nav {
   display: flex;
@@ -639,6 +673,7 @@ body {
   font-size: 14px;
   font-family: 'Courier New', monospace;
   margin: 0 8px;
+  transition: color 1s ease;
 }
 
 #mute-btn {
@@ -1000,6 +1035,12 @@ body {
   font-size: 12px;
   color: #888;
   margin-bottom: 6px;
+}
+
+#streak-display {
+  color: #f90;
+  font-size: 12px;
+  cursor: help;
 }
 
 #progress-track {
@@ -2179,6 +2220,95 @@ body.colorblind-mode #result-display.fail {
 #milestone-dismiss:hover {
   background: #ffcc00;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+/* ── Journey Summary Modal (T9 Day 26) ── */
+#journey-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 1700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#journey-content {
+  background: linear-gradient(135deg, #0a1a2a, #1a1a3e);
+  border: 3px solid #0f0;
+  border-radius: 16px;
+  padding: 36px 28px;
+  max-width: 480px;
+  width: 92%;
+  text-align: center;
+  animation: milestonePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 60px rgba(0, 255, 0, 0.15), 0 0 120px rgba(0, 255, 0, 0.05);
+}
+
+#journey-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+
+#journey-title {
+  color: #0f0;
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  text-shadow: 0 0 12px rgba(0, 255, 0, 0.3);
+}
+
+#journey-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.journey-stat {
+  background: rgba(0, 255, 0, 0.04);
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.journey-stat-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.journey-stat-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0f0;
+  margin-bottom: 2px;
+}
+
+.journey-stat-label {
+  font-size: 9px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#journey-dismiss {
+  background: #0a0;
+  color: #fff;
+  border: 2px solid #0f0;
+  padding: 12px 32px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+#journey-dismiss:hover {
+  background: #0c0;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
 }
 
 /* ── Level Difficulty Labels ── */

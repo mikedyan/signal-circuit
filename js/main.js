@@ -95,6 +95,10 @@ class GameState {
     this.ui.showScreen('level-select');
     this.trackPlaytimeStart();
 
+    // T8: Update streak on app start
+    this.streakData = this.updateStreak();
+    this.ui.updateStreakDisplay(this.streakData);
+
     // Remove intro after animation (skip for returning players)
     const intro = document.getElementById('intro-screen');
     if (intro) {
@@ -245,6 +249,57 @@ class GameState {
       this.saveLifetimeStats(stats);
     }
     this._sessionStart = Date.now(); // Reset for next interval
+  }
+
+  // ── Streak System (T8 Day 26) ──
+  getStreakData() {
+    try {
+      const saved = localStorage.getItem('signal-circuit-streak');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { streak: 0, freezeTokens: 0, lastPlayDate: null };
+  }
+
+  saveStreakData(data) {
+    try {
+      localStorage.setItem('signal-circuit-streak', JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  updateStreak() {
+    const data = this.getStreakData();
+    const today = new Date().toISOString().slice(0, 10);
+
+    if (data.lastPlayDate === today) {
+      return data; // Already played today
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+    if (data.lastPlayDate === yesterdayStr) {
+      // Consecutive day — increment streak
+      data.streak += 1;
+      // Award freeze token every 3 consecutive days
+      if (data.streak > 0 && data.streak % 3 === 0) {
+        data.freezeTokens = (data.freezeTokens || 0) + 1;
+      }
+    } else if (data.lastPlayDate && data.lastPlayDate !== today) {
+      // Missed day(s) — use freeze token or reset
+      if (data.freezeTokens > 0) {
+        data.freezeTokens -= 1;
+        // Don't increment streak, but preserve it
+      } else {
+        data.streak = 1; // Reset to 1 (today counts)
+      }
+    } else {
+      data.streak = 1; // First time playing
+    }
+
+    data.lastPlayDate = today;
+    this.saveStreakData(data);
+    return data;
   }
 
   // ── Milestones ──
@@ -556,7 +611,17 @@ class GameState {
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
     const el = document.getElementById('timer-display');
-    if (el) el.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+    if (el) {
+      el.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+      // T7: Timer color feedback at thresholds
+      if (elapsed < 60) {
+        el.style.color = '#4c4'; // green
+      } else if (elapsed < 120) {
+        el.style.color = '#cc0'; // yellow
+      } else {
+        el.style.color = '#f80'; // orange
+      }
+    }
   }
 
   // ── Game State ──
@@ -801,9 +866,9 @@ class GameState {
     // Sync hint button state
     this.ui.updateHintButton();
 
-    // Show onboarding tooltip on Level 1
-    if (level.id === 1) {
-      this.ui.showOnboarding();
+    // Show distributed onboarding tooltips for levels 1-4
+    if (level.id >= 1 && level.id <= 4) {
+      this.ui.showOnboarding(level.id);
     }
 
     this.ui.updateGateIndicator();
@@ -1292,6 +1357,8 @@ class GameState {
         const gridSize = 20;
         dragGate.x = Math.round((pos.x - dragOffsetX) / gridSize) * gridSize;
         dragGate.y = Math.round((pos.y - dragOffsetY) / gridSize) * gridSize;
+        // T5: Grid snap overlay
+        if (this.renderer) this.renderer._dragSnapOverlay = { x: pos.x - dragOffsetX, y: pos.y - dragOffsetY };
         this.markDirty();
       }
 
@@ -1306,6 +1373,8 @@ class GameState {
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
       if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      // T5: Clear grid snap overlay on touch end
+      if (this.renderer) this.renderer._dragSnapOverlay = null;
 
       if (e.touches.length < 2) {
         pinchState = null;
@@ -1430,6 +1499,8 @@ class GameState {
         const gridSize = 20;
         dragGate.x = Math.round((pos.x - dragOffsetX) / gridSize) * gridSize;
         dragGate.y = Math.round((pos.y - dragOffsetY) / gridSize) * gridSize;
+        // T5: Grid snap overlay
+        if (this.renderer) this.renderer._dragSnapOverlay = { x: pos.x - dragOffsetX, y: pos.y - dragOffsetY };
         this.markDirty();
       }
 
@@ -1455,6 +1526,9 @@ class GameState {
     });
 
     canvas.addEventListener('mouseup', () => {
+      // T5: Clear grid snap overlay
+      if (this.renderer) this.renderer._dragSnapOverlay = null;
+      this.markDirty();
       // I/O node: click-without-drag = toggle input, drag = reposition
       if (isDraggingIONode && dragIONode) {
         if (dragIONode.x === dragIOStartX && dragIONode.y === dragIOStartY) {
