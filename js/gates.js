@@ -8,7 +8,7 @@ const GateTypes = {
     logic: (a, b) => a & b,
     color: '#e8e800',
     width: 80,
-    height: 60,
+    height: 90,
   },
   OR: {
     name: 'OR',
@@ -17,7 +17,7 @@ const GateTypes = {
     logic: (a, b) => a | b,
     color: '#00c8e8',
     width: 80,
-    height: 60,
+    height: 90,
   },
   NOT: {
     name: 'NOT',
@@ -35,7 +35,7 @@ const GateTypes = {
     logic: (a, b) => a ^ b,
     color: '#c050f0',
     width: 80,
-    height: 60,
+    height: 90,
   },
 };
 
