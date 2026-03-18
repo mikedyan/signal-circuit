@@ -360,7 +360,7 @@ const LEVELS = [
       'X = A (just wire it). Y = A OR B. Two tasks, one workspace.'
     ],
     hintHighlights: ['A', 'B', 'X', 'Y'],
-    availableGates: ['AND', 'OR', 'NOT'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 1,
     goodGates: 1,
     inputs: [
@@ -420,7 +420,7 @@ const LEVELS = [
       'Combine two inputs first, then combine that intermediate result with the third.'
     ],
     hintHighlights: ['A', 'B', 'C', 'OUT'],
-    availableGates: ['AND'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 2,
     goodGates: 3,
     inputs: [
@@ -453,7 +453,7 @@ const LEVELS = [
       'Three pairs exist among three inputs. If any pair is both 1, the majority passes.'
     ],
     hintHighlights: ['A', 'B', 'C', 'OUT'],
-    availableGates: ['AND', 'OR'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 5,
     goodGates: 6,
     inputs: [
@@ -486,7 +486,7 @@ const LEVELS = [
       'Each input (A and B) needs its own AND gate to be "gated" by S or its inverse. Then combine both paths.'
     ],
     hintHighlights: ['A', 'B', 'S', 'OUT'],
-    availableGates: ['AND', 'OR', 'NOT'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 4,
     goodGates: 5,
     inputs: [
@@ -519,7 +519,7 @@ const LEVELS = [
       'SUM comes from XORing inputs step by step. CARRY is trickier — there are two situations that generate a carry. OR them together.'
     ],
     hintHighlights: ['A', 'B', 'Cin', 'SUM', 'CARRY'],
-    availableGates: ['AND', 'OR', 'XOR'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 5,
     goodGates: 6,
     inputs: [
@@ -555,7 +555,7 @@ const LEVELS = [
       'Y0 = NOT(A) AND NOT(B). Y1 = NOT(A) AND B. Y2 = A AND NOT(B). Y3 = A AND B. Share the NOT outputs!'
     ],
     hintHighlights: ['A', 'B', 'Y0', 'Y1', 'Y2', 'Y3'],
-    availableGates: ['AND', 'OR', 'NOT'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 6,
     goodGates: 8,
     inputs: [
@@ -732,7 +732,7 @@ const LEVELS = [
       'Full adder: S1 = XOR(XOR(A1,B1), C0). Cout = OR(AND(A1,B1), AND(C0, XOR(A1,B1))). Seven gates total.'
     ],
     hintHighlights: ['A1', 'A0', 'B1', 'B0', 'S1', 'S0', 'Cout'],
-    availableGates: ['AND', 'OR', 'XOR'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 7,
     goodGates: 9,
     inputs: [
