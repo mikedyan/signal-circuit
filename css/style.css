@@ -2513,22 +2513,7 @@ body.colorblind-mode #result-display.fail {
   background: rgba(0, 0, 0, 0.4);
 }
 
-/* ── Screen Shake on Failure ── */
-@keyframes screenShake {
-  0% { transform: translate(0, 0); }
-  10% { transform: translate(-6px, 2px); }
-  20% { transform: translate(5px, -3px); }
-  30% { transform: translate(-4px, 4px); }
-  40% { transform: translate(4px, -2px); }
-  50% { transform: translate(-3px, 1px); }
-  60% { transform: translate(2px, -1px); }
-  70% { transform: translate(-1px, 1px); }
-  100% { transform: translate(0, 0); }
-}
-
-#canvas-container.screen-shake {
-  animation: screenShake 0.4s ease-out;
-}
+/* ── Screen Shake on Failure — see #94 variable intensity version below ── */
 
 /* ── Achievement Tier Headers ── */
 .achievement-tier-header {
@@ -2792,4 +2777,129 @@ body.fontsize-x-large #level-info h2 {
 @keyframes powerUp {
   0% { opacity: 0.3; filter: brightness(0.4); }
   100% { opacity: 1; filter: brightness(1); }
+}
+
+/* ── #91: Cross-Level "Used In" References ── */
+#used-in-refs {
+  font-size: 11px;
+  color: #668;
+  padding: 4px 0;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+  font-style: italic;
+}
+
+/* ── #92: Intentional Screen Transitions ── */
+.screen-zoom-in {
+  opacity: 0;
+  transform: scale(0.92);
+  animation: screenZoomIn 300ms ease-out forwards;
+}
+
+.screen-zoom-out {
+  opacity: 0;
+  transform: scale(1.05);
+  animation: screenZoomOut 300ms ease-out forwards;
+}
+
+@keyframes screenZoomIn {
+  0% { opacity: 0; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes screenZoomOut {
+  0% { opacity: 0; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── #93: Unified Modal Visual Language ── */
+#how-to-play-modal,
+#achievements-modal,
+#encyclopedia-modal,
+#stats-modal,
+#milestone-modal,
+#journey-modal,
+#chapter-complete-modal,
+#confirm-modal,
+#shortcuts-overlay {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#how-to-play-content,
+#achievements-content,
+#encyclopedia-content,
+#stats-content,
+#shortcuts-content,
+#confirm-modal-content {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+#milestone-content,
+#journey-content,
+#chapter-complete-content {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* ── #94: Screen Shake with Variable Intensity ── */
+@keyframes screenShakeVar {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(calc(-6px * var(--shake-intensity, 0.5)), calc(2px * var(--shake-intensity, 0.5))); }
+  20% { transform: translate(calc(5px * var(--shake-intensity, 0.5)), calc(-3px * var(--shake-intensity, 0.5))); }
+  30% { transform: translate(calc(-4px * var(--shake-intensity, 0.5)), calc(4px * var(--shake-intensity, 0.5))); }
+  40% { transform: translate(calc(4px * var(--shake-intensity, 0.5)), calc(-2px * var(--shake-intensity, 0.5))); }
+  50% { transform: translate(calc(-3px * var(--shake-intensity, 0.5)), calc(1px * var(--shake-intensity, 0.5))); }
+  60% { transform: translate(calc(2px * var(--shake-intensity, 0.5)), calc(-1px * var(--shake-intensity, 0.5))); }
+  70% { transform: translate(calc(-1px * var(--shake-intensity, 0.5)), calc(1px * var(--shake-intensity, 0.5))); }
+  100% { transform: translate(0, 0); }
+}
+
+#canvas-container.screen-shake {
+  animation: screenShakeVar 0.4s ease-out;
+}
+
+/* ── #99: Graduation Screen Level Grid ── */
+.graduation-grid {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  gap: 4px;
+  margin-bottom: 16px;
+  grid-column: 1 / -1;
+}
+
+.grad-level {
+  background: rgba(0, 255, 0, 0.03);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 4px 2px;
+  text-align: center;
+  font-size: 9px;
+}
+
+.grad-level.grad-perfect {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.grad-level.grad-done {
+  border-color: #0a0;
+  background: rgba(0, 200, 0, 0.05);
+}
+
+.grad-level.grad-incomplete {
+  opacity: 0.4;
+}
+
+.grad-level-num {
+  display: block;
+  font-weight: bold;
+  color: #ccc;
+  font-size: 10px;
+}
+
+.grad-level-stars {
+  display: block;
+  font-size: 7px;
+  color: #ffd700;
+  letter-spacing: -1px;
 }

@@ -75,6 +75,59 @@ class GameState {
     this.showGhost = false;
     this.tapConnectSource = null; // For tap-to-connect: node/gate id
     this._tapConnectTimeout = null;
+    this.timerPending = false; // #96: Start timer on first action
+    this._levelSelectScrollY = 0; // #95: Preserve scroll position
+  }
+
+  // #98: Haptic feedback for mobile
+  haptic(pattern) {
+    try {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch (e) {}
+  }
+
+  // #96: Start timer on first user action (not level load)
+  _startTimerIfPending() {
+    if (this.timerPending && !this.timerRunning) {
+      this.timerPending = false;
+      this.startTimer();
+    }
+  }
+
+  // #97: Cycle detection — DFS for back edges in the circuit graph
+  detectCycle() {
+    const wires = this.wireManager.wires;
+    const adj = {};
+    // Build adjacency list from wires
+    for (const w of wires) {
+      if (!adj[w.fromGateId]) adj[w.fromGateId] = [];
+      adj[w.fromGateId].push(w.toGateId);
+    }
+    const visited = new Set();
+    const recStack = new Set();
+
+    const dfs = (node) => {
+      visited.add(node);
+      recStack.add(node);
+      for (const neighbor of (adj[node] || [])) {
+        if (!visited.has(neighbor)) {
+          if (dfs(neighbor)) return true;
+        } else if (recStack.has(neighbor)) {
+          return true;
+        }
+      }
+      recStack.delete(node);
+      return false;
+    };
+
+    // Check from all nodes that have outgoing edges
+    const allSources = new Set(wires.map(w => w.fromGateId));
+    for (const src of allSources) {
+      if (!visited.has(src)) {
+        if (dfs(src)) return true;
+      }
+    }
+    return false;
   }
 
   init() {
@@ -176,6 +229,7 @@ class GameState {
   resetProgress() {
     this.progress = { levels: {}, version: SCHEMA_VERSION };
     this.saveProgress();
+    this._levelSelectScrollY = 0; // #95: Reset scroll on progress reset
   }
 
   // ── Leaderboard Persistence ──
@@ -433,9 +487,25 @@ class GameState {
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
     this.isAnimating = false;
+    // #95: Restore scroll position after rendering
+    const scrollContainer = document.getElementById('level-select-screen');
+    if (scrollContainer && this._levelSelectScrollY > 0) {
+      requestAnimationFrame(() => {
+        scrollContainer.scrollTop = this._levelSelectScrollY;
+      });
+    }
+  }
+
+  // #95: Save level select scroll position before navigating away
+  _saveLevelSelectScroll() {
+    const scrollContainer = document.getElementById('level-select-screen');
+    if (scrollContainer) {
+      this._levelSelectScrollY = scrollContainer.scrollTop;
+    }
   }
 
   showChallengeConfig() {
+    this._saveLevelSelectScroll(); // #95
     this.currentScreen = 'challenge-config';
     this.stopTimer();
     this.audio.stopAmbient();
@@ -447,6 +517,7 @@ class GameState {
   }
 
   showSandboxConfig() {
+    this._saveLevelSelectScroll(); // #95
     this.currentScreen = 'sandbox-config';
     this.stopTimer();
     this.audio.stopAmbient();
@@ -493,6 +564,7 @@ class GameState {
   }
 
   startLevel(levelId) {
+    this._saveLevelSelectScroll(); // #95
     this.isChallengeMode = false;
     this.isSandboxMode = false;
     this.currentScreen = 'gameplay';
@@ -638,10 +710,12 @@ class GameState {
   }
 
   addGate(type, x, y, skipUndo) {
+    this._startTimerIfPending(); // #96
     const gate = new Gate(type, x, y, this.nextId++);
     this.gates.push(gate);
     this.ui.updateStatusBar(`Placed ${type} gate`);
     this.audio.playGatePlace(type);
+    this.haptic(15); // #98: short pulse on gate place
     // Impact ripple effect
     if (this.renderer) {
       this.renderer.spawnRipple(x + (GateTypes[type].width / 2), y + (GateTypes[type].height / 2));
@@ -863,7 +937,15 @@ class GameState {
     this.ui.hideStarDisplay();
     this.ui.updateStatusBar(`Level ${level.id}: ${level.title}`);
     this.resetHintState();
-    this.startTimer();
+    // #96: Defer timer start to first user action (campaign only)
+    if (!this.isChallengeMode && !this.isSandboxMode) {
+      this.timerPending = true;
+      // Show placeholder timer
+      const timerEl = document.getElementById('timer-display');
+      if (timerEl) timerEl.textContent = '⏱ —:——';
+    } else {
+      this.startTimer();
+    }
 
     // Sync hint button state
     this.ui.updateHintButton();
@@ -1124,6 +1206,7 @@ class GameState {
                 this.currentLevel.difficulty
               );
               this.audio.playSuccess(2);
+              this.haptic([30, 50, 30, 50, 50]); // #98: celebration pattern
               this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
               this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
               this.ui.showChallengeResult(gateCount, this.currentLevel);
@@ -1134,6 +1217,7 @@ class GameState {
             } else {
               const stars = this.completeLevel(this.currentLevel.id, gateCount);
               this.audio.playSuccess(stars);
+              this.haptic([30, 50, 30, 50, 50]); // #98: celebration pattern
               this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
               this.ui.updateStatusBar('Level complete! All truth table rows match.');
               this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
@@ -1152,17 +1236,21 @@ class GameState {
             const passCount = results.filter(r => r.pass).length;
             const total = results.length;
             const failCount = total - passCount;
+            // #94: Scale shake intensity with closeness (closer = weaker shake)
+            const shakeIntensity = 1 - (passCount / total);
             
             if (passCount / total >= 0.75) {
               // Near-miss feedback: ≥75% correct
               this.audio.playFail();
-              this._shakeScreen();
+              this._shakeScreen(shakeIntensity);
+              this.haptic(40); // #98: medium buzz for near-miss
               const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
               this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
               this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
             } else {
               this.audio.playFail();
-              this._shakeScreen();
+              this._shakeScreen(shakeIntensity);
+              this.haptic(80); // #98: long buzz for failure
               this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
               this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
             }
@@ -1198,6 +1286,7 @@ class GameState {
       if (this.isChallengeMode && this.currentLevel.isChallenge) {
         this.addLeaderboardEntry(this.currentLevel.difficultyKey, gateCount, this.currentLevel.difficulty);
         this.audio.playSuccess(2);
+        this.haptic([30, 50, 30, 50, 50]); // #98
         this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
         this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
         this.ui.showChallengeResult(gateCount, this.currentLevel);
@@ -1205,6 +1294,7 @@ class GameState {
       } else {
         const stars = this.completeLevel(this.currentLevel.id, gateCount);
         this.audio.playSuccess(stars);
+        this.haptic([30, 50, 30, 50, 50]); // #98
         this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
         this.ui.updateStatusBar('Level complete! All truth table rows match.');
         this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
@@ -1221,16 +1311,20 @@ class GameState {
       const passCount = results.filter(r => r.pass).length;
       const total = results.length;
       const failCount = total - passCount;
+      // #94: Scale shake intensity
+      const shakeIntensity = 1 - (passCount / total);
 
       if (passCount / total >= 0.75) {
         this.audio.playFail();
-        this._shakeScreen();
+        this._shakeScreen(shakeIntensity);
+        this.haptic(40); // #98
         const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
         this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
         this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
       } else {
         this.audio.playFail();
-        this._shakeScreen();
+        this._shakeScreen(shakeIntensity);
+        this.haptic(80); // #98
         this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
         this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
       }
@@ -1373,12 +1467,20 @@ class GameState {
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
+            this._startTimerIfPending(); // #96
             this.audio.playWireConnect();
+            this.haptic([15, 50, 15]); // #98: double pulse on wire connect
             this.renderer.spawnSparks(pin.x, pin.y);
             this.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
+            // #97: Cycle detection
+            if (this.detectCycle()) {
+              this.ui.updateStatusBar('⚠ Cycle detected — circuit may not simulate correctly');
+              wire._cycleWarning = true;
+            }
             this.markDirty();
           }
         } else {
+          this._startTimerIfPending(); // #96
           this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           this.markDirty();
         }
@@ -1559,7 +1661,9 @@ class GameState {
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
+            this._startTimerIfPending(); // #96
             this.audio.playWireConnect();
+            this.haptic([15, 50, 15]); // #98
             this.renderer.spawnSparks(pin.x, pin.y);
             this.undoManager.push({
               type: 'addWire',
@@ -1569,12 +1673,18 @@ class GameState {
               toGateId: wire.toGateId,
               toPinIndex: wire.toPinIndex,
             });
+            // #97: Cycle detection
+            if (this.detectCycle()) {
+              this.ui.updateStatusBar('⚠ Cycle detected — circuit may not simulate correctly');
+              wire._cycleWarning = true;
+            }
             // Track first wire achievement
             const wireAchs = this.achievements.trackFirstWire();
             this.ui.showAchievementToasts(wireAchs);
             this.markDirty();
           }
         } else {
+          this._startTimerIfPending(); // #96
           this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           this.markDirty();
         }
@@ -1820,9 +1930,12 @@ class GameState {
     }
   }
 
-  _shakeScreen() {
+  _shakeScreen(intensity) {
+    // #94: Scale shake intensity with closeness. intensity 0-1 (0=tiny, 1=strong)
+    intensity = typeof intensity === 'number' ? intensity : 0.5;
     const container = document.getElementById('canvas-container');
     if (!container) return;
+    container.style.setProperty('--shake-intensity', Math.max(0.15, intensity));
     container.classList.remove('screen-shake');
     void container.offsetWidth;
     container.classList.add('screen-shake');

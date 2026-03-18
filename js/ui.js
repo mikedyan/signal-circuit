@@ -346,19 +346,34 @@ class UI {
     const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen'];
     // T6: Play transition whoosh on screen change
     if (this.gameState.audio) this.gameState.audio.playTransitionWhoosh();
+
+    // #92: Determine transition direction
+    const fromScreen = this._currentScreen || 'level-select';
+    this._currentScreen = screen;
+    const isZoomIn = fromScreen === 'level-select' && screen === 'gameplay';
+    const isZoomOut = fromScreen === 'gameplay' && screen === 'level-select';
+
     for (const id of screens) {
       const el = document.getElementById(id);
       if (!el) continue;
       const shouldShow = id === screen + '-screen';
       if (shouldShow) {
         el.style.display = 'flex';
-        el.classList.add('screen-enter');
+        // #92: Apply directional enter animation
+        el.classList.remove('screen-enter', 'screen-zoom-in', 'screen-zoom-out', 'screen-active');
+        if (isZoomIn) {
+          el.classList.add('screen-zoom-in');
+        } else if (isZoomOut) {
+          el.classList.add('screen-zoom-out');
+        } else {
+          el.classList.add('screen-enter');
+        }
         void el.offsetWidth;
-        el.classList.remove('screen-enter');
+        el.classList.remove('screen-enter', 'screen-zoom-in', 'screen-zoom-out');
         el.classList.add('screen-active');
       } else {
         el.style.display = 'none';
-        el.classList.remove('screen-enter', 'screen-active');
+        el.classList.remove('screen-enter', 'screen-zoom-in', 'screen-zoom-out', 'screen-active');
       }
     }
   }
@@ -597,7 +612,6 @@ class UI {
       document.getElementById('level-desc').textContent = level.description;
       document.getElementById('prev-level').disabled = true;
       document.getElementById('next-level').disabled = true;
-      // Change run button text for sandbox
       document.getElementById('run-btn').textContent = '🔍 TEST';
     } else if (level.isChallenge) {
       document.getElementById('level-title').textContent = `🎲 ${level.title}`;
@@ -611,6 +625,25 @@ class UI {
       document.getElementById('prev-level').disabled = level.id <= 1;
       document.getElementById('next-level').disabled = level.id >= getLevelCount();
       document.getElementById('run-btn').textContent = '▶ RUN';
+    }
+
+    // #91: Cross-level "Used In" forward references
+    const usedInEl = document.getElementById('used-in-refs');
+    if (usedInEl) {
+      if (level.id && !level.isSandbox && !level.isChallenge && !level.isDaily) {
+        const refs = getForwardReferences(level.id);
+        if (refs.length > 0) {
+          const refList = refs.slice(0, 8).map(id => `L${id}`).join(', ');
+          const extra = refs.length > 8 ? ` +${refs.length - 8} more` : '';
+          usedInEl.textContent = `Used in: ${refList}${extra}`;
+          usedInEl.style.display = 'block';
+        } else {
+          usedInEl.textContent = '';
+          usedInEl.style.display = 'none';
+        }
+      } else {
+        usedInEl.style.display = 'none';
+      }
     }
   }
 
@@ -1773,45 +1806,66 @@ class UI {
     let totalStars = 0;
     let fastestLevel = null;
     let fastestTime = Infinity;
-    const gateCounts = {};
+    let perfectLevels = 0;
 
     for (const [id, data] of Object.entries(progress.levels || {})) {
       totalStars += data.stars || 0;
+      if (data.stars === 3) perfectLevels++;
       if (data.bestTime && data.bestTime < fastestTime) {
         fastestTime = data.bestTime;
         fastestLevel = parseInt(id);
       }
     }
 
-    // Favorite gate: most placed by type from lifetime stats
     const totalGates = stats.totalGatesPlaced || 0;
-
-    // Playtime
     const playtimeSec = stats.totalPlaytime || 0;
     const playMin = Math.floor(playtimeSec / 60);
     const playHour = Math.floor(playMin / 60);
     const playMinRemainder = playMin % 60;
     const playtimeStr = playHour > 0 ? `${playHour}h ${playMinRemainder}m` : `${playMin}m`;
 
-    // Fastest level string
     let fastestStr = '—';
     if (fastestLevel) {
-      const level = getLevel(fastestLevel);
       const fMins = Math.floor(fastestTime / 60);
       const fSecs = fastestTime % 60;
       fastestStr = `L${fastestLevel} (${fMins}:${fSecs.toString().padStart(2, '0')})`;
     }
 
     const maxStars = getLevelCount() * 3;
+    const totalLevels = getLevelCount();
+
+    // #99: Enhanced graduation title
+    const titleEl = document.getElementById('journey-title');
+    const iconEl = document.getElementById('journey-icon');
+    if (totalStars >= maxStars) {
+      titleEl.textContent = '🎓 MASTER LOGICIAN';
+      iconEl.textContent = '🎓';
+    } else {
+      titleEl.textContent = '🛸 JOURNEY COMPLETE';
+      iconEl.textContent = '🛸';
+    }
+
+    // #99: Build level grid showing all levels with stars
+    let levelGridHtml = '<div class="graduation-grid">';
+    for (let i = 1; i <= totalLevels; i++) {
+      const lp = progress.levels[i];
+      const stars = lp ? lp.stars || 0 : 0;
+      const completed = lp && lp.completed;
+      const starStr = completed ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '—';
+      const cls = completed ? (stars === 3 ? 'grad-perfect' : 'grad-done') : 'grad-incomplete';
+      levelGridHtml += `<div class="grad-level ${cls}"><span class="grad-level-num">${i}</span><span class="grad-level-stars">${starStr}</span></div>`;
+    }
+    levelGridHtml += '</div>';
 
     const container = document.getElementById('journey-stats');
     container.innerHTML = `
+      ${levelGridHtml}
       <div class="journey-stat"><div class="journey-stat-icon">⭐</div><div class="journey-stat-value">${totalStars}/${maxStars}</div><div class="journey-stat-label">Stars Earned</div></div>
+      <div class="journey-stat"><div class="journey-stat-icon">💎</div><div class="journey-stat-value">${perfectLevels}/${totalLevels}</div><div class="journey-stat-label">Perfect Levels</div></div>
       <div class="journey-stat"><div class="journey-stat-icon">🔧</div><div class="journey-stat-value">${totalGates}</div><div class="journey-stat-label">Gates Placed</div></div>
       <div class="journey-stat"><div class="journey-stat-icon">⏱</div><div class="journey-stat-value">${playtimeStr}</div><div class="journey-stat-label">Total Play Time</div></div>
       <div class="journey-stat"><div class="journey-stat-icon">⚡</div><div class="journey-stat-value">${fastestStr}</div><div class="journey-stat-label">Fastest Level</div></div>
       <div class="journey-stat"><div class="journey-stat-icon">🏆</div><div class="journey-stat-value">${achCount}/${achTotal}</div><div class="journey-stat-label">Achievements</div></div>
-      <div class="journey-stat"><div class="journey-stat-icon">🔥</div><div class="journey-stat-value">${gs.streakData ? gs.streakData.streak : 0}</div><div class="journey-stat-label">Day Streak</div></div>
     `;
 
     modal.style.display = 'flex';

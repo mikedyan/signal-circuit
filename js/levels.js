@@ -362,7 +362,7 @@ const LEVELS = [
     hintHighlights: ['A', 'B', 'X', 'Y'],
     availableGates: ['AND', 'OR', 'NOT'],
     optimalGates: 1,
-    goodGates: 2,
+    goodGates: 1,
     inputs: [
       { label: 'A', x: 60, y: 140 },
       { label: 'B', x: 60, y: 260 },
@@ -455,7 +455,7 @@ const LEVELS = [
     hintHighlights: ['A', 'B', 'C', 'OUT'],
     availableGates: ['AND', 'OR'],
     optimalGates: 5,
-    goodGates: 7,
+    goodGates: 6,
     inputs: [
       { label: 'A', x: 60, y: 100 },
       { label: 'B', x: 60, y: 200 },
@@ -521,7 +521,7 @@ const LEVELS = [
     hintHighlights: ['A', 'B', 'Cin', 'SUM', 'CARRY'],
     availableGates: ['AND', 'OR', 'XOR'],
     optimalGates: 5,
-    goodGates: 7,
+    goodGates: 6,
     inputs: [
       { label: 'A', x: 60, y: 100 },
       { label: 'B', x: 60, y: 200 },
@@ -630,7 +630,7 @@ const LEVELS = [
     hintHighlights: ['A1', 'A0', 'B1', 'B0', 'GT'],
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 7,
-    goodGates: 11,
+    goodGates: 9,
     inputs: [
       { label: 'A1', x: 60, y: 80 },
       { label: 'A0', x: 60, y: 160 },
@@ -672,7 +672,7 @@ const LEVELS = [
     hintHighlights: ['A1', 'A0', 'B1', 'B0', 'SEL', 'Y1', 'Y0'],
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
     optimalGates: 7,
-    goodGates: 9,
+    goodGates: 8,
     inputs: [
       { label: 'A1', x: 60, y: 60 },
       { label: 'A0', x: 60, y: 130 },
@@ -734,7 +734,7 @@ const LEVELS = [
     hintHighlights: ['A1', 'A0', 'B1', 'B0', 'S1', 'S0', 'Cout'],
     availableGates: ['AND', 'OR', 'XOR'],
     optimalGates: 7,
-    goodGates: 10,
+    goodGates: 9,
     inputs: [
       { label: 'A1', x: 60, y: 80 },
       { label: 'A0', x: 60, y: 170 },
@@ -828,6 +828,21 @@ function getLevelCount() {
 
 function getChapters() {
   return CHAPTERS;
+}
+
+// #91: Cross-level "Used In" forward references
+function getForwardReferences(levelId) {
+  const level = getLevel(levelId);
+  if (!level || !level.availableGates) return [];
+  const gates = new Set(level.availableGates);
+  const refs = [];
+  for (const other of LEVELS) {
+    if (other.id <= levelId) continue;
+    if (other.availableGates && other.availableGates.some(g => gates.has(g))) {
+      refs.push(other.id);
+    }
+  }
+  return refs;
 }
 
 // ── Procedural Challenge Generator ──
