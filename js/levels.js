@@ -742,28 +742,28 @@ const LEVELS = [
       { label: 'B0', x: 60, y: 350 },
     ],
     outputs: [
-      { label: 'S0', x: 600, y: 310 },
-      { label: 'S1', x: 600, y: 200 },
       { label: 'Cout', x: 600, y: 90 },
+      { label: 'S1', x: 600, y: 200 },
+      { label: 'S0', x: 600, y: 310 },
     ],
     truthTable: [
-      // A1 A0 B1 B0 → S1 S0 Cout  (outputs ordered: S0, S1, Cout)
+      // A1 A0 B1 B0 → Cout S1 S0  (matches 3-bit result order)
       { inputs: [0, 0, 0, 0], outputs: [0, 0, 0] },  // 0+0=000
-      { inputs: [0, 0, 0, 1], outputs: [1, 0, 0] },  // 0+1=001
+      { inputs: [0, 0, 0, 1], outputs: [0, 0, 1] },  // 0+1=001
       { inputs: [0, 0, 1, 0], outputs: [0, 1, 0] },  // 0+2=010
-      { inputs: [0, 0, 1, 1], outputs: [1, 1, 0] },  // 0+3=011
-      { inputs: [0, 1, 0, 0], outputs: [1, 0, 0] },  // 1+0=001
+      { inputs: [0, 0, 1, 1], outputs: [0, 1, 1] },  // 0+3=011
+      { inputs: [0, 1, 0, 0], outputs: [0, 0, 1] },  // 1+0=001
       { inputs: [0, 1, 0, 1], outputs: [0, 1, 0] },  // 1+1=010
-      { inputs: [0, 1, 1, 0], outputs: [1, 1, 0] },  // 1+2=011
-      { inputs: [0, 1, 1, 1], outputs: [0, 0, 1] },  // 1+3=100
+      { inputs: [0, 1, 1, 0], outputs: [0, 1, 1] },  // 1+2=011
+      { inputs: [0, 1, 1, 1], outputs: [1, 0, 0] },  // 1+3=100
       { inputs: [1, 0, 0, 0], outputs: [0, 1, 0] },  // 2+0=010
-      { inputs: [1, 0, 0, 1], outputs: [1, 1, 0] },  // 2+1=011
-      { inputs: [1, 0, 1, 0], outputs: [0, 0, 1] },  // 2+2=100
+      { inputs: [1, 0, 0, 1], outputs: [0, 1, 1] },  // 2+1=011
+      { inputs: [1, 0, 1, 0], outputs: [1, 0, 0] },  // 2+2=100
       { inputs: [1, 0, 1, 1], outputs: [1, 0, 1] },  // 2+3=101
-      { inputs: [1, 1, 0, 0], outputs: [1, 1, 0] },  // 3+0=011
-      { inputs: [1, 1, 0, 1], outputs: [0, 0, 1] },  // 3+1=100
+      { inputs: [1, 1, 0, 0], outputs: [0, 1, 1] },  // 3+0=011
+      { inputs: [1, 1, 0, 1], outputs: [1, 0, 0] },  // 3+1=100
       { inputs: [1, 1, 1, 0], outputs: [1, 0, 1] },  // 3+2=101
-      { inputs: [1, 1, 1, 1], outputs: [0, 1, 1] },  // 3+3=110
+      { inputs: [1, 1, 1, 1], outputs: [1, 1, 0] },  // 3+3=110
     ],
   },
 ];
