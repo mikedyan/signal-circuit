@@ -625,11 +625,11 @@ const LEVELS = [
     hints: [
       'A > B happens in two cases: the high bit of A wins (A1=1, B1=0), OR the high bits match and the low bit of A wins.',
       'First check the high bits: A1 AND NOT(B1) means A\'s MSB is bigger. For the "tie" case, use XNOR on the high bits.',
-      'GT = (A1 AND NOT(B1)) OR (NOT(XOR(A1,B1)) AND A0 AND NOT(B0)). Eight gates.'
+      'GT = (A1 AND NOT(B1)) OR (NOT(XOR(A1,B1)) AND A0 AND NOT(B0)). The textbook uses 8 gates — but AND(A, XOR(A,B)) = A·NOT(B), saving a NOT gate.'
     ],
     hintHighlights: ['A1', 'A0', 'B1', 'B0', 'GT'],
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
-    optimalGates: 8,
+    optimalGates: 7,
     goodGates: 11,
     inputs: [
       { label: 'A1', x: 60, y: 80 },
