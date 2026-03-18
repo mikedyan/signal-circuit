@@ -73,6 +73,8 @@ class GameState {
     this.needsRender = true;
     this.ghostOverlay = null; // {gates: [...], wires: [...]} for replay ghost (T10)
     this.showGhost = false;
+    this.tapConnectSource = null; // For tap-to-connect: node/gate id
+    this._tapConnectTimeout = null;
   }
 
   init() {
@@ -872,6 +874,7 @@ class GameState {
     }
 
     this.ui.updateGateIndicator();
+    this._clearTapConnect();
 
     // T3: Reset wire pitch escalation
     this.audio.resetWireCount();
@@ -959,6 +962,117 @@ class GameState {
     this.audio.resetWireCount(); // T3: Reset pitch escalation
     this._clearAutoSave(); // T7: Clear auto-save
     this.markDirty();
+  }
+
+  // ── Tap-to-Connect (mobile-friendly wiring) ──
+
+  _setTapConnectSource(nodeId) {
+    this.tapConnectSource = nodeId;
+    this.audio.playClick();
+    if (this._tapConnectTimeout) clearTimeout(this._tapConnectTimeout);
+    this._tapConnectTimeout = setTimeout(() => this._clearTapConnect(), 4000);
+    this.markDirty();
+  }
+
+  _clearTapConnect() {
+    if (this._tapConnectTimeout) {
+      clearTimeout(this._tapConnectTimeout);
+      this._tapConnectTimeout = null;
+    }
+    if (this.tapConnectSource !== null) {
+      this.tapConnectSource = null;
+      this.markDirty();
+    }
+  }
+
+  _executeTapConnect(targetId) {
+    if (this.tapConnectSource === null) return false;
+    const sourceId = this.tapConnectSource;
+    this._clearTapConnect();
+
+    if (sourceId === targetId) return false;
+    if (this.isAnimating) return false;
+
+    const sourceNode = this.findNode(sourceId);
+    const targetNode = this.findNode(targetId);
+    if (!sourceNode || !targetNode) return false;
+
+    // Try both directions
+    const wired = this._autoWire(sourceId, sourceNode, targetId, targetNode) ||
+                  this._autoWire(targetId, targetNode, sourceId, sourceNode);
+
+    if (!wired) {
+      let tx, ty;
+      if (targetNode instanceof Gate) {
+        tx = targetNode.x + targetNode.def.width / 2;
+        ty = targetNode.y + targetNode.def.height / 2;
+      } else {
+        tx = targetNode.x + targetNode.width / 2;
+        ty = targetNode.y + targetNode.height / 2;
+      }
+      this.wireManager._showInvalidFeedback(tx, ty);
+    }
+
+    this.markDirty();
+    return wired;
+  }
+
+  _autoWire(fromId, fromNode, toId, toNode) {
+    // Determine output pin on "from" node
+    let outputPinIndex = -1;
+    if (fromNode instanceof IONode && fromNode.type === 'input') {
+      outputPinIndex = 0;
+    } else if (fromNode instanceof Gate) {
+      const outPins = fromNode.getOutputPins();
+      if (outPins.length > 0) outputPinIndex = 0;
+    }
+    if (outputPinIndex === -1) return false;
+
+    // Find first open input pin on "to" node
+    let inputPinIndex = -1;
+    if (toNode instanceof IONode && toNode.type === 'output') {
+      const connected = this.wireManager.wires.some(
+        w => w.toGateId === toId && w.toPinIndex === 0
+      );
+      if (!connected) inputPinIndex = 0;
+    } else if (toNode instanceof Gate) {
+      const inputCount = toNode.def.inputs;
+      for (let i = 0; i < inputCount; i++) {
+        const connected = this.wireManager.wires.some(
+          w => w.toGateId === toId && w.toPinIndex === i
+        );
+        if (!connected) {
+          inputPinIndex = i;
+          break;
+        }
+      }
+    }
+    if (inputPinIndex === -1) return false;
+
+    // Create wire
+    const wire = new Wire(fromId, outputPinIndex, toId, inputPinIndex, this.wireManager.nextId++);
+    this.wireManager.wires.push(wire);
+
+    this.audio.playWireConnect();
+    const endpoints = this.wireManager.getWireEndpoints(wire);
+    if (endpoints && this.renderer) {
+      this.renderer.spawnSparks(endpoints.toPin.x, endpoints.toPin.y);
+    }
+
+    this.undoManager.push({
+      type: 'addWire',
+      wireId: wire.id,
+      fromGateId: wire.fromGateId,
+      fromPinIndex: wire.fromPinIndex,
+      toGateId: wire.toGateId,
+      toPinIndex: wire.toPinIndex,
+    });
+
+    const wireAchs = this.achievements.trackFirstWire();
+    this.ui.showAchievementToasts(wireAchs);
+    this._autoSave();
+    this.ui.updateGateIndicator();
+    return true;
   }
 
   async runSimulation() {
@@ -1155,6 +1269,8 @@ class GameState {
     let dragGate = null;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
+    let dragGateStartX = 0;
+    let dragGateStartY = 0;
 
     // ── Touch support ──
     let longPressTimer = null;
@@ -1191,6 +1307,7 @@ class GameState {
         isDraggingIONode = false;
         dragIONode = null;
         this.wireManager.cancelDrawing();
+        this._clearTapConnect();
 
         const t1 = getTouchPos(e.touches[0]);
         const t2 = getTouchPos(e.touches[1]);
@@ -1252,6 +1369,7 @@ class GameState {
       const pin = this.renderer.findPinAt(pos.x, pos.y);
       if (pin) {
         if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        this._clearTapConnect();
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
@@ -1270,6 +1388,7 @@ class GameState {
 
       if (this.wireManager.drawing) {
         this.wireManager.cancelDrawing();
+        this._clearTapConnect();
         if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
         return;
       }
@@ -1313,6 +1432,7 @@ class GameState {
 
       this.selectedGate = null;
       this.wireManager.selectedWire = null;
+      this._clearTapConnect();
       if (this.ui) this.ui.hideMobileDelete();
     }, { passive: false });
 
@@ -1385,13 +1505,18 @@ class GameState {
       }
       if (isTwoFingerGesture) return;
 
-      // I/O node: tap = toggle input value, drag = reposition
+      // I/O node: tap = toggle input value (or tap-to-connect), drag = reposition
       if (isDraggingIONode && dragIONode) {
         if (!touchMoved) {
-          if (dragIONode.type === 'input') {
+          if (this.tapConnectSource !== null) {
+            this._executeTapConnect(dragIONode.id);
+          } else if (dragIONode.type === 'input') {
             dragIONode.value = dragIONode.value ? 0 : 1;
             this._propagateLiveSignals();
             this.audio.playClick();
+          } else {
+            // Output IO node: enter tap-to-connect as source
+            this._setTapConnectSource(dragIONode.id);
           }
         } else if (dragIONode.x !== dragIOStartX || dragIONode.y !== dragIOStartY) {
           this.undoManager.push({
@@ -1409,6 +1534,15 @@ class GameState {
         this.markDirty();
       }
 
+      // Gate tap-to-connect (when tapped without dragging)
+      if (isDraggingGate && dragGate && !touchMoved) {
+        if (this.tapConnectSource !== null) {
+          this._executeTapConnect(dragGate.id);
+        } else {
+          this._setTapConnectSource(dragGate.id);
+        }
+      }
+
       isDraggingGate = false;
       dragGate = null;
     }, { passive: false });
@@ -1421,6 +1555,7 @@ class GameState {
 
       const pin = this.renderer.findPinAt(pos.x, pos.y);
       if (pin) {
+        this._clearTapConnect();
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
@@ -1449,6 +1584,7 @@ class GameState {
 
       if (this.wireManager.drawing) {
         this.wireManager.cancelDrawing();
+        this._clearTapConnect();
         return;
       }
 
@@ -1480,11 +1616,14 @@ class GameState {
         dragGate = gate;
         dragOffsetX = pos.x - gate.x;
         dragOffsetY = pos.y - gate.y;
+        dragGateStartX = gate.x;
+        dragGateStartY = gate.y;
         return;
       }
 
       this.selectedGate = null;
       this.wireManager.selectedWire = null;
+      this._clearTapConnect();
     });
 
     canvas.addEventListener('mousemove', (e) => {
@@ -1529,14 +1668,18 @@ class GameState {
       // T5: Clear grid snap overlay
       if (this.renderer) this.renderer._dragSnapOverlay = null;
       this.markDirty();
-      // I/O node: click-without-drag = toggle input, drag = reposition
+      // I/O node: click-without-drag = toggle input (or tap-to-connect), drag = reposition
       if (isDraggingIONode && dragIONode) {
         if (dragIONode.x === dragIOStartX && dragIONode.y === dragIOStartY) {
-          if (dragIONode.type === 'input') {
+          if (this.tapConnectSource !== null) {
+            this._executeTapConnect(dragIONode.id);
+          } else if (dragIONode.type === 'input') {
             dragIONode.value = dragIONode.value ? 0 : 1;
             this._propagateLiveSignals();
             this.audio.playClick();
             this.markDirty();
+          } else {
+            this._setTapConnectSource(dragIONode.id);
           }
         } else {
           this.undoManager.push({
@@ -1551,6 +1694,16 @@ class GameState {
         }
         isDraggingIONode = false;
         dragIONode = null;
+      }
+      // Gate: click-without-drag = tap-to-connect
+      if (isDraggingGate && dragGate) {
+        if (dragGate.x === dragGateStartX && dragGate.y === dragGateStartY) {
+          if (this.tapConnectSource !== null) {
+            this._executeTapConnect(dragGate.id);
+          } else {
+            this._setTapConnectSource(dragGate.id);
+          }
+        }
       }
       isDraggingGate = false;
       dragGate = null;

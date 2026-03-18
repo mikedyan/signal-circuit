@@ -258,6 +258,68 @@ class CanvasRenderer {
       }
     }
 
+    // Tap-to-connect source highlight + compatible target pins
+    if (this.gameState.tapConnectSource !== null) {
+      const srcNode = this.gameState.findNode(this.gameState.tapConnectSource);
+      if (srcNode) {
+        const pulse = 0.5 + 0.4 * Math.sin(performance.now() / 200);
+        let cx, cy, radius;
+        if (srcNode instanceof Gate) {
+          cx = srcNode.x + srcNode.def.width / 2;
+          cy = srcNode.y + srcNode.def.height / 2;
+          radius = Math.max(srcNode.def.width, srcNode.def.height) / 2 + 12;
+        } else {
+          cx = srcNode.x + srcNode.width / 2;
+          cy = srcNode.y + srcNode.height / 2;
+          radius = 32;
+        }
+        // Glow ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 255, 100, ${pulse * 0.9})`;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        const grad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
+        grad.addColorStop(0, `rgba(0, 255, 100, ${pulse * 0.12})`);
+        grad.addColorStop(1, 'rgba(0, 255, 100, 0)');
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Highlight open input pins on other elements
+        const openPulse = 0.3 + 0.3 * Math.sin(performance.now() / 250);
+        const wires = this.gameState.wireManager.wires;
+        const allNodes = [
+          ...this.gameState.gates,
+          ...this.gameState.outputNodes,
+        ];
+        for (const node of allNodes) {
+          if (node.id === this.gameState.tapConnectSource) continue;
+          let pins;
+          if (node instanceof Gate) {
+            pins = node.getInputPins();
+          } else if (node instanceof IONode && node.type === 'output') {
+            const p = node.getPin();
+            pins = [{ x: p.x, y: p.y, index: 0, gateId: node.id }];
+          } else continue;
+          for (const pin of pins) {
+            const connected = wires.some(w => w.toGateId === (pin.gateId || node.id) && w.toPinIndex === pin.index);
+            if (!connected) {
+              const px = pin.x + (node instanceof Gate ? -12 : -12);
+              const py = pin.y;
+              ctx.beginPath();
+              ctx.arc(px, py, 10, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(0, 255, 100, ${openPulse * 0.25})`;
+              ctx.fill();
+              ctx.strokeStyle = `rgba(0, 255, 100, ${openPulse * 0.8})`;
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+            }
+          }
+        }
+        this.gameState.markDirty();
+      }
+    }
+
     // Hovered pin highlight
     if (this.hoveredPin) {
       ctx.beginPath();
