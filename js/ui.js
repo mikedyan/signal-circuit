@@ -655,6 +655,10 @@ class UI {
     const table = document.getElementById('truth-table');
     table.innerHTML = '';
 
+    // Auto-compact for wide truth tables (7+ columns)
+    const totalCols = level.inputs.length + level.outputs.length;
+    table.classList.toggle('compact-table', totalCols >= 7);
+
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     for (const inp of level.inputs) {
