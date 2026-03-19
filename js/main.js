@@ -77,6 +77,8 @@ class GameState {
     this._tapConnectTimeout = null;
     this.timerPending = false; // #96: Start timer on first action
     this._levelSelectScrollY = 0; // #95: Preserve scroll position
+    this._lastPinHoverId = null; // T2: Track last hovered pin for audio
+    this._lastPinHoverTime = 0; // T2: Throttle pin hover audio
   }
 
   // #98: Haptic feedback for mobile
@@ -190,10 +192,17 @@ class GameState {
     }
     btn.addEventListener('click', () => {
       const newMuted = !this.audio.isMuted;
+      if (newMuted) {
+        // Play power-off sound before muting
+        this.audio.playMuteOff();
+      }
       this.audio.setMute(newMuted);
       btn.textContent = newMuted ? '🔇' : '🔊';
       btn.classList.toggle('muted', newMuted);
-      if (!newMuted) this.audio.playButtonClick();
+      if (!newMuted) {
+        // Play power-on sound after unmuting
+        this.audio.playMuteOn();
+      }
     });
   }
 
@@ -817,6 +826,7 @@ class GameState {
         break;
       }
     }
+    this.audio.playUndo();
     this.ui.updateStatusBar('Undo');
     this.ui.updateGateIndicator();
     this.markDirty();
@@ -868,6 +878,7 @@ class GameState {
         break;
       }
     }
+    this.audio.playRedo();
     this.ui.updateStatusBar('Redo');
     this.ui.updateGateIndicator();
     this.markDirty();
@@ -1744,6 +1755,19 @@ class GameState {
       const pin = this.renderer.findPinAt(pos.x, pos.y);
       this.renderer.hoveredPin = pin;
 
+      // T2: Pin hover audio feedback (throttled)
+      if (pin) {
+        const pinKey = pin.gateId + '-' + pin.pinIndex + '-' + pin.pinType;
+        const now = Date.now();
+        if (pinKey !== this._lastPinHoverId && now - this._lastPinHoverTime > 100) {
+          this.audio.playPinHover();
+          this._lastPinHoverId = pinKey;
+          this._lastPinHoverTime = now;
+        }
+      } else {
+        this._lastPinHoverId = null;
+      }
+
       if (isDraggingGate && dragGate) {
         const gridSize = 20;
         dragGate.x = Math.round((pos.x - dragOffsetX) / gridSize) * gridSize;
@@ -1760,7 +1784,12 @@ class GameState {
         this.markDirty();
       }
 
-      if (pin) {
+      // T10: Context-aware cursor states
+      if (isDraggingGate || isDraggingIONode) {
+        canvas.style.cursor = 'grabbing';
+      } else if (this.wireManager.drawing) {
+        canvas.style.cursor = 'crosshair';
+      } else if (pin) {
         canvas.style.cursor = 'pointer';
       } else if (this.wireManager.hoveredWire) {
         canvas.style.cursor = 'pointer';
@@ -1860,7 +1889,7 @@ class GameState {
 
       if ((e.key === 'Delete' || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey) {
         if (this.wireManager.selectedWire) {
-          this.audio.playWireDisconnect();
+          this.audio.playDeleteKey();
           const wire = this.wireManager.selectedWire;
           this.undoManager.push({
             type: 'removeWire',
@@ -1872,11 +1901,15 @@ class GameState {
           this.wireManager.removeWire(wire);
           this.markDirty();
         } else if (this.selectedGate) {
+          this.audio.playDeleteKey();
           this.removeGate(this.selectedGate);
         }
       }
 
       if (e.key === 'Escape') {
+        if (this.wireManager.drawing) {
+          this.audio.playEscapeCancel();
+        }
         this.wireManager.cancelDrawing();
         this.selectedGate = null;
         this.wireManager.selectedWire = null;

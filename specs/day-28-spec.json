@@ -1,0 +1,136 @@
+{
+  "day": 28,
+  "title": "Audio & Feedback Micro-Polish",
+  "summary": "Ten effort-1 audio and feedback additions that fill gaps in the soundscape and add subtle feedback touches. Undo/redo audio, pin hover sounds, gate counter color feedback, mute/unmute transitions, tooltip animations, keyboard shortcut audio, toolbox hover sounds, pre-level difficulty badges, mobile toolbox scroll indicator, and canvas cursor states.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Undo/Redo Audio Feedback — Add distinct sounds: undo = backward swoosh (descending frequency noise burst), redo = forward swoosh (ascending frequency noise burst). Call from performUndo() and performRedo() in main.js.",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Undo plays a descending swoosh sound",
+        "Redo plays an ascending swoosh sound",
+        "Sounds respect mute state",
+        "Micro-randomization applied"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Pin Hover Audio Feedback — Play a quiet blip when hovering over a connectable pin. Throttle to max once per 100ms to avoid spam. Trigger from the mousemove handler where hoveredPin changes.",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Hovering over a pin plays a quiet blip",
+        "Sound is throttled (no rapid-fire on quick mouse movement)",
+        "Sound is different from the gate placement sound",
+        "Respects mute state"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Gate Counter Live Feedback — Gate counter changes color at star thresholds: green when under 3★ budget, yellow at 2★, red at 1★. Add pulse animation class on threshold crossing.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Gate counter text/border turns green when count <= optimal",
+        "Turns yellow when count <= good but > optimal",
+        "Turns red when count > good",
+        "A brief pulse animation plays when crossing a threshold"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Mute/Unmute Transition Sound — Toggling sound plays a power-on sweep (unmute) or power-off descending tone (mute). The mute sound plays just before muting; the unmute sound plays right after unmuting.",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Unmuting plays an ascending power-on sweep",
+        "Muting plays a descending power-off tone (last sound before silence)",
+        "Sounds are short and non-intrusive"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Tooltip Animation Enhancement — Onboarding tooltips get a pulsing arrow/bounce animation to draw attention. CSS animation on the tooltip container.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Onboarding tooltip has a gentle pulsing/bounce animation",
+        "Animation is not aggressive — subtle and attention-drawing",
+        "Respects prefers-reduced-motion"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Keyboard Shortcut Audio Feedback — Delete and Escape keys produce distinct audio feedback. Delete = short sharp click, Escape = soft cancel whoosh.",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Pressing Delete/Backspace to remove a gate/wire plays a short sharp sound",
+        "Pressing Escape to cancel wire drawing plays a soft cancel sound",
+        "Sounds respect mute state"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Hover Sound for Toolbox Gates — Each gate type in the toolbox plays its unique frequency blip on hover. Throttle to avoid spam. Use gate-type-specific tones derived from gate placement sounds but quieter and shorter.",
+      "files_to_modify": ["js/audio.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Hovering over AND gate tool plays a sine blip",
+        "Hovering over OR gate tool plays a sawtooth blip",
+        "Hovering over NOT gate tool plays a square blip",
+        "Hovering over XOR gate tool plays an FM bell blip",
+        "Sounds are quieter than placement sounds",
+        "Throttled to prevent spam"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Pre-Level Complexity Rating Badge — Already partially done (difficulty labels exist). Enhance with visual emoji badges: 🟢 Easy, 🟡 Medium, 🔴 Hard displayed prominently on level cards and in the level info panel during gameplay.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Level cards show colored emoji difficulty badge",
+        "Gameplay info panel shows the difficulty badge next to the level title",
+        "Easy/Medium/Hard thresholds based on optimalGates"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Mobile Toolbox Scroll Indicator — When toolbox overflows, add fade gradient at bottom to indicate more content. CSS-only solution using pseudo-element gradient overlay.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "When toolbox has overflow content, a fade gradient appears at the bottom",
+        "Gradient is subtle and doesn't block interaction",
+        "Only visible when there's actual overflow"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Canvas Cursor States — Change cursor based on interaction context: crosshair in wire-drawing mode, grab when hovering a draggable gate, grabbing during drag, pointer on pins/wires. Already partially implemented in mousemove. Enhance to include wire-drawing mode and dragging state.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Default canvas cursor is crosshair",
+        "Cursor changes to pointer when hovering pins or wires",
+        "Cursor changes to grab when hovering a gate",
+        "Cursor changes to grabbing during gate drag",
+        "During wire drawing, cursor is crosshair"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Audio feedback plays correctly for all new sounds",
+    "Mute state is respected everywhere",
+    "No audio spam from rapid hover events",
+    "Gate counter colors change at correct thresholds",
+    "Cursor states are correct in all interaction modes",
+    "Mobile toolbox scroll indicator appears correctly",
+    "No regression in existing gameplay"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

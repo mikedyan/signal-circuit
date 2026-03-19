@@ -761,6 +761,275 @@ class AudioEngine {
     source.start(now);
   }
 
+  // ── Sound: Undo swoosh (descending) ──
+  playUndo() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const dur = this._randomize(0.12, 0.1);
+
+    const bufSize = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (i / bufSize); // Fade in (reversed feel)
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buf;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2000, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + dur);
+    filter.Q.setValueAtTime(1.5, now);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(this.masterVolume * 0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this._output);
+    source.start(now);
+  }
+
+  // ── Sound: Redo swoosh (ascending) ──
+  playRedo() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const dur = this._randomize(0.12, 0.1);
+
+    const bufSize = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buf;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(300, now);
+    filter.frequency.exponentialRampToValueAtTime(2000, now + dur);
+    filter.Q.setValueAtTime(1.5, now);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(this.masterVolume * 0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this._output);
+    source.start(now);
+  }
+
+  // ── Sound: Pin hover blip ──
+  playPinHover() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(this._randomize(2200, 0.05), now);
+    gain.gain.setValueAtTime(this.masterVolume * 0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    osc.connect(gain);
+    gain.connect(this._output);
+    osc.start(now);
+    osc.stop(now + 0.03);
+  }
+
+  // ── Sound: Mute transition (power-off descending tone) ──
+  playMuteOff() {
+    if (!this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+    gain.gain.setValueAtTime(this.masterVolume * 0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(this._output);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  }
+
+  // ── Sound: Unmute transition (power-on ascending sweep) ──
+  playMuteOn() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.12);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(this.masterVolume * 0.25, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(this._output);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  }
+
+  // ── Sound: Delete key feedback (sharp click) ──
+  playDeleteKey() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(this._randomize(900, 0.05), now);
+    osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+    gain.gain.setValueAtTime(this.masterVolume * 0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+    osc.connect(gain);
+    gain.connect(this._output);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+
+  // ── Sound: Escape/cancel feedback (soft whoosh) ──
+  playEscapeCancel() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const dur = 0.1;
+
+    const bufSize = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      d[i] = (Math.random() * 2 - 1) * (1 - i / bufSize) * 0.5;
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buf;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1500, now);
+    filter.frequency.exponentialRampToValueAtTime(200, now + dur);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(this.masterVolume * 0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this._output);
+    source.start(now);
+  }
+
+  // ── Sound: Toolbox gate hover blip (gate-type-specific, quiet) ──
+  playToolboxHover(gateType) {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const vol = this.masterVolume * 0.08; // Very quiet
+
+    switch (gateType) {
+      case 'AND': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(this._randomize(880, 0.03), now);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.04);
+        break;
+      }
+      case 'OR': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(this._randomize(660, 0.03), now);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1500, now);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.04);
+        break;
+      }
+      case 'NOT': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(this._randomize(1200, 0.03), now);
+        gain.gain.setValueAtTime(vol * 0.7, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.03);
+        break;
+      }
+      case 'XOR': {
+        const carrier = ctx.createOscillator();
+        const modulator = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const gain = ctx.createGain();
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(this._randomize(700, 0.03), now);
+        modulator.type = 'sine';
+        modulator.frequency.setValueAtTime(1400, now);
+        modGain.gain.setValueAtTime(200, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.06);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(gain);
+        gain.connect(this._output);
+        carrier.start(now);
+        modulator.start(now);
+        carrier.stop(now + 0.06);
+        modulator.stop(now + 0.06);
+        break;
+      }
+      default: {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(this._randomize(800, 0.05), now);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.04);
+        break;
+      }
+    }
+  }
+
   // ── Helper: Noise burst ──
   _playNoiseBurst(duration, volume) {
     const ctx = this.ctx;

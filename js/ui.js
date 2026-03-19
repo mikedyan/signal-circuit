@@ -308,18 +308,18 @@ class UI {
           btn.appendChild(timeSpan);
         }
 
-        // Difficulty label
+        // T8: Difficulty badge with emoji
         const diffLabel = document.createElement('span');
         diffLabel.className = 'level-difficulty';
         const optGates = level.optimalGates || 1;
         if (optGates <= 2) {
-          diffLabel.textContent = 'Easy';
+          diffLabel.textContent = '🟢 Easy';
           diffLabel.classList.add('diff-easy');
         } else if (optGates <= 4) {
-          diffLabel.textContent = 'Med';
+          diffLabel.textContent = '🟡 Med';
           diffLabel.classList.add('diff-medium');
         } else {
-          diffLabel.textContent = 'Hard';
+          diffLabel.textContent = '🔴 Hard';
           diffLabel.classList.add('diff-hard');
         }
         btn.appendChild(diffLabel);
@@ -434,6 +434,15 @@ class UI {
         dots.appendChild(dot);
       }
       el.appendChild(dots);
+
+      // T7: Toolbox hover sound (throttled)
+      el.addEventListener('mouseenter', () => {
+        const now = Date.now();
+        if (!this._lastToolboxHoverTime || now - this._lastToolboxHoverTime > 120) {
+          this.gameState.audio.playToolboxHover(gateType);
+          this._lastToolboxHoverTime = now;
+        }
+      });
 
       el.addEventListener('mousedown', (e) => this.startToolboxDrag(e, gateType));
       el.addEventListener('touchstart', (e) => this.startToolboxDragTouch(e, gateType), { passive: false });
@@ -620,7 +629,10 @@ class UI {
       document.getElementById('next-level').disabled = true;
       document.getElementById('run-btn').textContent = '▶ RUN';
     } else {
-      document.getElementById('level-title').textContent = `Level ${level.id}: ${level.title}`;
+      // T8: Show difficulty badge in level title
+      const optGates = level.optimalGates || 1;
+      const diffBadge = optGates <= 2 ? '🟢' : optGates <= 4 ? '🟡' : '🔴';
+      document.getElementById('level-title').textContent = `${diffBadge} Level ${level.id}: ${level.title}`;
       document.getElementById('level-desc').textContent = level.description;
       document.getElementById('prev-level').disabled = level.id <= 1;
       document.getElementById('next-level').disabled = level.id >= getLevelCount();
@@ -1499,8 +1511,15 @@ class UI {
       }
       starsPreview.innerHTML = starsHtml;
 
-      // Style class
-      el.className = count <= optimal ? 'optimal' : count <= good ? 'good' : 'over';
+      // Style class — T3: Color feedback + pulse on threshold crossing
+      const newClass = count <= optimal ? 'optimal' : count <= good ? 'good' : 'over';
+      const prevClass = this._prevGateClass || '';
+      el.className = newClass;
+      if (prevClass && prevClass !== newClass && count > 0) {
+        el.classList.add('gate-pulse');
+        setTimeout(() => el.classList.remove('gate-pulse'), 400);
+      }
+      this._prevGateClass = newClass;
     }
 
     // Update hint penalty display
