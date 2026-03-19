@@ -298,10 +298,16 @@ body {
   overflow-y: auto;
 }
 
-/* Allow truth table section to scroll horizontally if needed */
+/* Allow truth table to scroll in both directions */
 #truth-table-section {
-  overflow-x: auto;
+  overflow: visible;
+}
+
+#truth-table-wrapper {
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
+  max-height: 50vh;
+  touch-action: pan-x pan-y;
 }
 
 /* ── Level Info ── */
