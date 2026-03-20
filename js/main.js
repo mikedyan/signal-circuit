@@ -1,5 +1,23 @@
 // main.js — App initialization, game state, undo/redo, progress
 
+// ── Info Panel Toggle ──
+function toggleInfoPanel() {
+  const panel = document.getElementById('info-panel');
+  const btn = document.getElementById('panel-toggle');
+  const isMobile = window.innerWidth <= 768;
+  panel.classList.toggle('collapsed');
+  const collapsed = panel.classList.contains('collapsed');
+  if (isMobile) {
+    btn.textContent = collapsed ? '▲ Info' : '▼ Hide';
+  } else {
+    btn.textContent = collapsed ? '◀' : '▶';
+  }
+  // Let canvas re-fill the space
+  setTimeout(() => {
+    if (window.game && window.game.renderer) window.game.renderer.resize();
+  }, 300);
+}
+
 const STORAGE_KEY = 'signal-circuit-progress';
 const LEADERBOARD_KEY = 'signal-circuit-leaderboard';
 const STATS_KEY = 'signal-circuit-stats';
@@ -2162,6 +2180,12 @@ window.addEventListener('DOMContentLoaded', () => {
   game.init();
   game.startRenderLoop();
   window.game = game;
+
+  // Set correct toggle label for mobile
+  const toggleBtn = document.getElementById('panel-toggle');
+  if (toggleBtn && window.innerWidth <= 768) {
+    toggleBtn.textContent = '▼ Hide';
+  }
 
   // Save playtime on page unload
   window.addEventListener('beforeunload', () => {
