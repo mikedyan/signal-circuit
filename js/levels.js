@@ -33,6 +33,14 @@ const CHAPTERS = [
     gatesMastered: ['Decoder', 'Comparator', 'MUX', 'Ripple Adder'],
     color: '#ff6644',
   },
+  {
+    id: 5, title: 'Chapter 5: Shield Systems', levels: [23, 24, 25, 26, 27],
+    narrative: 'Defense Grid',
+    storyIntro: 'The ship enters uncharted space. Cosmic debris and electromagnetic storms batter the hull. Build the shield logic to protect the crew.',
+    storyComplete: '🛡️ Shields holding at maximum! The ship glides safely through the cosmic storm.',
+    gatesMastered: ['Parity', 'Priority Encoder', 'Subtractor', 'Demux'],
+    color: '#FFD700',
+  },
 ];
 
 const LEVELS = [
@@ -764,6 +772,195 @@ const LEVELS = [
       { inputs: [1, 1, 0, 1], outputs: [1, 0, 0] },  // 3+1=100
       { inputs: [1, 1, 1, 0], outputs: [1, 0, 1] },  // 3+2=101
       { inputs: [1, 1, 1, 1], outputs: [1, 1, 0] },  // 3+3=110
+    ],
+  },
+
+  // ── Chapter 5: Shield Systems (Defense Grid) ──
+  {
+    id: 23,
+    title: 'Error Detector',
+    description: 'Detect transmission errors in shield data. Output 1 when an odd number of input bits are high — the signature of a corrupted signal.',
+    postSolveInsight: '🔓 Parity checking is the oldest error detection trick in computing. Every byte transmitted over USB, Ethernet, and RAM includes parity bits built from circuits exactly like this one.\n🛡️ Shield data integrity monitor online.',
+    hints: [
+      'XOR naturally counts "oddness" — XOR(0,1)=1, XOR(1,1)=0. Chain them together.',
+      'First XOR two inputs together. Then XOR that result with the third input. Two gates total.',
+    ],
+    hintHighlights: ['A', 'B', 'C', 'P'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 2,
+    goodGates: 4,
+    inputs: [
+      { label: 'A', x: 60, y: 120 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'C', x: 60, y: 280 },
+    ],
+    outputs: [
+      { label: 'P', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [1] },
+      { inputs: [0, 1, 0], outputs: [1] },
+      { inputs: [0, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0], outputs: [1] },
+      { inputs: [1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+  },
+  {
+    id: 24,
+    title: 'Shield Integrity Check',
+    description: 'Validate 4-bit shield integrity codes. Output 1 when an even number of bits are high (including zero) — confirming the shields hold.',
+    postSolveInsight: '🔓 Even parity is used in RAID storage, ECC memory, and TCP checksums. Your computer is running millions of these checks per second right now.\n🛡️ Shield integrity validator operational.',
+    hints: [
+      'Even parity is the opposite of odd parity. XOR gives you odd parity — what turns odd into even?',
+      'XOR all four inputs together to get odd parity, then invert with NOT. Four gates: three XOR and one NOT.',
+    ],
+    hintHighlights: ['A', 'B', 'C', 'D', 'P'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 4,
+    goodGates: 6,
+    inputs: [
+      { label: 'A', x: 60, y: 80 },
+      { label: 'B', x: 60, y: 160 },
+      { label: 'C', x: 60, y: 240 },
+      { label: 'D', x: 60, y: 320 },
+    ],
+    outputs: [
+      { label: 'P', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0, 0], outputs: [1] },
+      { inputs: [0, 0, 0, 1], outputs: [0] },
+      { inputs: [0, 0, 1, 0], outputs: [0] },
+      { inputs: [0, 0, 1, 1], outputs: [1] },
+      { inputs: [0, 1, 0, 0], outputs: [0] },
+      { inputs: [0, 1, 0, 1], outputs: [1] },
+      { inputs: [0, 1, 1, 0], outputs: [1] },
+      { inputs: [0, 1, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 0, 1], outputs: [1] },
+      { inputs: [1, 0, 1, 0], outputs: [1] },
+      { inputs: [1, 0, 1, 1], outputs: [0] },
+      { inputs: [1, 1, 0, 0], outputs: [1] },
+      { inputs: [1, 1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1, 1], outputs: [1] },
+    ],
+  },
+  {
+    id: 25,
+    title: 'Threat Prioritizer',
+    description: 'Multiple threats detected! Encode the highest-priority active sensor (I3=highest) as a binary index (Y1:Y0) and flag if any threat exists (V).',
+    postSolveInsight: '🔓 Priority encoders are the backbone of interrupt controllers in every CPU. When multiple devices scream for attention simultaneously, this circuit decides who gets served first.\n🛡️ Threat prioritization matrix active.',
+    hints: [
+      'Y1 should be 1 when either of the top two inputs (I3 or I2) is active. That\'s just an OR gate.',
+      'Y0 is trickier: it\'s 1 for I3 (index 11) and I1 (index 01), but NOT for I2 (index 10). So Y0 = I3 OR (I1 when I2 is off).',
+      'Y0 = I3 OR (NOT(I2) AND I1). V = I3 OR I2 OR I1 OR I0. Share the I3 OR I2 computation.',
+    ],
+    hintHighlights: ['I3', 'I2', 'I1', 'I0', 'Y1', 'Y0', 'V'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 6,
+    goodGates: 8,
+    inputs: [
+      { label: 'I3', x: 60, y: 80 },
+      { label: 'I2', x: 60, y: 160 },
+      { label: 'I1', x: 60, y: 240 },
+      { label: 'I0', x: 60, y: 320 },
+    ],
+    outputs: [
+      { label: 'Y1', x: 600, y: 100 },
+      { label: 'Y0', x: 600, y: 200 },
+      { label: 'V', x: 600, y: 300 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0, 0], outputs: [0, 0, 0] },
+      { inputs: [0, 0, 0, 1], outputs: [0, 0, 1] },
+      { inputs: [0, 0, 1, 0], outputs: [0, 1, 1] },
+      { inputs: [0, 0, 1, 1], outputs: [0, 1, 1] },
+      { inputs: [0, 1, 0, 0], outputs: [1, 0, 1] },
+      { inputs: [0, 1, 0, 1], outputs: [1, 0, 1] },
+      { inputs: [0, 1, 1, 0], outputs: [1, 0, 1] },
+      { inputs: [0, 1, 1, 1], outputs: [1, 0, 1] },
+      { inputs: [1, 0, 0, 0], outputs: [1, 1, 1] },
+      { inputs: [1, 0, 0, 1], outputs: [1, 1, 1] },
+      { inputs: [1, 0, 1, 0], outputs: [1, 1, 1] },
+      { inputs: [1, 0, 1, 1], outputs: [1, 1, 1] },
+      { inputs: [1, 1, 0, 0], outputs: [1, 1, 1] },
+      { inputs: [1, 1, 0, 1], outputs: [1, 1, 1] },
+      { inputs: [1, 1, 1, 0], outputs: [1, 1, 1] },
+      { inputs: [1, 1, 1, 1], outputs: [1, 1, 1] },
+    ],
+  },
+  {
+    id: 26,
+    title: 'Damage Calculator',
+    description: 'Calculate shield damage with borrow propagation. Build a full subtractor: compute A minus B minus BorrowIn, producing the Difference and BorrowOut.',
+    postSolveInsight: '🔓 Full subtractors are the mirror image of full adders. Chain them together and you get multi-bit subtraction — the basis of every comparison and negative number operation in a CPU.\n🛡️ Shield damage assessment module online.',
+    hints: [
+      'The difference bit works exactly like addition: D = A XOR B XOR Bin. Three values, odd-one-out.',
+      'Borrow occurs when we need to "borrow" from the next column. It happens when A can\'t cover B + Bin.',
+      'Bout = (NOT(A) AND B) OR (NOT(A XOR B) AND Bin). Share the XOR(A,B) between the D and Bout computations — 7 gates total.',
+    ],
+    hintHighlights: ['A', 'B', 'Bin', 'D', 'Bout'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 7,
+    goodGates: 9,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'Bin', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'D', x: 600, y: 140 },
+      { label: 'Bout', x: 600, y: 260 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0, 0] },  // 0-0-0 = 0, no borrow
+      { inputs: [0, 0, 1], outputs: [1, 1] },  // 0-0-1 = -1, borrow
+      { inputs: [0, 1, 0], outputs: [1, 1] },  // 0-1-0 = -1, borrow
+      { inputs: [0, 1, 1], outputs: [0, 1] },  // 0-1-1 = -2, borrow
+      { inputs: [1, 0, 0], outputs: [1, 0] },  // 1-0-0 = 1, no borrow
+      { inputs: [1, 0, 1], outputs: [0, 0] },  // 1-0-1 = 0, no borrow
+      { inputs: [1, 1, 0], outputs: [0, 0] },  // 1-1-0 = 0, no borrow
+      { inputs: [1, 1, 1], outputs: [1, 1] },  // 1-1-1 = -1, borrow
+    ],
+  },
+  {
+    id: 27,
+    title: 'Shield Router',
+    description: 'The ultimate defense puzzle! Route shield power to one of four hull sectors. When SEL selects a sector, that output gets the data signal — all others stay off.',
+    postSolveInsight: '🔓 Demultiplexers are the inverse of multiplexers — one signal in, many possible destinations. Memory chips use them to route write data to the selected address. Your RAM is full of these.\n🛡️ Shield power routing grid operational! All sectors protected. The ship is battle-ready.',
+    hints: [
+      'Each output fires only for its specific select combination. Y0 fires when S1=0 AND S0=0, Y1 when S1=0 AND S0=1, etc.',
+      'Every output needs D AND the right combination of S1/NOT(S1) and S0/NOT(S0). Share the NOT gates and the partial products.',
+      'Compute D·NOT(S1) and D·S1 first, then AND each with NOT(S0) or S0 for the four outputs. Eight gates total.',
+    ],
+    hintHighlights: ['D', 'S1', 'S0', 'Y0', 'Y1', 'Y2', 'Y3'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 8,
+    goodGates: 10,
+    inputs: [
+      { label: 'D', x: 60, y: 120 },
+      { label: 'S1', x: 60, y: 200 },
+      { label: 'S0', x: 60, y: 280 },
+    ],
+    outputs: [
+      { label: 'Y0', x: 600, y: 60 },
+      { label: 'Y1', x: 600, y: 150 },
+      { label: 'Y2', x: 600, y: 250 },
+      { label: 'Y3', x: 600, y: 340 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0, 0, 0, 0] },
+      { inputs: [0, 0, 1], outputs: [0, 0, 0, 0] },
+      { inputs: [0, 1, 0], outputs: [0, 0, 0, 0] },
+      { inputs: [0, 1, 1], outputs: [0, 0, 0, 0] },
+      { inputs: [1, 0, 0], outputs: [1, 0, 0, 0] },
+      { inputs: [1, 0, 1], outputs: [0, 1, 0, 0] },
+      { inputs: [1, 1, 0], outputs: [0, 0, 1, 0] },
+      { inputs: [1, 1, 1], outputs: [0, 0, 0, 1] },
     ],
   },
 ];
