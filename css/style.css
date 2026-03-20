@@ -64,7 +64,7 @@ body {
 
 #game-subtitle {
   font-size: 14px;
-  color: #666;
+  color: #8a8a8a; /* F29-1: WCAG AA 4.5:1 contrast on #1a1a2e */
   letter-spacing: 4px;
   text-transform: uppercase;
   margin-bottom: 40px;
@@ -168,7 +168,7 @@ body {
   margin-top: 30px;
   background: none;
   border: 1px solid #444;
-  color: #666;
+  color: #8a8a8a; /* F29-1: WCAG AA contrast fix */
   padding: 8px 20px;
   font-family: 'Courier New', monospace;
   font-size: 11px;
@@ -697,6 +697,7 @@ body {
 
 #status-text {
   flex: 1;
+  color: #8a8a8a; /* F29-1: WCAG AA contrast fix */
 }
 
 #timer-display {
@@ -2384,7 +2385,7 @@ body.colorblind-mode #result-display.fail {
 /* ── Game Narrative ── */
 #game-narrative {
   font-size: 11px;
-  color: #556;
+  color: #7a7a8e; /* F29-1: WCAG AA contrast fix */
   letter-spacing: 1px;
   font-style: italic;
   margin-bottom: 20px;
@@ -2982,6 +2983,66 @@ body.fontsize-x-large #level-info h2 {
 @keyframes tooltipArrowPulse {
   0%, 100% { opacity: 0.5; transform: translateX(-50%) translateY(0); }
   50% { opacity: 1; transform: translateX(-50%) translateY(3px); }
+}
+
+/* ── Day 29: Accessibility — Focus-Visible Styles (F29-1) ── */
+*:focus-visible {
+  outline: 2px solid #0f0;
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid #0f0;
+  outline-offset: 2px;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+}
+
+/* Suppress default outline for mouse clicks */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ── Day 29: "One More Level" Teaser (F29-3) ── */
+#next-level-teaser {
+  font-size: 11px;
+  color: #668;
+  margin: 6px 0 4px;
+  padding: 6px 10px;
+  background: rgba(0, 200, 255, 0.04);
+  border: 1px solid rgba(0, 200, 255, 0.12);
+  border-radius: 4px;
+  text-align: left;
+  animation: teaserFadeIn 0.6s ease 1.2s both;
+}
+
+#next-level-teaser .teaser-label {
+  color: #0f0;
+  font-weight: bold;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes teaserFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Day 29: localStorage Warning Toast (F29-4) ── */
+#storage-warning {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(200, 100, 0, 0.95);
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  z-index: 3000;
+  animation: toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 4.6s forwards;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Day 28: Toolbox Scroll Indicator (T9) ── */

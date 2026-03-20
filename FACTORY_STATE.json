@@ -1,10 +1,10 @@
 {
   "project": "signal-circuit",
-  "currentDay": 28,
-  "lastCompletedDay": 28,
-  "lastRunDate": "2026-03-19",
+  "currentDay": 29,
+  "lastCompletedDay": 29,
+  "lastRunDate": "2026-03-20",
   "status": "green",
-  "totalItemsShipped": 138,
+  "totalItemsShipped": 143,
   "dayHistory": {
     "1": { "date": "2026-02-19", "items": 1, "status": "green", "summary": "Initial scaffolding: HTML/CSS/JS structure, canvas, basic gate rendering" },
     "2": { "date": "2026-02-20", "items": 3, "status": "green", "summary": "Gate drag-drop, wire drawing, circuit simulation engine" },
@@ -33,6 +33,7 @@
     "25": { "date": "2026-03-16", "items": 10, "status": "green", "summary": "Visual Identity & Interaction Polish: color-coded toolbox gates, brand mark SVG, pin visibility improved, font size toggle, non-blocking onboarding, semantic wire colors, clear circuit undo, level transition choreography, sound micro-randomization, challenge mode gating" },
     "26": { "date": "2026-03-17", "items": 10, "status": "green", "summary": "Onboarding & Reward Systems: distributed onboarding (L1–4), idle wire animation, staggered star reveal + chime, RUN button press depth, grid snap overlay, UI navigation sounds, timer color thresholds, daily streak with freeze tokens, Circuit Journey graduation modal, Perfect Retry button" },
     "27": { "date": "2026-03-18", "items": 10, "status": "green", "summary": "Systems Integration & Hardening: cross-level references, intentional zoom transitions, unified modal language, intensity-scaled failure shake, level select scroll restore, first-action timer start, cycle detection warning, mobile haptics, enhanced Master Logician graduation screen, tighter gate budgets" },
-    "28": { "date": "2026-03-19", "items": 10, "status": "green", "summary": "Audio & Feedback Micro-Polish: undo/redo swooshes, pin hover blips, gate counter color + pulse, mute power sweep, tooltip pulse + arrow, delete/escape audio, toolbox hover tones, emoji difficulty badges, toolbox scroll fade, contextual cursors" }
+    "28": { "date": "2026-03-19", "items": 10, "status": "green", "summary": "Audio & Feedback Micro-Polish: undo/redo swooshes, pin hover blips, gate counter color + pulse, mute power sweep, tooltip pulse + arrow, delete/escape audio, toolbox hover tones, emoji difficulty badges, toolbox scroll fade, contextual cursors" },
+    "29": { "date": "2026-03-20", "items": 5, "status": "green", "summary": "Quality Bar: accessibility audit (ARIA + WCAG contrast + focus states + noscript), performance budget (idle render trim + particle cap), one-more-level teaser, safe localStorage quota fallback, narrative micro-copy polish" }
   }
 }

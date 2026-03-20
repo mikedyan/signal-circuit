@@ -180,7 +180,7 @@ const LEVELS = [
     id: 6,
     title: 'Signal Selector',
     description: 'Use AND and NOT together: output B only when A is 0. When A is 1, output 0.',
-    postSolveInsight: '🔓 You just built an "inhibit" gate — it blocks signal B when control signal A is active. Used in priority circuits!\n🛸 Signal filtering ready for comms array.',
+    postSolveInsight: '🔓 You just built an "inhibit" gate — it blocks signal B when control signal A is active. Used in priority circuits!\n🛸 Signal filters engaged. The comms array is next — and the crew needs to call for help.',
     hints: [
       'When A=0, the output should equal B. When A=1, the output should always be 0.',
       'You need to "gate" B based on A. What if you inverted A first?',
@@ -323,7 +323,7 @@ const LEVELS = [
     id: 11,
     title: 'The Implication',
     description: 'Most of this truth table outputs 1. Study the one exception carefully.',
-    postSolveInsight: '🔓 A→B = OR(NOT(A), B). Material implication is the foundation of formal logic and programming conditionals. Just 2 gates!\n📡 Communications array fully operational!',
+    postSolveInsight: '🔓 A→B = OR(NOT(A), B). Material implication is the foundation of formal logic and programming conditionals. Just 2 gates!\n📡 Conditional relay logic restored — one more module to go.',
     hints: [
       'A→B is only false when A is true but B isn\'t. All other cases are true.',
       'Just 2 gates needed. What if you transformed one input before combining?',
@@ -353,7 +353,7 @@ const LEVELS = [
     id: 12,
     title: 'Dual Output Router',
     description: 'Two outputs from two inputs. Route input A to output X, and compute A OR B to output Y. Your first multi-output puzzle!',
-    postSolveInsight: '🔓 Multi-output circuits share inputs but produce independent results. This is how real chips work — one input bus, many output signals!\n📡 Multi-channel router calibrated for life support.',
+    postSolveInsight: '🔓 Multi-output circuits share inputs but produce independent results. This is how real chips work — one input bus, many output signals!\n📡 Communications array fully operational! Distress signal broadcasting. But life support readings are critical...',
     hints: [
       'Two separate outputs need two separate circuits — but they can share the same inputs.',
       'Output X just needs to copy A directly. Output Y combines A and B.',
@@ -512,7 +512,7 @@ const LEVELS = [
     id: 17,
     title: 'Full Adder',
     description: 'The boss level! Add three single-bit numbers (A + B + carry-in) and produce SUM and CARRY outputs.',
-    postSolveInsight: '🔓 Full Adder: SUM = XOR(XOR(A,B), Cin), CARRY = OR(AND(A,B), AND(Cin, XOR(A,B))). Chain these together and you\'ve built a CPU\'s arithmetic unit!\n🌬️ Life support fully operational! All systems go.',
+    postSolveInsight: '🔓 Full Adder: SUM = XOR(XOR(A,B), Cin), CARRY = OR(AND(A,B), AND(Cin, XOR(A,B))). Chain these together and you\'ve built a CPU\'s arithmetic unit!\n🌬️ Life support fully restored! The crew can breathe again. Now... let\'s get them home.',
     hints: [
       'Think of it as two half-adders chained together. What does a half adder (Level 11) produce?',
       '5 gates total. First, add A and B (like Level 11). Then add that partial result with Cin. The carries from both additions combine.',
@@ -725,7 +725,7 @@ const LEVELS = [
     id: 22,
     title: '2-Bit Ripple Adder',
     description: 'The ultimate challenge! Add two 2-bit numbers (A1:A0 + B1:B0) and produce the 3-bit result (Cout:S1:S0).',
-    postSolveInsight: '🔓 You just built a 2-bit ripple carry adder — chain four of these together and you have an 8-bit adder, the arithmetic heart of early CPUs like the Intel 8080.\n🚀 Warp drive arithmetic unit operational! Ready for light speed.',
+    postSolveInsight: '🔓 You just built a 2-bit ripple carry adder — chain four of these together and you have an 8-bit adder, the arithmetic heart of early CPUs like the Intel 8080.\n🚀 Warp drive arithmetic unit operational! The engines hum to life. Course plotted for home. Engage.',
     hints: [
       'Break it into two stages: add the low bits first (A0 + B0 → S0 and carry), then add the high bits with that carry.',
       'Stage 1 is a half adder: S0 = XOR(A0,B0), C0 = AND(A0,B0). Stage 2 is a full adder on A1, B1, and C0.',

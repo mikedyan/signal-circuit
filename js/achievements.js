@@ -53,12 +53,20 @@ class AchievementManager {
   }
 
   save() {
-    try {
-      localStorage.setItem('signal-circuit-achievements', JSON.stringify({
+    // F29-4: Use SafeStorage for graceful quota handling
+    if (typeof SafeStorage !== 'undefined') {
+      SafeStorage.setItem('signal-circuit-achievements', JSON.stringify({
         unlocked: this.unlocked,
         stats: this.stats,
       }));
-    } catch (e) {}
+    } else {
+      try {
+        localStorage.setItem('signal-circuit-achievements', JSON.stringify({
+          unlocked: this.unlocked,
+          stats: this.stats,
+        }));
+      } catch (e) {}
+    }
   }
 
   isUnlocked(id) {

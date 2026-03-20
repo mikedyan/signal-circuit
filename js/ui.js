@@ -840,10 +840,22 @@ class UI {
 
     // Show next level button if there's a next level
     const nextBtn = document.getElementById('next-level-btn');
+    const teaserEl = document.getElementById('next-level-teaser');
     if (level.id < getLevelCount()) {
       nextBtn.style.display = 'inline-block';
+      // F29-3: "One more level" teaser to hook re-engagement
+      if (teaserEl) {
+        const nextLevel = getLevel(level.id + 1);
+        if (nextLevel) {
+          teaserEl.innerHTML = `<span class="teaser-label">Up Next →</span> Level ${nextLevel.id}: ${nextLevel.title}`;
+          teaserEl.style.display = 'block';
+        } else {
+          teaserEl.style.display = 'none';
+        }
+      }
     } else {
       nextBtn.style.display = 'none';
+      if (teaserEl) teaserEl.style.display = 'none';
     }
 
     // T10: Show "Perfect Retry" button if hints were used and level doesn't have Pure Logic badge yet
@@ -877,6 +889,8 @@ class UI {
     if (parEl) parEl.style.display = 'none';
     const retryBtn = document.getElementById('perfect-retry-btn');
     if (retryBtn) retryBtn.style.display = 'none';
+    const teaserEl = document.getElementById('next-level-teaser');
+    if (teaserEl) teaserEl.style.display = 'none';
   }
 
   showChallengeResult(gateCount, level) {
@@ -1976,7 +1990,8 @@ class UI {
     this.celebrationParticles = [];
 
     // Scale effects by star rating (amplified for Day 22 juice)
-    const particleCount = stars === 3 ? 180 : stars === 2 ? 100 : 45;
+    // F29-2: Cap at 200 particles for performance budget
+    const particleCount = Math.min(stars === 3 ? 180 : stars === 2 ? 100 : 45, 200);
     const useFlash = stars >= 2;
     const flashDuration = stars === 3 ? 900 : 600;
 

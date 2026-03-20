@@ -8,6 +8,50 @@ const AUTOSAVE_KEY = 'signal-circuit-autosave';
 const GHOST_KEY = 'signal-circuit-ghost';
 const SCHEMA_VERSION = 1;
 
+// F29-4: Safe localStorage wrapper — graceful fallback on quota exceeded
+const SafeStorage = {
+  _warned: false,
+
+  getItem(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+
+  setItem(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      if (!this._warned && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
+        this._warned = true;
+        this._showWarning();
+      }
+      return false;
+    }
+  },
+
+  removeItem(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
+  },
+
+  _showWarning() {
+    // Show a brief toast warning
+    let toast = document.getElementById('storage-warning');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'storage-warning';
+      toast.textContent = '⚠ Storage full — progress may not save. Clear browser data to fix.';
+      document.body.appendChild(toast);
+      setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5200);
+    }
+  },
+};
+
 class UndoManager {
   constructor() {
     this.undoStack = [];
@@ -229,10 +273,8 @@ class GameState {
   }
 
   saveProgress() {
-    try {
-      this.progress.version = SCHEMA_VERSION;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
-    } catch (e) {}
+    this.progress.version = SCHEMA_VERSION;
+    SafeStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
   }
 
   resetProgress() {
@@ -251,9 +293,7 @@ class GameState {
   }
 
   saveLeaderboard() {
-    try {
-      localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(this.leaderboard));
-    } catch (e) {}
+    SafeStorage.setItem(LEADERBOARD_KEY, JSON.stringify(this.leaderboard));
   }
 
   getLeaderboard(difficultyKey) {
@@ -290,9 +330,7 @@ class GameState {
   }
 
   saveLifetimeStats(stats) {
-    try {
-      localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-    } catch (e) {}
+    SafeStorage.setItem(STATS_KEY, JSON.stringify(stats));
   }
 
   trackGatePlaced() {
@@ -326,9 +364,7 @@ class GameState {
   }
 
   saveStreakData(data) {
-    try {
-      localStorage.setItem('signal-circuit-streak', JSON.stringify(data));
-    } catch (e) {}
+    SafeStorage.setItem('signal-circuit-streak', JSON.stringify(data));
   }
 
   updateStreak() {
@@ -377,9 +413,7 @@ class GameState {
   }
 
   saveMilestones(milestones) {
-    try {
-      localStorage.setItem(MILESTONES_KEY, JSON.stringify(milestones));
-    } catch (e) {}
+    SafeStorage.setItem(MILESTONES_KEY, JSON.stringify(milestones));
   }
 
   isLevelUnlocked(levelId) {
@@ -1997,14 +2031,12 @@ class GameState {
       nextId: this.nextId,
       timestamp: Date.now(),
     };
-    try {
-      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
-    } catch (e) {}
+    SafeStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
   }
 
   _restoreAutoSave(levelId) {
     try {
-      const raw = localStorage.getItem(AUTOSAVE_KEY);
+      const raw = SafeStorage.getItem(AUTOSAVE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw);
       if (data.levelId !== levelId) return;
@@ -2049,9 +2081,7 @@ class GameState {
   }
 
   _clearAutoSave() {
-    try {
-      localStorage.removeItem(AUTOSAVE_KEY);
-    } catch (e) {}
+    SafeStorage.removeItem(AUTOSAVE_KEY);
   }
 
   // ── T10: Replay Ghost ──
@@ -2068,9 +2098,9 @@ class GameState {
       })),
     };
     try {
-      const all = JSON.parse(localStorage.getItem(GHOST_KEY) || '{}');
+      const all = JSON.parse(SafeStorage.getItem(GHOST_KEY) || '{}');
       all[levelId] = data;
-      localStorage.setItem(GHOST_KEY, JSON.stringify(all));
+      SafeStorage.setItem(GHOST_KEY, JSON.stringify(all));
     } catch (e) {}
   }
 
@@ -2078,7 +2108,7 @@ class GameState {
     this.ghostOverlay = null;
     this.showGhost = false;
     try {
-      const all = JSON.parse(localStorage.getItem(GHOST_KEY) || '{}');
+      const all = JSON.parse(SafeStorage.getItem(GHOST_KEY) || '{}');
       const data = all[levelId];
       if (data && (data.gates.length > 0 || data.wires.length > 0)) {
         this.ghostOverlay = data;
@@ -2099,16 +2129,25 @@ class GameState {
   }
 
   startRenderLoop() {
+    let idleFrameCount = 0;
     const loop = () => {
       if (this.currentScreen === 'gameplay') {
         // Always render during animation, otherwise only when dirty
         const sim = this.simulation;
+        const hasActiveParticles = this.renderer.sparkParticles.length > 0 || this.renderer.ripples.length > 0;
         if (this.needsRender || (sim && sim.animating) || 
-            this.renderer.sparkParticles.length > 0 ||
-            this.renderer.ripples.length > 0 ||
+            hasActiveParticles ||
             this.wireManager.drawing) {
           this.renderer.render();
           this.needsRender = false;
+          idleFrameCount = 0;
+        } else {
+          // F29-2: Trim idle rendering — only redraw every 30 frames (~2Hz) when idle
+          idleFrameCount++;
+          if (idleFrameCount >= 30) {
+            this.renderer.render();
+            idleFrameCount = 0;
+          }
         }
       }
       requestAnimationFrame(loop);
