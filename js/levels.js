@@ -901,12 +901,12 @@ const LEVELS = [
     hints: [
       'The difference bit works exactly like addition: D = A XOR B XOR Bin. Three values, odd-one-out.',
       'Borrow occurs when we need to "borrow" from the next column. It happens when A can\'t cover B + Bin.',
-      'Bout = (B AND Bin) OR (NOT(A) AND (B XOR Bin)). The key: XOR B and Bin first — that feeds both D and Bout with no extra inversion. Six gates total.',
+      'Bout = (D AND (B XOR Bin)) OR (B AND Bin). The deep insight: D already encodes NOT(A) when B XOR Bin is active — no NOT gate needed anywhere. Five gates total.',
     ],
     hintHighlights: ['A', 'B', 'Bin', 'D', 'Bout'],
     availableGates: ['AND', 'OR', 'NOT', 'XOR'],
-    optimalGates: 6,
-    goodGates: 8,
+    optimalGates: 5,
+    goodGates: 7,
     inputs: [
       { label: 'A', x: 60, y: 100 },
       { label: 'B', x: 60, y: 200 },
