@@ -30,6 +30,7 @@ class UI {
     this.setupGhostToggle();
     this.setupFontSizeToggle();
     this.setupJourneyModal();
+    this.setupLevelCreator();
   }
 
   // ── Colorblind Mode Toggle ──
@@ -343,7 +344,7 @@ class UI {
   }
 
   showScreen(screen) {
-    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen'];
+    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen'];
     // T6: Play transition whoosh on screen change
     if (this.gameState.audio) this.gameState.audio.playTransitionWhoosh();
 
@@ -770,6 +771,9 @@ class UI {
     } else {
       document.getElementById('status-bar').textContent = text;
     }
+    // ARIA: Announce status changes for screen readers
+    const sr = document.getElementById('sr-status');
+    if (sr) sr.textContent = text;
   }
 
   // ── Star Display ──
@@ -1649,6 +1653,22 @@ class UI {
         tip: 'XOR is the foundation of binary addition (half adder). Also used in parity checks and encryption.',
         table: [[0,0,0],[0,1,1],[1,0,1],[1,1,0]],
       },
+      {
+        type: 'NAND',
+        symbol: '⊼',
+        desc: 'NOT-AND: outputs 0 ONLY when both inputs are 1. The inverse of AND.',
+        analogy: '🏭 A factory alarm: it stays ON unless both safety checks pass simultaneously.',
+        tip: 'NAND is a "universal gate" — you can build ANY logic circuit using only NAND gates. Every modern CPU is ultimately made of NANDs.',
+        table: [[0,0,1],[0,1,1],[1,0,1],[1,1,0]],
+      },
+      {
+        type: 'NOR',
+        symbol: '⊽',
+        desc: 'NOT-OR: outputs 1 ONLY when both inputs are 0. The inverse of OR.',
+        analogy: '🚀 The Apollo Guidance Computer was built entirely from ~5,600 NOR gates — it navigated humans to the moon!',
+        tip: 'NOR is also universal. The entire Apollo 11 computer used only NOR gates — proving you can build anything with just one gate type.',
+        table: [[0,0,1],[0,1,0],[1,0,0],[1,1,0]],
+      },
     ];
 
     for (const info of gateInfo) {
@@ -2110,5 +2130,171 @@ class UI {
     };
 
     requestAnimationFrame(animate);
+  }
+
+  // ── Level Creator (#121) ──
+  setupLevelCreator() {
+    const createBtn = document.getElementById('create-level-btn');
+    if (createBtn) {
+      createBtn.addEventListener('click', () => {
+        this.gameState.audio.playButtonClick();
+        this.showCreatorScreen();
+      });
+    }
+
+    const backBtn = document.getElementById('creator-back-btn');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        this.gameState.audio.playButtonClick();
+        this.gameState.showLevelSelect();
+      });
+    }
+
+    const playBtn = document.getElementById('creator-play-btn');
+    if (playBtn) {
+      playBtn.addEventListener('click', () => {
+        this.playCustomLevel();
+      });
+    }
+
+    const shareBtn = document.getElementById('creator-share-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', () => {
+        this.shareCustomLevel();
+      });
+    }
+
+    // Input/output count sliders
+    const inputSlider = document.getElementById('creator-input-slider');
+    const outputSlider = document.getElementById('creator-output-slider');
+    if (inputSlider) {
+      inputSlider.addEventListener('input', () => this.renderCreatorTruthTable());
+    }
+    if (outputSlider) {
+      outputSlider.addEventListener('input', () => this.renderCreatorTruthTable());
+    }
+  }
+
+  showCreatorScreen() {
+    this.gameState._saveLevelSelectScroll();
+    this.gameState.currentScreen = 'creator-config';
+    this.gameState.stopTimer();
+    this.gameState.audio.stopAmbient();
+    this.showScreen('creator-config');
+    this.renderCreatorTruthTable();
+  }
+
+  renderCreatorTruthTable() {
+    const numInputs = parseInt(document.getElementById('creator-input-slider').value) || 2;
+    const numOutputs = parseInt(document.getElementById('creator-output-slider').value) || 1;
+    const numRows = Math.pow(2, numInputs);
+    const inputLabels = ['A', 'B', 'C', 'D'].slice(0, numInputs);
+    const outputLabels = numOutputs === 1 ? ['OUT'] : Array.from({ length: numOutputs }, (_, i) => `Y${i}`);
+
+    document.getElementById('creator-input-count').textContent = numInputs;
+    document.getElementById('creator-output-count').textContent = numOutputs;
+
+    let html = '<table class="creator-tt"><thead><tr>';
+    for (const l of inputLabels) html += `<th class="tt-input">${l}</th>`;
+    for (const l of outputLabels) html += `<th class="tt-output">${l}</th>`;
+    html += '</tr></thead><tbody>';
+
+    for (let r = 0; r < numRows; r++) {
+      html += '<tr>';
+      for (let i = numInputs - 1; i >= 0; i--) {
+        html += `<td class="tt-input">${(r >> i) & 1}</td>`;
+      }
+      for (let o = 0; o < numOutputs; o++) {
+        html += `<td class="tt-output tt-toggle" data-row="${r}" data-col="${o}">0</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+
+    const container = document.getElementById('creator-truth-table');
+    container.innerHTML = html;
+
+    // Click to toggle output cells
+    container.querySelectorAll('.tt-toggle').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const val = cell.textContent === '0' ? '1' : '0';
+        cell.textContent = val;
+        cell.classList.toggle('tt-active', val === '1');
+        if (this.gameState.audio) this.gameState.audio.playClick();
+      });
+    });
+  }
+
+  _getCreatorData() {
+    const name = document.getElementById('creator-name').value.trim() || 'Custom Level';
+    const numInputs = parseInt(document.getElementById('creator-input-slider').value) || 2;
+    const numOutputs = parseInt(document.getElementById('creator-output-slider').value) || 1;
+    const numRows = Math.pow(2, numInputs);
+
+    const truthTable = [];
+    const cells = document.querySelectorAll('#creator-truth-table .tt-toggle');
+    let cellIdx = 0;
+    for (let r = 0; r < numRows; r++) {
+      const row = [];
+      // Input bits
+      for (let i = numInputs - 1; i >= 0; i--) {
+        row.push((r >> i) & 1);
+      }
+      // Output bits
+      for (let o = 0; o < numOutputs; o++) {
+        row.push(parseInt(cells[cellIdx].textContent) || 0);
+        cellIdx++;
+      }
+      truthTable.push(row);
+    }
+
+    // Collect selected gates
+    const gates = [];
+    document.querySelectorAll('#creator-gate-select input:checked').forEach(cb => {
+      gates.push(cb.value);
+    });
+    if (gates.length === 0) gates.push('AND', 'OR', 'NOT');
+
+    return { n: name, i: numInputs, o: numOutputs, t: truthTable, g: gates };
+  }
+
+  playCustomLevel() {
+    const data = this._getCreatorData();
+    const level = buildCustomLevel(data);
+    const gs = this.gameState;
+
+    gs.isChallengeMode = false;
+    gs.isSandboxMode = false;
+    gs.currentScreen = 'gameplay';
+    this.showScreen('gameplay');
+    gs.audio.startAmbient();
+    gs.renderer.resize();
+    gs.renderer.resetView();
+    gs.loadChallengeLevel(level);
+    setTimeout(() => gs.renderer.resize(), 100);
+    gs.audio.playButtonClick();
+  }
+
+  shareCustomLevel() {
+    const data = this._getCreatorData();
+    const encoded = btoa(JSON.stringify(data));
+    const url = window.location.origin + window.location.pathname + '#custom=' + encoded;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.updateStatusBar('📋 Share link copied to clipboard!');
+        const shareBtn = document.getElementById('creator-share-btn');
+        if (shareBtn) {
+          const orig = shareBtn.textContent;
+          shareBtn.textContent = '✓ Copied!';
+          setTimeout(() => { shareBtn.textContent = orig; }, 2000);
+        }
+      }).catch(() => {
+        prompt('Copy this link to share your level:', url);
+      });
+    } else {
+      prompt('Copy this link to share your level:', url);
+    }
+    this.gameState.audio.playButtonClick();
   }
 }

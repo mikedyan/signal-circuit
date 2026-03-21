@@ -37,6 +37,24 @@ const GateTypes = {
     width: 80,
     height: 60,
   },
+  NAND: {
+    name: 'NAND',
+    inputs: 2,
+    outputs: 1,
+    logic: (a, b) => (a & b) ? 0 : 1,
+    color: '#cc6600',
+    width: 80,
+    height: 60,
+  },
+  NOR: {
+    name: 'NOR',
+    inputs: 2,
+    outputs: 1,
+    logic: (a, b) => (a | b) ? 0 : 1,
+    color: '#9933cc',
+    width: 80,
+    height: 60,
+  },
 };
 
 class Gate {
@@ -141,6 +159,33 @@ class Gate {
         ctx.beginPath();
         ctx.moveTo(cx - s * 1.3, cy - s * 0.7);
         ctx.quadraticCurveTo(cx - s * 0.6, cy, cx - s * 1.3, cy + s * 0.7);
+        ctx.stroke();
+        break;
+      case 'NAND':
+        // AND shape with inversion bubble
+        ctx.beginPath();
+        ctx.moveTo(cx - s, cy - s * 0.7);
+        ctx.lineTo(cx - s * 0.1, cy - s * 0.7);
+        ctx.arc(cx - s * 0.1, cy, s * 0.7, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(cx - s, cy + s * 0.7);
+        ctx.closePath();
+        ctx.stroke();
+        // Inversion bubble
+        ctx.beginPath();
+        ctx.arc(cx + s * 0.8, cy, 3, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case 'NOR':
+        // OR shape with inversion bubble
+        ctx.beginPath();
+        ctx.moveTo(cx - s, cy - s * 0.7);
+        ctx.quadraticCurveTo(cx - s * 0.3, cy, cx - s, cy + s * 0.7);
+        ctx.quadraticCurveTo(cx + s * 0.1, cy + s * 0.5, cx + s * 0.7, cy);
+        ctx.quadraticCurveTo(cx + s * 0.1, cy - s * 0.5, cx - s, cy - s * 0.7);
+        ctx.stroke();
+        // Inversion bubble
+        ctx.beginPath();
+        ctx.arc(cx + s * 0.9, cy, 3, 0, Math.PI * 2);
         ctx.stroke();
         break;
     }

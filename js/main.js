@@ -1993,6 +1993,55 @@ class GameState {
         e.preventDefault();
         this.runSimulation();
       }
+
+      // Number keys 1-6: Quick-place available gates at canvas center
+      if (e.key >= '1' && e.key <= '6' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const level = this.currentLevel;
+        if (level && level.availableGates) {
+          const idx = parseInt(e.key) - 1;
+          if (idx < level.availableGates.length) {
+            const gateType = level.availableGates[idx];
+            const def = GateTypes[gateType];
+            if (def) {
+              const cw = this.renderer.displayWidth || 800;
+              const ch = this.renderer.displayHeight || 500;
+              const center = this.renderer.screenToWorld(cw / 2, ch / 2);
+              const gridSize = 20;
+              // Offset each placed gate slightly to avoid stacking
+              const jitter = this.gates.length * 30;
+              const x = Math.round((center.x - def.width / 2 + jitter) / gridSize) * gridSize;
+              const y = Math.round((center.y - def.height / 2) / gridSize) * gridSize;
+              this.addGate(gateType, x, y);
+            }
+          }
+        }
+      }
+
+      // Tab: Cycle through placed gates
+      if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        if (this.gates.length > 0) {
+          const currentIdx = this.selectedGate ? this.gates.indexOf(this.selectedGate) : -1;
+          const nextIdx = (currentIdx + (e.shiftKey ? -1 : 1) + this.gates.length) % this.gates.length;
+          this.selectedGate = this.gates[nextIdx];
+          this.wireManager.selectedWire = null;
+          this.markDirty();
+          this.ui.updateStatusBar(`Selected: ${this.selectedGate.type} gate`);
+          this.audio.playClick();
+        }
+      }
+
+      // Arrow keys: Nudge selected gate
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && this.selectedGate && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        const step = e.shiftKey ? 40 : 20;
+        if (e.key === 'ArrowUp') this.selectedGate.y -= step;
+        if (e.key === 'ArrowDown') this.selectedGate.y += step;
+        if (e.key === 'ArrowLeft') this.selectedGate.x -= step;
+        if (e.key === 'ArrowRight') this.selectedGate.x += step;
+        this.markDirty();
+        this._autoSave();
+      }
     });
   }
 
@@ -2174,6 +2223,58 @@ class GameState {
   }
 }
 
+// ── Custom Level URL Hash ──
+function parseCustomLevelFromHash() {
+  try {
+    const hash = window.location.hash;
+    if (!hash || !hash.startsWith('#custom=')) return null;
+    const encoded = hash.slice(8);
+    const json = atob(encoded);
+    const data = JSON.parse(json);
+    if (!data.n || !data.i || !data.o || !data.t || !data.g) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function buildCustomLevel(data) {
+  const numInputs = data.i;
+  const numOutputs = data.o;
+  const inputLabels = ['A', 'B', 'C', 'D'].slice(0, numInputs);
+  const outputLabels = numOutputs === 1 ? ['OUT'] : Array.from({ length: numOutputs }, (_, i) => `Y${i}`);
+
+  const inputs = inputLabels.map((label, i) => ({
+    label,
+    x: 60,
+    y: 80 + i * Math.min(100, 300 / numInputs),
+  }));
+  const outputs = outputLabels.map((label, i) => ({
+    label,
+    x: 620,
+    y: 80 + i * Math.min(100, 300 / numOutputs) + (numInputs - numOutputs) * 25,
+  }));
+
+  const truthTable = data.t.map(row => ({
+    inputs: row.slice(0, numInputs),
+    outputs: row.slice(numInputs),
+  }));
+
+  return {
+    id: 'custom',
+    title: data.n || 'Custom Level',
+    description: 'A community-created custom level!',
+    hints: [],
+    availableGates: data.g,
+    optimalGates: Math.max(1, numInputs),
+    goodGates: Math.max(2, numInputs + 2),
+    inputs,
+    outputs,
+    truthTable,
+    isCustom: true,
+  };
+}
+
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', () => {
   const game = new GameState();
@@ -2185,6 +2286,21 @@ window.addEventListener('DOMContentLoaded', () => {
   const toggleBtn = document.getElementById('panel-toggle');
   if (toggleBtn && window.innerWidth <= 768) {
     toggleBtn.textContent = '▼ Hide';
+  }
+
+  // Check for custom level in URL hash
+  const customData = parseCustomLevelFromHash();
+  if (customData) {
+    const customLevel = buildCustomLevel(customData);
+    game.isChallengeMode = false;
+    game.isSandboxMode = false;
+    game.currentScreen = 'gameplay';
+    game.ui.showScreen('gameplay');
+    game.audio.startAmbient();
+    game.renderer.resize();
+    game.renderer.resetView();
+    game.loadChallengeLevel(customLevel);
+    setTimeout(() => game.renderer.resize(), 100);
   }
 
   // Save playtime on page unload

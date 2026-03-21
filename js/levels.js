@@ -41,6 +41,14 @@ const CHAPTERS = [
     gatesMastered: ['Parity', 'Priority Encoder', 'Subtractor', 'Demux'],
     color: '#FFD700',
   },
+  {
+    id: 6, title: 'Chapter 6: Universal Gates', levels: [28, 29, 30, 31],
+    narrative: 'Engine Core',
+    storyIntro: 'Deep in the engine room, the core logic is built from universal gates. NAND and NOR can each build ANY other gate — master them to unlock the ship\'s true potential.',
+    storyComplete: '⚛️ Engine core fully rebuilt! With universal gates, you can build anything. The ship is limitless.',
+    gatesMastered: ['NAND', 'NOR', 'Universality'],
+    color: '#cc6600',
+  },
 ];
 
 const LEVELS = [
@@ -963,6 +971,117 @@ const LEVELS = [
       { inputs: [1, 1, 1], outputs: [0, 0, 0, 1] },
     ],
   },
+
+  // ── Chapter 6: Universal Gates ──
+  {
+    id: 28,
+    title: 'Meet NAND',
+    description: 'NAND outputs 0 only when BOTH inputs are 1 — the opposite of AND. It\'s the most important gate in computing.',
+    postSolveInsight: '🔓 NAND is called a "universal gate" because you can build ANY other gate using only NAND gates. Every modern CPU is ultimately made of NANDs.\n⚛️ Engine core logic unit #1 responding.',
+    hints: [
+      'NAND is like AND followed by NOT. It outputs 1 for everything except when both inputs are 1.',
+      'You only need 1 gate.',
+      'Connect both inputs to a single NAND gate and wire the output.',
+    ],
+    hintHighlights: ['A', 'B', 'OUT'],
+    availableGates: ['NAND'],
+    optimalGates: 1,
+    goodGates: 1,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [1] },
+      { inputs: [0, 1], outputs: [1] },
+      { inputs: [1, 0], outputs: [1] },
+      { inputs: [1, 1], outputs: [0] },
+    ],
+  },
+  {
+    id: 29,
+    title: 'Meet NOR',
+    description: 'NOR outputs 1 only when BOTH inputs are 0 — the opposite of OR. Another universal gate!',
+    postSolveInsight: '🔓 NOR is also universal — the Apollo Guidance Computer was built entirely from NOR gates. It navigated humans to the moon!\n⚛️ Engine core logic unit #2 online.',
+    hints: [
+      'NOR is like OR followed by NOT. It only outputs 1 when neither input is active.',
+      'You only need 1 gate.',
+      'A single NOR gate does the job — wire both inputs and the output.',
+    ],
+    hintHighlights: ['A', 'B', 'OUT'],
+    availableGates: ['NOR'],
+    optimalGates: 1,
+    goodGates: 1,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [1] },
+      { inputs: [0, 1], outputs: [0] },
+      { inputs: [1, 0], outputs: [0] },
+      { inputs: [1, 1], outputs: [0] },
+    ],
+  },
+  {
+    id: 30,
+    title: 'NOT from NAND',
+    description: 'Build a NOT gate using ONLY NAND gates. Hint: what happens when you feed the same signal to both NAND inputs?',
+    postSolveInsight: '🔓 NAND with both inputs tied together = NOT. This is the first step to proving NAND universality: NAND(A,A) = NOT(A).\n⚛️ Engine inverter circuits rebuilt from universal components.',
+    hints: [
+      'If both inputs of a NAND are the same value, NAND(A,A) = NOT(A). Think about why.',
+      'You only need 1 NAND gate — wire input A to BOTH of its inputs.',
+      'Connect A to pin 1 AND pin 2 of a single NAND gate.',
+    ],
+    hintHighlights: ['A', 'OUT'],
+    availableGates: ['NAND'],
+    optimalGates: 1,
+    goodGates: 1,
+    inputs: [
+      { label: 'A', x: 60, y: 200 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0], outputs: [1] },
+      { inputs: [1], outputs: [0] },
+    ],
+  },
+  {
+    id: 31,
+    title: 'AND from NAND',
+    description: 'Build an AND gate using ONLY NAND gates. This proves NAND can reproduce basic logic!',
+    postSolveInsight: '🔓 NAND then NOT-via-NAND = AND. With NOT and AND proven, you can build OR (De Morgan\'s), XOR, and eventually any circuit — all from NAND alone. That\'s universality!\n⚛️ Engine core fully operational! Universal gate mastery achieved.',
+    hints: [
+      'AND = NOT(NAND). First NAND the inputs, then invert the result.',
+      'You need 2 NAND gates: one for A NAND B, then feed that result into both inputs of a second NAND.',
+      'Gate 1: NAND(A,B). Gate 2: NAND(result, result) = NOT(result) = AND.',
+    ],
+    hintHighlights: ['A', 'B', 'OUT'],
+    availableGates: ['NAND'],
+    optimalGates: 2,
+    goodGates: 3,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0] },
+      { inputs: [0, 1], outputs: [0] },
+      { inputs: [1, 0], outputs: [0] },
+      { inputs: [1, 1], outputs: [1] },
+    ],
+  },
 ];
 
 // ── Daily Challenge Generator ──
@@ -1005,7 +1124,7 @@ function generateDailyChallenge() {
     title: `Daily Challenge — ${dateStr}`,
     description: `Today's unique puzzle! Build the circuit that matches this truth table. New puzzle every day.`,
     hints: [],
-    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
     optimalGates: numInputs + 1,
     goodGates: numInputs + 3,
     inputs,
@@ -1163,7 +1282,7 @@ function generateChallenge(numInputs, numOutputs) {
     description: challengeName
       ? `Build a "${challengeName}" circuit — ${numInputs} inputs, ${numOutputs} output${numOutputs > 1 ? 's' : ''}.`
       : `Build a circuit matching this ${numInputs}-input, ${numOutputs}-output truth table.`,
-    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
     optimalGates,
     goodGates,
     inputs,
@@ -1267,7 +1386,7 @@ function generateSandboxLevel(numInputs, numOutputs) {
     id: 'sandbox',
     title: 'Sandbox Mode',
     description: `Free build — ${numInputs} inputs, ${numOutputs} output${numOutputs > 1 ? 's' : ''}. Place any gates and test your circuit.`,
-    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
     optimalGates: 0,
     goodGates: 0,
     inputs,

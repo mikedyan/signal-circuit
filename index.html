@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=42">
+  <link rel="stylesheet" href="css/style.css?v=43">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -20,7 +20,9 @@
       </div>
     </div>
   </noscript>
-  <div id="app">
+  <!-- ARIA live region for screen reader announcements -->
+  <div id="sr-status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+  <div id="app" role="main">
     <!-- Intro Screen -->
   <div id="intro-screen">
     <div id="intro-title">⚡ Signal Circuit</div>
@@ -49,6 +51,7 @@
           </div>
         </div>
 
+        <button id="create-level-btn" class="challenge-btn" style="margin-top:10px;" aria-label="Create custom level">✏️ Create Level</button>
         <button id="how-to-play-btn" class="challenge-btn" style="margin-top:10px;" aria-label="How to Play">📖 How to Play</button>
         <div id="info-buttons-row">
           <button id="encyclopedia-btn" class="challenge-btn info-btn" aria-label="Gate Encyclopedia">📚 Gate Encyclopedia</button>
@@ -176,6 +179,49 @@
       </div>
     </div>
 
+    <!-- Level Creator Screen (#121) -->
+    <div id="creator-config-screen" style="display:none;">
+      <div id="creator-config-content">
+        <button id="creator-back-btn" aria-label="Back to level select">← Back</button>
+        <h2>✏️ Level Creator</h2>
+        <p style="color:#888;font-size:12px;margin-bottom:16px;">Design a custom puzzle and share it with friends!</p>
+
+        <div class="creator-field">
+          <label for="creator-name">Level Name</label>
+          <input type="text" id="creator-name" placeholder="My Custom Level" maxlength="40" autocomplete="off">
+        </div>
+
+        <div id="creator-sliders">
+          <div class="slider-group">
+            <label>Inputs: <span id="creator-input-count">2</span></label>
+            <input type="range" id="creator-input-slider" min="1" max="4" value="2">
+          </div>
+          <div class="slider-group">
+            <label>Outputs: <span id="creator-output-count">1</span></label>
+            <input type="range" id="creator-output-slider" min="1" max="3" value="1">
+          </div>
+        </div>
+
+        <h3 style="color:#ccc;font-size:13px;margin:12px 0 8px;">Truth Table <span style="color:#666;font-size:11px;">(click outputs to toggle)</span></h3>
+        <div id="creator-truth-table"></div>
+
+        <h3 style="color:#ccc;font-size:13px;margin:16px 0 8px;">Available Gates</h3>
+        <div id="creator-gate-select">
+          <label class="gate-checkbox"><input type="checkbox" value="AND" checked> AND</label>
+          <label class="gate-checkbox"><input type="checkbox" value="OR" checked> OR</label>
+          <label class="gate-checkbox"><input type="checkbox" value="NOT" checked> NOT</label>
+          <label class="gate-checkbox"><input type="checkbox" value="XOR"> XOR</label>
+          <label class="gate-checkbox"><input type="checkbox" value="NAND"> NAND</label>
+          <label class="gate-checkbox"><input type="checkbox" value="NOR"> NOR</label>
+        </div>
+
+        <div id="creator-actions">
+          <button id="creator-play-btn" class="challenge-btn generate-btn" aria-label="Play custom level">▶ Play Level</button>
+          <button id="creator-share-btn" class="challenge-btn" aria-label="Copy share link">🔗 Share Link</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Gameplay Screen -->
     <div id="gameplay-screen" style="display:none;">
       <!-- Toolbox Sidebar -->
@@ -300,6 +346,12 @@
   <div id="shortcuts-overlay" style="display:none;">
     <div id="shortcuts-content">
       <h3>⌨️ Keyboard Shortcuts</h3>
+      <div class="shortcut-row"><kbd>1</kbd>–<kbd>6</kbd> Quick-place gate (by toolbox order)</div>
+      <div class="shortcut-row"><kbd>Tab</kbd> Cycle through gates</div>
+      <div class="shortcut-row"><kbd>↑↓←→</kbd> Nudge selected gate</div>
+      <div class="shortcut-row"><kbd>Shift+↑↓←→</kbd> Large nudge</div>
+      <div class="shortcut-row"><kbd>Enter</kbd> Run simulation</div>
+      <div class="shortcut-row"><kbd>Shift+Enter</kbd> Quick test (no animation)</div>
       <div class="shortcut-row"><kbd>Ctrl+Z</kbd> Undo</div>
       <div class="shortcut-row"><kbd>Ctrl+Shift+Z</kbd> Redo (or Ctrl+Y)</div>
       <div class="shortcut-row"><kbd>Delete</kbd> Remove selected</div>
@@ -315,14 +367,14 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=42"></script>
-  <script src="js/wires.js?v=42"></script>
-  <script src="js/simulation.js?v=42"></script>
-  <script src="js/levels.js?v=42"></script>
-  <script src="js/audio.js?v=42"></script>
-  <script src="js/achievements.js?v=42"></script>
-  <script src="js/canvas.js?v=42"></script>
-  <script src="js/ui.js?v=42"></script>
-  <script src="js/main.js?v=42"></script>
+  <script src="js/gates.js?v=43"></script>
+  <script src="js/wires.js?v=43"></script>
+  <script src="js/simulation.js?v=43"></script>
+  <script src="js/levels.js?v=43"></script>
+  <script src="js/audio.js?v=43"></script>
+  <script src="js/achievements.js?v=43"></script>
+  <script src="js/canvas.js?v=43"></script>
+  <script src="js/ui.js?v=43"></script>
+  <script src="js/main.js?v=43"></script>
 </body>
 </html>

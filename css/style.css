@@ -3117,6 +3117,172 @@ button:focus-visible {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
+/* ── Day 30: Screen Reader Only ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Day 30: Level Creator Screen ── */
+#creator-config-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a1a2a 100%);
+}
+
+#creator-config-content {
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  padding: 40px 0;
+}
+
+#creator-config-content h2 {
+  font-size: 28px;
+  color: #0f0;
+  margin-bottom: 5px;
+}
+
+.creator-field {
+  text-align: left;
+  margin-bottom: 14px;
+}
+
+.creator-field label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.creator-field input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  background: #1a1a2e;
+  border: 2px solid #444;
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.creator-field input[type="text"]:focus {
+  outline: none;
+  border-color: #0f0;
+}
+
+#creator-sliders {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+#creator-truth-table {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.creator-tt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.creator-tt th, .creator-tt td {
+  padding: 8px 12px;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.creator-tt th {
+  background: #2a2a3e;
+  font-weight: bold;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.creator-tt th.tt-input { color: #0af; }
+.creator-tt th.tt-output { color: #fa0; }
+
+.creator-tt td.tt-input {
+  background: #1a1a2e;
+  color: #0af;
+}
+
+.creator-tt td.tt-output {
+  background: #1a1a2e;
+  color: #666;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.creator-tt td.tt-output:hover {
+  background: #2a2a3e;
+}
+
+.creator-tt td.tt-output.tt-active {
+  background: #1a3a1a;
+  color: #0f0;
+  font-weight: bold;
+}
+
+#creator-gate-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.gate-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #ccc;
+  cursor: pointer;
+  padding: 6px 10px;
+  background: #1a1a2e;
+  border: 1px solid #444;
+  border-radius: 6px;
+  transition: border-color 0.15s;
+}
+
+.gate-checkbox:has(input:checked) {
+  border-color: #0f0;
+  color: #0f0;
+}
+
+.gate-checkbox input {
+  accent-color: #0f0;
+}
+
+#creator-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+#creator-actions .challenge-btn {
+  flex: 1;
+  max-width: 200px;
+}
+
 /* ── Day 28: Toolbox Scroll Indicator (T9) ── */
 #toolbox {
   overflow-y: auto;

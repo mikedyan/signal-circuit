@@ -207,6 +207,62 @@ class AudioEngine {
         modulator.stop(now + 0.18);
         break;
       }
+      case 'NAND': {
+        // NAND = inverted AND — descending sine with inversion snap
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(this._randomize(880, 0.03), now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.06);
+        gain.gain.setValueAtTime(vol * 0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.1);
+        // Inversion click
+        const nClick = ctx.createOscillator();
+        const nClickGain = ctx.createGain();
+        nClick.type = 'square';
+        nClick.frequency.setValueAtTime(2400, now + 0.06);
+        nClickGain.gain.setValueAtTime(vol * 0.2, now + 0.06);
+        nClickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        nClick.connect(nClickGain);
+        nClickGain.connect(this._output);
+        nClick.start(now + 0.06);
+        nClick.stop(now + 0.08);
+        break;
+      }
+      case 'NOR': {
+        // NOR = inverted OR — warm sawtooth with inversion snap
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(this._randomize(660, 0.03), now);
+        osc.frequency.exponentialRampToValueAtTime(330, now + 0.07);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2000, now);
+        gain.gain.setValueAtTime(vol * 0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.1);
+        // Inversion click
+        const nrClick = ctx.createOscillator();
+        const nrClickGain = ctx.createGain();
+        nrClick.type = 'square';
+        nrClick.frequency.setValueAtTime(2000, now + 0.07);
+        nrClickGain.gain.setValueAtTime(vol * 0.2, now + 0.07);
+        nrClickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        nrClick.connect(nrClickGain);
+        nrClickGain.connect(this._output);
+        nrClick.start(now + 0.07);
+        nrClick.stop(now + 0.09);
+        break;
+      }
       default:
         this.playClick();
     }
@@ -1012,6 +1068,36 @@ class AudioEngine {
         modulator.start(now);
         carrier.stop(now + 0.06);
         modulator.stop(now + 0.06);
+        break;
+      }
+      case 'NAND': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(this._randomize(880, 0.03), now);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.04);
+        break;
+      }
+      case 'NOR': {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(this._randomize(660, 0.03), now);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1500, now);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this._output);
+        osc.start(now);
+        osc.stop(now + 0.04);
         break;
       }
       default: {
