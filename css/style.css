@@ -3301,3 +3301,579 @@ button:focus-visible {
   display: block;
   margin-top: -24px;
 }
+
+/* ══════════════════════════════════════════════
+   Day 31: Community Features & Mastery Systems
+   ══════════════════════════════════════════════ */
+
+/* ── Info Buttons Row 2 ── */
+#info-buttons-row-2 {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+#info-buttons-row-2 .info-btn {
+  font-size: 11px;
+  padding: 6px 12px;
+}
+
+/* ── Placement Test Modal ── */
+#placement-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#placement-content {
+  background: #1a1a2e;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 450px;
+  width: 90%;
+  text-align: center;
+}
+
+#placement-content h3 {
+  color: #0f0;
+  margin-bottom: 8px;
+}
+
+#placement-question {
+  font-size: 16px;
+  color: #e0e0e0;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+#placement-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.placement-option {
+  background: #2a2a3e;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.placement-option:hover:not(:disabled) {
+  background: #3a3a5e;
+  border-color: #0f0;
+}
+
+.placement-option.correct {
+  background: rgba(0, 255, 0, 0.2);
+  border-color: #0f0;
+  color: #0f0;
+}
+
+.placement-option.wrong {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: #f44;
+  color: #f44;
+}
+
+#placement-skip {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+}
+
+#placement-skip:hover {
+  color: #999;
+}
+
+/* ── Mastery Tree Modal ── */
+#mastery-tree-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+#mastery-tree-content {
+  background: #1a1a2e;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+#mastery-tree-content h3 {
+  color: #0f0;
+  margin-bottom: 16px;
+}
+
+.mastery-tree-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.mastery-tier {
+  width: 100%;
+}
+
+.mastery-tier-label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.mastery-tier-nodes {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mastery-node {
+  background: #2a2a3e;
+  border: 2px solid #444;
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 80px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.mastery-node.mastered {
+  background: rgba(0, 255, 0, 0.08);
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.15);
+}
+
+.mastery-node.available {
+  border-color: #666;
+  opacity: 0.7;
+}
+
+.mastery-node.locked {
+  opacity: 0.4;
+}
+
+.mastery-node-icon {
+  font-size: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.mastery-node-name {
+  font-size: 10px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.mastery-check {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #0f0;
+  color: #000;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: bold;
+}
+
+.mastery-arrow {
+  color: #444;
+  font-size: 20px;
+  margin: 4px 0;
+}
+
+.mastery-summary {
+  margin-top: 16px;
+  color: #888;
+  font-size: 13px;
+}
+
+/* ── Circuit Collection Modal ── */
+#collection-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+#collection-content {
+  background: #1a1a2e;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 550px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+#collection-content h3 {
+  color: #0f0;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.collection-empty {
+  color: #666;
+  text-align: center;
+  padding: 30px;
+}
+
+.collection-chapter {
+  margin-bottom: 16px;
+}
+
+.collection-chapter-title {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid;
+  margin-bottom: 8px;
+}
+
+.collection-entry {
+  background: #2a2a3e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+}
+
+.collection-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.collection-level-name {
+  font-weight: bold;
+  color: #e0e0e0;
+  font-size: 13px;
+}
+
+.collection-stars {
+  color: #ffd700;
+  font-size: 14px;
+}
+
+.collection-entry-details {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.collection-entry-date {
+  font-size: 10px;
+  color: #555;
+  margin-top: 2px;
+}
+
+/* ── Logic Profile Modal ── */
+#profile-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+#profile-content {
+  background: #1a1a2e;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+#profile-content h3 {
+  color: #0f0;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.profile-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.profile-gate {
+  background: #2a2a3e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.profile-gate.profile-strong {
+  border-color: #0a0;
+}
+
+.profile-gate.profile-weak {
+  border-color: #f44;
+}
+
+.profile-gate-name {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.profile-bar {
+  height: 8px;
+  background: #1a1a2e;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.profile-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s;
+}
+
+.profile-gate-stats {
+  font-size: 11px;
+  color: #888;
+}
+
+.profile-tokens {
+  text-align: center;
+  color: #cc0;
+  font-size: 14px;
+  padding: 10px;
+  background: rgba(204, 204, 0, 0.06);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.profile-recommendation {
+  text-align: center;
+  color: #ccc;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.profile-rank {
+  text-align: center;
+  padding: 12px;
+  background: #2a2a3e;
+  border-radius: 10px;
+}
+
+.profile-rank-label {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.profile-rank-bar {
+  height: 10px;
+  background: #1a1a2e;
+  border-radius: 5px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.profile-rank-fill {
+  height: 100%;
+  background: linear-gradient(to right, #0f0, #ffd700);
+  border-radius: 5px;
+  transition: width 0.5s;
+}
+
+.profile-rank-pct {
+  font-size: 12px;
+  color: #888;
+}
+
+/* ── Share Card Modal ── */
+#share-card-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+#share-card-content {
+  background: #1a1a2e;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 650px;
+  width: 95%;
+  text-align: center;
+}
+
+#share-card-content h3 {
+  color: #0f0;
+  margin-bottom: 12px;
+}
+
+#share-card-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+#share-card-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+#share-card-buttons button {
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+}
+
+#share-card-download {
+  background: #0f0;
+  color: #000;
+  border: none;
+  font-weight: bold;
+}
+
+#share-card-close {
+  background: transparent;
+  border: 1px solid #555;
+  color: #ccc;
+}
+
+/* ── Aesthetics Display ── */
+#aesthetics-display {
+  font-size: 12px;
+  margin-top: 6px;
+  font-family: 'Courier New', monospace;
+}
+
+/* ── Share Card Button ── */
+#share-card-btn {
+  background: linear-gradient(to right, #c050f0, #0080ff);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+#share-card-btn:hover {
+  filter: brightness(1.2);
+}
+
+/* ── Real World Section ── */
+.real-world-section {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid rgba(0, 255, 0, 0.15);
+  border-radius: 10px;
+  text-align: left;
+}
+
+.real-world-header {
+  color: #0f0;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.real-world-fact {
+  color: #ccc;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.real-world-device {
+  color: #888;
+  font-size: 11px;
+}
+
+/* ── Hint Token Badge on Hint Button ── */
+#hint-btn {
+  position: relative;
+}
+
+/* ── Modal Close Buttons (shared) ── */
+#mastery-tree-close,
+#collection-close,
+#profile-close {
+  margin-top: 16px;
+  padding: 8px 24px;
+  background: transparent;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #ccc;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+}
+
+#mastery-tree-close:hover,
+#collection-close:hover,
+#profile-close:hover {
+  border-color: #0f0;
+  color: #0f0;
+}
+
+/* ── Mystery Gate Toolbox ── */
+.tool-gate[data-gate-type="MYSTERY"] {
+  border-left-color: #888 !important;
+  color: #888 !important;
+  animation: mysteryPulse 2s infinite;
+}
+
+@keyframes mysteryPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}

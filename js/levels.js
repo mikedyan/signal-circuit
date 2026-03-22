@@ -8,6 +8,12 @@ const CHAPTERS = [
     storyComplete: '🛸 Navigation systems online! The ship can steer again.',
     gatesMastered: ['AND', 'OR', 'NOT'],
     color: '#00cc44',
+    realWorld: {
+      title: '🔌 In the Real World',
+      fact: 'The AND, OR, and NOT gates you just mastered are inside every microchip. Your phone\'s processor contains billions of them, executing logic just like this — millions of times per second.',
+      device: 'Smartphone CPU',
+      icon: '📱',
+    },
   },
   {
     id: 2, title: 'Chapter 2: Combinations', levels: [7, 8, 9, 10, 11, 12],
@@ -16,6 +22,12 @@ const CHAPTERS = [
     storyComplete: '📡 Communications restored! We can reach mission control.',
     gatesMastered: ['XOR', 'De Morgan\'s Laws'],
     color: '#00c8e8',
+    realWorld: {
+      title: '🔐 In the Real World',
+      fact: 'XOR is the backbone of modern encryption. Every time you send a secure message, XOR operations scramble your data. De Morgan\'s Laws let chip designers optimize circuits to use fewer transistors.',
+      device: 'Encryption Hardware',
+      icon: '🔒',
+    },
   },
   {
     id: 3, title: 'Chapter 3: Multi-Output', levels: [13, 14, 15, 16, 17],
@@ -24,6 +36,12 @@ const CHAPTERS = [
     storyComplete: '🌬️ Life support fully operational! The crew is safe.',
     gatesMastered: ['Half Adder', 'Full Adder', 'MUX', 'Majority'],
     color: '#c050f0',
+    realWorld: {
+      title: '🧮 In the Real World',
+      fact: 'The half and full adders you built are exactly how calculators add numbers. Stack 32 full adders together and you get a 32-bit ALU — the arithmetic brain of a computer.',
+      device: 'Calculator / ALU',
+      icon: '🧮',
+    },
   },
   {
     id: 4, title: 'Chapter 4: Advanced Systems', levels: [18, 19, 20, 21, 22],
@@ -32,6 +50,12 @@ const CHAPTERS = [
     storyComplete: '🚀 Warp drive online! The ship is ready for interstellar travel.',
     gatesMastered: ['Decoder', 'Comparator', 'MUX', 'Ripple Adder'],
     color: '#ff6644',
+    realWorld: {
+      title: '🖥️ In the Real World',
+      fact: 'Decoders select which memory chip to read from in your computer\'s RAM. Multiplexers route data between components. These circuits are the traffic controllers of every digital system.',
+      device: 'Computer Memory',
+      icon: '💾',
+    },
   },
   {
     id: 5, title: 'Chapter 5: Shield Systems', levels: [23, 24, 25, 26, 27],
@@ -40,6 +64,12 @@ const CHAPTERS = [
     storyComplete: '🛡️ Shields holding at maximum! The ship glides safely through the cosmic storm.',
     gatesMastered: ['Parity', 'Priority Encoder', 'Subtractor', 'Demux'],
     color: '#FFD700',
+    realWorld: {
+      title: '🌐 In the Real World',
+      fact: 'Parity circuits detect data corruption in network transmissions. Priority encoders handle interrupt signals in CPUs. Every packet of internet data is protected by error-detection logic like yours.',
+      device: 'Network Router',
+      icon: '🌐',
+    },
   },
   {
     id: 6, title: 'Chapter 6: Universal Gates', levels: [28, 29, 30, 31],
@@ -48,6 +78,27 @@ const CHAPTERS = [
     storyComplete: '⚛️ Engine core fully rebuilt! With universal gates, you can build anything. The ship is limitless.',
     gatesMastered: ['NAND', 'NOR', 'Universality'],
     color: '#cc6600',
+    realWorld: {
+      title: '🏭 In the Real World',
+      fact: 'Modern chip fabrication uses only NAND gates. The Apollo Guidance Computer that flew astronauts to the moon was built entirely from ~5,600 NOR gates. Universal gates prove that simplicity is the ultimate sophistication.',
+      device: 'Microprocessor',
+      icon: '⚛️',
+    },
+  },
+  {
+    id: 7, title: 'Bonus: Dark Gate', levels: [32],
+    narrative: 'Unknown Signal',
+    storyIntro: 'A mysterious component has been detected in the ship\'s circuitry. Its behavior is unknown. Reverse-engineer it.',
+    storyComplete: '🕵️ Mystery component identified! Your analytical skills saved the mission.',
+    gatesMastered: ['Reverse Engineering'],
+    color: '#666',
+    isBonus: true,
+    realWorld: {
+      title: '🕵️ In the Real World',
+      fact: 'Hardware reverse engineering is a real discipline. Engineers probe unknown chips with oscilloscopes and logic analyzers, testing input/output combinations — exactly what you just did.',
+      device: 'Logic Analyzer',
+      icon: '🔬',
+    },
   },
 ];
 
@@ -1081,6 +1132,36 @@ const LEVELS = [
       { inputs: [1, 0], outputs: [0] },
       { inputs: [1, 1], outputs: [1] },
     ],
+  },
+  // ── Bonus: Dark Gate Level ──
+  {
+    id: 32,
+    title: 'The Dark Gate',
+    description: 'A mysterious gate has appeared. Its logic is unknown. Experiment with inputs to discover its behavior, then use it to solve the puzzle.',
+    postSolveInsight: '🔓 The Dark Gate was XOR all along! By experimenting with inputs and observing outputs, you reverse-engineered its truth table — just like real engineers debugging unknown ICs.\n🕵️ Mystery solved. Your analytical skills are razor-sharp.',
+    hints: [
+      'Place the mystery gate and toggle the input nodes to observe its output. What pattern do you see?',
+      'Test all four input combinations: 00, 01, 10, 11. The gate outputs 1 when inputs are DIFFERENT.',
+      'It behaves like XOR! One mystery gate is all you need.',
+    ],
+    hintHighlights: ['A', 'B', 'OUT'],
+    availableGates: ['MYSTERY'],
+    optimalGates: 1,
+    goodGates: 1,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0] },
+      { inputs: [0, 1], outputs: [1] },
+      { inputs: [1, 0], outputs: [1] },
+      { inputs: [1, 1], outputs: [0] },
+    ],
+    isDarkGate: true,
   },
 ];
 

@@ -1,10 +1,10 @@
 {
   "project": "signal-circuit",
-  "currentDay": 30,
-  "lastCompletedDay": 30,
-  "lastRunDate": "2026-03-21",
+  "currentDay": 31,
+  "lastCompletedDay": 31,
+  "lastRunDate": "2026-03-22",
   "status": "green",
-  "totalItemsShipped": 158,
+  "totalItemsShipped": 168,
   "dayHistory": {
     "1": { "date": "2026-02-19", "items": 1, "status": "green", "summary": "Initial scaffolding: HTML/CSS/JS structure, canvas, basic gate rendering" },
     "2": { "date": "2026-02-20", "items": 3, "status": "green", "summary": "Gate drag-drop, wire drawing, circuit simulation engine" },
@@ -35,6 +35,7 @@
     "27": { "date": "2026-03-18", "items": 10, "status": "green", "summary": "Systems Integration & Hardening: cross-level references, intentional zoom transitions, unified modal language, intensity-scaled failure shake, level select scroll restore, first-action timer start, cycle detection warning, mobile haptics, enhanced Master Logician graduation screen, tighter gate budgets" },
     "28": { "date": "2026-03-19", "items": 10, "status": "green", "summary": "Audio & Feedback Micro-Polish: undo/redo swooshes, pin hover blips, gate counter color + pulse, mute power sweep, tooltip pulse + arrow, delete/escape audio, toolbox hover tones, emoji difficulty badges, toolbox scroll fade, contextual cursors" },
     "29": { "date": "2026-03-20", "items": 5, "status": "green", "summary": "Quality Bar: accessibility audit (ARIA + WCAG contrast + focus states + noscript), performance budget (idle render trim + particle cap), one-more-level teaser, safe localStorage quota fallback, narrative micro-copy polish" },
-    "30": { "date": "2026-03-21", "items": 15, "status": "green", "summary": "Universal Gates & UGC: NAND/NOR primitives + Chapter 6 (4 levels), NAND/NOR symbols + audio, keyboard quick-place + navigation, Level Creator with URL hash sharing, ARIA live region, challenges/sandbox include universal gates" }
+    "30": { "date": "2026-03-21", "items": 15, "status": "green", "summary": "Universal Gates & UGC: NAND/NOR primitives + Chapter 6 (4 levels), NAND/NOR symbols + audio, keyboard quick-place + navigation, Level Creator with URL hash sharing, ARIA live region, challenges/sandbox include universal gates" },
+    "31": { "date": "2026-03-22", "items": 10, "status": "green", "summary": "Community & Mastery Systems: solution replays, placement test, real-world chapter insights, Dark Gate mystery level, visual share card generator, mastery tree, circuit collection gallery, hint token economy, logic profile dashboard, circuit aesthetics scoring + Clean Circuit badge" }
   }
 }

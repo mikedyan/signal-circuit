@@ -22,6 +22,9 @@ const ACHIEVEMENTS = [
   { id: 'star_collector', name: 'Star Collector', desc: 'Earn 60 total stars', icon: '🌟', tier: 'gold' },
   { id: 'perfect_campaign', name: 'Flawless', desc: '3 stars on all campaign levels', icon: '💎', tier: 'gold' },
   { id: 'speed_run', name: 'Lightning Run', desc: 'Complete 5 levels in under 30 seconds each', icon: '⚡', tier: 'gold' },
+  { id: 'clean_circuit', name: 'Clean Circuit', desc: 'Achieve 85%+ aesthetics score — elegant wiring!', icon: '✨', tier: 'silver' },
+  { id: 'dark_gate', name: 'Dark Gate Master', desc: 'Solve the mystery gate level', icon: '🕵️', tier: 'silver' },
+  { id: 'collector', name: 'Collector', desc: 'Build a collection of 10+ solved circuits', icon: '🗂️', tier: 'silver' },
 ];
 
 const TIER_COLORS = {
@@ -165,6 +168,20 @@ class AchievementManager {
     // Speed Run (5 levels under 30s)
     if (this.stats.speedLevels >= 5) {
       if (this.unlock('speed_run')) newlyUnlocked.push('speed_run');
+    }
+
+    // Dark Gate (level 32)
+    if (levelId === 32) {
+      if (this.unlock('dark_gate')) newlyUnlocked.push('dark_gate');
+    }
+
+    // Collector (10+ solved circuits)
+    let solvedCount = 0;
+    for (const [, data] of Object.entries(gameState.progress.levels || {})) {
+      if (data.completed) solvedCount++;
+    }
+    if (solvedCount >= 10) {
+      if (this.unlock('collector')) newlyUnlocked.push('collector');
     }
 
     this.save();

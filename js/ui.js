@@ -31,6 +31,11 @@ class UI {
     this.setupFontSizeToggle();
     this.setupJourneyModal();
     this.setupLevelCreator();
+    this.setupMasteryTree();
+    this.setupCircuitCollection();
+    this.setupLogicProfile();
+    this.setupShareCard();
+    this.setupPlacementTest();
   }
 
   // ── Colorblind Mode Toggle ──
@@ -777,7 +782,7 @@ class UI {
   }
 
   // ── Star Display ──
-  showStarDisplay(stars, gateCount, level) {
+  showStarDisplay(stars, gateCount, level, aesthetics) {
     const display = document.getElementById('star-display');
     display.style.display = 'block';
 
@@ -831,6 +836,26 @@ class UI {
                         gateCount <= communityAvg ? '👍' : '📈';
       parEl.textContent = `${comparison} You: ${gateCount} · Par: ${level.optimalGates} · Avg: ${communityAvg.toFixed(1)}`;
       parEl.style.display = 'block';
+    }
+
+    // Day 31: Aesthetics score display
+    const aestheticsEl = document.getElementById('aesthetics-display');
+    if (aestheticsEl && aesthetics && aesthetics.score > 0) {
+      aestheticsEl.textContent = `${aesthetics.label} · Aesthetics: ${aesthetics.score}% (${aesthetics.crossings} crossings)`;
+      aestheticsEl.style.display = 'block';
+      aestheticsEl.style.color = aesthetics.score >= 85 ? '#0f0' : aesthetics.score >= 65 ? '#cc0' : '#f80';
+    } else if (aestheticsEl) {
+      aestheticsEl.style.display = 'none';
+    }
+
+    // Day 31: Show share card button for campaign levels
+    const shareCardBtn = document.getElementById('share-card-btn');
+    if (shareCardBtn) {
+      const isCampaign = !level.isChallenge && !level.isSandbox && !level.isDaily;
+      shareCardBtn.style.display = isCampaign ? '' : 'none';
+      shareCardBtn.onclick = () => {
+        this.generateShareCard(level, stars, gateCount, aesthetics);
+      };
     }
 
     // Show post-solve insight for campaign levels
@@ -895,6 +920,10 @@ class UI {
     if (retryBtn) retryBtn.style.display = 'none';
     const teaserEl = document.getElementById('next-level-teaser');
     if (teaserEl) teaserEl.style.display = 'none';
+    const aestheticsEl = document.getElementById('aesthetics-display');
+    if (aestheticsEl) aestheticsEl.style.display = 'none';
+    const shareCardBtn = document.getElementById('share-card-btn');
+    if (shareCardBtn) shareCardBtn.style.display = 'none';
   }
 
   showChallengeResult(gateCount, level) {
@@ -1267,6 +1296,18 @@ class UI {
       }
     }
 
+    // Day 31: Real-world visualization
+    if (chapter.realWorld) {
+      const rwDiv = document.createElement('div');
+      rwDiv.className = 'real-world-section';
+      rwDiv.innerHTML = `
+        <div class="real-world-header">${chapter.realWorld.icon} ${chapter.realWorld.title}</div>
+        <div class="real-world-fact">${chapter.realWorld.fact}</div>
+        <div class="real-world-device">💻 Found in: <strong>${chapter.realWorld.device}</strong></div>
+      `;
+      gatesList.parentElement.appendChild(rwDiv);
+    }
+
     modal.style.display = 'flex';
 
     const continueBtn = document.getElementById('chapter-complete-continue');
@@ -1450,7 +1491,7 @@ class UI {
   }
 
   // ── Hint Button Sync ──
-  updateHintButton() {
+  updateHintButton(tokens) {
     const gs = this.gameState;
     const level = gs.currentLevel;
     const hintBtn = document.getElementById('hint-btn');
@@ -1461,16 +1502,20 @@ class UI {
       return;
     }
 
+    const tokenCount = tokens !== undefined ? tokens : (gs.hintTokens ? gs.hintTokens.tokens : 0);
     hintBtn.style.display = '';
     if (gs.hintsUsed >= level.hints.length) {
       hintBtn.disabled = true;
       hintBtn.textContent = '💡 No more hints';
+    } else if (tokenCount <= 0) {
+      hintBtn.disabled = true;
+      hintBtn.textContent = '💡 No tokens (0)';
     } else if (gs.hintsUsed === 0) {
       hintBtn.disabled = false;
-      hintBtn.textContent = '💡 Hint';
+      hintBtn.textContent = `💡 Hint (🪙${tokenCount})`;
     } else {
       hintBtn.disabled = false;
-      hintBtn.textContent = `💡 Hint ${gs.hintsUsed + 1}/${level.hints.length}`;
+      hintBtn.textContent = `💡 Hint ${gs.hintsUsed + 1}/${level.hints.length} (🪙${tokenCount})`;
     }
   }
 
@@ -2296,5 +2341,440 @@ class UI {
       prompt('Copy this link to share your level:', url);
     }
     this.gameState.audio.playButtonClick();
+  }
+
+  // ── Placement Test (Day 31 T2) ──
+  setupPlacementTest() {
+    const skipBtn = document.getElementById('placement-skip');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', () => {
+        document.getElementById('placement-modal').style.display = 'none';
+        this.gameState.completePlacementTest(0);
+      });
+    }
+  }
+
+  showPlacementTest() {
+    const modal = document.getElementById('placement-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    const questions = [
+      {
+        q: 'Which gate outputs 1 only when BOTH inputs are 1?',
+        opts: ['OR', 'AND', 'NOT', 'XOR'],
+        answer: 1,
+      },
+      {
+        q: 'What does a NOT gate do?',
+        opts: ['Combines two signals', 'Flips the input (0→1, 1→0)', 'Outputs 1 when inputs differ', 'Outputs 0 always'],
+        answer: 1,
+      },
+      {
+        q: 'XOR outputs 1 when inputs are ___',
+        opts: ['Both 1', 'Both 0', 'Different', 'The same'],
+        answer: 2,
+      },
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    const renderQuestion = () => {
+      const qEl = document.getElementById('placement-question');
+      const optEl = document.getElementById('placement-options');
+      const progEl = document.getElementById('placement-progress');
+
+      if (currentQ >= questions.length) {
+        // Done
+        qEl.textContent = score >= 2 ? '🎯 Nice! You know your gates.' : '👋 Welcome! Let\'s start learning.';
+        optEl.innerHTML = '';
+        progEl.textContent = `Score: ${score}/${questions.length}`;
+        setTimeout(() => {
+          modal.style.display = 'none';
+          this.gameState.completePlacementTest(score);
+        }, 1500);
+        return;
+      }
+
+      const q = questions[currentQ];
+      qEl.textContent = q.q;
+      progEl.textContent = `Question ${currentQ + 1} of ${questions.length}`;
+      optEl.innerHTML = '';
+
+      q.opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'placement-option';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => {
+          if (i === q.answer) {
+            score++;
+            btn.classList.add('correct');
+          } else {
+            btn.classList.add('wrong');
+            optEl.children[q.answer].classList.add('correct');
+          }
+          // Disable all
+          Array.from(optEl.children).forEach(b => b.disabled = true);
+          setTimeout(() => {
+            currentQ++;
+            renderQuestion();
+          }, 800);
+        });
+        optEl.appendChild(btn);
+      });
+    };
+
+    renderQuestion();
+  }
+
+  // ── Mastery Tree (Day 31 T6) ──
+  setupMasteryTree() {
+    const btn = document.getElementById('mastery-tree-btn');
+    const modal = document.getElementById('mastery-tree-modal');
+    const closeBtn = document.getElementById('mastery-tree-close');
+
+    if (btn) btn.addEventListener('click', () => {
+      this.renderMasteryTree();
+      if (modal) modal.style.display = 'flex';
+    });
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  renderMasteryTree() {
+    const container = document.getElementById('mastery-tree-view');
+    if (!container) return;
+
+    const gs = this.gameState;
+    const progress = gs.progress;
+
+    // Determine mastered gates
+    const mastered = new Set();
+    for (const [levelId, data] of Object.entries(progress.levels || {})) {
+      if (data.completed) {
+        const level = getLevel(parseInt(levelId));
+        if (level && level.availableGates) {
+          level.availableGates.forEach(g => mastered.add(g));
+        }
+      }
+    }
+
+    const tree = [
+      { id: 'AND', label: 'AND', prereqs: [], tier: 0 },
+      { id: 'OR', label: 'OR', prereqs: [], tier: 0 },
+      { id: 'NOT', label: 'NOT', prereqs: [], tier: 0 },
+      { id: 'XOR', label: 'XOR', prereqs: ['AND', 'OR', 'NOT'], tier: 1 },
+      { id: 'NAND', label: 'NAND', prereqs: ['AND', 'NOT'], tier: 2 },
+      { id: 'NOR', label: 'NOR', prereqs: ['OR', 'NOT'], tier: 2 },
+      { id: 'MYSTERY', label: '???', prereqs: ['XOR'], tier: 3 },
+    ];
+
+    let html = '<div class="mastery-tree-grid">';
+    const tiers = [0, 1, 2, 3];
+    const tierLabels = ['🌱 Basics', '🔀 Combinations', '⚛️ Universal', '🕵️ Mystery'];
+
+    tiers.forEach((tier, ti) => {
+      const tierNodes = tree.filter(n => n.tier === tier);
+      if (tierNodes.length === 0) return;
+
+      html += `<div class="mastery-tier"><div class="mastery-tier-label">${tierLabels[ti]}</div><div class="mastery-tier-nodes">`;
+      for (const node of tierNodes) {
+        const isMastered = mastered.has(node.id);
+        const prereqsMet = node.prereqs.every(p => mastered.has(p));
+        const cls = isMastered ? 'mastery-node mastered' : prereqsMet ? 'mastery-node available' : 'mastery-node locked';
+        const color = GateTypes[node.id] ? GateTypes[node.id].color : '#888';
+        html += `<div class="${cls}" style="border-color:${isMastered ? color : '#444'}">
+          <div class="mastery-node-icon" style="color:${isMastered ? color : '#555'}">${isMastered ? node.label : '🔒'}</div>
+          <div class="mastery-node-name">${node.label}</div>
+          ${isMastered ? '<div class="mastery-check">✓</div>' : ''}
+        </div>`;
+      }
+      html += '</div></div>';
+
+      // Arrow between tiers
+      if (ti < tiers.length - 1) {
+        html += '<div class="mastery-arrow">↓</div>';
+      }
+    });
+    html += '</div>';
+
+    const masteredCount = tree.filter(n => mastered.has(n.id)).length;
+    html += `<div class="mastery-summary">${masteredCount}/${tree.length} gate types mastered</div>`;
+
+    container.innerHTML = html;
+  }
+
+  // ── Circuit Collection Gallery (Day 31 T7) ──
+  setupCircuitCollection() {
+    const btn = document.getElementById('collection-btn');
+    const modal = document.getElementById('collection-modal');
+    const closeBtn = document.getElementById('collection-close');
+
+    if (btn) btn.addEventListener('click', () => {
+      this.renderCircuitCollection();
+      if (modal) modal.style.display = 'flex';
+    });
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  renderCircuitCollection() {
+    const container = document.getElementById('collection-list');
+    if (!container) return;
+
+    const collection = this.gameState.getCollection();
+    const chapters = getChapters();
+
+    if (Object.keys(collection).length === 0) {
+      container.innerHTML = '<div class="collection-empty">No circuits saved yet. Complete levels to build your collection!</div>';
+      return;
+    }
+
+    let html = '';
+    for (const chapter of chapters) {
+      const chapterCircuits = chapter.levels
+        .filter(lid => collection[lid])
+        .map(lid => ({ id: lid, ...collection[lid], level: getLevel(lid) }));
+
+      if (chapterCircuits.length === 0) continue;
+
+      html += `<div class="collection-chapter"><div class="collection-chapter-title" style="border-color:${chapter.color || '#333'}">${chapter.title}</div>`;
+      for (const circuit of chapterCircuits) {
+        const starsStr = '★'.repeat(circuit.stars || 0) + '☆'.repeat(3 - (circuit.stars || 0));
+        const gateTypes = circuit.gates ? [...new Set(circuit.gates.map(g => g.type))].join(', ') : '—';
+        html += `<div class="collection-entry">
+          <div class="collection-entry-header">
+            <span class="collection-level-name">L${circuit.id}: ${circuit.level ? circuit.level.title : 'Level ' + circuit.id}</span>
+            <span class="collection-stars">${starsStr}</span>
+          </div>
+          <div class="collection-entry-details">
+            <span>🔧 ${circuit.gateCount} gates</span>
+            <span>🔌 ${circuit.wireCount} wires</span>
+            <span>📐 ${gateTypes}</span>
+          </div>
+          <div class="collection-entry-date">${new Date(circuit.date).toLocaleDateString()}</div>
+        </div>`;
+      }
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+  }
+
+  // ── Logic Profile (Day 31 T9) ──
+  setupLogicProfile() {
+    const btn = document.getElementById('profile-btn');
+    const modal = document.getElementById('profile-modal');
+    const closeBtn = document.getElementById('profile-close');
+
+    if (btn) btn.addEventListener('click', () => {
+      this.renderLogicProfile();
+      if (modal) modal.style.display = 'flex';
+    });
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  renderLogicProfile() {
+    const container = document.getElementById('profile-view');
+    if (!container) return;
+
+    const gs = this.gameState;
+    const progress = gs.progress;
+
+    // Calculate per-gate proficiency
+    const gateStats = {};
+    const gateTypes = ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'];
+
+    for (const gType of gateTypes) {
+      gateStats[gType] = { levelsUsed: 0, levelsCompleted: 0, totalStars: 0, maxStars: 0 };
+    }
+
+    for (const level of LEVELS) {
+      if (!level.availableGates) continue;
+      for (const gType of level.availableGates) {
+        if (!gateStats[gType]) continue;
+        gateStats[gType].levelsUsed++;
+        gateStats[gType].maxStars += 3;
+        const p = progress.levels[level.id];
+        if (p && p.completed) {
+          gateStats[gType].levelsCompleted++;
+          gateStats[gType].totalStars += p.stars || 0;
+        }
+      }
+    }
+
+    // Find strongest and weakest
+    let strongest = null, weakest = null;
+    let highPct = -1, lowPct = 101;
+
+    for (const [gType, stats] of Object.entries(gateStats)) {
+      if (stats.levelsUsed === 0) continue;
+      const pct = stats.maxStars > 0 ? (stats.totalStars / stats.maxStars) * 100 : 0;
+      if (pct > highPct) { highPct = pct; strongest = gType; }
+      if (pct < lowPct && stats.levelsUsed > 0) { lowPct = pct; weakest = gType; }
+    }
+
+    // Recommend next action
+    let recommendation = '';
+    if (weakest && lowPct < 50) {
+      recommendation = `Focus on <strong>${weakest}</strong> levels — only ${Math.round(lowPct)}% mastery.`;
+    } else if (weakest) {
+      recommendation = `Try improving your <strong>${weakest}</strong> scores for perfect mastery.`;
+    } else {
+      recommendation = 'You\'re doing great! Try the daily challenge.';
+    }
+
+    let html = '<div class="profile-grid">';
+    for (const [gType, stats] of Object.entries(gateStats)) {
+      if (stats.levelsUsed === 0) continue;
+      const pct = stats.maxStars > 0 ? Math.round((stats.totalStars / stats.maxStars) * 100) : 0;
+      const color = GateTypes[gType] ? GateTypes[gType].color : '#888';
+      const barColor = pct >= 80 ? '#0f0' : pct >= 50 ? '#cc0' : '#f44';
+      const isStrong = gType === strongest;
+      const isWeak = gType === weakest;
+
+      html += `<div class="profile-gate ${isStrong ? 'profile-strong' : ''} ${isWeak ? 'profile-weak' : ''}">
+        <div class="profile-gate-name" style="color:${color}">${gType} ${isStrong ? '💪' : ''} ${isWeak ? '📈' : ''}</div>
+        <div class="profile-bar"><div class="profile-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <div class="profile-gate-stats">${stats.levelsCompleted}/${stats.levelsUsed} levels · ⭐ ${stats.totalStars}/${stats.maxStars} · ${pct}%</div>
+      </div>`;
+    }
+    html += '</div>';
+
+    // Hint tokens status
+    const tokens = gs.hintTokens;
+    html += `<div class="profile-tokens">🪙 Hint Tokens: <strong>${tokens.tokens}</strong> (${tokens.earned} earned total)</div>`;
+
+    // Recommendation
+    html += `<div class="profile-recommendation">💡 ${recommendation}</div>`;
+
+    // Overall mastery level
+    const totalCompleted = Object.values(progress.levels || {}).filter(d => d.completed).length;
+    const totalLevels = getLevelCount();
+    const overallPct = totalLevels > 0 ? Math.round((totalCompleted / totalLevels) * 100) : 0;
+    let rank;
+    if (overallPct >= 95) rank = '🎓 Master Logician';
+    else if (overallPct >= 75) rank = '⚡ Circuit Expert';
+    else if (overallPct >= 50) rank = '🔧 Logic Engineer';
+    else if (overallPct >= 25) rank = '📐 Gate Apprentice';
+    else rank = '🌱 Beginner';
+
+    html += `<div class="profile-rank"><div class="profile-rank-label">${rank}</div><div class="profile-rank-bar"><div class="profile-rank-fill" style="width:${overallPct}%"></div></div><div class="profile-rank-pct">${overallPct}% complete</div></div>`;
+
+    container.innerHTML = html;
+  }
+
+  // ── Share Card Generator (Day 31 T5) ──
+  setupShareCard() {
+    const modal = document.getElementById('share-card-modal');
+    const closeBtn = document.getElementById('share-card-close');
+    const downloadBtn = document.getElementById('share-card-download');
+
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    if (modal) modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', () => {
+        const canvas = document.getElementById('share-card-canvas');
+        const link = document.createElement('a');
+        link.download = 'signal-circuit-achievement.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  }
+
+  generateShareCard(level, stars, gateCount, aesthetics) {
+    const canvas = document.getElementById('share-card-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const w = 1200, h = 630;
+    canvas.width = w;
+    canvas.height = h;
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#0a0a1a');
+    grad.addColorStop(0.5, '#1a1a3e');
+    grad.addColorStop(1, '#0a1a2a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Circuit board pattern
+    ctx.strokeStyle = 'rgba(0, 255, 0, 0.05)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y < h; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    // Brand
+    ctx.font = 'bold 48px Courier New';
+    ctx.fillStyle = '#0f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('⚡ Signal Circuit', 60, 80);
+
+    // Level info
+    ctx.font = 'bold 36px Courier New';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`Level ${level.id}: ${level.title}`, 60, 160);
+
+    // Stars
+    const starStr = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    ctx.font = '72px serif';
+    ctx.fillText(starStr, 60, 260);
+
+    // Stats
+    ctx.font = '28px Courier New';
+    ctx.fillStyle = '#ccc';
+    ctx.fillText(`🔧 ${gateCount} gates`, 60, 340);
+    ctx.fillText(`📊 Optimal: ${level.optimalGates}`, 60, 380);
+
+    if (aesthetics) {
+      ctx.fillText(`${aesthetics.label} (${aesthetics.score}%)`, 60, 420);
+    }
+
+    // Time
+    const gs = this.gameState;
+    const elapsed = gs.timerStart ? Math.floor((Date.now() - gs.timerStart) / 1000) : 0;
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    ctx.fillText(`⏱ ${mins}:${secs.toString().padStart(2, '0')}`, 60, 460);
+
+    // URL
+    ctx.font = '20px Courier New';
+    ctx.fillStyle = '#0f0';
+    ctx.fillText('mikedyan.github.io/signal-circuit', 60, h - 40);
+
+    // Decorative circuit elements on the right side
+    ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 5; i++) {
+      const x = 700 + Math.random() * 400;
+      const y = 100 + Math.random() * 400;
+      ctx.beginPath();
+      ctx.arc(x, y, 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + 8, y);
+      ctx.lineTo(x + 40 + Math.random() * 60, y + (Math.random() - 0.5) * 80);
+      ctx.stroke();
+    }
+
+    // Show modal
+    const modal = document.getElementById('share-card-modal');
+    if (modal) modal.style.display = 'flex';
   }
 }

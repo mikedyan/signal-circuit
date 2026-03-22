@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=43">
+  <link rel="stylesheet" href="css/style.css?v=44">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -57,6 +57,11 @@
           <button id="encyclopedia-btn" class="challenge-btn info-btn" aria-label="Gate Encyclopedia">📚 Gate Encyclopedia</button>
           <button id="achievements-btn" class="challenge-btn info-btn" aria-label="Achievements">🏆 Achievements</button>
           <button id="stats-btn" class="challenge-btn info-btn" aria-label="Stats">📊 Stats</button>
+        </div>
+        <div id="info-buttons-row-2">
+          <button id="mastery-tree-btn" class="challenge-btn info-btn" aria-label="Mastery Tree">🌳 Mastery Tree</button>
+          <button id="collection-btn" class="challenge-btn info-btn" aria-label="Circuit Collection">🗂️ Collection</button>
+          <button id="profile-btn" class="challenge-btn info-btn" aria-label="Logic Profile">🧬 Logic Profile</button>
         </div>
         <div id="settings-row">
           <button id="colorblind-toggle-btn" class="settings-btn" aria-label="Toggle colorblind mode">👁 Colorblind Mode: Off</button>
@@ -290,11 +295,13 @@
           <div id="stars-container"></div>
           <p id="star-message"></p>
           <div id="par-display" style="display:none;"></div>
+          <div id="aesthetics-display" style="display:none;"></div>
           <div id="post-solve-insight" style="display:none;"></div>
           <button id="next-level-btn" style="display:none;" aria-label="Go to next level">Next Level →</button>
           <div id="next-level-teaser" style="display:none;"></div>
           <button id="perfect-retry-btn" style="display:none;" aria-label="Retry for pure logic badge">Try for 🧠 Pure Logic?</button>
         <button id="share-btn" style="display:none;" aria-label="Copy result to clipboard">📋 Share Result</button>
+        <button id="share-card-btn" style="display:none;" aria-label="Generate share card">📸 Share Card</button>
         </div>
         <button id="ghost-toggle-btn" style="display:none;">👻 Show Previous Solution</button>
 
@@ -304,6 +311,57 @@
           <button id="mute-btn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- Placement Test Modal (Day 31) -->
+  <div id="placement-modal" style="display:none;">
+    <div id="placement-content">
+      <h3>🧪 Quick Placement Test</h3>
+      <p style="color:#888;font-size:12px;margin-bottom:16px;">Answer a few questions to find your starting point.</p>
+      <div id="placement-question"></div>
+      <div id="placement-options"></div>
+      <div id="placement-progress" style="color:#666;font-size:11px;margin-top:12px;"></div>
+      <button id="placement-skip" style="margin-top:12px;font-size:11px;color:#666;">Skip — start from Level 1</button>
+    </div>
+  </div>
+
+  <!-- Mastery Tree Modal (Day 31) -->
+  <div id="mastery-tree-modal" style="display:none;">
+    <div id="mastery-tree-content">
+      <h3>🌳 Mastery Tree</h3>
+      <div id="mastery-tree-view"></div>
+      <button id="mastery-tree-close">Close</button>
+    </div>
+  </div>
+
+  <!-- Circuit Collection Modal (Day 31) -->
+  <div id="collection-modal" style="display:none;">
+    <div id="collection-content">
+      <h3>🗂️ Circuit Collection</h3>
+      <div id="collection-list"></div>
+      <button id="collection-close">Close</button>
+    </div>
+  </div>
+
+  <!-- Logic Profile Modal (Day 31) -->
+  <div id="profile-modal" style="display:none;">
+    <div id="profile-content">
+      <h3>🧬 Your Logic Profile</h3>
+      <div id="profile-view"></div>
+      <button id="profile-close">Close</button>
+    </div>
+  </div>
+
+  <!-- Share Card Modal (Day 31) -->
+  <div id="share-card-modal" style="display:none;">
+    <div id="share-card-content">
+      <h3>📸 Share Your Achievement</h3>
+      <canvas id="share-card-canvas" width="1200" height="630"></canvas>
+      <div id="share-card-buttons">
+        <button id="share-card-download">💾 Save Image</button>
+        <button id="share-card-close">Close</button>
       </div>
     </div>
   </div>
@@ -367,14 +425,14 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=43"></script>
-  <script src="js/wires.js?v=43"></script>
-  <script src="js/simulation.js?v=43"></script>
-  <script src="js/levels.js?v=43"></script>
-  <script src="js/audio.js?v=43"></script>
-  <script src="js/achievements.js?v=43"></script>
-  <script src="js/canvas.js?v=43"></script>
-  <script src="js/ui.js?v=43"></script>
-  <script src="js/main.js?v=43"></script>
+  <script src="js/gates.js?v=44"></script>
+  <script src="js/wires.js?v=44"></script>
+  <script src="js/simulation.js?v=44"></script>
+  <script src="js/levels.js?v=44"></script>
+  <script src="js/audio.js?v=44"></script>
+  <script src="js/achievements.js?v=44"></script>
+  <script src="js/canvas.js?v=44"></script>
+  <script src="js/ui.js?v=44"></script>
+  <script src="js/main.js?v=44"></script>
 </body>
 </html>

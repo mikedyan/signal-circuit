@@ -1,0 +1,138 @@
+{
+  "day": 31,
+  "title": "Community Features & Mastery Systems",
+  "summary": "Adds social and mastery systems: solution replays with animated playback, adaptive placement test for new players, real-world circuit visualizations, mystery Dark Gate in Chapter 2, visual share card generation, mastery tree skill progression, circuit collection gallery, hint token economy, personal logic profile dashboard, and circuit aesthetics scoring with Clean Circuit badge.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Solution Replays — Record gate/wire placement actions during solving. Store replay data in localStorage keyed by level. Add 'Watch Replay' button on solved levels that animates gates and wires appearing sequentially with timing.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Actions (addGate, addWire) are recorded with timestamps during gameplay",
+        "Replay data stored in localStorage per level on completion",
+        "Watch Replay button appears on level select for completed levels",
+        "Clicking replay animates the build sequence on the canvas"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Adaptive Difficulty / Placement Test — On first launch (no progress), offer a 3-question placement test. Each question shows a truth table and gate options. Correct answers skip player ahead past tutorial chapters. Store test result.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Placement test modal appears on first launch only (no existing progress)",
+        "3 progressive questions testing gate knowledge",
+        "Correct answers unlock early chapters automatically",
+        "Test result stored in localStorage, never shown again"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Real World Visualization — Enhance chapter completion modals with real-world hardware connections. Show how the player's circuits map to real devices (calculators, CPUs, network routers).",
+      "files_to_modify": ["js/ui.js", "js/levels.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Each chapter completion modal shows a real-world hardware connection",
+        "Visual shows progression: gates → chip → device",
+        "Content is educational and specific to the chapter's concepts"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Dark Gate / Mystery Mechanic — Add a '?' mystery gate type. Create one level that includes it. Player must experiment (toggle inputs, observe outputs) to discover its behavior, then use it to solve the puzzle.",
+      "files_to_modify": ["js/gates.js", "js/levels.js", "js/canvas.js", "css/style.css"],
+      "acceptance_criteria": [
+        "MYSTERY gate type defined with hidden truth table behavior",
+        "Gate renders as '?' with distinctive visual styling",
+        "Player can place it and toggle inputs to discover behavior",
+        "At least one level uses the mystery gate"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Visual Share Card — Generate a branded share card on level completion using Canvas2D. Card shows level name, stars, gate count, time, and Signal Circuit branding. Offer 'Save Card' button that downloads the image.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Share card generated as canvas image on completion",
+        "Card includes: level name, stars, gate count, time, branding",
+        "Download button saves PNG to device",
+        "Card looks good at share-friendly dimensions (1200x630)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Mastery Tree Visual Progression — Add a 'Mastery Tree' modal accessible from level select. Shows gate concepts as nodes in a tree. Nodes light up as player masters concepts. Branches show prerequisite relationships.",
+      "files_to_modify": ["js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Mastery Tree button on level select screen",
+        "Tree shows gate types as nodes with connections",
+        "Completed concepts glow/highlight",
+        "Locked concepts shown dimmed with prerequisite path visible"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Circuit Collection Gallery — Save completed circuit snapshots (gate types + positions + wire connections) per level. Gallery modal shows thumbnails of all saved circuits, organized by chapter.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Circuit data saved to localStorage on level completion",
+        "Gallery button accessible from level select",
+        "Gallery shows circuit summaries organized by chapter",
+        "Each entry shows level name, gate count, stars, date"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Hint Token Economy — Replace free hints with a token system. Players earn tokens from achievements, daily challenges, and streaks. Each hint costs 1 token. First 3 tokens given free on start. Token count displayed in UI.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "js/achievements.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Hint tokens tracked in localStorage",
+        "New players start with 3 free tokens",
+        "Using a hint deducts 1 token",
+        "Tokens earned from: daily challenge (+1), streak milestone (+1), achievement unlock (+1)",
+        "Token count visible on hint button"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Your Logic Profile — Enhanced mastery dashboard showing per-gate-type proficiency, strongest/weakest areas, recommended next level, and improvement trends.",
+      "files_to_modify": ["js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Profile button on level select",
+        "Shows per-gate proficiency (based on levels using each gate)",
+        "Identifies strongest and weakest gate type",
+        "Recommends what to play next based on gaps"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Circuit Aesthetics Recognition — Score circuits on visual cleanliness: wire crossing count, gate alignment, routing efficiency. Award 'Clean Circuit' bonus badge for elegant solutions.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "js/achievements.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Aesthetics score calculated on level completion",
+        "Score based on wire crossings and gate alignment",
+        "Clean Circuit badge awarded for high-score solutions",
+        "Score shown in post-completion UI"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "All new modals open and close correctly",
+    "localStorage doesn't exceed quota with all new data",
+    "Placement test only shows on first launch",
+    "Hint token economy balances correctly",
+    "Replay playback doesn't break canvas state",
+    "Dark gate simulation works correctly",
+    "Share card renders at proper dimensions"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

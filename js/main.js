@@ -24,6 +24,11 @@ const STATS_KEY = 'signal-circuit-stats';
 const MILESTONES_KEY = 'signal-circuit-milestones';
 const AUTOSAVE_KEY = 'signal-circuit-autosave';
 const GHOST_KEY = 'signal-circuit-ghost';
+const REPLAY_KEY = 'signal-circuit-replays';
+const COLLECTION_KEY = 'signal-circuit-collection';
+const TOKENS_KEY = 'signal-circuit-hint-tokens';
+const PROFILE_KEY = 'signal-circuit-profile';
+const PLACEMENT_KEY = 'signal-circuit-placement-done';
 const SCHEMA_VERSION = 1;
 
 // F29-4: Safe localStorage wrapper — graceful fallback on quota exceeded
@@ -141,6 +146,155 @@ class GameState {
     this._levelSelectScrollY = 0; // #95: Preserve scroll position
     this._lastPinHoverId = null; // T2: Track last hovered pin for audio
     this._lastPinHoverTime = 0; // T2: Throttle pin hover audio
+    // Day 31: Replay recording
+    this._replayActions = [];
+    this._replayStartTime = null;
+    // Day 31: Hint tokens
+    this.hintTokens = this._loadHintTokens();
+  }
+
+  // ── Hint Token System (Day 31) ──
+  _loadHintTokens() {
+    try {
+      const saved = SafeStorage.getItem(TOKENS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { tokens: 3, earned: 0 }; // Start with 3 free tokens
+  }
+
+  _saveHintTokens() {
+    SafeStorage.setItem(TOKENS_KEY, JSON.stringify(this.hintTokens));
+  }
+
+  spendHintToken() {
+    if (this.hintTokens.tokens <= 0) return false;
+    this.hintTokens.tokens--;
+    this._saveHintTokens();
+    return true;
+  }
+
+  earnHintToken(reason) {
+    this.hintTokens.tokens++;
+    this.hintTokens.earned++;
+    this._saveHintTokens();
+    if (this.ui) this.ui.updateStatusBar(`💡 +1 hint token (${reason})`);
+  }
+
+  // ── Replay Recording (Day 31) ──
+  _startReplayRecording() {
+    this._replayActions = [];
+    this._replayStartTime = Date.now();
+  }
+
+  _recordReplayAction(type, data) {
+    if (!this._replayStartTime) return;
+    this._replayActions.push({
+      type,
+      data,
+      time: Date.now() - this._replayStartTime,
+    });
+  }
+
+  _saveReplay(levelId) {
+    if (!levelId || typeof levelId !== 'number' || this._replayActions.length === 0) return;
+    try {
+      const all = JSON.parse(SafeStorage.getItem(REPLAY_KEY) || '{}');
+      all[levelId] = {
+        actions: this._replayActions,
+        totalTime: Date.now() - this._replayStartTime,
+        gateCount: this.gates.length,
+        date: new Date().toISOString(),
+      };
+      SafeStorage.setItem(REPLAY_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
+  getReplay(levelId) {
+    try {
+      const all = JSON.parse(SafeStorage.getItem(REPLAY_KEY) || '{}');
+      return all[levelId] || null;
+    } catch (e) { return null; }
+  }
+
+  // ── Circuit Collection (Day 31) ──
+  _saveToCollection(levelId) {
+    if (!levelId || typeof levelId !== 'number') return;
+    try {
+      const all = JSON.parse(SafeStorage.getItem(COLLECTION_KEY) || '{}');
+      all[levelId] = {
+        gates: this.gates.map(g => ({ type: g.type, x: g.x, y: g.y })),
+        wireCount: this.wireManager.wires.length,
+        gateCount: this.gates.length,
+        date: new Date().toISOString(),
+        stars: this.progress.levels[levelId] ? this.progress.levels[levelId].stars : 1,
+      };
+      SafeStorage.setItem(COLLECTION_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
+  getCollection() {
+    try {
+      return JSON.parse(SafeStorage.getItem(COLLECTION_KEY) || '{}');
+    } catch (e) { return {}; }
+  }
+
+  // ── Circuit Aesthetics Score (Day 31) ──
+  calculateAestheticsScore() {
+    const gates = this.gates;
+    const wires = this.wireManager.wires;
+    if (gates.length === 0) return { score: 0, crossings: 0, alignment: 0, label: 'N/A' };
+
+    // Count wire crossings
+    let crossings = 0;
+    const wireEndpoints = wires.map(w => this.wireManager.getWireEndpoints(w)).filter(Boolean);
+    for (let i = 0; i < wireEndpoints.length; i++) {
+      for (let j = i + 1; j < wireEndpoints.length; j++) {
+        const a = wireEndpoints[i];
+        const b = wireEndpoints[j];
+        if (a && b && this._wiresCross(a, b)) crossings++;
+      }
+    }
+
+    // Check gate alignment (how many gates share X or Y coordinates)
+    let alignedPairs = 0;
+    const threshold = 5;
+    for (let i = 0; i < gates.length; i++) {
+      for (let j = i + 1; j < gates.length; j++) {
+        if (Math.abs(gates[i].x - gates[j].x) <= threshold ||
+            Math.abs(gates[i].y - gates[j].y) <= threshold) {
+          alignedPairs++;
+        }
+      }
+    }
+
+    const maxPairs = gates.length * (gates.length - 1) / 2;
+    const alignmentScore = maxPairs > 0 ? (alignedPairs / maxPairs) * 100 : 100;
+    const crossingPenalty = Math.min(crossings * 15, 60);
+    const rawScore = Math.max(0, Math.round(alignmentScore - crossingPenalty));
+
+    let label;
+    if (rawScore >= 85) label = '✨ Pristine';
+    else if (rawScore >= 65) label = '🔧 Clean';
+    else if (rawScore >= 40) label = '📐 Decent';
+    else label = '🔀 Messy';
+
+    return { score: rawScore, crossings, alignment: Math.round(alignmentScore), label };
+  }
+
+  _wiresCross(a, b) {
+    // Simple line segment crossing test
+    return this._segmentsCross(
+      a.fromPin.x, a.fromPin.y, a.toPin.x, a.toPin.y,
+      b.fromPin.x, b.fromPin.y, b.toPin.x, b.toPin.y
+    );
+  }
+
+  _segmentsCross(x1, y1, x2, y2, x3, y3, x4, y4) {
+    const d = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
+    if (Math.abs(d) < 0.001) return false;
+    const t = ((x3 - x1) * (y4 - y3) - (y3 - y1) * (x4 - x3)) / d;
+    const u = ((x3 - x1) * (y2 - y1) - (y3 - y1) * (x2 - x1)) / d;
+    return t > 0.05 && t < 0.95 && u > 0.05 && u < 0.95;
   }
 
   // #98: Haptic feedback for mobile
@@ -218,6 +372,9 @@ class GameState {
     this.streakData = this.updateStreak();
     this.ui.updateStreakDisplay(this.streakData);
 
+    // Day 31: Show placement test for brand new players
+    this._checkPlacementTest();
+
     // Remove intro after animation (skip for returning players)
     const intro = document.getElementById('intro-screen');
     if (intro) {
@@ -242,6 +399,52 @@ class GameState {
 
   markDirty() {
     this.needsRender = true;
+  }
+
+  // ── Placement Test (Day 31) ──
+  _checkPlacementTest() {
+    // Only show for brand new players (no progress, no placement test done)
+    try {
+      if (SafeStorage.getItem(PLACEMENT_KEY) === 'true') return;
+      const progress = this.loadProgress();
+      const hasProgress = Object.keys(progress.levels || {}).length > 0;
+      if (hasProgress) {
+        SafeStorage.setItem(PLACEMENT_KEY, 'true');
+        return;
+      }
+    } catch (e) { return; }
+
+    // Show after intro animation settles
+    setTimeout(() => {
+      if (this.ui) this.ui.showPlacementTest();
+    }, 3500);
+  }
+
+  completePlacementTest(score) {
+    SafeStorage.setItem(PLACEMENT_KEY, 'true');
+    // Score 0-3: skip ahead based on knowledge
+    if (score >= 3) {
+      // Know all basics — unlock through chapter 2
+      for (let i = 1; i <= 12; i++) {
+        if (!this.progress.levels[i]) {
+          this.progress.levels[i] = { completed: false, bookmarked: true };
+        }
+      }
+      this.earnHintToken('placement test ace');
+    } else if (score >= 2) {
+      // Know AND/OR — unlock chapter 1
+      for (let i = 1; i <= 6; i++) {
+        if (!this.progress.levels[i]) {
+          this.progress.levels[i] = { completed: false, bookmarked: true };
+        }
+      }
+    }
+    // score 0-1: start from beginning (default)
+    this.saveProgress();
+    if (this.ui) {
+      this.ui.renderLevelSelect();
+      this.ui.updateProgressBar(this.progress);
+    }
   }
 
   setupMuteButton() {
@@ -404,6 +607,10 @@ class GameState {
       if (data.streak > 0 && data.streak % 3 === 0) {
         data.freezeTokens = (data.freezeTokens || 0) + 1;
       }
+      // Day 31: Award hint token every 5-day streak
+      if (data.streak > 0 && data.streak % 5 === 0) {
+        this.earnHintToken(`${data.streak}-day streak`);
+      }
     } else if (data.lastPlayDate && data.lastPlayDate !== today) {
       // Missed day(s) — use freeze token or reset
       if (data.freezeTokens > 0) {
@@ -501,6 +708,8 @@ class GameState {
 
     this.saveProgress();
     this._saveGhost(levelId); // T10: save solution as ghost for replay
+    this._saveReplay(levelId); // Day 31: save replay
+    this._saveToCollection(levelId); // Day 31: save to circuit collection
     this._clearAutoSave(); // Clear auto-save on completion
 
     // Check for chapter completion
@@ -655,6 +864,13 @@ class GameState {
       if (this.hintsUsed >= this.currentLevel.hints.length) return;
       if (this.isSandboxMode || this.isChallengeMode) return;
 
+      // Day 31: Hint token economy
+      if (!this.spendHintToken()) {
+        this.ui.updateStatusBar('💡 No hint tokens! Earn more from challenges and achievements.');
+        this.audio.playFail();
+        return;
+      }
+
       this.hintsUsed++;
       if (this.hintsUsed >= 2) this.maxHintPenalty = Math.max(this.maxHintPenalty, this.hintsUsed - 1);
       this.audio.playButtonClick();
@@ -668,7 +884,7 @@ class GameState {
       this.ui.showHint(this.currentLevel.hints[this.hintsUsed - 1], this.hintsUsed, this.currentLevel.hints.length, isVisualHint);
 
       // Update hint button via centralized method
-      this.ui.updateHintButton();
+      this.ui.updateHintButton(this.hintTokens.tokens);
       if (this.hintsUsed >= this.currentLevel.hints.length) {
         this.showSkipButton();
       }
@@ -707,7 +923,7 @@ class GameState {
 
     document.getElementById('skip-btn').style.display = 'none';
     document.getElementById('hint-display').style.display = 'none';
-    if (this.ui) this.ui.updateHintButton();
+    if (this.ui) this.ui.updateHintButton(this.hintTokens.tokens);
 
     // Show skip after 60 seconds
     if (this._skipTimer) clearTimeout(this._skipTimer);
@@ -790,6 +1006,7 @@ class GameState {
       });
     }
     this.trackGatePlaced();
+    this._recordReplayAction('addGate', { type, x, y, id: gate.id });
     this.ui.updateGateIndicator();
     this.markDirty();
     this._autoSave();
@@ -825,6 +1042,7 @@ class GameState {
   addWireFromData(fromGateId, fromPinIndex, toGateId, toPinIndex) {
     const wire = new Wire(fromGateId, fromPinIndex, toGateId, toPinIndex, this.wireManager.nextId++);
     this.wireManager.wires.push(wire);
+    this._recordReplayAction('addWire', { fromGateId, fromPinIndex, toGateId, toPinIndex });
     this.markDirty();
     this._autoSave();
     return wire;
@@ -1000,6 +1218,7 @@ class GameState {
     this.ui.hideStarDisplay();
     this.ui.updateStatusBar(`Level ${level.id}: ${level.title}`);
     this.resetHintState();
+    this._startReplayRecording(); // Day 31: begin recording
     // #96: Defer timer start to first user action (campaign only)
     if (!this.isChallengeMode && !this.isSandboxMode) {
       this.timerPending = true;
@@ -1274,24 +1493,32 @@ class GameState {
               this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
               this.ui.showChallengeResult(gateCount, this.currentLevel);
               this.ui.startCelebration(2);
-              // Track challenge achievements
+              // Track challenge achievements + earn hint token
               const chAchs = this.achievements.trackChallengeComplete();
               this.ui.showAchievementToasts(chAchs);
+              this.earnHintToken('challenge complete');
             } else {
               const stars = this.completeLevel(this.currentLevel.id, gateCount);
               this.audio.playSuccess(stars);
               this.haptic([30, 50, 30, 50, 50]); // #98: celebration pattern
               this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
               this.ui.updateStatusBar('Level complete! All truth table rows match.');
-              this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
+              // Day 31: Calculate aesthetics score
+              const aesthetics = this.calculateAestheticsScore();
+              this.ui.showStarDisplay(stars, gateCount, this.currentLevel, aesthetics);
               this.ui.startCelebration(stars);
               // Check achievements
               const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
               const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
+              // Day 31: Clean Circuit achievement
+              if (aesthetics.score >= 85 && this.achievements.unlock('clean_circuit')) {
+                newAchs.push('clean_circuit');
+              }
               if (this.currentLevel.isDaily) {
                 if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
                 // Show share button for daily challenge
                 this.ui.showShareButton(gateCount, stars, elapsed);
+                this.earnHintToken('daily challenge');
               }
               this.ui.showAchievementToasts(newAchs);
             }
@@ -1354,19 +1581,25 @@ class GameState {
         this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
         this.ui.showChallengeResult(gateCount, this.currentLevel);
         this.ui.startCelebration(2);
+        this.earnHintToken('challenge complete');
       } else {
         const stars = this.completeLevel(this.currentLevel.id, gateCount);
         this.audio.playSuccess(stars);
         this.haptic([30, 50, 30, 50, 50]); // #98
         this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
         this.ui.updateStatusBar('Level complete! All truth table rows match.');
-        this.ui.showStarDisplay(stars, gateCount, this.currentLevel);
+        const aesthetics = this.calculateAestheticsScore();
+        this.ui.showStarDisplay(stars, gateCount, this.currentLevel, aesthetics);
         this.ui.startCelebration(stars);
         const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
         const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
+        if (aesthetics.score >= 85 && this.achievements.unlock('clean_circuit')) {
+          newAchs.push('clean_circuit');
+        }
         if (this.currentLevel.isDaily) {
           if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
           this.ui.showShareButton(gateCount, stars, elapsed);
+          this.earnHintToken('daily challenge');
         }
         this.ui.showAchievementToasts(newAchs);
       }

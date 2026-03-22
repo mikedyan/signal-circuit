@@ -55,6 +55,16 @@ const GateTypes = {
     width: 80,
     height: 60,
   },
+  MYSTERY: {
+    name: '???',
+    inputs: 2,
+    outputs: 1,
+    logic: (a, b) => a ^ b, // Secretly XOR — player must discover
+    color: '#888',
+    width: 80,
+    height: 60,
+    isMystery: true,
+  },
 };
 
 class Gate {
@@ -187,6 +197,24 @@ class Gate {
         ctx.beginPath();
         ctx.arc(cx + s * 0.9, cy, 3, 0, Math.PI * 2);
         ctx.stroke();
+        break;
+      case 'MYSTERY':
+        // Mystery gate: question mark symbol with shimmer
+        ctx.font = `bold ${Math.round(s * 1.8)}px Courier New`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const shimmer = 0.6 + 0.4 * Math.sin(performance.now() / 400);
+        ctx.fillStyle = `rgba(200, 200, 255, ${shimmer})`;
+        ctx.fillText('?', cx, cy);
+        // Rotating border dots
+        const angle = performance.now() / 800;
+        for (let d = 0; d < 4; d++) {
+          const a = angle + d * Math.PI / 2;
+          ctx.beginPath();
+          ctx.arc(cx + Math.cos(a) * s * 0.9, cy + Math.sin(a) * s * 0.9, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(150, 150, 255, ${shimmer * 0.6})`;
+          ctx.fill();
+        }
         break;
     }
   }
