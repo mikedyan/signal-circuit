@@ -90,6 +90,8 @@ class WireManager {
   startDrawing(gateId, pinIndex, pinType, x, y) {
     this.drawing = true;
     this.drawFrom = { gateId, pinIndex, pinType, x, y };
+    // Day 32 T2: Start wire proximity audio
+    if (this.gameState.audio) this.gameState.audio.startWireProximity();
   }
 
   updateMouse(x, y) {
@@ -143,6 +145,8 @@ class WireManager {
     this.wires.push(wire);
     this.drawing = false;
     this.drawFrom = null;
+    // Day 32 T2: Stop wire proximity audio on completion
+    if (this.gameState.audio) this.gameState.audio.stopWireProximity();
     return wire;
   }
 
@@ -161,6 +165,8 @@ class WireManager {
   cancelDrawing() {
     this.drawing = false;
     this.drawFrom = null;
+    // Day 32 T2: Stop wire proximity audio
+    if (this.gameState.audio) this.gameState.audio.stopWireProximity();
   }
 
   removeWire(wire) {

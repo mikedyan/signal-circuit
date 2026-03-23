@@ -1431,6 +1431,201 @@ function getDifficultyLabel(numInputs, numOutputs) {
   return labels[key] || 'Medium';
 }
 
+// ── Day 32 T3: Challenge a Friend URL encoding ──
+function encodeFriendChallenge(level, senderScore) {
+  const data = {
+    t: level.truthTable.map(r => [...r.inputs, ...r.outputs]),
+    i: level.inputs.length,
+    o: level.outputs.length,
+    s: senderScore,  // sender's gate count
+    n: level.title || 'Challenge',
+  };
+  return '#friend=' + btoa(JSON.stringify(data));
+}
+
+function parseFriendChallenge() {
+  try {
+    const hash = window.location.hash;
+    if (!hash || !hash.startsWith('#friend=')) return null;
+    const encoded = hash.slice(8);
+    const data = JSON.parse(atob(encoded));
+    if (!data.t || !data.i || !data.o) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function buildFriendChallengeLevel(data) {
+  const numInputs = data.i;
+  const numOutputs = data.o;
+  const inputLabels = ['A', 'B', 'C', 'D'].slice(0, numInputs);
+  const outputLabels = numOutputs === 1 ? ['OUT'] : Array.from({ length: numOutputs }, (_, i) => `Y${i}`);
+
+  const canvasHeight = 500;
+  const inputSpacing = canvasHeight / (numInputs + 1);
+  const outputSpacing = canvasHeight / (numOutputs + 1);
+
+  const inputs = inputLabels.map((label, i) => ({
+    label, x: 60, y: Math.round(inputSpacing * (i + 1)),
+  }));
+  const outputs = outputLabels.map((label, i) => ({
+    label, x: 600, y: Math.round(outputSpacing * (i + 1)),
+  }));
+
+  const truthTable = data.t.map(row => ({
+    inputs: row.slice(0, numInputs),
+    outputs: row.slice(numInputs),
+  }));
+
+  return {
+    id: 'friend-challenge',
+    title: `🤝 Friend's Challenge`,
+    description: data.s ? `Your friend solved this in ${data.s} gates — can you beat them?` : 'A friend challenged you to solve this circuit!',
+    hints: [],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: data.s || numInputs + 1,
+    goodGates: (data.s || numInputs + 1) + 2,
+    inputs,
+    outputs,
+    truthTable,
+    isChallenge: true,
+    isFriendChallenge: true,
+    friendScore: data.s || null,
+    difficulty: getDifficultyLabel(numInputs, numOutputs),
+    difficultyKey: `${numInputs}x${numOutputs}`,
+  };
+}
+
+// ── Day 32 T7: Weekly Puzzle ──
+const WEEKLY_PUZZLES = [
+  {
+    name: 'Mars Rover Fault Detector',
+    story: 'The Mars rover\'s fault detection circuit is offline. Build a majority voter to protect critical systems.',
+    inputs: 3, outputs: 1,
+    table: [0,0,0,1,0,1,1,1], // Majority
+    gates: ['AND', 'OR', 'NOT'],
+  },
+  {
+    name: 'Submarine Depth Alarm',
+    story: 'The submarine needs a depth alarm — trigger when at least 2 of 3 pressure sensors detect danger.',
+    inputs: 3, outputs: 1,
+    table: [0,0,0,1,0,1,1,1], // Majority (variant context)
+    gates: ['AND', 'OR', 'NOT', 'XOR'],
+  },
+  {
+    name: 'Space Station Airlock',
+    story: 'Both inner AND outer door sensors must agree before the airlock cycles. Build the safety interlock.',
+    inputs: 2, outputs: 1,
+    table: [0,0,0,1], // AND (but with narrative)
+    gates: ['AND', 'OR', 'NOT'],
+  },
+  {
+    name: 'Train Signal Controller',
+    story: 'A rail junction needs a signal controller: green when either track is clear, red when both are occupied.',
+    inputs: 2, outputs: 1,
+    table: [1,1,1,0], // NAND
+    gates: ['AND', 'OR', 'NOT', 'NAND'],
+  },
+  {
+    name: 'Satellite Error Corrector',
+    story: 'Deep space signals are noisy. Build a parity checker to detect single-bit transmission errors.',
+    inputs: 3, outputs: 1,
+    table: [0,1,1,0,1,0,0,1], // XOR parity
+    gates: ['AND', 'OR', 'NOT', 'XOR'],
+  },
+  {
+    name: 'Nuclear Plant Safety Logic',
+    story: 'Three independent sensors monitor reactor temperature. The shutdown triggers only if exactly one sensor reads normal.',
+    inputs: 3, outputs: 1,
+    table: [0,1,1,0,1,0,0,0], // Exactly-one
+    gates: ['AND', 'OR', 'NOT', 'XOR', 'NAND'],
+  },
+  {
+    name: 'Hospital Triage Sorter',
+    story: 'An emergency triage system routes patients. Build the priority encoder that identifies the most urgent case.',
+    inputs: 3, outputs: 1,
+    table: [0,0,0,0,1,1,1,1], // A (highest bit) — priority
+    gates: ['AND', 'OR', 'NOT'],
+  },
+  {
+    name: 'Quantum Lab Interlock',
+    story: 'The quantum computer\'s cooling system must activate when conditions differ — XOR the sensor readings.',
+    inputs: 2, outputs: 1,
+    table: [0,1,1,0], // XOR
+    gates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+  },
+];
+
+function generateWeeklyPuzzle() {
+  const now = new Date();
+  // ISO week number
+  const oneJan = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.ceil(((now - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
+  const idx = weekNum % WEEKLY_PUZZLES.length;
+  const puzzle = WEEKLY_PUZZLES[idx];
+
+  const numInputs = puzzle.inputs;
+  const numOutputs = puzzle.outputs;
+  const inputLabels = ['A', 'B', 'C', 'D'].slice(0, numInputs);
+  const outputLabels = numOutputs === 1 ? ['OUT'] : ['X', 'Y'];
+  const numRows = Math.pow(2, numInputs);
+
+  const canvasHeight = 500;
+  const inputSpacing = canvasHeight / (numInputs + 1);
+  const outputSpacing = canvasHeight / (numOutputs + 1);
+
+  const inputs = inputLabels.map((label, i) => ({
+    label, x: 60, y: Math.round(inputSpacing * (i + 1)),
+  }));
+  const outputs = outputLabels.map((label, i) => ({
+    label, x: 600, y: Math.round(outputSpacing * (i + 1)),
+  }));
+
+  const truthTable = [];
+  for (let r = 0; r < numRows; r++) {
+    const inVals = [];
+    for (let j = numInputs - 1; j >= 0; j--) inVals.push((r >> j) & 1);
+    const outVals = numOutputs === 1 ? [puzzle.table[r]] : puzzle.table[r];
+    truthTable.push({ inputs: inVals, outputs: outVals });
+  }
+
+  return {
+    id: 'weekly',
+    title: `🏗️ Puzzle of the Week: ${puzzle.name}`,
+    description: puzzle.story,
+    hints: [],
+    availableGates: puzzle.gates,
+    optimalGates: numInputs + 1,
+    goodGates: numInputs + 3,
+    inputs,
+    outputs,
+    truthTable,
+    isWeekly: true,
+    weekNumber: weekNum,
+  };
+}
+
+// ── Day 32 T4: Seasonal Themes ──
+function getSeasonalTheme() {
+  const month = new Date().getMonth(); // 0-11
+  const themes = [
+    { name: 'New Year Circuits', emoji: '🎆', accent: '#FFD700', month: 0 },
+    { name: 'Logic of Love', emoji: '💝', accent: '#FF6B9D', month: 1 },
+    { name: 'Spring Signals', emoji: '🌸', accent: '#FF9FD5', month: 2 },
+    { name: 'April Logic', emoji: '🔬', accent: '#00E5FF', month: 3 },
+    { name: 'May Circuits', emoji: '⚡', accent: '#76FF03', month: 4 },
+    { name: 'Summer Solstice', emoji: '☀️', accent: '#FFAB40', month: 5 },
+    { name: 'Digital Freedom', emoji: '🎆', accent: '#FF1744', month: 6 },
+    { name: 'August Build', emoji: '🔧', accent: '#00B0FF', month: 7 },
+    { name: 'Back to Logic', emoji: '📚', accent: '#7C4DFF', month: 8 },
+    { name: 'Logic of Spooky', emoji: '🎃', accent: '#FF6D00', month: 9 },
+    { name: 'November Bits', emoji: '🍂', accent: '#8D6E63', month: 10 },
+    { name: 'Winter Circuits', emoji: '❄️', accent: '#80DEEA', month: 11 },
+  ];
+  return themes[month] || themes[0];
+}
+
 function generateSandboxLevel(numInputs, numOutputs) {
   numInputs = numInputs || 2;
   numOutputs = numOutputs || 1;

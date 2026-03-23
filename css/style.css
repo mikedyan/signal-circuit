@@ -3877,3 +3877,120 @@ button:focus-visible {
   0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }
 }
+
+/* ── Day 32: Blitz & Speedrun HUDs ── */
+#blitz-hud, #speedrun-hud {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#blitz-info, #speedrun-info {
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #FF6D00;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 6px 18px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 13px;
+  color: #FFD700;
+  font-family: 'Courier New', monospace;
+  pointer-events: auto;
+}
+
+#speedrun-info {
+  border-color: #00E5FF;
+  color: #00E5FF;
+}
+
+#speedrun-exit-btn {
+  background: transparent;
+  border: 1px solid #FF6B6B;
+  color: #FF6B6B;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+#speedrun-exit-btn:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+/* ── Day 32: Challenge Friend Button ── */
+#challenge-friend-btn {
+  background: linear-gradient(135deg, #1a1a3e, #2a2a4e);
+  border: 1px solid #7C4DFF;
+  color: #B388FF;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  margin-top: 6px;
+  transition: all 0.2s;
+}
+
+#challenge-friend-btn:hover {
+  border-color: #B388FF;
+  background: linear-gradient(135deg, #2a2a4e, #3a3a5e);
+}
+
+/* ── Day 32: Weekly Puzzle Button ── */
+.weekly-btn {
+  border-color: #FFD700 !important;
+  color: #FFD700 !important;
+  position: relative;
+}
+
+.weekly-btn::after {
+  content: 'NEW';
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #FF1744;
+  color: #fff;
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+/* ── Day 32: Review Section ── */
+#review-section {
+  margin-top: 12px;
+}
+
+#review-levels {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.review-level {
+  border-color: #7C4DFF !important;
+  background: rgba(124, 77, 255, 0.08) !important;
+}
+
+.review-level:hover {
+  background: rgba(124, 77, 255, 0.15) !important;
+}
+
+/* ── Day 32: Enhanced Stats ── */
+.stat-card-wide {
+  grid-column: 1 / -1;
+}
+
+.stat-card-wide h4 {
+  font-size: 12px;
+  margin-bottom: 4px;
+}

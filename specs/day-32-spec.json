@@ -1,0 +1,141 @@
+{
+  "day": 32,
+  "title": "Audio Evolution & Competitive Modes",
+  "summary": "Day 32 builds the evolving audio identity across chapters, adds proximity-based wire-drawing audio, introduces Challenge-a-Friend URL sharing, seasonal themed challenges, enhanced play statistics (Lab Notebook), micro-celebrations for intermediate successes, Puzzle of the Week, Challenge Ladder/Blitz Mode, Speedrun Mode, and spaced repetition review levels. Each is a P3 feature — we implement the simplest viable version that integrates cleanly with existing systems.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Audio Progression Across Chapters — Each chapter gets a distinct audio palette. Chapter 1 = clean sine, Chapter 2 = richer harmonics (detune), Chapter 3 = FM synthesis, Chapter 4/5/6 = progressively more complex. Adjust the music pad and ambient layer based on current chapter. Store current chapter context in AudioEngine and modulate oscillator types/detuning/filter parameters.",
+      "files_to_modify": ["js/audio.js", "js/main.js"],
+      "acceptance_criteria": [
+        "AudioEngine has setChapterPalette(chapterIndex) method",
+        "Music pad chord voicing changes per chapter",
+        "Gate placement sounds shift timbre based on chapter context",
+        "Transitions are smooth (no pops or clicks)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Wire-Drawing Continuous Audio Feedback — While drawing a wire, play a soft proximity tone that changes pitch based on distance to nearest valid pin. Use a continuously-updating oscillator that fades out when wire drawing ends.",
+      "files_to_modify": ["js/audio.js", "js/canvas.js"],
+      "acceptance_criteria": [
+        "AudioEngine has startWireProximity() and updateWireProximity(distance) and stopWireProximity() methods",
+        "During wire drawing, a soft tone plays and pitch changes as cursor moves near valid pins",
+        "Tone stops cleanly when wire drawing is complete or cancelled",
+        "No audio if muted"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Challenge a Friend via URL-Encoded Puzzles — After completing a challenge/daily, show a 'Challenge Friend' button that encodes the truth table, gate count, and sender's score into a URL hash. When opened, the recipient sees 'X solved this in N gates — can you beat them?'",
+      "files_to_modify": ["js/ui.js", "js/main.js", "js/levels.js"],
+      "acceptance_criteria": [
+        "A 'Challenge Friend' button appears after completing a challenge or daily",
+        "Clicking it copies a URL with encoded puzzle + score to clipboard",
+        "Opening the URL loads the puzzle with target score shown",
+        "URL format is #challenge=<base64-encoded-data>"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Seasonal/Themed Content Rotations — Add a getSeasonalTheme() function that returns current theme based on month. Display seasonal badge on daily challenge button. Apply subtle CSS class for seasonal flair.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "getSeasonalTheme() returns theme object with name, emoji, accent color",
+        "Daily challenge button shows seasonal emoji",
+        "At least 4 seasonal themes defined (spring/summer/fall/winter or monthly)",
+        "Current theme is visually indicated on level select"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Play Statistics Dashboard ('Lab Notebook') — Enhance the existing stats modal with detailed analytics: time per level chart (text-based bar chart), gates-per-level trend, most-retried levels, favorite gate distribution, total play time.",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Stats modal shows per-level gate count comparison (text bar chart)",
+        "Stats modal shows most-retried levels (highest attempt count)",
+        "Stats modal shows total playtime tracked across sessions",
+        "Stats modal shows gate usage distribution"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Micro-Celebrations for Intermediate Successes — During gameplay, trigger small sparkle effects and sounds for: first wire connection in a level, all gates placed, and first correct truth table row (partial match on quick test).",
+      "files_to_modify": ["js/main.js", "js/audio.js", "js/canvas.js"],
+      "acceptance_criteria": [
+        "First wire in a new level triggers a small sparkle burst and soft chime",
+        "Connecting the last available input across all gates triggers 'all wired' sparkle",
+        "Audio feedback is subtle (lower volume than main events)",
+        "Celebrations don't fire more than once per trigger per level"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Puzzle of the Week — Add a weekly curated puzzle system. Define 4-8 puzzles with story context. Use week number to rotate. Show on level select with special styling. Featured above daily challenge.",
+      "files_to_modify": ["js/levels.js", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "generateWeeklyPuzzle() returns a curated puzzle based on ISO week number",
+        "Weekly puzzle button visible on level select screen",
+        "Weekly puzzles have story context descriptions",
+        "At least 8 weekly puzzles defined in rotation"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Challenge Ladder / Blitz Mode — Escalating difficulty mode: start with 2-input/1-output, each solve advances to harder puzzle. Timer counts up. Track highest level reached. Show ladder position.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "js/levels.js", "index.html"],
+      "acceptance_criteria": [
+        "Blitz mode button on level select launches ladder",
+        "Each completed puzzle advances to a harder one (more inputs/outputs)",
+        "Timer runs continuously across puzzles",
+        "High score (highest level reached) persisted to localStorage",
+        "UI shows current ladder position and best record"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Speedrun Mode — All campaign levels played consecutively with total timer. Show splits per chapter. Track personal best. Restart from beginning option.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "Speedrun mode button on level select",
+        "Completing a level auto-advances to next",
+        "Total elapsed time shown prominently",
+        "Per-level split times recorded",
+        "Personal best time persisted",
+        "Can exit speedrun at any point"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Spaced Repetition Review Levels — Track when each level was last completed. Surface a 'Review' suggestion on level select when a level hasn't been played in 3+ days. Algorithm: prioritize levels with lowest stars that are oldest.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Progress tracks lastPlayed timestamp per level",
+        "Review suggestion section appears on level select when applicable",
+        "Levels with lowest stars and oldest completion are prioritized",
+        "Clicking review starts that level normally",
+        "Review section hidden when no levels qualify"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Audio evolution doesn't cause pops or memory leaks across chapter transitions",
+    "Challenge Friend URLs decode correctly and load proper puzzles",
+    "Blitz mode escalation and timer work correctly",
+    "Speedrun auto-advance transitions cleanly between levels",
+    "Spaced repetition doesn't show for brand-new players with no completed levels",
+    "All new modals/overlays are dismissable and don't block underlying UI"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced that breaks core gameplay (simulation, wire drawing, level loading), revert."
+}

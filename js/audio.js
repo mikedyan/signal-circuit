@@ -8,6 +8,8 @@ class AudioEngine {
     this.masterVolume = 0.3;
     this._initialized = false;
     this._wireConnectionCount = 0; // For pitch escalation
+    this._chapterPalette = 0; // Day 32 T1: current chapter audio palette index
+    this._wireProxOsc = null; // Day 32 T2: wire proximity oscillator
 
     // Load mute state from localStorage
     try {
@@ -1114,6 +1116,111 @@ class AudioEngine {
         break;
       }
     }
+  }
+
+  // ── Day 32 T1: Audio Progression Across Chapters ──
+  setChapterPalette(chapterIndex) {
+    this._chapterPalette = chapterIndex || 0;
+    // Update music pad voicing if active
+    if (this._musicOscs && this.ctx) {
+      const palettes = [
+        // Ch1: Clean C major (sine)
+        { freqs: [130.81, 164.81, 196.00], type: 'sine', detune: 0 },
+        // Ch2: Richer Am7 (triangle, slight detune)
+        { freqs: [110.00, 146.83, 174.61], type: 'triangle', detune: 4 },
+        // Ch3: FM-flavored Cm (sawtooth filtered)
+        { freqs: [130.81, 155.56, 196.00], type: 'sawtooth', detune: 6 },
+        // Ch4: Suspended Csus4 (triangle, wider detune)
+        { freqs: [130.81, 174.61, 196.00], type: 'triangle', detune: 8 },
+        // Ch5: Power chord C5 (sine + square mix)
+        { freqs: [130.81, 196.00, 261.63], type: 'sine', detune: 3 },
+        // Ch6: Universal — chromatic tension
+        { freqs: [123.47, 164.81, 207.65], type: 'triangle', detune: 10 },
+      ];
+      const p = palettes[Math.min(chapterIndex, palettes.length - 1)] || palettes[0];
+      const ctx = this.ctx;
+      this._musicOscs.forEach(({ osc }, i) => {
+        if (p.freqs[i] !== undefined) {
+          osc.frequency.linearRampToValueAtTime(p.freqs[i], ctx.currentTime + 1.5);
+          osc.type = p.type;
+          osc.detune.linearRampToValueAtTime(p.detune * (Math.random() - 0.5), ctx.currentTime + 1.5);
+        }
+      });
+    }
+  }
+
+  // ── Day 32 T2: Wire-Drawing Continuous Audio Feedback ──
+  startWireProximity() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    if (this._wireProxOsc) return; // Already active
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, ctx.currentTime);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(600, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(this.masterVolume * 0.04, ctx.currentTime + 0.2);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this._output);
+    osc.start();
+    this._wireProxOsc = osc;
+    this._wireProxGain = gain;
+    this._wireProxFilter = filter;
+  }
+
+  updateWireProximity(distance) {
+    if (!this._wireProxOsc || !this.ctx) return;
+    const ctx = this.ctx;
+    // Map distance to pitch: closer = higher pitch, further = lower
+    // distance is in pixels, typically 0 (on pin) to 300+ (far away)
+    const maxDist = 300;
+    const clamped = Math.min(Math.max(distance, 0), maxDist);
+    const t = 1 - (clamped / maxDist); // 1 = close, 0 = far
+    const freq = 200 + t * 800; // 200Hz (far) to 1000Hz (close)
+    const vol = this.masterVolume * (0.02 + t * 0.06); // Louder when close
+    this._wireProxOsc.frequency.linearRampToValueAtTime(freq, ctx.currentTime + 0.05);
+    this._wireProxGain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.05);
+  }
+
+  stopWireProximity() {
+    if (!this._wireProxOsc) return;
+    try {
+      if (this._wireProxGain && this.ctx) {
+        this._wireProxGain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+      }
+      setTimeout(() => {
+        try { if (this._wireProxOsc) this._wireProxOsc.stop(); } catch (e) {}
+        this._wireProxOsc = null;
+        this._wireProxGain = null;
+        this._wireProxFilter = null;
+      }, 150);
+    } catch (e) {
+      this._wireProxOsc = null;
+    }
+  }
+
+  // ── Day 32 T6: Micro-celebration chime (subtle) ──
+  playMicroCelebration() {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(this._randomize(1200, 0.05), now);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+    gain.gain.setValueAtTime(this.masterVolume * 0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(this._output);
+    osc.start(now);
+    osc.stop(now + 0.12);
   }
 
   // ── Helper: Noise burst ──

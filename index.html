@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=44">
+  <link rel="stylesheet" href="css/style.css?v=45">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -41,12 +41,21 @@
         </div>
         <div id="chapters-container"></div>
 
+        <!-- Day 32 T10: Spaced Repetition Review -->
+        <div id="review-section" style="display:none;">
+          <div class="chapter-title">📖 Review Suggested</div>
+          <div id="review-levels"></div>
+        </div>
+
         <!-- Challenge Mode Section -->
         <div id="challenge-section">
           <div class="chapter-title">Challenge Mode</div>
           <div id="challenge-buttons">
+            <button id="weekly-puzzle-btn" class="challenge-btn weekly-btn" aria-label="Puzzle of the Week">🏗️ Puzzle of the Week</button>
             <button id="daily-challenge-btn" class="challenge-btn daily-btn" aria-label="Daily Challenge">📅 Daily Challenge</button>
             <button id="random-challenge-btn" class="challenge-btn" aria-label="Random Challenge">🎲 Random Challenge</button>
+            <button id="blitz-mode-btn" class="challenge-btn" aria-label="Blitz Mode">🔥 Blitz Ladder</button>
+            <button id="speedrun-btn" class="challenge-btn" aria-label="Speedrun Mode">🏁 Speedrun</button>
             <button id="sandbox-btn" class="challenge-btn" aria-label="Sandbox mode">🔧 Sandbox</button>
           </div>
         </div>
@@ -302,6 +311,7 @@
           <button id="perfect-retry-btn" style="display:none;" aria-label="Retry for pure logic badge">Try for 🧠 Pure Logic?</button>
         <button id="share-btn" style="display:none;" aria-label="Copy result to clipboard">📋 Share Result</button>
         <button id="share-card-btn" style="display:none;" aria-label="Generate share card">📸 Share Card</button>
+        <button id="challenge-friend-btn" style="display:none;" aria-label="Challenge a friend">🤝 Challenge Friend</button>
         </div>
         <button id="ghost-toggle-btn" style="display:none;">👻 Show Previous Solution</button>
 
@@ -366,6 +376,25 @@
     </div>
   </div>
 
+  <!-- Blitz Mode HUD (Day 32 T8) -->
+  <div id="blitz-hud" style="display:none;">
+    <div id="blitz-info">
+      <span id="blitz-level">Level 1</span>
+      <span id="blitz-timer">⏱ 0:00</span>
+      <span id="blitz-best">Best: —</span>
+    </div>
+  </div>
+
+  <!-- Speedrun HUD (Day 32 T9) -->
+  <div id="speedrun-hud" style="display:none;">
+    <div id="speedrun-info">
+      <span id="speedrun-progress">1/32</span>
+      <span id="speedrun-timer">⏱ 0:00</span>
+      <span id="speedrun-best">PB: —</span>
+      <button id="speedrun-exit-btn">✕ Exit</button>
+    </div>
+  </div>
+
   <!-- Confirm Modal -->
   <div id="confirm-modal" style="display:none;">
     <div id="confirm-modal-content">
@@ -425,14 +454,14 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=44"></script>
-  <script src="js/wires.js?v=44"></script>
-  <script src="js/simulation.js?v=44"></script>
-  <script src="js/levels.js?v=44"></script>
-  <script src="js/audio.js?v=44"></script>
-  <script src="js/achievements.js?v=44"></script>
-  <script src="js/canvas.js?v=44"></script>
-  <script src="js/ui.js?v=44"></script>
-  <script src="js/main.js?v=44"></script>
+  <script src="js/gates.js?v=45"></script>
+  <script src="js/wires.js?v=45"></script>
+  <script src="js/simulation.js?v=45"></script>
+  <script src="js/levels.js?v=45"></script>
+  <script src="js/audio.js?v=45"></script>
+  <script src="js/achievements.js?v=45"></script>
+  <script src="js/canvas.js?v=45"></script>
+  <script src="js/ui.js?v=45"></script>
+  <script src="js/main.js?v=45"></script>
 </body>
 </html>

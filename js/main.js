@@ -151,6 +151,19 @@ class GameState {
     this._replayStartTime = null;
     // Day 31: Hint tokens
     this.hintTokens = this._loadHintTokens();
+    // Day 32 T6: Micro-celebration tracking per level
+    this._microCelebrations = { firstWire: false, allWired: false };
+    // Day 32 T8: Blitz Mode state
+    this.blitzMode = false;
+    this.blitzLevel = 0;
+    this.blitzTimer = null;
+    this.blitzStart = null;
+    // Day 32 T9: Speedrun Mode state
+    this.speedrunMode = false;
+    this.speedrunLevelIdx = 0;
+    this.speedrunStart = null;
+    this.speedrunTimer = null;
+    this.speedrunSplits = [];
   }
 
   // ── Hint Token System (Day 31) ──
@@ -694,11 +707,13 @@ class GameState {
         bestGateCount: existing ? Math.min(existing.bestGateCount || gateCount, gateCount) : gateCount,
         bestTime: existing ? Math.min(existing.bestTime || elapsed, elapsed) : elapsed,
         pureLogic: pureLogic || (existing && existing.pureLogic), // Once earned, keep it
+        lastPlayed: Date.now(), // Day 32 T10: track for spaced repetition
       };
     } else {
       if (gateCount < (existing.bestGateCount || Infinity)) existing.bestGateCount = gateCount;
       if (elapsed < (existing.bestTime || Infinity)) existing.bestTime = elapsed;
       if (pureLogic) existing.pureLogic = true;
+      existing.lastPlayed = Date.now(); // Day 32 T10
     }
 
     // Clear bookmark if it was bookmarked
@@ -1243,6 +1258,14 @@ class GameState {
     // T3: Reset wire pitch escalation
     this.audio.resetWireCount();
 
+    // Day 32 T1: Set chapter audio palette based on current level's chapter
+    const chapters = getChapters();
+    const chapterIdx = chapters.findIndex(ch => ch.levels.includes(id));
+    if (chapterIdx >= 0) this.audio.setChapterPalette(chapterIdx);
+
+    // Day 32 T6: Reset micro-celebration tracking for this level
+    this._microCelebrations = { firstWire: false, allWired: false };
+
     // T10: Load ghost overlay if this level was previously solved
     this._loadGhost(id);
 
@@ -1436,6 +1459,7 @@ class GameState {
     this.ui.showAchievementToasts(wireAchs);
     this._autoSave();
     this.ui.updateGateIndicator();
+    this._checkMicroCelebrations(); // Day 32 T6
     return true;
   }
 
@@ -1497,6 +1521,14 @@ class GameState {
               const chAchs = this.achievements.trackChallengeComplete();
               this.ui.showAchievementToasts(chAchs);
               this.earnHintToken('challenge complete');
+
+              // Day 32 T3: Show Challenge Friend button for challenges
+              this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
+
+              // Day 32 T8: Blitz auto-advance after short delay
+              if (this.blitzMode) {
+                setTimeout(() => this._blitzAdvance(), 1500);
+              }
             } else {
               const stars = this.completeLevel(this.currentLevel.id, gateCount);
               this.audio.playSuccess(stars);
@@ -1519,8 +1551,15 @@ class GameState {
                 // Show share button for daily challenge
                 this.ui.showShareButton(gateCount, stars, elapsed);
                 this.earnHintToken('daily challenge');
+                // Day 32 T3: Challenge Friend for dailies too
+                this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
               }
               this.ui.showAchievementToasts(newAchs);
+
+              // Day 32 T9: Speedrun auto-advance
+              if (this.speedrunMode) {
+                setTimeout(() => this._speedrunAdvance(), 1200);
+              }
             }
           } else {
             const passCount = results.filter(r => r.pass).length;
@@ -1582,6 +1621,8 @@ class GameState {
         this.ui.showChallengeResult(gateCount, this.currentLevel);
         this.ui.startCelebration(2);
         this.earnHintToken('challenge complete');
+        this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
+        if (this.blitzMode) setTimeout(() => this._blitzAdvance(), 1500);
       } else {
         const stars = this.completeLevel(this.currentLevel.id, gateCount);
         this.audio.playSuccess(stars);
@@ -1600,8 +1641,10 @@ class GameState {
           if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
           this.ui.showShareButton(gateCount, stars, elapsed);
           this.earnHintToken('daily challenge');
+          this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
         }
         this.ui.showAchievementToasts(newAchs);
+        if (this.speedrunMode) setTimeout(() => this._speedrunAdvance(), 1200);
       }
     } else {
       const passCount = results.filter(r => r.pass).length;
@@ -2040,6 +2083,12 @@ class GameState {
       const pin = this.renderer.findPinAt(pos.x, pos.y);
       this.renderer.hoveredPin = pin;
 
+      // Day 32 T2: Update wire proximity audio during wire drawing
+      if (this.wireManager.drawing && this.audio._wireProxOsc) {
+        const nearestDist = this._findNearestValidPinDistance(pos.x, pos.y);
+        this.audio.updateWireProximity(nearestDist);
+      }
+
       // T2: Pin hover audio feedback (throttled)
       if (pin) {
         const pinKey = pin.gateId + '-' + pin.pinIndex + '-' + pin.pinType;
@@ -2278,6 +2327,36 @@ class GameState {
     });
   }
 
+  // Day 32 T2: Find distance to nearest valid pin for wire proximity audio
+  _findNearestValidPinDistance(mx, my) {
+    let minDist = 999;
+    if (!this.wireManager.drawFrom) return minDist;
+    const fromType = this.wireManager.drawFrom.pinType;
+    const targetType = fromType === 'output' ? 'input' : 'output';
+
+    const checkPin = (px, py) => {
+      const d = Math.hypot(mx - px, my - py);
+      if (d < minDist) minDist = d;
+    };
+
+    for (const gate of this.gates) {
+      if (targetType === 'input') {
+        const pins = gate.getInputPins();
+        pins.forEach(p => checkPin(gate.x + p.x, gate.y + p.y));
+      } else {
+        const pins = gate.getOutputPins();
+        pins.forEach(p => checkPin(gate.x + p.x, gate.y + p.y));
+      }
+    }
+    for (const node of this.inputNodes) {
+      if (targetType === 'output') checkPin(node.x + node.width, node.y + node.height / 2);
+    }
+    for (const node of this.outputNodes) {
+      if (targetType === 'input') checkPin(node.x, node.y + node.height / 2);
+    }
+    return minDist;
+  }
+
   async _runTensionAnimation() {
     // Brief workspace dim + input pulse before simulation starts
     const overlay = document.getElementById('run-tension-overlay');
@@ -2428,6 +2507,219 @@ class GameState {
     this.markDirty();
   }
 
+  // ── Day 32 T6: Micro-Celebrations ──
+  _checkMicroCelebrations() {
+    if (!this._microCelebrations || this.isSandboxMode) return;
+    // First wire in level
+    if (!this._microCelebrations.firstWire && this.wireManager.wires.length === 1) {
+      this._microCelebrations.firstWire = true;
+      this.audio.playMicroCelebration();
+      if (this.renderer) {
+        const wire = this.wireManager.wires[0];
+        const endpoints = this.wireManager.getWireEndpoints(wire);
+        if (endpoints) this.renderer.spawnSparks(endpoints.toPin.x, endpoints.toPin.y);
+      }
+    }
+  }
+
+  // ── Day 32 T8: Blitz Ladder Mode ──
+  startBlitzMode() {
+    this.blitzMode = true;
+    this.blitzLevel = 0;
+    this.isChallengeMode = true;
+    this.isSandboxMode = false;
+    this.blitzStart = Date.now();
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
+    this.renderer.resize();
+    this.renderer.resetView();
+    this._showBlitzHud(true);
+    this._loadNextBlitzPuzzle();
+    if (this.blitzTimer) clearInterval(this.blitzTimer);
+    this.blitzTimer = setInterval(() => this._updateBlitzTimer(), 1000);
+    setTimeout(() => this.renderer.resize(), 100);
+  }
+
+  _loadNextBlitzPuzzle() {
+    // Escalating difficulty: level 0-2 = 2x1, 3-5 = 3x1, 6-8 = 2x2, 9+ = 3x2
+    const ladderConfig = [
+      { i: 2, o: 1 }, { i: 2, o: 1 }, { i: 2, o: 1 },
+      { i: 3, o: 1 }, { i: 3, o: 1 }, { i: 3, o: 1 },
+      { i: 2, o: 2 }, { i: 2, o: 2 }, { i: 2, o: 2 },
+      { i: 3, o: 2 }, { i: 3, o: 2 }, { i: 4, o: 1 },
+    ];
+    const cfg = ladderConfig[Math.min(this.blitzLevel, ladderConfig.length - 1)];
+    const level = generateChallenge(cfg.i, cfg.o);
+    level.title = `Blitz #${this.blitzLevel + 1}: ${level.title}`;
+    this.loadChallengeLevel(level);
+  }
+
+  _blitzAdvance() {
+    this.blitzLevel++;
+    this._saveBlitzBest(this.blitzLevel);
+    this._updateBlitzHud();
+    this._loadNextBlitzPuzzle();
+  }
+
+  _updateBlitzTimer() {
+    if (!this.blitzStart) return;
+    const elapsed = Math.floor((Date.now() - this.blitzStart) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const el = document.getElementById('blitz-timer');
+    if (el) el.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  _updateBlitzHud() {
+    const el = document.getElementById('blitz-level');
+    if (el) el.textContent = `Level ${this.blitzLevel + 1}`;
+    const best = this._getBlitzBest();
+    const bestEl = document.getElementById('blitz-best');
+    if (bestEl) bestEl.textContent = best > 0 ? `Best: Level ${best}` : 'Best: —';
+  }
+
+  _showBlitzHud(show) {
+    const hud = document.getElementById('blitz-hud');
+    if (hud) hud.style.display = show ? 'flex' : 'none';
+  }
+
+  _getBlitzBest() {
+    try { return parseInt(SafeStorage.getItem('signal-circuit-blitz-best') || '0'); } catch (e) { return 0; }
+  }
+
+  _saveBlitzBest(level) {
+    const current = this._getBlitzBest();
+    if (level > current) SafeStorage.setItem('signal-circuit-blitz-best', String(level));
+  }
+
+  stopBlitzMode() {
+    this.blitzMode = false;
+    this.isChallengeMode = false;
+    if (this.blitzTimer) { clearInterval(this.blitzTimer); this.blitzTimer = null; }
+    this._showBlitzHud(false);
+    this.showLevelSelect();
+  }
+
+  // ── Day 32 T9: Speedrun Mode ──
+  startSpeedrunMode() {
+    const allLevels = LEVELS.map(l => l.id);
+    if (allLevels.length === 0) return;
+    this.speedrunMode = true;
+    this.speedrunLevelIdx = 0;
+    this.speedrunSplits = [];
+    this.isChallengeMode = false;
+    this.isSandboxMode = false;
+    this.speedrunStart = Date.now();
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
+    this.renderer.resize();
+    this.renderer.resetView();
+    this._showSpeedrunHud(true);
+    this.loadLevel(allLevels[0]);
+    if (this.speedrunTimer) clearInterval(this.speedrunTimer);
+    this.speedrunTimer = setInterval(() => this._updateSpeedrunTimer(), 1000);
+    setTimeout(() => this.renderer.resize(), 100);
+  }
+
+  _speedrunAdvance() {
+    // Record split
+    const elapsed = Date.now() - this.speedrunStart;
+    this.speedrunSplits.push(elapsed);
+    this.speedrunLevelIdx++;
+    const allLevels = LEVELS.map(l => l.id);
+    if (this.speedrunLevelIdx >= allLevels.length) {
+      // Speedrun complete!
+      this._finishSpeedrun();
+      return;
+    }
+    this._updateSpeedrunHud();
+    this.loadLevel(allLevels[this.speedrunLevelIdx]);
+  }
+
+  _finishSpeedrun() {
+    const totalMs = Date.now() - this.speedrunStart;
+    const totalSec = Math.floor(totalMs / 1000);
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    this._saveSpeedrunBest(totalSec);
+    this.stopSpeedrunMode();
+    this.ui.showConfirmModal(
+      `🏁 Speedrun Complete!\nTime: ${mins}:${secs.toString().padStart(2, '0')}\n${this._getSpeedrunBest() === totalSec ? '🎉 New Personal Best!' : `PB: ${this._formatSpeedrunBest()}`}`,
+      () => {}
+    );
+  }
+
+  _updateSpeedrunTimer() {
+    if (!this.speedrunStart) return;
+    const elapsed = Math.floor((Date.now() - this.speedrunStart) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const el = document.getElementById('speedrun-timer');
+    if (el) el.textContent = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  _updateSpeedrunHud() {
+    const total = LEVELS.length;
+    const el = document.getElementById('speedrun-progress');
+    if (el) el.textContent = `${this.speedrunLevelIdx + 1}/${total}`;
+    const bestEl = document.getElementById('speedrun-best');
+    if (bestEl) bestEl.textContent = `PB: ${this._formatSpeedrunBest()}`;
+  }
+
+  _showSpeedrunHud(show) {
+    const hud = document.getElementById('speedrun-hud');
+    if (hud) hud.style.display = show ? 'flex' : 'none';
+  }
+
+  _getSpeedrunBest() {
+    try { return parseInt(SafeStorage.getItem('signal-circuit-speedrun-best') || '0'); } catch (e) { return 0; }
+  }
+
+  _saveSpeedrunBest(seconds) {
+    const current = this._getSpeedrunBest();
+    if (current === 0 || seconds < current) SafeStorage.setItem('signal-circuit-speedrun-best', String(seconds));
+  }
+
+  _formatSpeedrunBest() {
+    const best = this._getSpeedrunBest();
+    if (!best) return '—';
+    const m = Math.floor(best / 60);
+    const s = best % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  stopSpeedrunMode() {
+    this.speedrunMode = false;
+    if (this.speedrunTimer) { clearInterval(this.speedrunTimer); this.speedrunTimer = null; }
+    this._showSpeedrunHud(false);
+    this.showLevelSelect();
+  }
+
+  // ── Day 32 T10: Spaced Repetition ──
+  getReviewLevels() {
+    const now = Date.now();
+    const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+    const candidates = [];
+
+    for (const [id, data] of Object.entries(this.progress.levels || {})) {
+      if (!data.completed) continue;
+      const lastPlayed = data.lastPlayed || data.completedAt || 0;
+      if (!lastPlayed || (now - lastPlayed) < threeDaysMs) continue;
+      candidates.push({
+        levelId: parseInt(id),
+        stars: data.stars || 0,
+        daysSincePlay: Math.floor((now - lastPlayed) / 86400000),
+        score: (4 - (data.stars || 0)) * 10 + Math.floor((now - lastPlayed) / 86400000), // Higher = more needy
+      });
+    }
+
+    // Sort by review priority (highest score first) and take top 3
+    candidates.sort((a, b) => b.score - a.score);
+    return candidates.slice(0, 3);
+  }
+
   startRenderLoop() {
     let idleFrameCount = 0;
     const loop = () => {
@@ -2533,6 +2825,21 @@ window.addEventListener('DOMContentLoaded', () => {
     game.renderer.resize();
     game.renderer.resetView();
     game.loadChallengeLevel(customLevel);
+    setTimeout(() => game.renderer.resize(), 100);
+  }
+
+  // Day 32 T3: Check for friend challenge URL
+  const friendData = parseFriendChallenge();
+  if (friendData) {
+    const friendLevel = buildFriendChallengeLevel(friendData);
+    game.isChallengeMode = true;
+    game.isSandboxMode = false;
+    game.currentScreen = 'gameplay';
+    game.ui.showScreen('gameplay');
+    game.audio.startAmbient();
+    game.renderer.resize();
+    game.renderer.resetView();
+    game.loadChallengeLevel(friendLevel);
     setTimeout(() => game.renderer.resize(), 100);
   }
 

@@ -36,6 +36,8 @@ class UI {
     this.setupLogicProfile();
     this.setupShareCard();
     this.setupPlacementTest();
+    this.setupCompetitiveModes(); // Day 32
+    this.applySeasonalTheme(); // Day 32 T4
   }
 
   // ── Colorblind Mode Toggle ──
@@ -346,6 +348,9 @@ class UI {
       chapterDiv.appendChild(grid);
       container.appendChild(chapterDiv);
     }
+
+    // Day 32 T10: Render spaced repetition review section
+    this.renderReviewSection();
   }
 
   showScreen(screen) {
@@ -386,7 +391,12 @@ class UI {
 
   setupBackButton() {
     document.getElementById('back-btn').addEventListener('click', () => {
-      if (this.gameState.isChallengeMode) {
+      // Day 32: Handle blitz and speedrun back
+      if (this.gameState.blitzMode) {
+        this.gameState.stopBlitzMode();
+      } else if (this.gameState.speedrunMode) {
+        this.gameState.stopSpeedrunMode();
+      } else if (this.gameState.isChallengeMode) {
         this.gameState.showChallengeConfig();
       } else {
         this.gameState.showLevelSelect();
@@ -907,6 +917,11 @@ class UI {
         retryBtn.style.display = 'none';
       }
     }
+  }
+
+  hideChallengeFriendButton() {
+    const btn = document.getElementById('challenge-friend-btn');
+    if (btn) btn.style.display = 'none';
   }
 
   hideStarDisplay() {
@@ -1775,7 +1790,7 @@ class UI {
     const closeBtn = document.getElementById('stats-close');
 
     if (btn) btn.addEventListener('click', () => {
-      this.renderStatsDashboard();
+      this.renderEnhancedStats();
       if (modal) modal.style.display = 'flex';
     });
     if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
@@ -2776,5 +2791,163 @@ class UI {
     // Show modal
     const modal = document.getElementById('share-card-modal');
     if (modal) modal.style.display = 'flex';
+  }
+
+  // ── Day 32 T3: Challenge Friend Button ──
+  showChallengeFriendButton(level, gateCount) {
+    const btn = document.getElementById('challenge-friend-btn');
+    if (!btn) return;
+    btn.style.display = '';
+    btn.onclick = () => {
+      const hash = encodeFriendChallenge(level, gateCount);
+      const url = window.location.origin + window.location.pathname + hash;
+      navigator.clipboard.writeText(url).then(() => {
+        btn.textContent = '✅ Link Copied!';
+        setTimeout(() => { btn.textContent = '🤝 Challenge Friend'; }, 2000);
+      }).catch(() => {
+        // Fallback: show URL in prompt
+        prompt('Share this link:', url);
+      });
+    };
+  }
+
+  // ── Day 32 T4: Apply Seasonal Theme ──
+  applySeasonalTheme() {
+    const theme = getSeasonalTheme();
+    const dailyBtn = document.getElementById('daily-challenge-btn');
+    if (dailyBtn) {
+      dailyBtn.textContent = `${theme.emoji} Daily Challenge`;
+      dailyBtn.style.borderColor = theme.accent;
+    }
+    // Apply seasonal accent as CSS variable
+    document.documentElement.style.setProperty('--seasonal-accent', theme.accent);
+  }
+
+  // ── Day 32 T5: Enhanced Stats Dashboard ──
+  renderEnhancedStats() {
+    const container = document.getElementById('stats-grid');
+    if (!container) return;
+
+    // Call existing stats render first
+    this.renderStatsDashboard();
+
+    const gs = this.gameState;
+    const progress = gs.progress;
+
+    // Per-level gate count chart
+    let chartHtml = '<div class="stat-card stat-card-wide"><div class="stat-icon">📊</div><h4 style="color:#0f0;margin:4px 0;">Gates per Level</h4>';
+    const levels = typeof LEVELS !== 'undefined' ? LEVELS : [];
+    const maxGates = Math.max(...levels.map(l => {
+      const p = progress.levels[l.id];
+      return p && p.bestGateCount ? p.bestGateCount : 0;
+    }), 1);
+
+    for (const level of levels.slice(0, 15)) {
+      const p = progress.levels[level.id];
+      const gates = p && p.bestGateCount ? p.bestGateCount : 0;
+      const pct = Math.round((gates / maxGates) * 100);
+      const optimal = level.optimalGates || 1;
+      const barColor = gates <= optimal ? '#0f0' : gates <= (level.goodGates || optimal + 2) ? '#FFD700' : '#FF6B6B';
+      chartHtml += `<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin:2px 0;">
+        <span style="width:28px;color:#888;">${level.id}</span>
+        <div style="flex:1;height:10px;background:#222;border-radius:3px;overflow:hidden;">
+          <div style="width:${gates ? pct : 0}%;height:100%;background:${barColor};border-radius:3px;"></div>
+        </div>
+        <span style="width:28px;color:#ccc;text-align:right;">${gates || '—'}</span>
+      </div>`;
+    }
+    chartHtml += '</div>';
+
+    // Gate usage distribution
+    let gateUsage = {};
+    for (const level of levels) {
+      const p = progress.levels[level.id];
+      if (p && p.completed && level.availableGates) {
+        for (const g of level.availableGates) {
+          gateUsage[g] = (gateUsage[g] || 0) + 1;
+        }
+      }
+    }
+    let gateHtml = '<div class="stat-card"><div class="stat-icon">🔧</div><h4 style="color:#0f0;margin:4px 0;">Gate Exposure</h4>';
+    for (const [gate, count] of Object.entries(gateUsage).sort((a, b) => b[1] - a[1])) {
+      gateHtml += `<div style="font-size:11px;color:#ccc;">${gate}: ${count} levels</div>`;
+    }
+    gateHtml += '</div>';
+
+    container.innerHTML += chartHtml + gateHtml;
+  }
+
+  // ── Day 32 T7: Setup Weekly Puzzle + T8 Blitz + T9 Speedrun + T10 Review ──
+  setupCompetitiveModes() {
+    // Weekly puzzle
+    const weeklyBtn = document.getElementById('weekly-puzzle-btn');
+    if (weeklyBtn) {
+      weeklyBtn.addEventListener('click', () => {
+        const gs = this.gameState;
+        const level = generateWeeklyPuzzle();
+        gs.isChallengeMode = false;
+        gs.isSandboxMode = false;
+        gs.currentScreen = 'gameplay';
+        this.showScreen('gameplay');
+        gs.audio.startAmbient();
+        gs.renderer.resize();
+        gs.renderer.resetView();
+        gs.loadChallengeLevel(level);
+        setTimeout(() => gs.renderer.resize(), 100);
+      });
+    }
+
+    // Blitz mode
+    const blitzBtn = document.getElementById('blitz-mode-btn');
+    if (blitzBtn) {
+      blitzBtn.addEventListener('click', () => {
+        this.gameState.startBlitzMode();
+      });
+    }
+
+    // Speedrun mode
+    const speedrunBtn = document.getElementById('speedrun-btn');
+    if (speedrunBtn) {
+      speedrunBtn.addEventListener('click', () => {
+        this.gameState.startSpeedrunMode();
+      });
+    }
+
+    // Speedrun exit
+    const speedrunExit = document.getElementById('speedrun-exit-btn');
+    if (speedrunExit) {
+      speedrunExit.addEventListener('click', () => {
+        this.gameState.stopSpeedrunMode();
+      });
+    }
+  }
+
+  // ── Day 32 T10: Render Spaced Repetition Review ──
+  renderReviewSection() {
+    const gs = this.gameState;
+    const reviews = gs.getReviewLevels();
+    const section = document.getElementById('review-section');
+    const container = document.getElementById('review-levels');
+    if (!section || !container) return;
+
+    if (reviews.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = '';
+    container.innerHTML = '';
+
+    for (const rev of reviews) {
+      const level = getLevel(rev.levelId);
+      if (!level) continue;
+      const btn = document.createElement('div');
+      btn.className = 'level-btn review-level';
+      btn.innerHTML = `<span class="level-number">${rev.levelId}</span>
+        <span class="level-btn-title">${level.title}</span>
+        <span style="color:#888;font-size:10px;">${rev.daysSincePlay}d ago · ${'★'.repeat(rev.stars)}${'☆'.repeat(3 - rev.stars)}</span>`;
+      btn.addEventListener('click', () => gs.startLevel(rev.levelId));
+      container.appendChild(btn);
+    }
   }
 }
