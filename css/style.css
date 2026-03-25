@@ -3994,3 +3994,276 @@ button:focus-visible {
   font-size: 12px;
   margin-bottom: 4px;
 }
+
+/* ══════════ Day 33 ══════════ */
+
+/* ── T3: Dual-Aesthetic Warm-Up — Amber/Copper Highlights ── */
+.challenge-btn {
+  border-color: #8B6914;
+  transition: all 0.2s;
+}
+
+.challenge-btn:hover {
+  border-color: #D4A04A;
+  box-shadow: 0 0 12px rgba(212, 160, 74, 0.3);
+}
+
+#info-panel {
+  border-left-color: #5a4828;
+}
+
+#toolbox {
+  border-right-color: #5a4828;
+}
+
+.settings-btn {
+  background: #1a1a2e;
+  border: 1px solid #5a4828;
+  color: #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  transition: all 0.2s;
+}
+
+.settings-btn:hover {
+  border-color: #D4A04A;
+  color: #D4A04A;
+}
+
+.settings-btn.active {
+  border-color: #D4A04A;
+  color: #D4A04A;
+  background: rgba(212, 160, 74, 0.1);
+}
+
+/* Modal warm borders */
+#how-to-play-content,
+#achievements-content,
+#encyclopedia-content,
+#stats-content,
+#milestone-content,
+#journey-content,
+#mastery-tree-content,
+#collection-content,
+#profile-content,
+#share-card-content {
+  border-color: #5a4828;
+}
+
+/* ── T4: Simplified Visual Cognitive Accessibility Mode ── */
+body.simplified-visual {
+  font-size: 16px;
+}
+
+body.simplified-visual * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.05s !important;
+}
+
+body.simplified-visual #game-title {
+  text-shadow: none;
+}
+
+body.simplified-visual .level-btn {
+  border-width: 3px;
+  font-size: 14px;
+}
+
+body.simplified-visual .level-btn-title {
+  font-size: 11px;
+}
+
+body.simplified-visual #level-title {
+  font-size: 18px;
+}
+
+body.simplified-visual #level-desc {
+  font-size: 14px;
+  color: #fff;
+}
+
+body.simplified-visual #run-btn {
+  font-size: 20px;
+  min-height: 54px;
+  border-width: 3px;
+}
+
+body.simplified-visual #result-display {
+  font-size: 16px;
+}
+
+body.simplified-visual .tool-gate {
+  font-size: 16px;
+  padding: 14px 12px;
+  border-width: 3px;
+}
+
+body.simplified-visual #celebration-canvas,
+body.simplified-visual #victory-flash,
+body.simplified-visual #run-tension-overlay {
+  display: none !important;
+}
+
+body.simplified-visual .chapter-title {
+  font-size: 16px;
+  color: #ccc;
+}
+
+/* ── T5: Locked/Pre-placed Gate Visual Indicator ── */
+/* Applied via canvas renderer — lock icon drawn on gate */
+
+/* ── T6: Mobile Bottom Sheet ── */
+@media (max-width: 768px) {
+  #info-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    max-height: 55vh;
+    min-height: 120px;
+    border-left: none;
+    border-top: 3px solid #5a4828;
+    border-radius: 16px 16px 0 0;
+    z-index: 40;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #2a2a3e;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  #info-panel::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: #666;
+    border-radius: 2px;
+    margin: 4px auto 8px;
+  }
+
+  #info-panel.collapsed {
+    min-height: 0;
+    max-height: 0;
+    padding: 0;
+    border-top: none;
+  }
+
+  #toolbox {
+    border-bottom-color: #5a4828;
+  }
+
+  #accessible-wire-panel {
+    position: fixed;
+    bottom: 56vh;
+    left: 8px;
+    right: 8px;
+    z-index: 42;
+    background: rgba(42, 42, 62, 0.95);
+    border: 1px solid #5a4828;
+    border-radius: 8px;
+    padding: 8px;
+  }
+}
+
+/* ── T9: Accessible Wire Panel ── */
+#accessible-wire-panel {
+  background: #2a2a3e;
+  border: 1px solid #5a4828;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  top: 8px;
+  left: 130px;
+  z-index: 15;
+  min-width: 180px;
+}
+
+#accessible-wire-panel select {
+  width: 100%;
+  padding: 4px 6px;
+  background: #1a1a2e;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+#a11y-wire-connect {
+  width: 100%;
+  background: #0a3a0a;
+  border: 1px solid #0f0;
+  color: #0f0;
+}
+
+#a11y-wire-connect:hover {
+  background: #0a5a0a;
+}
+
+/* ── T8: Sync Buttons Row ── */
+#sync-row .settings-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── T10: Welcome Back Modal ── */
+#welcome-back-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+#welcome-back-content {
+  background: #2a2a3e;
+  border: 2px solid #5a4828;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* ── Discovery Level Badge ── */
+.discovery-badge {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 8px;
+  color: #00E5FF;
+}
+
+/* ── Phase Indicator ── */
+.phase-indicator {
+  display: inline-block;
+  background: rgba(0, 229, 255, 0.15);
+  border: 1px solid #00E5FF;
+  color: #00E5FF;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+/* ── Gamepad Cursor Overlay ── */
+.gamepad-cursor {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #0f0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+  transform: translate(-50%, -50%);
+}

@@ -196,6 +196,42 @@ class CanvasRenderer {
     for (const gate of this.gameState.gates) {
       const isSelected = this.gameState.selectedGate === gate;
       gate.render(ctx, isSelected);
+      // Day 33 T5: Draw lock icon on pre-placed gates
+      if (gate._locked) {
+        ctx.save();
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = 'rgba(255, 200, 0, 0.8)';
+        ctx.fillText('🔒', gate.x + gate.def.width - 2, gate.y + 2);
+        ctx.restore();
+      }
+    }
+
+    // Day 33 T7: Gamepad cursor overlay
+    if (this.gameState._gamepadConnected && this.gameState._gamepadCursor) {
+      const gc = this.gameState._gamepadCursor;
+      ctx.save();
+      ctx.strokeStyle = '#0f0';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(0, 255, 0, 0.5)';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(gc.x, gc.y, 12, 0, Math.PI * 2);
+      ctx.stroke();
+      // Crosshair lines
+      ctx.beginPath();
+      ctx.moveTo(gc.x - 16, gc.y);
+      ctx.lineTo(gc.x - 6, gc.y);
+      ctx.moveTo(gc.x + 6, gc.y);
+      ctx.lineTo(gc.x + 16, gc.y);
+      ctx.moveTo(gc.x, gc.y - 16);
+      ctx.lineTo(gc.x, gc.y - 6);
+      ctx.moveTo(gc.x, gc.y + 6);
+      ctx.lineTo(gc.x, gc.y + 16);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
     }
 
     // Compatible pin highlighting during wire drawing

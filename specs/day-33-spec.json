@@ -1,0 +1,149 @@
+{
+  "day": 33,
+  "title": "Game Modes & Platform Expansion",
+  "summary": "Day 33 adds new game modes (Discovery Levels, Multi-Phase Levels), resolves the dual-aesthetic tension, adds a Simplified Visual accessibility mode, introduces Variable Canvas levels with pre-placed elements, redesigns mobile interaction with bottom sheets, adds gamepad support, cross-device progress sync via export/import codes, an alternative dropdown-based wire connection for motor-impaired players, and a cold-start re-engagement system for lapsed players.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Discovery Levels — Open-ended levels with full gate palette and no gate budget constraint. Add 3 discovery levels (IDs 33-35) in a new Chapter 8: Discovery Lab. Players can use any approach; stars based on elegance rather than minimum gates.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "3 new discovery levels exist with id 33, 34, 35",
+        "New chapter 'Discovery Lab' contains these levels",
+        "availableGates includes all 6 gate types",
+        "optimalGates thresholds are generous (allowing creative solutions)",
+        "Each level has a unique truth table and description emphasizing creativity"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Multi-Phase Levels — Levels that evolve mid-solve. After completing phase 1, new requirements appear that build on the existing circuit. Add 2 multi-phase levels (IDs 36-37) in the Discovery Lab chapter. Implement phase tracking in GameState and UI updates when phase advances.",
+      "files_to_modify": ["js/levels.js", "js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Multi-phase levels have a 'phases' array in their definition",
+        "After solving phase 1, the truth table updates with new requirements",
+        "Player's existing circuit is preserved between phases",
+        "UI shows current phase indicator (Phase 1/2)",
+        "Stars awarded based on final phase completion"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Dual-Aesthetic Tension Resolution — Warm up the chrome UI elements to match the breadboard aesthetic. Add amber/warm highlights to buttons, modals, and panel borders. Unify visual temperature across canvas and UI.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Button borders and glows use warm amber tones (#D4A04A or similar)",
+        "Modal borders shift from cool blue/green to warm copper/amber",
+        "Panel backgrounds get subtle warm undertone",
+        "Overall visual temperature feels unified between canvas and chrome"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Simplified Visual Cognitive Accessibility Mode — Add a toggle in settings for reduced visual complexity: fewer animations, higher contrast, larger text, simplified gate graphics. Uses CSS class on body.",
+      "files_to_modify": ["css/style.css", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "Settings row has 'Simplified Visual' toggle button",
+        "When active, body gets 'simplified-visual' class",
+        "Animations are reduced/disabled in simplified mode",
+        "Contrast is increased, text is larger",
+        "Setting persists in localStorage"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Variable Canvas / Spatial Variety — Some levels start with pre-placed gates or restricted zones. Add support for 'preplacedGates' array in level definitions. Discovery levels use this feature.",
+      "files_to_modify": ["js/levels.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Level definitions can include 'preplacedGates' array",
+        "Pre-placed gates appear on level load and cannot be removed",
+        "Pre-placed gates are visually distinct (locked indicator)",
+        "At least one discovery level uses pre-placed gates"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T6",
+      "description": "Mobile-Native Interaction Redesign — Add bottom sheet for controls on mobile, gesture-based gate selection via swipe on toolbox, thumb-zone optimized layout. Rework mobile CSS for bottom-sheet panel.",
+      "files_to_modify": ["css/style.css", "js/ui.js"],
+      "acceptance_criteria": [
+        "On mobile (<768px), info panel renders as a bottom sheet",
+        "Bottom sheet has drag handle for resize",
+        "Toolbox gates are accessible via horizontal scroll at bottom",
+        "Run button is positioned in thumb-reach zone",
+        "Desktop layout is unchanged"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Gamepad / Controller Input Support — Add Gamepad API support: D-pad navigates grid, face buttons for place/connect/delete, shoulder buttons for undo/redo. Show gamepad indicator when connected.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Gamepad connection is detected and logged",
+        "D-pad moves a cursor overlay on the canvas",
+        "A button places/selects, B button deletes",
+        "LB/RB for undo/redo",
+        "Gamepad indicator appears in status bar when connected"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Cross-Device Progress Sync — Export progress as a compact code string and import on another device. Add Export/Import buttons to settings area on level select.",
+      "files_to_modify": ["js/main.js", "js/ui.js", "index.html"],
+      "acceptance_criteria": [
+        "Export button generates a base64-encoded progress string",
+        "Import button accepts a code and restores progress",
+        "Code includes level completion, stars, streaks",
+        "Invalid codes show error message",
+        "Buttons appear in settings row on level select"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Alternative Dropdown-Based Wire Connection — For motor-impaired players, add an accessibility wire-drawing mode: select source from dropdown, select destination from dropdown, click Connect. Toggle in settings.",
+      "files_to_modify": ["js/ui.js", "js/main.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Settings has 'Accessible Wiring' toggle",
+        "When active, a wire panel appears with source/destination dropdowns",
+        "Dropdowns list all available output pins and input pins",
+        "Connect button creates the wire",
+        "Existing wire-drawing still works alongside dropdown mode"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Cold-Start / Lapsed Player Re-Engagement — If the PWA detects a returning player after 7+ days, show a welcome-back modal with context. Track last visit date.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Last visit date is stored in localStorage",
+        "On return after 7+ days, a welcome-back modal appears",
+        "Modal shows where player left off and a quick refresher",
+        "Modal has 'Continue' and 'Start Fresh' options",
+        "Regular visits update the last-visit timestamp"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Discovery levels load and are playable with all gates",
+    "Multi-phase levels advance correctly after phase 1 solve",
+    "CSS warm-up doesn't break existing theme/dark mode",
+    "Simplified visual mode toggles correctly",
+    "Pre-placed gates render and can't be deleted",
+    "Mobile bottom sheet doesn't break desktop layout",
+    "Gamepad polling doesn't cause performance issues",
+    "Export/import round-trips correctly",
+    "Dropdown wiring creates valid connections",
+    "Welcome-back modal only shows for 7+ day gap"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

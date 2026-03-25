@@ -1,9 +1,10 @@
-# Bugs
+# Bugs — Signal Circuit
 
-## Open
-*None*
+*Updated: Day 33 (2026-03-25)*
 
-## Closed
-- **BUG-001 (Day 3):** Star thresholds for levels 8 and 9 were set to optimalGates=3, but the minimum for De Morgan constructions is 4 gates. Fixed to optimalGates=4, goodGates=5.
-- **BUG-002 (Day 15):** Wire hit-testing was using L-shaped segment math but rendering was bezier curves — mismatch made clicking wires unreliable. Fixed by switching hit-testing to bezier point sampling (20 sample points).
-- **BUG-003 (Day 21):** Skip/Bookmark button could appear in challenge/sandbox mode due to timer-based show logic not checking mode. Fixed by adding guard in showSkipButton().
+## Open Bugs
+None.
+
+## Fixed (Recent)
+- Day 32: All bugs from Day 31 resolved
+- Day 33: No new bugs introduced

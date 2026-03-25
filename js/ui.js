@@ -38,6 +38,9 @@ class UI {
     this.setupPlacementTest();
     this.setupCompetitiveModes(); // Day 32
     this.applySeasonalTheme(); // Day 32 T4
+    this.setupSimplifiedVisual(); // Day 33 T4
+    this.setupSyncButtons(); // Day 33 T8
+    this.setupAccessibleWiring(); // Day 33 T9
   }
 
   // ── Colorblind Mode Toggle ──
@@ -648,7 +651,12 @@ class UI {
       // T8: Show difficulty badge in level title
       const optGates = level.optimalGates || 1;
       const diffBadge = optGates <= 2 ? '🟢' : optGates <= 4 ? '🟡' : '🔴';
-      document.getElementById('level-title').textContent = `${diffBadge} Level ${level.id}: ${level.title}`;
+      let titleText = `${diffBadge} Level ${level.id}: ${level.title}`;
+      // Day 33 T2: Phase indicator for multi-phase levels
+      if (this.gameState.isMultiPhase && level.phases) {
+        titleText += ` (Phase ${this.gameState.currentPhase + 1}/${level.phases.length})`;
+      }
+      document.getElementById('level-title').textContent = titleText;
       document.getElementById('level-desc').textContent = level.description;
       document.getElementById('prev-level').disabled = level.id <= 1;
       document.getElementById('next-level').disabled = level.id >= getLevelCount();
@@ -1556,7 +1564,8 @@ class UI {
     }
 
     el.style.display = 'flex';
-    const count = gs.gates.length;
+    // Day 33 T5: Exclude pre-placed (locked) gates from count
+    const count = gs.gates.filter(g => !g._locked).length;
     const countText = document.getElementById('gate-count-text');
     const starsPreview = document.getElementById('gate-stars-preview');
 
@@ -1602,6 +1611,9 @@ class UI {
 
     // Update hint penalty display
     this.updateHintPenalty();
+
+    // Day 33 T9: Refresh accessible wiring dropdowns
+    this._refreshAccessibleWireDropdowns();
   }
 
   updateHintPenalty() {
@@ -2920,6 +2932,220 @@ class UI {
         this.gameState.stopSpeedrunMode();
       });
     }
+  }
+
+  // ── Day 33 T4: Simplified Visual Mode ──
+  setupSimplifiedVisual() {
+    const btn = document.getElementById('simplified-visual-btn');
+    if (!btn) return;
+
+    let isActive = false;
+    try { isActive = localStorage.getItem('signal-circuit-simplified') === 'true'; } catch (e) {}
+    if (isActive) {
+      document.body.classList.add('simplified-visual');
+      btn.textContent = '🧩 Simplified: On';
+      btn.classList.add('active');
+    }
+
+    btn.addEventListener('click', () => {
+      isActive = !isActive;
+      document.body.classList.toggle('simplified-visual', isActive);
+      btn.textContent = isActive ? '🧩 Simplified: On' : '🧩 Simplified: Off';
+      btn.classList.toggle('active', isActive);
+      try { localStorage.setItem('signal-circuit-simplified', isActive ? 'true' : 'false'); } catch (e) {}
+    });
+  }
+
+  // ── Day 33 T8: Cross-Device Sync UI ──
+  setupSyncButtons() {
+    const exportBtn = document.getElementById('export-progress-btn');
+    const importBtn = document.getElementById('import-progress-btn');
+    if (!exportBtn || !importBtn) return;
+
+    exportBtn.addEventListener('click', () => {
+      const code = this.gameState.exportProgress();
+      if (code) {
+        // Try clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(() => {
+            this.updateStatusBar('📋 Progress code copied to clipboard!');
+            exportBtn.textContent = '✅ Copied!';
+            setTimeout(() => { exportBtn.textContent = '📤 Export Progress'; }, 2000);
+          }).catch(() => {
+            prompt('Copy this code:', code);
+          });
+        } else {
+          prompt('Copy this code:', code);
+        }
+      }
+    });
+
+    importBtn.addEventListener('click', () => {
+      const code = prompt('Paste your progress code:');
+      if (!code) return;
+      const ok = this.gameState.importProgress(code);
+      if (ok) {
+        this.updateStatusBar('✅ Progress imported successfully!');
+        this.renderLevelSelect();
+        this.updateProgressBar(this.gameState.progress);
+      } else {
+        this.updateStatusBar('❌ Invalid progress code');
+        alert('Invalid progress code. Please check and try again.');
+      }
+    });
+  }
+
+  // ── Day 33 T9: Accessible Wiring Panel ──
+  setupAccessibleWiring() {
+    const toggle = document.getElementById('accessible-wiring-btn');
+    if (!toggle) return;
+
+    let isActive = false;
+    try { isActive = localStorage.getItem('signal-circuit-a11y-wiring') === 'true'; } catch (e) {}
+
+    const panel = document.getElementById('accessible-wire-panel');
+    if (panel) panel.style.display = isActive ? '' : 'none';
+
+    if (isActive) {
+      toggle.textContent = '🔌 Accessible Wiring: On';
+      toggle.classList.add('active');
+    }
+
+    toggle.addEventListener('click', () => {
+      isActive = !isActive;
+      toggle.textContent = isActive ? '🔌 Accessible Wiring: On' : '🔌 Accessible Wiring: Off';
+      toggle.classList.toggle('active', isActive);
+      if (panel) panel.style.display = isActive ? '' : 'none';
+      try { localStorage.setItem('signal-circuit-a11y-wiring', isActive ? 'true' : 'false'); } catch (e) {}
+    });
+
+    // Connect button
+    const connectBtn = document.getElementById('a11y-wire-connect');
+    if (connectBtn) {
+      connectBtn.addEventListener('click', () => {
+        this._doAccessibleWireConnect();
+      });
+    }
+  }
+
+  _refreshAccessibleWireDropdowns() {
+    const srcSelect = document.getElementById('a11y-wire-source');
+    const dstSelect = document.getElementById('a11y-wire-dest');
+    if (!srcSelect || !dstSelect) return;
+
+    const gs = this.gameState;
+    srcSelect.innerHTML = '<option value="">-- Source (output pin) --</option>';
+    dstSelect.innerHTML = '<option value="">-- Destination (input pin) --</option>';
+
+    // Collect output pins (sources)
+    for (const node of gs.inputNodes) {
+      srcSelect.innerHTML += `<option value="io-${node.id}-0">${node.label} (output)</option>`;
+    }
+    for (const gate of gs.gates) {
+      const pins = gate.getOutputPins();
+      pins.forEach((p, i) => {
+        srcSelect.innerHTML += `<option value="g-${gate.id}-${i}">${gate.type} #${gate.id} out${pins.length > 1 ? i : ''}</option>`;
+      });
+    }
+
+    // Collect input pins (destinations)
+    for (const node of gs.outputNodes) {
+      dstSelect.innerHTML += `<option value="io-${node.id}-0">${node.label} (input)</option>`;
+    }
+    for (const gate of gs.gates) {
+      const inputCount = gate.def.inputs;
+      for (let i = 0; i < inputCount; i++) {
+        dstSelect.innerHTML += `<option value="g-${gate.id}-${i}">${gate.type} #${gate.id} in${i}</option>`;
+      }
+    }
+  }
+
+  _doAccessibleWireConnect() {
+    const srcSelect = document.getElementById('a11y-wire-source');
+    const dstSelect = document.getElementById('a11y-wire-dest');
+    if (!srcSelect || !dstSelect) return;
+
+    const srcVal = srcSelect.value;
+    const dstVal = dstSelect.value;
+    if (!srcVal || !dstVal) {
+      this.updateStatusBar('Select both source and destination pins');
+      return;
+    }
+
+    const parsePinVal = (val) => {
+      const parts = val.split('-');
+      if (parts[0] === 'io') return { gateId: parseInt(parts[1]), pinIndex: parseInt(parts[2]) };
+      if (parts[0] === 'g') return { gateId: parseInt(parts[1]), pinIndex: parseInt(parts[2]) };
+      return null;
+    };
+
+    const src = parsePinVal(srcVal);
+    const dst = parsePinVal(dstVal);
+    if (!src || !dst) return;
+
+    const gs = this.gameState;
+    const wire = gs.addWireFromData(src.gateId, src.pinIndex, dst.gateId, dst.pinIndex);
+    if (wire) {
+      gs.audio.playWireConnect();
+      gs.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
+      gs.ui.updateGateIndicator();
+      this.updateStatusBar('Wire connected!');
+      this._refreshAccessibleWireDropdowns();
+    }
+  }
+
+  // ── Day 33 T10: Welcome Back Modal ──
+  showWelcomeBackModal(daysSince) {
+    const gs = this.gameState;
+    const progress = gs.progress;
+    const completedCount = Object.values(progress.levels || {}).filter(l => l.completed).length;
+    const totalStars = Object.values(progress.levels || {}).reduce((sum, l) => sum + (l.stars || 0), 0);
+
+    // Find last level played
+    let lastLevel = null;
+    let lastLevelId = 0;
+    for (const [id, data] of Object.entries(progress.levels || {})) {
+      if (data.lastPlayed && data.lastPlayed > (lastLevel ? lastLevel.lastPlayed : 0)) {
+        lastLevel = data;
+        lastLevelId = parseInt(id);
+      }
+    }
+
+    const modal = document.getElementById('welcome-back-modal');
+    if (!modal) return;
+
+    const content = document.getElementById('welcome-back-content');
+    if (!content) return;
+
+    let html = `<div style="font-size:32px;margin-bottom:8px;">👋</div>`;
+    html += `<h3 style="color:#0f0;margin-bottom:8px;">Welcome Back, Engineer!</h3>`;
+    html += `<p style="color:#aaa;font-size:12px;margin-bottom:12px;">It's been ${daysSince} days since your last session.</p>`;
+    html += `<div style="text-align:left;padding:8px;background:#1a1a2e;border-radius:8px;margin-bottom:12px;">`;
+    html += `<div style="color:#ccc;font-size:12px;">📊 Your progress: ${completedCount} levels · ⭐ ${totalStars} stars</div>`;
+    if (lastLevelId) {
+      const lvl = getLevel(lastLevelId);
+      html += `<div style="color:#888;font-size:11px;margin-top:4px;">Last played: Level ${lastLevelId}${lvl ? ' — ' + lvl.title : ''}</div>`;
+    }
+    html += `</div>`;
+    html += `<p style="color:#aaa;font-size:11px;margin-bottom:12px;">Quick refresher: Place gates, draw wires, match the truth table. ⭐⭐⭐ for optimal gate count!</p>`;
+    content.innerHTML = html;
+
+    const continueBtn = document.getElementById('welcome-back-continue');
+    const freshBtn = document.getElementById('welcome-back-fresh');
+
+    if (continueBtn) {
+      continueBtn.onclick = () => { modal.style.display = 'none'; };
+    }
+    if (freshBtn) {
+      freshBtn.onclick = () => {
+        gs.resetProgress();
+        this.renderLevelSelect();
+        this.updateProgressBar(gs.progress);
+        modal.style.display = 'none';
+      };
+    }
+
+    modal.style.display = 'flex';
   }
 
   // ── Day 32 T10: Render Spaced Repetition Review ──

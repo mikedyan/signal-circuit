@@ -100,6 +100,21 @@ const CHAPTERS = [
       icon: '🔬',
     },
   },
+  {
+    id: 8, title: 'Chapter 8: Discovery Lab', levels: [33, 34, 35, 36, 37],
+    narrative: 'Open Design',
+    storyIntro: 'The lab doors open. No rules, no constraints — just truth tables and a full toolbox. Design your way.',
+    storyComplete: '🧪 Discovery complete! You\'ve proven that engineering is as much art as science.',
+    gatesMastered: ['Creative Design', 'Multi-Phase', 'Constraint Solving'],
+    color: '#00E5FF',
+    isBonus: true,
+    realWorld: {
+      title: '🧪 In the Real World',
+      fact: 'Real chip designers face open-ended problems daily. There\'s no single right answer — just tradeoffs between speed, size, power, and cost. You\'re thinking like a real engineer now.',
+      device: 'ASIC Design Lab',
+      icon: '🧪',
+    },
+  },
 ];
 
 const LEVELS = [
@@ -1162,6 +1177,214 @@ const LEVELS = [
       { inputs: [1, 1], outputs: [0] },
     ],
     isDarkGate: true,
+  },
+
+  // ── Chapter 8: Discovery Lab (Day 33 T1) ──
+  {
+    id: 33,
+    title: 'Open Design: 3-Input Selector',
+    description: 'Build any circuit that produces the given truth table. All gates available — no restrictions. Find YOUR solution.',
+    postSolveInsight: '🔓 There are multiple valid solutions! Every designer finds a different path. That\'s the beauty of logic design.',
+    hints: [
+      'There are many ways to solve this. Think about which gate combinations feel natural to you.',
+      'Try breaking the problem into smaller pieces — which input combinations produce 1?',
+      'No single "right" approach. Experiment freely!',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 3,
+    goodGates: 6,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'C', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [1] },
+      { inputs: [0, 1, 0], outputs: [1] },
+      { inputs: [0, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 0], outputs: [1] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+    isDiscovery: true,
+  },
+  {
+    id: 34,
+    title: 'Open Design: Dual Output Logic',
+    description: 'Two outputs, full gate palette. Design freely — there\'s no single right answer.',
+    postSolveInsight: '🔓 Multi-output circuits often share intermediate signals. Elegant solutions reuse gates across both outputs.',
+    hints: [
+      'Think about each output independently first, then look for shared logic.',
+      'The two outputs have different patterns — one responds to AND-like conditions, the other to XOR-like.',
+      'Build and test one output at a time. Connect the second output once the first works.',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 3,
+    goodGates: 6,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'X', x: 620, y: 140 },
+      { label: 'Y', x: 620, y: 260 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0, 0] },
+      { inputs: [0, 1], outputs: [0, 1] },
+      { inputs: [1, 0], outputs: [0, 1] },
+      { inputs: [1, 1], outputs: [1, 0] },
+    ],
+    isDiscovery: true,
+  },
+  {
+    id: 35,
+    title: 'Guided Expansion',
+    description: 'Start with a pre-placed AND gate. Expand the circuit to match the target truth table. Build around what\'s given.',
+    postSolveInsight: '🔓 Real engineering often means extending existing circuits. The constraint of pre-placed components forces creative thinking.',
+    hints: [
+      'The AND gate is already placed — use its output as part of your solution.',
+      'You need to combine the AND result with something else to get the final output.',
+      'Think about what the AND gate gives you, then decide how to modify its result.',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 2,
+    goodGates: 4,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [1] },
+      { inputs: [0, 1], outputs: [1] },
+      { inputs: [1, 0], outputs: [1] },
+      { inputs: [1, 1], outputs: [0] },
+    ],
+    isDiscovery: true,
+    preplacedGates: [
+      { type: 'AND', x: 250, y: 170 },
+    ],
+  },
+
+  // ── Chapter 8: Multi-Phase Discovery (Day 33 T2) ──
+  {
+    id: 36,
+    title: 'Phase Shift: Evolving Requirements',
+    description: 'Phase 1: Build a simple OR circuit. Once it works, Phase 2 will add new requirements on top.',
+    postSolveInsight: '🔓 Multi-phase design mirrors real engineering — systems evolve and you must adapt without starting over.',
+    hints: [
+      'Phase 1 is straightforward — just an OR operation.',
+      'When Phase 2 arrives, you\'ll need to add logic without breaking Phase 1.',
+      'Think modular: keep your Phase 1 circuit clean so it\'s easy to extend.',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 2,
+    goodGates: 4,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0] },
+      { inputs: [0, 1], outputs: [1] },
+      { inputs: [1, 0], outputs: [1] },
+      { inputs: [1, 1], outputs: [1] },
+    ],
+    isMultiPhase: true,
+    phases: [
+      {
+        phase: 1,
+        description: 'Phase 1: Build an OR circuit.',
+        truthTable: [
+          { inputs: [0, 0], outputs: [0] },
+          { inputs: [0, 1], outputs: [1] },
+          { inputs: [1, 0], outputs: [1] },
+          { inputs: [1, 1], outputs: [1] },
+        ],
+      },
+      {
+        phase: 2,
+        description: 'Phase 2: Now make output 1 ONLY when exactly one input is 1 (XOR). Adapt your circuit!',
+        truthTable: [
+          { inputs: [0, 0], outputs: [0] },
+          { inputs: [0, 1], outputs: [1] },
+          { inputs: [1, 0], outputs: [1] },
+          { inputs: [1, 1], outputs: [0] },
+        ],
+        optimalGates: 3,
+        goodGates: 5,
+      },
+    ],
+    isDiscovery: true,
+  },
+  {
+    id: 37,
+    title: 'Phase Shift: Growing Complexity',
+    description: 'Phase 1: Simple AND gate. Phase 2 adds a second output. Don\'t tear down — build up!',
+    postSolveInsight: '🔓 Incremental design is a core skill. Adding features to working systems without breaking them is what separates beginners from engineers.',
+    hints: [
+      'Phase 1 just needs AND — one gate, done.',
+      'Phase 2 adds a second output. Your AND gate stays useful.',
+      'The second output needs different logic — but the same inputs.',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 2,
+    goodGates: 4,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'X', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0] },
+      { inputs: [0, 1], outputs: [0] },
+      { inputs: [1, 0], outputs: [0] },
+      { inputs: [1, 1], outputs: [1] },
+    ],
+    isMultiPhase: true,
+    phases: [
+      {
+        phase: 1,
+        description: 'Phase 1: Build an AND gate circuit.',
+        truthTable: [
+          { inputs: [0, 0], outputs: [0] },
+          { inputs: [0, 1], outputs: [0] },
+          { inputs: [1, 0], outputs: [0] },
+          { inputs: [1, 1], outputs: [1] },
+        ],
+        outputs: [{ label: 'X', x: 620, y: 200 }],
+      },
+      {
+        phase: 2,
+        description: 'Phase 2: A second output Y appears! Y = OR(A, B). Wire it without breaking X.',
+        truthTable: [
+          { inputs: [0, 0], outputs: [0, 0] },
+          { inputs: [0, 1], outputs: [0, 1] },
+          { inputs: [1, 0], outputs: [0, 1] },
+          { inputs: [1, 1], outputs: [1, 1] },
+        ],
+        outputs: [
+          { label: 'X', x: 620, y: 140 },
+          { label: 'Y', x: 620, y: 260 },
+        ],
+        optimalGates: 2,
+        goodGates: 4,
+      },
+    ],
+    isDiscovery: true,
   },
 ];
 

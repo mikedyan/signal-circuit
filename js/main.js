@@ -164,6 +164,17 @@ class GameState {
     this.speedrunStart = null;
     this.speedrunTimer = null;
     this.speedrunSplits = [];
+    // Day 33 T2: Multi-phase level tracking
+    this.currentPhase = 0;
+    this.isMultiPhase = false;
+    // Day 33 T5: Pre-placed (locked) gate IDs
+    this._lockedGateIds = new Set();
+    // Day 33 T7: Gamepad state
+    this._gamepadConnected = false;
+    this._gamepadCursor = null;
+    this._gamepadPollId = null;
+    // Day 33 T10: Last visit tracking
+    this._updateLastVisit();
   }
 
   // ── Hint Token System (Day 31) ──
@@ -385,8 +396,14 @@ class GameState {
     this.streakData = this.updateStreak();
     this.ui.updateStreakDisplay(this.streakData);
 
+    // Day 33 T10: Welcome back for lapsed players (check before placement test)
+    this._checkWelcomeBack();
+
     // Day 31: Show placement test for brand new players
     this._checkPlacementTest();
+
+    // Day 33 T7: Gamepad support
+    this._setupGamepad();
 
     // Remove intro after animation (skip for returning players)
     const intro = document.getElementById('intro-screen');
@@ -1029,6 +1046,12 @@ class GameState {
   }
 
   removeGate(gate, skipUndo) {
+    // Day 33 T5: Prevent removing locked (pre-placed) gates
+    if (gate._locked || this._lockedGateIds.has(gate.id)) {
+      this.ui.updateStatusBar('🔒 This gate is locked and cannot be removed');
+      this.audio.playFail();
+      return;
+    }
     const removedWires = this.wireManager.wires.filter(
       w => w.fromGateId === gate.id || w.toGateId === gate.id
     ).map(w => ({ ...w }));
@@ -1266,6 +1289,33 @@ class GameState {
     // Day 32 T6: Reset micro-celebration tracking for this level
     this._microCelebrations = { firstWire: false, allWired: false };
 
+    // Day 33 T2: Multi-phase init
+    this._lockedGateIds = new Set();
+    if (level.isMultiPhase && level.phases) {
+      this.isMultiPhase = true;
+      this.currentPhase = 0;
+      // Start with phase 1 truth table
+      this.currentLevel.truthTable = level.phases[0].truthTable;
+      this.currentLevel.description = level.phases[0].description;
+      // Re-render info with phase indicator
+      this.ui.updateLevelInfo();
+      this.ui.updateTruthTable(null);
+    } else {
+      this.isMultiPhase = false;
+      this.currentPhase = 0;
+    }
+
+    // Day 33 T5: Pre-placed gates
+    if (level.preplacedGates && level.preplacedGates.length > 0) {
+      for (const pg of level.preplacedGates) {
+        const pos = this._scalePosition(pg.x, pg.y);
+        const gate = new Gate(pg.type, pos.x, pos.y, this.nextId++);
+        gate._locked = true;
+        this.gates.push(gate);
+        this._lockedGateIds.add(gate.id);
+      }
+    }
+
     // T10: Load ghost overlay if this level was previously solved
     this._loadGhost(id);
 
@@ -1501,6 +1551,13 @@ class GameState {
           this.ui.updateTruthTable(results);
 
           if (allPass) {
+            // Day 33 T2: Multi-phase — advance instead of completing
+            if (this.isMultiPhase && this.currentPhase < this.currentLevel.phases.length - 1) {
+              this.audio.playSuccess(1);
+              setTimeout(() => this.advancePhase(), 1200);
+              return;
+            }
+
             this.audio.musicResolve();
             const gateCount = this.gates.length;
 
@@ -1610,6 +1667,13 @@ class GameState {
     this.ui.updateTruthTable(results);
 
     if (allPass) {
+      // Day 33 T2: Multi-phase — advance instead of completing
+      if (this.isMultiPhase && this.currentPhase < this.currentLevel.phases.length - 1) {
+        this.audio.playSuccess(1);
+        setTimeout(() => this.advancePhase(), 800);
+        return;
+      }
+
       const gateCount = this.gates.length;
 
       if (this.isChallengeMode && this.currentLevel.isChallenge) {
@@ -2720,9 +2784,202 @@ class GameState {
     return candidates.slice(0, 3);
   }
 
+  // ── Day 33 T7: Gamepad Support ──
+  _setupGamepad() {
+    window.addEventListener('gamepadconnected', (e) => {
+      this._gamepadConnected = true;
+      this._gamepadCursor = { x: 350, y: 200 }; // Center of reference canvas
+      this.ui.updateStatusBar('🎮 Gamepad connected');
+      this.markDirty();
+    });
+    window.addEventListener('gamepaddisconnected', () => {
+      this._gamepadConnected = false;
+      this._gamepadCursor = null;
+      this.ui.updateStatusBar('🎮 Gamepad disconnected');
+      this.markDirty();
+    });
+  }
+
+  _pollGamepad() {
+    if (!this._gamepadConnected || this.currentScreen !== 'gameplay') return;
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = gamepads[0];
+    if (!gp) return;
+
+    const deadzone = 0.2;
+    const speed = 5;
+    let cx = this._gamepadCursor ? this._gamepadCursor.x : 350;
+    let cy = this._gamepadCursor ? this._gamepadCursor.y : 200;
+
+    // Left stick or D-pad
+    const lx = Math.abs(gp.axes[0]) > deadzone ? gp.axes[0] : 0;
+    const ly = Math.abs(gp.axes[1]) > deadzone ? gp.axes[1] : 0;
+    // D-pad buttons (indices 12-15: up, down, left, right)
+    const dpUp = gp.buttons[12] && gp.buttons[12].pressed ? -1 : 0;
+    const dpDown = gp.buttons[13] && gp.buttons[13].pressed ? 1 : 0;
+    const dpLeft = gp.buttons[14] && gp.buttons[14].pressed ? -1 : 0;
+    const dpRight = gp.buttons[15] && gp.buttons[15].pressed ? 1 : 0;
+
+    cx += (lx + dpLeft + dpRight) * speed;
+    cy += (ly + dpUp + dpDown) * speed;
+    cx = Math.max(0, Math.min(700, cx));
+    cy = Math.max(0, Math.min(500, cy));
+    this._gamepadCursor = { x: cx, y: cy };
+
+    // A button (0) — select/place
+    if (gp.buttons[0] && gp.buttons[0].pressed && !this._gpAWasPressed) {
+      const pos = this.renderer ? this.renderer.screenToWorld(cx, cy) : { x: cx, y: cy };
+      const pin = this.renderer ? this.renderer.findPinAt(pos.x, pos.y) : null;
+      if (pin) {
+        if (this.wireManager.drawing) {
+          const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+          if (wire) {
+            this.audio.playWireConnect();
+            this.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
+          }
+        } else {
+          this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+        }
+      } else {
+        const gate = this.renderer ? this.renderer.findGateAt(pos.x, pos.y) : null;
+        if (gate) {
+          this.selectedGate = gate;
+        }
+      }
+      this.markDirty();
+    }
+    this._gpAWasPressed = gp.buttons[0] && gp.buttons[0].pressed;
+
+    // B button (1) — delete
+    if (gp.buttons[1] && gp.buttons[1].pressed && !this._gpBWasPressed) {
+      if (this.selectedGate) {
+        this.removeGate(this.selectedGate);
+        this.selectedGate = null;
+      }
+    }
+    this._gpBWasPressed = gp.buttons[1] && gp.buttons[1].pressed;
+
+    // LB (4) — undo, RB (5) — redo
+    if (gp.buttons[4] && gp.buttons[4].pressed && !this._gpLBWasPressed) {
+      this.performUndo();
+    }
+    this._gpLBWasPressed = gp.buttons[4] && gp.buttons[4].pressed;
+
+    if (gp.buttons[5] && gp.buttons[5].pressed && !this._gpRBWasPressed) {
+      this.performRedo();
+    }
+    this._gpRBWasPressed = gp.buttons[5] && gp.buttons[5].pressed;
+
+    this.markDirty();
+  }
+
+  // ── Day 33 T10: Last Visit Tracking ──
+  _updateLastVisit() {
+    SafeStorage.setItem('signal-circuit-last-visit', String(Date.now()));
+  }
+
+  _getLastVisit() {
+    try {
+      const ts = SafeStorage.getItem('signal-circuit-last-visit');
+      return ts ? parseInt(ts) : 0;
+    } catch (e) { return 0; }
+  }
+
+  _checkWelcomeBack() {
+    const lastVisit = this._getLastVisit();
+    if (!lastVisit) return; // First visit
+    const daysSince = Math.floor((Date.now() - lastVisit) / 86400000);
+    if (daysSince >= 7 && this.ui) {
+      this.ui.showWelcomeBackModal(daysSince);
+    }
+  }
+
+  // ── Day 33 T2: Multi-Phase Level Support ──
+  advancePhase() {
+    if (!this.isMultiPhase || !this.currentLevel || !this.currentLevel.phases) return false;
+    const nextPhaseIdx = this.currentPhase + 1;
+    if (nextPhaseIdx >= this.currentLevel.phases.length) return false;
+
+    this.currentPhase = nextPhaseIdx;
+    const phase = this.currentLevel.phases[nextPhaseIdx];
+
+    // Update truth table
+    this.currentLevel.truthTable = phase.truthTable;
+    this.currentLevel.description = phase.description;
+    if (phase.optimalGates) this.currentLevel.optimalGates = phase.optimalGates;
+    if (phase.goodGates) this.currentLevel.goodGates = phase.goodGates;
+
+    // Phase 2 may add new outputs
+    if (phase.outputs) {
+      // Remove existing output nodes and recreate
+      this.outputNodes = [];
+      for (const out of phase.outputs) {
+        const pos = this._scalePosition(out.x, out.y);
+        const node = new IONode('output', out.label, pos.x, pos.y, this.nextId++);
+        this.outputNodes.push(node);
+      }
+    }
+
+    // Update UI
+    this.ui.updateLevelInfo();
+    this.ui.updateTruthTable(null);
+    this.ui.updateResultDisplay('idle', `Phase ${nextPhaseIdx + 1} — ${phase.description}`);
+    this.ui.updateStatusBar(`⚡ Phase ${nextPhaseIdx + 1} activated!`);
+    this.audio.playSuccess(1); // Brief celebration for phase advance
+    this.ui.updateGateIndicator();
+    this.markDirty();
+    return true;
+  }
+
+  // ── Day 33 T5: Check if a gate is locked (pre-placed) ──
+  isGateLocked(gateId) {
+    return this._lockedGateIds.has(gateId);
+  }
+
+  // ── Day 33 T8: Cross-Device Sync ──
+  exportProgress() {
+    try {
+      const data = {
+        v: 1,
+        levels: this.progress.levels,
+        streak: this.getStreakData(),
+        tokens: this.hintTokens,
+        ts: Date.now(),
+      };
+      return btoa(JSON.stringify(data));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  importProgress(code) {
+    try {
+      const json = atob(code.trim());
+      const data = JSON.parse(json);
+      if (!data.v || !data.levels) return false;
+      this.progress.levels = data.levels;
+      this.saveProgress();
+      if (data.streak) this.saveStreakData(data.streak);
+      if (data.tokens) {
+        this.hintTokens = data.tokens;
+        this._saveHintTokens();
+      }
+      if (this.ui) {
+        this.ui.renderLevelSelect();
+        this.ui.updateProgressBar(this.progress);
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   startRenderLoop() {
     let idleFrameCount = 0;
     const loop = () => {
+      // Day 33 T7: Poll gamepad
+      if (this._gamepadConnected) this._pollGamepad();
+
       if (this.currentScreen === 'gameplay') {
         // Always render during animation, otherwise only when dirty
         const sim = this.simulation;
