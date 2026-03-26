@@ -11,10 +11,20 @@ class AudioEngine {
     this._chapterPalette = 0; // Day 32 T1: current chapter audio palette index
     this._wireProxOsc = null; // Day 32 T2: wire proximity oscillator
 
-    // Load mute state from localStorage
+    // Day 34 T9: Separate SFX and Music volume channels
+    this.sfxVolume = 0.3;
+    this.musicVolume = 0.3;
+
+    // Load mute/volume state from localStorage
     try {
       const saved = localStorage.getItem('signal-circuit-muted');
       if (saved === 'true') this.muted = true;
+      const savedVol = localStorage.getItem('signal-circuit-master-volume');
+      if (savedVol !== null) this.masterVolume = parseFloat(savedVol);
+      const savedSfx = localStorage.getItem('signal-circuit-sfx-volume');
+      if (savedSfx !== null) this.sfxVolume = parseFloat(savedSfx);
+      const savedMusic = localStorage.getItem('signal-circuit-music-volume');
+      if (savedMusic !== null) this.musicVolume = parseFloat(savedMusic);
     } catch (e) {}
   }
 
@@ -104,6 +114,62 @@ class AudioEngine {
 
   get isMuted() {
     return this.muted;
+  }
+
+  // Day 34 T8: Set master volume (0-1)
+  setMasterVolume(vol) {
+    this.masterVolume = Math.max(0, Math.min(1, vol));
+    this.sfxVolume = this.masterVolume;
+    this.musicVolume = this.masterVolume;
+    this.muted = this.masterVolume === 0;
+    if (this._musicPadGain && this.ctx) {
+      this._musicPadGain.gain.linearRampToValueAtTime(
+        this.musicVolume * 0.04, this.ctx.currentTime + 0.1
+      );
+    }
+    if (this._ambientNodes && this._ambientNodes.ambientGain && this.ctx) {
+      this._ambientNodes.ambientGain.gain.linearRampToValueAtTime(
+        this.musicVolume * 0.03, this.ctx.currentTime + 0.1
+      );
+    }
+    try {
+      localStorage.setItem('signal-circuit-master-volume', this.masterVolume.toString());
+      localStorage.setItem('signal-circuit-sfx-volume', this.sfxVolume.toString());
+      localStorage.setItem('signal-circuit-music-volume', this.musicVolume.toString());
+      localStorage.setItem('signal-circuit-muted', this.muted ? 'true' : 'false');
+    } catch (e) {}
+  }
+
+  // Day 34 T9: Set SFX volume independently
+  setSfxVolume(vol) {
+    this.sfxVolume = Math.max(0, Math.min(1, vol));
+    try { localStorage.setItem('signal-circuit-sfx-volume', this.sfxVolume.toString()); } catch (e) {}
+  }
+
+  // Day 34 T9: Set Music volume independently
+  setMusicVolume(vol) {
+    this.musicVolume = Math.max(0, Math.min(1, vol));
+    if (this._musicPadGain && this.ctx) {
+      this._musicPadGain.gain.linearRampToValueAtTime(
+        this.musicVolume * 0.04, this.ctx.currentTime + 0.1
+      );
+    }
+    if (this._ambientNodes && this._ambientNodes.ambientGain && this.ctx) {
+      this._ambientNodes.ambientGain.gain.linearRampToValueAtTime(
+        this.musicVolume * 0.03, this.ctx.currentTime + 0.1
+      );
+    }
+    try { localStorage.setItem('signal-circuit-music-volume', this.musicVolume.toString()); } catch (e) {}
+  }
+
+  // Day 34 T9: Get effective SFX volume (respects mute)
+  get _sfxVol() {
+    return this.muted ? 0 : this.sfxVolume;
+  }
+
+  // Day 34 T9: Get effective Music volume
+  get _musicVol() {
+    return this.muted ? 0 : this.musicVolume;
   }
 
   // ── Micro-randomization helper ──
@@ -670,7 +736,7 @@ class AudioEngine {
 
     const ambientGain = ctx.createGain();
     ambientGain.gain.setValueAtTime(0, ctx.currentTime);
-    ambientGain.gain.linearRampToValueAtTime(this.masterVolume * 0.03, ctx.currentTime + 1.5);
+    ambientGain.gain.linearRampToValueAtTime(this._musicVol * 0.03, ctx.currentTime + 1.5);
 
     noise.connect(filter);
     filter.connect(ambientGain);
@@ -708,7 +774,7 @@ class AudioEngine {
     const freqs = [130.81, 164.81, 196.00];
     const padGain = ctx.createGain();
     padGain.gain.setValueAtTime(0, ctx.currentTime);
-    padGain.gain.linearRampToValueAtTime(this.masterVolume * 0.04, ctx.currentTime + 3);
+    padGain.gain.linearRampToValueAtTime(this._musicVol * 0.04, ctx.currentTime + 3);
     padGain.connect(this._output);
     this._musicPadGain = padGain;
 
@@ -1221,6 +1287,79 @@ class AudioEngine {
     gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.12);
+  }
+
+  // ── Day 34 T10: Hint Sound Urgency Escalation ──
+  playHintReveal(hintNumber) {
+    if (this.muted || !this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const vol = this._sfxVol;
+
+    if (hintNumber <= 1) {
+      // Hint 1: Gentle chime — single soft bell tone
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      gain.gain.setValueAtTime(vol * 0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(this._output);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } else if (hintNumber === 2) {
+      // Hint 2: Moderate alert — two-tone ascending
+      const notes = [440, 587.33]; // A4, D5
+      notes.forEach((freq, i) => {
+        const t = now + i * 0.12;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(vol * 0.35, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        osc.connect(gain);
+        gain.connect(this._output);
+        osc.start(t);
+        osc.stop(t + 0.25);
+      });
+    } else {
+      // Hint 3+: Urgent signal — FM synthesis with vibrato
+      const carrier = ctx.createOscillator();
+      const modulator = ctx.createOscillator();
+      const modGain = ctx.createGain();
+      const gain = ctx.createGain();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(880, now); // A5
+      carrier.frequency.exponentialRampToValueAtTime(1174.66, now + 0.1); // D6
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(12, now); // Fast vibrato
+      modGain.gain.setValueAtTime(40, now);
+      gain.gain.setValueAtTime(vol * 0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(gain);
+      gain.connect(this._output);
+      carrier.start(now);
+      modulator.start(now);
+      carrier.stop(now + 0.35);
+      modulator.stop(now + 0.35);
+      // Add second urgent tone
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(1174.66, now + 0.15);
+      osc2.frequency.exponentialRampToValueAtTime(1567.98, now + 0.25);
+      gain2.gain.setValueAtTime(vol * 0.15, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc2.connect(gain2);
+      gain2.connect(this._output);
+      osc2.start(now + 0.15);
+      osc2.stop(now + 0.35);
+    }
   }
 
   // ── Helper: Noise burst ──

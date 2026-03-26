@@ -4267,3 +4267,182 @@ body.simplified-visual .chapter-title {
   box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
   transform: translate(-50%, -50%);
 }
+
+/* ══════════════════════════════════════════════
+   Day 34: Micro-Polish & Visual Flourishes
+   ══════════════════════════════════════════════ */
+
+/* ── T1: Break Reminder Toast ── */
+#break-reminder-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 50, 0.95);
+  border: 1px solid #4488cc;
+  border-radius: 10px;
+  padding: 12px 24px;
+  z-index: 3000;
+  font-size: 14px;
+  color: #88ccff;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 4px 20px rgba(68, 136, 204, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── T4: CRT Boot Sequence ── */
+#boot-sequence {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: left;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  width: 350px;
+}
+
+.boot-line {
+  color: #0a0;
+  opacity: 0;
+  animation: bootLineAppear 0.25s ease forwards;
+  margin-bottom: 4px;
+  text-shadow: 0 0 4px rgba(0, 255, 0, 0.3);
+}
+
+@keyframes bootLineAppear {
+  0% { opacity: 0; }
+  30% { opacity: 0.7; }
+  60% { opacity: 0.3; } /* CRT flicker */
+  100% { opacity: 1; }
+}
+
+#intro-screen #intro-title {
+  animation: introGlow 1.2s ease 0.9s both;
+}
+
+#intro-screen #intro-subtitle {
+  animation: introSlide 0.6s ease 1.0s both;
+}
+
+/* CRT scanline overlay */
+#intro-screen::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── T5: Progress Bar Milestone Markers ── */
+#progress-track {
+  position: relative;
+}
+
+.milestone-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8px;
+  color: #555;
+  z-index: 2;
+  pointer-events: auto;
+  cursor: help;
+  transition: color 0.3s, text-shadow 0.3s;
+  line-height: 1;
+}
+
+.milestone-marker.milestone-reached {
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+  animation: milestoneShimmer 2s ease-in-out infinite;
+}
+
+@keyframes milestoneShimmer {
+  0%, 100% { text-shadow: 0 0 4px rgba(255, 215, 0, 0.3); }
+  50% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.7), 0 0 20px rgba(255, 215, 0, 0.3); }
+}
+
+/* ── T6: Level Select Micro-Interactions ── */
+.level-new-pulse {
+  animation: levelNewPulse 2s ease-in-out infinite !important;
+}
+
+@keyframes levelNewPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+  50% { box-shadow: 0 0 12px 2px rgba(0, 255, 0, 0.25); }
+}
+
+/* ── T8: Volume Slider ── */
+#volume-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#volume-icon {
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1;
+}
+
+#volume-slider {
+  width: 60px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+#volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0f0;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
+}
+
+#volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0f0;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
+}
+
+/* ── Reduced Motion: disable new animations ── */
+@media (prefers-reduced-motion: reduce) {
+  .boot-line {
+    animation: none !important;
+    opacity: 1;
+  }
+
+  .milestone-marker.milestone-reached {
+    animation: none !important;
+  }
+
+  .level-new-pulse {
+    animation: none !important;
+  }
+
+  #intro-screen::after {
+    display: none;
+  }
+}

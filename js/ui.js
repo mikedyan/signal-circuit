@@ -345,6 +345,22 @@ class UI {
           });
         }
 
+        // Day 34 T6: Level select micro-interactions
+        // Staggered fade-in
+        const btnIdx = chapter.levels.indexOf(levelId);
+        btn.style.opacity = '0';
+        btn.style.transform = 'translateY(8px)';
+        setTimeout(() => {
+          btn.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          btn.style.opacity = '1';
+          btn.style.transform = 'translateY(0)';
+        }, 40 * btnIdx);
+
+        // Pulse glow on newly-unlocked but incomplete levels
+        if (isUnlocked && !isCompleted) {
+          btn.classList.add('level-new-pulse');
+        }
+
         grid.appendChild(btn);
       }
 
@@ -469,12 +485,47 @@ class UI {
     }
   }
 
+  // Day 34 T3: Enhanced drag ghost with gate preview
+  _buildDragGhost(gateType) {
+    const def = GateTypes[gateType];
+    this.dragGhost.innerHTML = '';
+    this.dragGhost.style.borderColor = def.color;
+    this.dragGhost.style.color = def.color;
+
+    const label = document.createElement('span');
+    label.textContent = def.name;
+    label.style.fontWeight = 'bold';
+    this.dragGhost.appendChild(label);
+
+    const dots = document.createElement('div');
+    dots.style.display = 'flex';
+    dots.style.justifyContent = 'space-between';
+    dots.style.marginTop = '4px';
+    dots.style.gap = '3px';
+    dots.style.alignItems = 'center';
+    for (let i = 0; i < def.inputs; i++) {
+      const d = document.createElement('span');
+      d.style.cssText = 'width:5px;height:5px;background:#888;border-radius:50%;display:inline-block;';
+      dots.appendChild(d);
+    }
+    const arrow = document.createElement('span');
+    arrow.textContent = '→';
+    arrow.style.cssText = 'color:#666;font-size:9px;margin:0 2px;';
+    dots.appendChild(arrow);
+    for (let i = 0; i < def.outputs; i++) {
+      const d = document.createElement('span');
+      d.style.cssText = `width:5px;height:5px;background:${def.color};border-radius:50%;display:inline-block;`;
+      dots.appendChild(d);
+    }
+    this.dragGhost.appendChild(dots);
+  }
+
   startToolboxDrag(e, gateType) {
     e.preventDefault();
     this.isDragging = true;
     this.dragType = gateType;
 
-    this.dragGhost.textContent = GateTypes[gateType].name;
+    this._buildDragGhost(gateType);
     this.dragGhost.style.display = 'block';
     this.dragGhost.style.left = (e.clientX - 30) + 'px';
     this.dragGhost.style.top = (e.clientY - 15) + 'px';
@@ -514,7 +565,7 @@ class UI {
     this.dragType = gateType;
 
     const touch = e.touches[0];
-    this.dragGhost.textContent = GateTypes[gateType].name;
+    this._buildDragGhost(gateType);
     this.dragGhost.style.display = 'block';
     this.dragGhost.style.left = (touch.clientX - 30) + 'px';
     this.dragGhost.style.top = (touch.clientY - 15) + 'px';
@@ -1426,6 +1477,35 @@ class UI {
     if (textEl) textEl.textContent = `${completed}/${totalLevels} Levels`;
     if (starsEl) starsEl.textContent = `⭐ ${totalStars}`;
     if (fillEl) fillEl.style.width = pctComplete + '%';
+
+    // Day 34 T5: Progress bar milestone markers
+    this._updateMilestoneMarkers(pctComplete);
+  }
+
+  _updateMilestoneMarkers(pctComplete) {
+    const track = document.getElementById('progress-track');
+    if (!track) return;
+    // Remove old markers
+    track.querySelectorAll('.milestone-marker').forEach(m => m.remove());
+
+    const milestones = [
+      { pct: 25, label: '25%', icon: '◆' },
+      { pct: 50, label: '50%', icon: '◆' },
+      { pct: 75, label: '75%', icon: '◆' },
+      { pct: 100, label: '100%', icon: '★' },
+    ];
+
+    for (const ms of milestones) {
+      const marker = document.createElement('div');
+      marker.className = 'milestone-marker';
+      marker.style.left = ms.pct + '%';
+      marker.textContent = ms.icon;
+      marker.title = ms.label;
+      if (pctComplete >= ms.pct) {
+        marker.classList.add('milestone-reached');
+      }
+      track.appendChild(marker);
+    }
   }
 
   // ── Streak Display (T8) ──
@@ -1511,6 +1591,20 @@ class UI {
       } catch (e) {}
       this._currentOnboardingLevel = null;
     }
+  }
+
+  // ── Day 34 T2: Return-Player Re-Onboarding ──
+  showReOnboarding() {
+    const tooltip = document.getElementById('onboarding-tooltip');
+    if (!tooltip) return;
+    const text = document.getElementById('tooltip-text');
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const tap = isMobile ? 'Tap' : 'Click';
+    text.textContent = `Welcome back! Quick reminder: Drag gates → Wire pins → Match the truth table. ${tap} Hint if stuck!`;
+    tooltip.style.display = 'block';
+    this._onboardingShownAt = Date.now();
+    if (this._onboardingTimer) clearTimeout(this._onboardingTimer);
+    this._onboardingTimer = setTimeout(() => this.dismissOnboarding(), 10000);
   }
 
   // ── Hint Button Sync ──
@@ -2784,6 +2878,17 @@ class UI {
     ctx.font = '20px Courier New';
     ctx.fillStyle = '#0f0';
     ctx.fillText('mikedyan.github.io/signal-circuit', 60, h - 40);
+
+    // Day 34 T7: Subtle watermark overlay
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.font = 'bold 120px Courier New';
+    ctx.fillStyle = '#0f0';
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(-0.2);
+    ctx.textAlign = 'center';
+    ctx.fillText('SIGNAL CIRCUIT', 0, 0);
+    ctx.restore();
 
     // Decorative circuit elements on the right side
     ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';

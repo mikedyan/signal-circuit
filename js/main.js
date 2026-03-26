@@ -167,6 +167,11 @@ class GameState {
     // Day 33 T2: Multi-phase level tracking
     this.currentPhase = 0;
     this.isMultiPhase = false;
+    // Day 34 T1: Session-awareness break reminder
+    this._sessionStartTime = Date.now();
+    this._breakReminderShown = false;
+    // Day 34 T2: Return-player re-onboarding flag
+    this._reOnboardingShown = false;
     // Day 33 T5: Pre-placed (locked) gate IDs
     this._lockedGateIds = new Set();
     // Day 33 T7: Gamepad state
@@ -478,27 +483,61 @@ class GameState {
   }
 
   setupMuteButton() {
+    // Day 34 T8: Volume slider replaces binary mute
+    const slider = document.getElementById('volume-slider');
+    const icon = document.getElementById('volume-icon');
+    if (slider && icon) {
+      // Set initial state from audio engine
+      const vol = Math.round(this.audio.masterVolume * 100);
+      slider.value = this.audio.muted ? 0 : vol;
+      this._updateVolumeIcon(icon, parseInt(slider.value));
+
+      slider.addEventListener('input', () => {
+        const val = parseInt(slider.value);
+        this.audio.setMasterVolume(val / 100);
+        this._updateVolumeIcon(icon, val);
+      });
+
+      icon.addEventListener('click', () => {
+        if (parseInt(slider.value) > 0) {
+          this._prevVolume = parseInt(slider.value);
+          slider.value = 0;
+          this.audio.playMuteOff();
+          this.audio.setMasterVolume(0);
+          this._updateVolumeIcon(icon, 0);
+        } else {
+          const restore = this._prevVolume || 30;
+          slider.value = restore;
+          this.audio.setMasterVolume(restore / 100);
+          this._updateVolumeIcon(icon, restore);
+          this.audio.playMuteOn();
+        }
+      });
+      return;
+    }
+
+    // Fallback: legacy mute button
     const btn = document.getElementById('mute-btn');
     if (!btn) return;
-    // Set initial state
     if (this.audio.isMuted) {
       btn.textContent = '🔇';
       btn.classList.add('muted');
     }
     btn.addEventListener('click', () => {
       const newMuted = !this.audio.isMuted;
-      if (newMuted) {
-        // Play power-off sound before muting
-        this.audio.playMuteOff();
-      }
+      if (newMuted) this.audio.playMuteOff();
       this.audio.setMute(newMuted);
       btn.textContent = newMuted ? '🔇' : '🔊';
       btn.classList.toggle('muted', newMuted);
-      if (!newMuted) {
-        // Play power-on sound after unmuting
-        this.audio.playMuteOn();
-      }
+      if (!newMuted) this.audio.playMuteOn();
     });
+  }
+
+  _updateVolumeIcon(icon, val) {
+    if (val === 0) icon.textContent = '🔇';
+    else if (val <= 33) icon.textContent = '🔈';
+    else if (val <= 66) icon.textContent = '🔉';
+    else icon.textContent = '🔊';
   }
 
   // ── Progress Persistence ──
@@ -905,7 +944,8 @@ class GameState {
 
       this.hintsUsed++;
       if (this.hintsUsed >= 2) this.maxHintPenalty = Math.max(this.maxHintPenalty, this.hintsUsed - 1);
-      this.audio.playButtonClick();
+      // Day 34 T10: Hint sound urgency escalation
+      this.audio.playHintReveal(this.hintsUsed);
 
       // Activate visual highlights on hint 3 (the final hint)
       const isVisualHint = this.hintsUsed === 3 && this.currentLevel.hintHighlights;
@@ -1005,6 +1045,29 @@ class GameState {
         el.style.color = '#f80'; // orange
       }
     }
+
+    // Day 34 T1: Session-awareness break reminder (45 min)
+    this._checkBreakReminder();
+  }
+
+  _checkBreakReminder() {
+    if (this._breakReminderShown) return;
+    const sessionElapsed = Math.floor((Date.now() - this._sessionStartTime) / 1000);
+    if (sessionElapsed >= 45 * 60) {
+      this._breakReminderShown = true;
+      this._showBreakToast();
+    }
+  }
+
+  _showBreakToast() {
+    const toast = document.getElementById('break-reminder-toast');
+    if (!toast) return;
+    toast.textContent = "⏸ You've been playing for 45 min — take a break? 🧠";
+    toast.style.display = 'block';
+    toast.style.animation = 'none';
+    void toast.offsetWidth;
+    toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 7.6s forwards';
+    setTimeout(() => { toast.style.display = 'none'; }, 8100);
   }
 
   // ── Game State ──
@@ -1273,6 +1336,20 @@ class GameState {
     // Show distributed onboarding tooltips for levels 1-4
     if (level.id >= 1 && level.id <= 4) {
       this.ui.showOnboarding(level.id);
+    }
+
+    // Day 34 T2: Return-player contextual re-onboarding
+    if (!this._reOnboardingShown) {
+      try {
+        const lastVisit = localStorage.getItem('signal-circuit-last-visit');
+        if (lastVisit) {
+          const daysSince = Math.floor((Date.now() - parseInt(lastVisit)) / (1000 * 60 * 60 * 24));
+          if (daysSince >= 3) {
+            this._reOnboardingShown = true;
+            this.ui.showReOnboarding();
+          }
+        }
+      } catch (e) {}
     }
 
     this.ui.updateGateIndicator();

@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=46">
+  <link rel="stylesheet" href="css/style.css?v=47">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -23,8 +23,14 @@
   <!-- ARIA live region for screen reader announcements -->
   <div id="sr-status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
   <div id="app" role="main">
-    <!-- Intro Screen -->
+    <!-- Intro Screen — Day 34 T4: CRT Boot Sequence -->
   <div id="intro-screen">
+    <div id="boot-sequence">
+      <div class="boot-line" style="animation-delay:0s">INITIALIZING LOGIC CORES...</div>
+      <div class="boot-line" style="animation-delay:0.3s">LOADING GATE DEFINITIONS... OK</div>
+      <div class="boot-line" style="animation-delay:0.55s">CALIBRATING SIGNAL PATH... OK</div>
+      <div class="boot-line" style="animation-delay:0.75s">SYSTEM READY_</div>
+    </div>
     <div id="intro-title">⚡ Signal Circuit</div>
     <div id="intro-subtitle">Logic Gate Puzzle Game</div>
   </div>
@@ -332,7 +338,11 @@
         <div id="status-bar">
           <span id="status-text">Ready</span>
           <span id="timer-display">⏱ 0:00</span>
-          <button id="mute-btn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+          <!-- Day 34 T8: Volume slider replaces binary mute -->
+          <div id="volume-control">
+            <span id="volume-icon" title="Click to mute/unmute" aria-label="Volume" role="button" tabindex="0">🔊</span>
+            <input type="range" id="volume-slider" min="0" max="100" value="30" aria-label="Volume level">
+          </div>
         </div>
 
       </div>
@@ -453,6 +463,8 @@
   <!-- Drag ghost element -->
   <div id="drag-ghost"></div>
   <div id="victory-flash"></div>
+  <!-- Day 34 T1: Break reminder toast -->
+  <div id="break-reminder-toast" style="display:none;"></div>
   <div id="shortcuts-overlay" style="display:none;">
     <div id="shortcuts-content">
       <h3>⌨️ Keyboard Shortcuts</h3>

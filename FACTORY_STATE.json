@@ -1,28 +1,28 @@
 {
   "project": "signal-circuit",
-  "currentDay": 33,
+  "currentDay": 34,
   "status": "complete",
-  "lastRun": "2026-03-25T08:09:00-07:00",
+  "lastRun": "2026-03-26T08:10:00-07:00",
   "totalLevels": 37,
   "totalChapters": 8,
-  "completedDays": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33],
-  "day33": {
+  "completedDays": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34],
+  "day34": {
     "tasksCompleted": 10,
     "tasksPlanned": 10,
     "features": [
-      "T1: Discovery Levels (3 levels, full gate palette)",
-      "T2: Multi-Phase Levels (2 levels, progressive reveal)",
-      "T3: Dual-Aesthetic Tension Resolution (warm amber highlights)",
-      "T4: Simplified Visual Accessibility Mode",
-      "T5: Variable Canvas / Pre-placed Gates",
-      "T6: Mobile Bottom Sheet Redesign",
-      "T7: Gamepad / Controller Input Support",
-      "T8: Cross-Device Progress Sync (export/import)",
-      "T9: Accessible Dropdown-Based Wire Connection",
-      "T10: Cold-Start / Lapsed Player Re-Engagement"
+      "T1: Session-Awareness Break Reminder (45min toast)",
+      "T2: Return-Player Contextual Re-Onboarding (3+ day gap)",
+      "T3: Enhanced Drag Ghost (gate color + pin preview)",
+      "T4: CRT Boot Sequence Animation (intro screen)",
+      "T5: Progress Bar Milestone Markers with Shimmer",
+      "T6: Level Select Micro-Interactions (staggered fade, pulse)",
+      "T7: Screenshot Share Card Watermark",
+      "T8: Volume Slider (replaces binary mute toggle)",
+      "T9: Separate SFX and Music Volume Channels",
+      "T10: Hint Sound Urgency Escalation (3-tier)"
     ],
     "bugsFixed": 0,
-    "levelsAdded": [33, 34, 35, 36, 37],
+    "levelsAdded": [],
     "qaResult": "ALL_PASS"
   }
 }
