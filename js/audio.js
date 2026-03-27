@@ -99,6 +99,18 @@ class AudioEngine {
     return this._compressor || this.ctx.destination;
   }
 
+  // Day 35 T1: Stereo panning — create a panner for positional sounds
+  _createPanner(xPosition) {
+    if (!this.ctx || xPosition === undefined || xPosition === null) return this._output;
+    const panner = this.ctx.createStereoPanner();
+    // Map canvas x (0 to ~700 ref width) to pan [-0.8, 0.8] (not full hard pan)
+    const canvasWidth = (window.game && window.game.renderer) ? (window.game.renderer.displayWidth || 700) : 700;
+    const normalized = Math.max(-0.8, Math.min(0.8, ((xPosition / canvasWidth) * 2 - 1) * 0.8));
+    panner.pan.setValueAtTime(normalized, this.ctx.currentTime);
+    panner.connect(this._output);
+    return panner;
+  }
+
   _resumeIfNeeded() {
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
@@ -182,17 +194,17 @@ class AudioEngine {
     this._wireConnectionCount = 0;
   }
 
-  // ── Sound: Gate placement (T2 — gate-type specific) ──
-  playGatePlace(gateType) {
+  // ── Sound: Gate placement (T2 — gate-type specific, Day 35 T1: stereo pan) ──
+  playGatePlace(gateType, xPosition) {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
     const vol = this.masterVolume;
+    const out = this._createPanner(xPosition);
 
     switch (gateType) {
       case 'AND': {
-        // Clean sine — precise, digital feel
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
@@ -201,13 +213,12 @@ class AudioEngine {
         gain.gain.setValueAtTime(vol * 0.45, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
         osc.connect(gain);
-        gain.connect(this._output);
+        gain.connect(out);
         osc.start(now);
         osc.stop(now + 0.08);
         break;
       }
       case 'OR': {
-        // Warm sawtooth — fuller, inclusive feel
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         const filter = ctx.createBiquadFilter();
@@ -220,13 +231,12 @@ class AudioEngine {
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
         osc.connect(filter);
         filter.connect(gain);
-        gain.connect(this._output);
+        gain.connect(out);
         osc.start(now);
         osc.stop(now + 0.09);
         break;
       }
       case 'NOT': {
-        // Sharp square snap — decisive, inverted
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'square';
@@ -235,10 +245,9 @@ class AudioEngine {
         gain.gain.setValueAtTime(vol * 0.3, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
         osc.connect(gain);
-        gain.connect(this._output);
+        gain.connect(out);
         osc.start(now);
         osc.stop(now + 0.05);
-        // Add a tiny click at start
         const click = ctx.createOscillator();
         const clickGain = ctx.createGain();
         click.type = 'sine';
@@ -246,13 +255,12 @@ class AudioEngine {
         clickGain.gain.setValueAtTime(vol * 0.15, now);
         clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
         click.connect(clickGain);
-        clickGain.connect(this._output);
+        clickGain.connect(out);
         click.start(now);
         click.stop(now + 0.015);
         break;
       }
       case 'XOR': {
-        // Bell-like FM synthesis — distinctive, complex
         const carrier = ctx.createOscillator();
         const modulator = ctx.createOscillator();
         const modGain = ctx.createGain();
@@ -260,7 +268,7 @@ class AudioEngine {
         carrier.type = 'sine';
         carrier.frequency.setValueAtTime(this._randomize(700, 0.03), now);
         modulator.type = 'sine';
-        modulator.frequency.setValueAtTime(1400, now); // 2:1 ratio for bell
+        modulator.frequency.setValueAtTime(1400, now);
         modGain.gain.setValueAtTime(300, now);
         modGain.gain.exponentialRampToValueAtTime(1, now + 0.15);
         gain.gain.setValueAtTime(vol * 0.4, now);
@@ -268,7 +276,7 @@ class AudioEngine {
         modulator.connect(modGain);
         modGain.connect(carrier.frequency);
         carrier.connect(gain);
-        gain.connect(this._output);
+        gain.connect(out);
         carrier.start(now);
         modulator.start(now);
         carrier.stop(now + 0.18);
@@ -276,7 +284,6 @@ class AudioEngine {
         break;
       }
       case 'NAND': {
-        // NAND = inverted AND — descending sine with inversion snap
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
@@ -285,10 +292,9 @@ class AudioEngine {
         gain.gain.setValueAtTime(vol * 0.4, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
         osc.connect(gain);
-        gain.connect(this._output);
+        gain.connect(out);
         osc.start(now);
         osc.stop(now + 0.1);
-        // Inversion click
         const nClick = ctx.createOscillator();
         const nClickGain = ctx.createGain();
         nClick.type = 'square';
@@ -296,13 +302,12 @@ class AudioEngine {
         nClickGain.gain.setValueAtTime(vol * 0.2, now + 0.06);
         nClickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
         nClick.connect(nClickGain);
-        nClickGain.connect(this._output);
+        nClickGain.connect(out);
         nClick.start(now + 0.06);
         nClick.stop(now + 0.08);
         break;
       }
       case 'NOR': {
-        // NOR = inverted OR — warm sawtooth with inversion snap
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         const filter = ctx.createBiquadFilter();
@@ -315,10 +320,9 @@ class AudioEngine {
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
         osc.connect(filter);
         filter.connect(gain);
-        gain.connect(this._output);
+        gain.connect(out);
         osc.start(now);
         osc.stop(now + 0.1);
-        // Inversion click
         const nrClick = ctx.createOscillator();
         const nrClickGain = ctx.createGain();
         nrClick.type = 'square';
@@ -326,7 +330,7 @@ class AudioEngine {
         nrClickGain.gain.setValueAtTime(vol * 0.2, now + 0.07);
         nrClickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
         nrClick.connect(nrClickGain);
-        nrClickGain.connect(this._output);
+        nrClickGain.connect(out);
         nrClick.start(now + 0.07);
         nrClick.stop(now + 0.09);
         break;
@@ -370,12 +374,13 @@ class AudioEngine {
     osc2.stop(now + 0.04);
   }
 
-  // ── Sound: Wire connection zap with pitch escalation (T3) ──
-  playWireConnect() {
+  // ── Sound: Wire connection zap with pitch escalation (T3, Day 35 T1: stereo pan) ──
+  playWireConnect(xPosition) {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
+    const out = this._createPanner(xPosition);
 
     // Pitch escalation: each wire is ~1 semitone higher, capped at 1 octave
     const semitones = Math.min(this._wireConnectionCount, 12);
@@ -394,7 +399,7 @@ class AudioEngine {
     gain.gain.setValueAtTime(this.masterVolume * 0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
-    gain.connect(this._output);
+    gain.connect(out);
     osc.start(now);
     osc.stop(now + 0.12);
 
@@ -407,7 +412,7 @@ class AudioEngine {
     gain2.gain.setValueAtTime(this.masterVolume * 0.15, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc2.connect(gain2);
-    gain2.connect(this._output);
+    gain2.connect(out);
     osc2.start(now);
     osc2.stop(now + 0.08);
 
@@ -415,13 +420,14 @@ class AudioEngine {
     this._playNoiseBurst(this._randomize(0.08, 0.1), this.masterVolume * 0.2);
   }
 
-  // ── Sound: Wire/gate disconnection ──
-  playWireDisconnect() {
+  // ── Sound: Wire/gate disconnection (Day 35 T1: stereo pan) ──
+  playWireDisconnect(xPosition) {
     if (this.muted || !this._ensureContext()) return;
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
     const dur = this._randomize(0.12, 0.1);
+    const out = this._createPanner(xPosition);
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -431,7 +437,7 @@ class AudioEngine {
     gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(gain);
-    gain.connect(this._output);
+    gain.connect(out);
     osc.start(now);
     osc.stop(now + dur);
   }

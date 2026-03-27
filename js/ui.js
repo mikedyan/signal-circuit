@@ -41,6 +41,8 @@ class UI {
     this.setupSimplifiedVisual(); // Day 33 T4
     this.setupSyncButtons(); // Day 33 T8
     this.setupAccessibleWiring(); // Day 33 T9
+    this.setupLightMode(); // Day 35 T5
+    this.setupUndoTimeline(); // Day 35 T6
   }
 
   // ── Colorblind Mode Toggle ──
@@ -3280,5 +3282,113 @@ class UI {
       btn.addEventListener('click', () => gs.startLevel(rev.levelId));
       container.appendChild(btn);
     }
+  }
+
+  // ── Day 35 T5: Light Mode Toggle ──
+  setupLightMode() {
+    const btn = document.getElementById('light-mode-btn');
+    if (!btn) return;
+
+    let isLight = false;
+
+    // Auto-detect from system preference on first visit
+    try {
+      const saved = localStorage.getItem('signal-circuit-theme');
+      if (saved) {
+        isLight = saved === 'light';
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        isLight = true;
+      }
+    } catch (e) {}
+
+    const applyTheme = (light) => {
+      document.body.classList.toggle('light-mode', light);
+      btn.textContent = light ? '☀️ Light Mode' : '🌙 Dark Mode';
+      btn.classList.toggle('active', light);
+      // Notify canvas renderer to redraw with new colors
+      if (this.gameState && this.gameState.renderer) {
+        this.gameState.markDirty();
+      }
+    };
+
+    applyTheme(isLight);
+
+    btn.addEventListener('click', () => {
+      isLight = !isLight;
+      applyTheme(isLight);
+      try { localStorage.setItem('signal-circuit-theme', isLight ? 'light' : 'dark'); } catch (e) {}
+    });
+  }
+
+  // ── Day 35 T6: Undo History Timeline ──
+  setupUndoTimeline() {
+    this._undoTimelineEl = document.getElementById('undo-timeline');
+    this._undoTimelineTrack = document.getElementById('undo-timeline-track');
+  }
+
+  updateUndoTimeline() {
+    const el = this._undoTimelineEl;
+    const track = this._undoTimelineTrack;
+    if (!el || !track) return;
+
+    const gs = this.gameState;
+    if (!gs || !gs.undoManager) return;
+
+    const undoStack = gs.undoManager.undoStack;
+    const redoStack = gs.undoManager.redoStack;
+    const total = undoStack.length + redoStack.length;
+
+    if (total === 0) {
+      el.style.display = 'none';
+      return;
+    }
+
+    el.style.display = '';
+    track.innerHTML = '';
+
+    // Action type labels for tooltips
+    const typeLabels = {
+      addGate: '+ Gate',
+      removeGate: '- Gate',
+      addWire: '+ Wire',
+      removeWire: '- Wire',
+      moveIONode: 'Move',
+      clearCircuit: 'Clear',
+    };
+
+    // Undo stack entries (past actions)
+    for (let i = 0; i < undoStack.length; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'undo-dot';
+      if (i === undoStack.length - 1) dot.classList.add('current');
+      const action = undoStack[i];
+      dot.title = typeLabels[action.type] || action.type;
+      const idx = i;
+      dot.addEventListener('click', () => {
+        // Undo back to this point
+        const steps = undoStack.length - 1 - idx;
+        for (let s = 0; s < steps; s++) gs.performUndo();
+        this.updateUndoTimeline();
+      });
+      track.appendChild(dot);
+    }
+
+    // Redo stack entries (future actions, shown greyed)
+    for (let i = redoStack.length - 1; i >= 0; i--) {
+      const dot = document.createElement('div');
+      dot.className = 'undo-dot future';
+      const action = redoStack[i];
+      dot.title = typeLabels[action.type] || action.type;
+      const stepsForward = redoStack.length - i;
+      dot.addEventListener('click', () => {
+        for (let s = 0; s < stepsForward; s++) gs.performRedo();
+        this.updateUndoTimeline();
+      });
+      track.appendChild(dot);
+    }
+
+    // Auto-scroll to show current position
+    const currentDot = track.querySelector('.current');
+    if (currentDot) currentDot.scrollIntoView({ inline: 'center', behavior: 'smooth' });
   }
 }

@@ -6,9 +6,14 @@ class CanvasRenderer {
     this.ctx = canvas.getContext('2d');
     this.gameState = gameState;
     this.hoveredPin = null;
-    this.sparkParticles = [];
+    this.sparkParticles = []; // Day 35 T3: active particles
+    this._particlePool = [];  // Day 35 T3: recycled particle pool
     this.ripples = [];
     this.viewTransform = { x: 0, y: 0, scale: 1 };
+    // Day 35 T3: Pre-allocate particle pool
+    for (let i = 0; i < 100; i++) {
+      this._particlePool.push({ x: 0, y: 0, vx: 0, vy: 0, life: 0, decay: 0, size: 0 });
+    }
     this.minScale = 0.3;
     this.maxScale = 3.0;
     this.resize();
@@ -395,15 +400,23 @@ class CanvasRenderer {
     const w = right - left;
     const h = bottom - top;
 
+    // Day 35 T5: Light mode canvas adaptation
+    const isLight = document.body.classList.contains('light-mode');
+
     // Background gradient
     const bgGrad = ctx.createLinearGradient(left, top, left, bottom);
-    bgGrad.addColorStop(0, '#ece8d8');
-    bgGrad.addColorStop(1, '#e0dcd0');
+    if (isLight) {
+      bgGrad.addColorStop(0, '#f8f6ee');
+      bgGrad.addColorStop(1, '#f0ece0');
+    } else {
+      bgGrad.addColorStop(0, '#ece8d8');
+      bgGrad.addColorStop(1, '#e0dcd0');
+    }
     ctx.fillStyle = bgGrad;
     ctx.fillRect(left, top, w, h);
 
     // Subtle copper trace lines (horizontal) — snap to 40px grid
-    ctx.strokeStyle = 'rgba(180, 160, 120, 0.15)';
+    ctx.strokeStyle = isLight ? 'rgba(160, 140, 100, 0.12)' : 'rgba(180, 160, 120, 0.15)';
     ctx.lineWidth = 1;
     const gridStartY = Math.floor(top / 40) * 40;
     for (let y = gridStartY; y <= bottom; y += 40) {
@@ -414,6 +427,7 @@ class CanvasRenderer {
     }
 
     // Subtle copper trace lines (vertical)
+    ctx.strokeStyle = isLight ? 'rgba(160, 140, 100, 0.12)' : 'rgba(180, 160, 120, 0.15)';
     const gridStartX = Math.floor(left / 40) * 40;
     for (let x = gridStartX; x <= right; x += 40) {
       ctx.beginPath();
@@ -432,11 +446,11 @@ class CanvasRenderer {
         for (let y = holeStartY; y < bottom; y += gridSize) {
           ctx.beginPath();
           ctx.arc(x, y, 2, 0, Math.PI * 2);
-          ctx.fillStyle = '#c8c4b4';
+          ctx.fillStyle = isLight ? '#d8d4c8' : '#c8c4b4';
           ctx.fill();
           ctx.beginPath();
           ctx.arc(x, y, 1, 0, Math.PI * 2);
-          ctx.fillStyle = '#b8b4a8';
+          ctx.fillStyle = isLight ? '#c8c4b8' : '#b8b4a8';
           ctx.fill();
         }
       }
@@ -562,37 +576,48 @@ class CanvasRenderer {
     }
   }
 
+  // Day 35 T3: Spark particles with object pool — no GC spikes
   spawnSparks(x, y) {
     for (let i = 0; i < 10; i++) {
+      let p;
+      if (this._particlePool.length > 0) {
+        p = this._particlePool.pop();
+      } else {
+        p = { x: 0, y: 0, vx: 0, vy: 0, life: 0, decay: 0, size: 0 };
+      }
       const angle = Math.random() * Math.PI * 2;
       const speed = 2 + Math.random() * 4;
-      this.sparkParticles.push({
-        x, y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 1,
-        decay: 0.03 + Math.random() * 0.02,
-        size: 2 + Math.random() * 3,
-      });
+      p.x = x;
+      p.y = y;
+      p.vx = Math.cos(angle) * speed;
+      p.vy = Math.sin(angle) * speed;
+      p.life = 1;
+      p.decay = 0.03 + Math.random() * 0.02;
+      p.size = 2 + Math.random() * 3;
+      this.sparkParticles.push(p);
     }
   }
 
   _renderSparks(ctx) {
-    for (let i = this.sparkParticles.length - 1; i >= 0; i--) {
+    let writeIdx = 0;
+    for (let i = 0; i < this.sparkParticles.length; i++) {
       const p = this.sparkParticles[i];
       p.x += p.vx;
       p.y += p.vy;
       p.vy += 0.1; // gravity
       p.life -= p.decay;
       if (p.life <= 0) {
-        this.sparkParticles.splice(i, 1);
+        // Return to pool instead of discarding
+        this._particlePool.push(p);
         continue;
       }
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255, ${Math.floor(150 + 105 * p.life)}, 50, ${p.life})`;
       ctx.fill();
+      this.sparkParticles[writeIdx++] = p;
     }
+    this.sparkParticles.length = writeIdx; // Compact in-place, no splice
   }
 
   _drawNodeGlow(ctx, node, color) {

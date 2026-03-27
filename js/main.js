@@ -180,6 +180,8 @@ class GameState {
     this._gamepadPollId = null;
     // Day 33 T10: Last visit tracking
     this._updateLastVisit();
+    // Day 35 T2: AbortController for event listener cleanup
+    this._abortController = new AbortController();
   }
 
   // ── Hint Token System (Day 31) ──
@@ -1086,7 +1088,7 @@ class GameState {
     const gate = new Gate(type, x, y, this.nextId++);
     this.gates.push(gate);
     this.ui.updateStatusBar(`Placed ${type} gate`);
-    this.audio.playGatePlace(type);
+    this.audio.playGatePlace(type, x);
     this.haptic(15); // #98: short pulse on gate place
     // Impact ripple effect
     if (this.renderer) {
@@ -1103,6 +1105,7 @@ class GameState {
     this.trackGatePlaced();
     this._recordReplayAction('addGate', { type, x, y, id: gate.id });
     this.ui.updateGateIndicator();
+    if (this.ui) this.ui.updateUndoTimeline(); // Day 35 T6
     this.markDirty();
     this._autoSave();
     return gate;
@@ -1123,7 +1126,7 @@ class GameState {
     this.gates = this.gates.filter(g => g.id !== gate.id);
     if (this.selectedGate === gate) this.selectedGate = null;
     this.ui.updateStatusBar(`Removed ${gate.type} gate`);
-    this.audio.playWireDisconnect();
+    this.audio.playWireDisconnect(gate.x);
 
     if (!skipUndo) {
       this.undoManager.push({
@@ -1136,6 +1139,7 @@ class GameState {
       });
     }
     this.ui.updateGateIndicator();
+    if (this.ui) this.ui.updateUndoTimeline(); // Day 35 T6
     this.markDirty();
     this._autoSave();
   }
@@ -1200,6 +1204,7 @@ class GameState {
     this.audio.playUndo();
     this.ui.updateStatusBar('Undo');
     this.ui.updateGateIndicator();
+    if (this.ui) this.ui.updateUndoTimeline(); // Day 35 T6
     this.markDirty();
   }
 
@@ -1252,6 +1257,7 @@ class GameState {
     this.audio.playRedo();
     this.ui.updateStatusBar('Redo');
     this.ui.updateGateIndicator();
+    if (this.ui) this.ui.updateUndoTimeline(); // Day 35 T6
     this.markDirty();
   }
 
@@ -1567,8 +1573,8 @@ class GameState {
     const wire = new Wire(fromId, outputPinIndex, toId, inputPinIndex, this.wireManager.nextId++);
     this.wireManager.wires.push(wire);
 
-    this.audio.playWireConnect();
     const endpoints = this.wireManager.getWireEndpoints(wire);
+    this.audio.playWireConnect(endpoints ? endpoints.toPin.x : undefined);
     if (endpoints && this.renderer) {
       this.renderer.spawnSparks(endpoints.toPin.x, endpoints.toPin.y);
     }
@@ -1868,6 +1874,8 @@ class GameState {
       return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     };
 
+    const signal = this._abortController ? this._abortController.signal : undefined;
+
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (this.isAnimating) return;
@@ -1924,7 +1932,7 @@ class GameState {
         if (touchMoved) return;
         const wire = this.wireManager.findWireAt(pos.x, pos.y);
         if (wire) {
-          this.audio.playWireDisconnect();
+          this.audio.playWireDisconnect(pos.x);
           this.undoManager.push({ type: 'removeWire', fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
           this.wireManager.removeWire(wire);
           this.markDirty();
@@ -1948,7 +1956,7 @@ class GameState {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
             this._startTimerIfPending(); // #96
-            this.audio.playWireConnect();
+            this.audio.playWireConnect(pin.x);
             this.haptic([15, 50, 15]); // #98: double pulse on wire connect
             this.renderer.spawnSparks(pin.x, pin.y);
             this.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
@@ -2016,7 +2024,7 @@ class GameState {
       this.wireManager.selectedWire = null;
       this._clearTapConnect();
       if (this.ui) this.ui.hideMobileDelete();
-    }, { passive: false });
+    }, { passive: false, signal });
 
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
@@ -2070,7 +2078,7 @@ class GameState {
         dragIONode.y = Math.round((pos.y - dragIOOffsetY) / gridSize) * gridSize;
         this.markDirty();
       }
-    }, { passive: false });
+    }, { passive: false, signal });
 
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
@@ -2127,7 +2135,7 @@ class GameState {
 
       isDraggingGate = false;
       dragGate = null;
-    }, { passive: false });
+    }, { passive: false, signal });
 
     // ── Mouse support ──
     canvas.addEventListener('mousedown', (e) => {
@@ -2142,7 +2150,7 @@ class GameState {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
             this._startTimerIfPending(); // #96
-            this.audio.playWireConnect();
+            this.audio.playWireConnect(pin.x);
             this.haptic([15, 50, 15]); // #98
             this.renderer.spawnSparks(pin.x, pin.y);
             this.undoManager.push({
@@ -2214,7 +2222,7 @@ class GameState {
       this.selectedGate = null;
       this.wireManager.selectedWire = null;
       this._clearTapConnect();
-    });
+    }, { signal });
 
     canvas.addEventListener('mousemove', (e) => {
       const screenPos = this.renderer.getMousePos(e);
@@ -2276,7 +2284,7 @@ class GameState {
       } else {
         canvas.style.cursor = 'crosshair';
       }
-    });
+    }, { signal });
 
     canvas.addEventListener('mouseup', () => {
       // T5: Clear grid snap overlay
@@ -2321,7 +2329,7 @@ class GameState {
       }
       isDraggingGate = false;
       dragGate = null;
-    });
+    }, { signal });
 
     canvas.addEventListener('contextmenu', (e) => {
       e.preventDefault();
@@ -2331,7 +2339,7 @@ class GameState {
 
       const wire = this.wireManager.findWireAt(pos.x, pos.y);
       if (wire) {
-        this.audio.playWireDisconnect();
+        this.audio.playWireDisconnect(pos.x);
         this.undoManager.push({
           type: 'removeWire',
           fromGateId: wire.fromGateId,
@@ -2348,7 +2356,7 @@ class GameState {
       if (gate) {
         this.removeGate(gate);
       }
-    });
+    }, { signal });
 
     // Mouse wheel zoom (desktop)
     canvas.addEventListener('wheel', (e) => {
@@ -2357,7 +2365,7 @@ class GameState {
       const zoomFactor = e.deltaY > 0 ? 0.92 : 1.08;
       const vt = this.renderer.viewTransform;
       this.renderer.zoomAt(vt.scale * zoomFactor, screenPos.x, screenPos.y);
-    }, { passive: false });
+    }, { passive: false, signal });
 
     document.addEventListener('keydown', (e) => {
       if (this.isAnimating || this.currentScreen !== 'gameplay') return;
@@ -2465,7 +2473,7 @@ class GameState {
         this.markDirty();
         this._autoSave();
       }
-    });
+    }, { signal });
   }
 
   // Day 32 T2: Find distance to nearest valid pin for wire proximity audio
@@ -3079,6 +3087,17 @@ class GameState {
       requestAnimationFrame(loop);
     };
     loop();
+  }
+
+  // Day 35 T2: Clean up all event listeners via AbortController
+  destroy() {
+    if (this._abortController) {
+      this._abortController.abort();
+    }
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.blitzTimer) clearInterval(this.blitzTimer);
+    if (this.speedrunTimer) clearInterval(this.speedrunTimer);
+    this.audio.stopAmbient();
   }
 }
 
