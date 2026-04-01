@@ -1,12 +1,20 @@
 {
   "project": "signal-circuit",
-  "phase": "Phase 2 — Expert Review Complete",
+  "phase": "Phase 3 — Engagement & Depth",
+  "roadmap": "ROADMAP_PHASE3.md",
   "lastCompletedDay": 35,
-  "nextDay": null,
+  "nextDay": 36,
   "totalItemsCompleted": 176,
   "totalItems": 176,
-  "status": "PHASE 2 COMPLETE — All 176 expert review improvements implemented",
-  "lastRun": "2026-03-27T08:17:00-07:00",
+  "status": "PHASE 3 ROADMAP READY — Expert panel review complete, 30-day roadmap authored",
+  "lastRun": "2026-03-31T21:00:00-07:00",
+  "expertReview": "reviews/expert-panel-day35.md",
+  "reviewScore": 7.3,
+  "reviewHighlights": {
+    "strengths": ["Procedural audio engine (9/10)", "Breadboard aesthetic", "Accessibility story", "Educational depth"],
+    "weaknesses": ["Replayability (5/10)", "Addictiveness (6/10)", "No social features", "Difficulty cliff Ch3→Ch4"]
+  },
+  "phase3Focus": "Fix replayability, deepen engagement, smooth difficulty curve",
   "days": {
     "35": {
       "items": ["#171 Stereo Panning", "#172 AbortController Pattern", "#173 Particle Pool", "#174 Cache-Busting", "#175 Light Mode", "#176 Undo Timeline"],
