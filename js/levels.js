@@ -44,7 +44,21 @@ const CHAPTERS = [
     },
   },
   {
-    id: 4, title: 'Chapter 4: Advanced Systems', levels: [18, 19, 20, 21, 22],
+    id: 4, title: 'Chapter 3.5: Systems Check', levels: [18, 19, 20],
+    narrative: 'Diagnostics',
+    storyIntro: 'Before engaging the warp drive, run a full systems diagnostic. These bridge circuits verify your core skills under new conditions.',
+    storyComplete: '✅ All diagnostics passed! Systems verified. You\'re ready for advanced engineering.',
+    gatesMastered: ['Decoder Basics', 'Comparator', 'Selector'],
+    color: '#9966cc',
+    realWorld: {
+      title: '🔍 In the Real World',
+      fact: 'Before launching any spacecraft, engineers run exhaustive diagnostic tests on every subsystem. These bridge circuits are like pre-flight checks — simpler versions of the complex systems ahead.',
+      device: 'Pre-Flight Diagnostic Systems',
+      icon: '🔍',
+    },
+  },
+  {
+    id: 5, title: 'Chapter 4: Advanced Systems', levels: [21, 22, 23, 24, 25],
     narrative: 'Warp Drive',
     storyIntro: 'The warp drive controller needs advanced logic. Decoders, comparators, and arithmetic — the heart of faster-than-light travel.',
     storyComplete: '🚀 Warp drive online! The ship is ready for interstellar travel.',
@@ -58,7 +72,7 @@ const CHAPTERS = [
     },
   },
   {
-    id: 5, title: 'Chapter 5: Shield Systems', levels: [23, 24, 25, 26, 27],
+    id: 6, title: 'Chapter 5: Shield Systems', levels: [26, 27, 28, 29, 30],
     narrative: 'Defense Grid',
     storyIntro: 'The ship enters uncharted space. Cosmic debris and electromagnetic storms batter the hull. Build the shield logic to protect the crew.',
     storyComplete: '🛡️ Shields holding at maximum! The ship glides safely through the cosmic storm.',
@@ -72,7 +86,7 @@ const CHAPTERS = [
     },
   },
   {
-    id: 6, title: 'Chapter 6: Universal Gates', levels: [28, 29, 30, 31],
+    id: 7, title: 'Chapter 6: Universal Gates', levels: [31, 32, 33, 34],
     narrative: 'Engine Core',
     storyIntro: 'Deep in the engine room, the core logic is built from universal gates. NAND and NOR can each build ANY other gate — master them to unlock the ship\'s true potential.',
     storyComplete: '⚛️ Engine core fully rebuilt! With universal gates, you can build anything. The ship is limitless.',
@@ -86,7 +100,7 @@ const CHAPTERS = [
     },
   },
   {
-    id: 7, title: 'Bonus: Dark Gate', levels: [32],
+    id: 8, title: 'Bonus: Dark Gate', levels: [35],
     narrative: 'Unknown Signal',
     storyIntro: 'A mysterious component has been detected in the ship\'s circuitry. Its behavior is unknown. Reverse-engineer it.',
     storyComplete: '🕵️ Mystery component identified! Your analytical skills saved the mission.',
@@ -101,7 +115,7 @@ const CHAPTERS = [
     },
   },
   {
-    id: 8, title: 'Chapter 8: Discovery Lab', levels: [33, 34, 35, 36, 37],
+    id: 9, title: 'Chapter 8: Discovery Lab', levels: [36, 37, 38, 39, 40],
     narrative: 'Open Design',
     storyIntro: 'The lab doors open. No rules, no constraints — just truth tables and a full toolbox. Design your way.',
     storyComplete: '🧪 Discovery complete! You\'ve proven that engineering is as much art as science.',
@@ -625,9 +639,102 @@ const LEVELS = [
     ],
   },
 
-  // ── Chapter 4: Advanced Systems (Warp Drive) ──
+
+  // ── Chapter 3.5: Systems Check (Bridge Levels) ──
   {
     id: 18,
+    title: '2-Input Decoder',
+    description: 'Route a 1-bit address to one of two outputs. When A=0, activate Y0. When A=1, activate Y1. But there\'s a twist: Y0 should also pass through B.',
+    postSolveInsight: '🔓 You just built a simple decoder — the building block of address selection. The full 2-to-4 decoder in Chapter 4 extends this exact principle to 2-bit addresses.\n🔍 Diagnostic module 1: decoder circuit verified.',
+    hints: [
+      'Y0 should output B when A is 0, and 0 when A is 1. Y1 should output B when A is 1, and 0 when A is 0.',
+      'Think of A as a selector. NOT(A) "enables" Y0, while A "enables" Y1. Both outputs are gated by B.',
+      'Y0 = NOT(A) AND B. Y1 = A AND B. Three gates total: one NOT and two ANDs.'
+    ],
+    hintHighlights: ['A', 'B', 'Y0', 'Y1'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 3,
+    goodGates: 4,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'Y0', x: 600, y: 140 },
+      { label: 'Y1', x: 600, y: 260 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0, 0] },
+      { inputs: [0, 1], outputs: [1, 0] },
+      { inputs: [1, 0], outputs: [0, 0] },
+      { inputs: [1, 1], outputs: [0, 1] },
+    ],
+  },
+  {
+    id: 19,
+    title: 'Bit Comparator',
+    description: 'Compare two single bits for equality. Output EQ=1 when A and B have the same value.',
+    postSolveInsight: '🔓 XNOR — the equality gate! NOT(XOR(A,B)) checks if two bits match. Chain these together and you get the multi-bit comparator coming up in Chapter 4.\n🔍 Diagnostic module 2: comparator circuit verified.',
+    hints: [
+      'The output should be 1 when both inputs are the same (both 0 or both 1).',
+      'XOR outputs 1 when inputs differ. You want the OPPOSITE of that.',
+      'EQ = NOT(XOR(A, B)). Two gates: XOR then NOT.'
+    ],
+    hintHighlights: ['A', 'B', 'EQ'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 2,
+    goodGates: 3,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'EQ', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [1] },
+      { inputs: [0, 1], outputs: [0] },
+      { inputs: [1, 0], outputs: [0] },
+      { inputs: [1, 1], outputs: [1] },
+    ],
+  },
+  {
+    id: 20,
+    title: 'Data Selector',
+    description: 'Route one of two data lines to the output based on a select signal. When S=0, output A. When S=1, output B.',
+    postSolveInsight: '🔓 This is a 2-to-1 multiplexer — the fundamental data routing circuit. In Chapter 4, you\'ll build a wider version that selects between entire multi-bit numbers.\n🔍 Diagnostic module 3: selector circuit verified. All systems go!',
+    hints: [
+      'When S=0, the output should equal A. When S=1, the output should equal B. S acts as a switch.',
+      'Create two "paths": one gates A with NOT(S), the other gates B with S. Then combine.',
+      'OUT = OR(AND(A, NOT(S)), AND(B, S)). Four gates: one NOT, two ANDs, one OR.'
+    ],
+    hintHighlights: ['A', 'B', 'S', 'OUT'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 4,
+    goodGates: 5,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'S', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 600, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 0], outputs: [0] },
+      { inputs: [0, 1, 1], outputs: [1] },
+      { inputs: [1, 0, 0], outputs: [1] },
+      { inputs: [1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 0], outputs: [1] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+  },
+
+  // ── Chapter 4: Advanced Systems (Warp Drive) ──
+  {
+    id: 21,
     title: '2-to-4 Decoder',
     description: 'Route a 2-bit address to exactly one of four output channels. Only the selected channel fires.',
     postSolveInsight: '🔓 Decoders convert binary addresses into one-hot signals. Every memory chip uses them to select which storage cell to read.\n🚀 Warp channel routing initialized.',
@@ -658,7 +765,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 19,
+    id: 22,
     title: 'Equality Comparator',
     description: 'Compare two 2-bit numbers. Output 1 if they\'re equal, 0 if they\'re different.',
     postSolveInsight: '🔓 Equality comparison is the backbone of conditional logic — every "if (x == y)" in code compiles down to circuits like this one.\n🚀 Sensor calibration comparator online.',
@@ -700,7 +807,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 20,
+    id: 23,
     title: 'Greater-Than Comparator',
     description: 'Compare two 2-bit numbers A and B. Output GT=1 when A is strictly greater than B.',
     postSolveInsight: '🔓 Magnitude comparators chain bit-by-bit from most significant to least. CPUs use cascaded comparators for sorting and branching.\n🚀 Power level comparator calibrated.',
@@ -742,7 +849,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 21,
+    id: 24,
     title: '2-Bit Multiplexer',
     description: 'Select between two 2-bit numbers. When SEL=0, output A. When SEL=1, output B.',
     postSolveInsight: '🔓 Wide multiplexers route entire data buses based on a control signal. This is how CPUs choose between register values, memory paths, and ALU results.\n🚀 Warp field data bus selector active.',
@@ -804,7 +911,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 22,
+    id: 25,
     title: '2-Bit Ripple Adder',
     description: 'The ultimate challenge! Add two 2-bit numbers (A1:A0 + B1:B0) and produce the 3-bit result (Cout:S1:S0).',
     postSolveInsight: '🔓 You just built a 2-bit ripple carry adder — chain four of these together and you have an 8-bit adder, the arithmetic heart of early CPUs like the Intel 8080.\n🚀 Warp drive arithmetic unit operational! The engines hum to life. Course plotted for home. Engage.',
@@ -851,7 +958,7 @@ const LEVELS = [
 
   // ── Chapter 5: Shield Systems (Defense Grid) ──
   {
-    id: 23,
+    id: 26,
     title: 'Error Detector',
     description: 'Detect transmission errors in shield data. Output 1 when an odd number of input bits are high — the signature of a corrupted signal.',
     postSolveInsight: '🔓 Parity checking is the oldest error detection trick in computing. Every byte transmitted over USB, Ethernet, and RAM includes parity bits built from circuits exactly like this one.\n🛡️ Shield data integrity monitor online.',
@@ -883,7 +990,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 24,
+    id: 27,
     title: 'Shield Integrity Check',
     description: 'Validate 4-bit shield integrity codes. Output 1 when an even number of bits are high (including zero) — confirming the shields hold.',
     postSolveInsight: '🔓 Even parity is used in RAID storage, ECC memory, and TCP checksums. Your computer is running millions of these checks per second right now.\n🛡️ Shield integrity validator operational.',
@@ -924,7 +1031,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 25,
+    id: 28,
     title: 'Threat Prioritizer',
     description: 'Multiple threats detected! Encode the highest-priority active sensor (I3=highest) as a binary index (Y1:Y0) and flag if any threat exists (V).',
     postSolveInsight: '🔓 Priority encoders are the backbone of interrupt controllers in every CPU. When multiple devices scream for attention simultaneously, this circuit decides who gets served first.\n🛡️ Threat prioritization matrix active.',
@@ -968,7 +1075,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 26,
+    id: 29,
     title: 'Damage Calculator',
     description: 'Calculate shield damage with borrow propagation. Build a full subtractor: compute A minus B minus BorrowIn, producing the Difference and BorrowOut.',
     postSolveInsight: '🔓 Full subtractors are the mirror image of full adders. Chain them together and you get multi-bit subtraction — the basis of every comparison and negative number operation in a CPU.\n🛡️ Shield damage assessment module online.',
@@ -1002,7 +1109,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 27,
+    id: 30,
     title: 'Shield Router',
     description: 'The ultimate defense puzzle! Route shield power to one of four hull sectors. When SEL selects a sector, that output gets the data signal — all others stay off.',
     postSolveInsight: '🔓 Demultiplexers are the inverse of multiplexers — one signal in, many possible destinations. Memory chips use them to route write data to the selected address. Your RAM is full of these.\n🛡️ Shield power routing grid operational! All sectors protected. The ship is battle-ready.',
@@ -1040,7 +1147,7 @@ const LEVELS = [
 
   // ── Chapter 6: Universal Gates ──
   {
-    id: 28,
+    id: 31,
     title: 'Meet NAND',
     description: 'NAND outputs 0 only when BOTH inputs are 1 — the opposite of AND. It\'s the most important gate in computing.',
     postSolveInsight: '🔓 NAND is called a "universal gate" because you can build ANY other gate using only NAND gates. Every modern CPU is ultimately made of NANDs.\n⚛️ Engine core logic unit #1 responding.',
@@ -1068,7 +1175,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 29,
+    id: 32,
     title: 'Meet NOR',
     description: 'NOR outputs 1 only when BOTH inputs are 0 — the opposite of OR. Another universal gate!',
     postSolveInsight: '🔓 NOR is also universal — the Apollo Guidance Computer was built entirely from NOR gates. It navigated humans to the moon!\n⚛️ Engine core logic unit #2 online.',
@@ -1096,7 +1203,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 30,
+    id: 33,
     title: 'NOT from NAND',
     description: 'Build a NOT gate using ONLY NAND gates. Hint: what happens when you feed the same signal to both NAND inputs?',
     postSolveInsight: '🔓 NAND with both inputs tied together = NOT. This is the first step to proving NAND universality: NAND(A,A) = NOT(A).\n⚛️ Engine inverter circuits rebuilt from universal components.',
@@ -1121,7 +1228,7 @@ const LEVELS = [
     ],
   },
   {
-    id: 31,
+    id: 34,
     title: 'AND from NAND',
     description: 'Build an AND gate using ONLY NAND gates. This proves NAND can reproduce basic logic!',
     postSolveInsight: '🔓 NAND then NOT-via-NAND = AND. With NOT and AND proven, you can build OR (De Morgan\'s), XOR, and eventually any circuit — all from NAND alone. That\'s universality!\n⚛️ Engine core fully operational! Universal gate mastery achieved.',
@@ -1150,7 +1257,7 @@ const LEVELS = [
   },
   // ── Bonus: Dark Gate Level ──
   {
-    id: 32,
+    id: 35,
     title: 'The Dark Gate',
     description: 'A mysterious gate has appeared. Its logic is unknown. Experiment with inputs to discover its behavior, then use it to solve the puzzle.',
     postSolveInsight: '🔓 The Dark Gate was XOR all along! By experimenting with inputs and observing outputs, you reverse-engineered its truth table — just like real engineers debugging unknown ICs.\n🕵️ Mystery solved. Your analytical skills are razor-sharp.',
@@ -1181,7 +1288,7 @@ const LEVELS = [
 
   // ── Chapter 8: Discovery Lab (Day 33 T1) ──
   {
-    id: 33,
+    id: 36,
     title: 'Open Design: 3-Input Selector',
     description: 'Build any circuit that produces the given truth table. All gates available — no restrictions. Find YOUR solution.',
     postSolveInsight: '🔓 There are multiple valid solutions! Every designer finds a different path. That\'s the beauty of logic design.',
@@ -1214,7 +1321,7 @@ const LEVELS = [
     isDiscovery: true,
   },
   {
-    id: 34,
+    id: 37,
     title: 'Open Design: Dual Output Logic',
     description: 'Two outputs, full gate palette. Design freely — there\'s no single right answer.',
     postSolveInsight: '🔓 Multi-output circuits often share intermediate signals. Elegant solutions reuse gates across both outputs.',
@@ -1243,7 +1350,7 @@ const LEVELS = [
     isDiscovery: true,
   },
   {
-    id: 35,
+    id: 38,
     title: 'Guided Expansion',
     description: 'Start with a pre-placed AND gate. Expand the circuit to match the target truth table. Build around what\'s given.',
     postSolveInsight: '🔓 Real engineering often means extending existing circuits. The constraint of pre-placed components forces creative thinking.',
@@ -1276,7 +1383,7 @@ const LEVELS = [
 
   // ── Chapter 8: Multi-Phase Discovery (Day 33 T2) ──
   {
-    id: 36,
+    id: 39,
     title: 'Phase Shift: Evolving Requirements',
     description: 'Phase 1: Build a simple OR circuit. Once it works, Phase 2 will add new requirements on top.',
     postSolveInsight: '🔓 Multi-phase design mirrors real engineering — systems evolve and you must adapt without starting over.',
@@ -1329,7 +1436,7 @@ const LEVELS = [
     isDiscovery: true,
   },
   {
-    id: 37,
+    id: 40,
     title: 'Phase Shift: Growing Complexity',
     description: 'Phase 1: Simple AND gate. Phase 2 adds a second output. Don\'t tear down — build up!',
     postSolveInsight: '🔓 Incremental design is a core skill. Adding features to working systems without breaking them is what separates beginners from engineers.',

@@ -1,0 +1,78 @@
+{
+  "day": 36,
+  "title": "Difficulty Bridge Levels (Chapter 3.5)",
+  "phase": "Phase 3 — Day 1",
+  "summary": "Add 3 bridge levels between Chapter 3 and Chapter 4 to smooth the difficulty cliff identified in expert review (5/10 replayability, difficulty cliff Ch3→Ch4). New levels: 2-Input Decoder, Bit Comparator, Data Selector. Add new Chapter 3.5 with narrative. Update CHAPTERS array, level numbering, and ensure progress save/load compatibility.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add 3 new bridge levels after current Level 17 (Full Adder). Level 17.5a: '2-Input Decoder' (NOT+AND, 3 gates optimal, outputs Y0=NOT(A)·B, Y1=A·B). Level 17.5b: 'Bit Comparator' (XOR+NOT, 2 gates optimal, EQ=XNOR(A,B)). Level 17.5c: 'Data Selector' (MUX pattern, 4 gates optimal). Each with truth tables, hints (3 tiers), postSolveInsight.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Three new level objects exist in LEVELS array with correct truth tables",
+        "Each level has 3 hints, hintHighlights, postSolveInsight, and correct optimalGates/goodGates",
+        "Truth tables are mathematically correct for their described function",
+        "Levels use sequential IDs that don't clash with existing levels"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Renumber existing levels 18-37 to 21-40 (shift by +3) to make room for bridge levels 18, 19, 20. Update all CHAPTERS arrays to reference new level IDs.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Bridge levels get IDs 18, 19, 20",
+        "Former Level 18 (2-to-4 Decoder) becomes Level 21",
+        "Former Level 32 (Dark Gate) becomes Level 35",
+        "Former Level 37 (Phase Shift: Growing Complexity) becomes Level 40",
+        "All CHAPTERS level arrays updated with correct new IDs",
+        "No duplicate level IDs exist"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Add new Chapter 3.5 entry in CHAPTERS array between Chapter 3 and Chapter 4, containing levels [18, 19, 20]. Include narrative: 'Systems Check', storyIntro about running diagnostics before warp drive, storyComplete, gatesMastered, color, and realWorld fact.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "New chapter appears in CHAPTERS array between Chapter 3 and Chapter 4",
+        "Chapter has id, title, levels: [18, 19, 20], narrative, storyIntro, storyComplete",
+        "Chapter has color, realWorld object with title/fact/device/icon",
+        "Chapter has gatesMastered array"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Ensure progress save/load handles the new level IDs without breaking existing saves. Verify that isLevelUnlocked() chain works correctly across the chapter boundary (Level 17 completion unlocks Level 18).",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Completing Level 17 unlocks Level 18 (first bridge level)",
+        "Completing Level 20 unlocks Level 21 (first Chapter 4 level)",
+        "Existing progress data (old level IDs) doesn't crash the game",
+        "Progress bar total reflects new level count"
+      ],
+      "depends_on": ["T2", "T3"]
+    },
+    {
+      "id": "T5",
+      "description": "Update bridge level between Chapters 2→3 (currently level 12) postSolveInsight to reference the new chapter structure. Ensure the level-select rendering correctly shows the new chapter.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Level select shows Chapter 3.5 between Chapter 3 and Chapter 4",
+        "All chapters render with correct colors and level counts"
+      ],
+      "depends_on": ["T3"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "All truth tables are mathematically correct",
+    "Level numbering is sequential with no gaps or duplicates",
+    "Progress save/load works with new and old level IDs",
+    "Level select renders all chapters including new Chapter 3.5",
+    "Level unlocking works across chapter boundary (17→18→19→20→21)",
+    "Optimal gate counts are achievable for each bridge level"
+  ],
+  "rollback_criteria": "If any truth table is incorrect or level numbering breaks existing features, revert"
+}
