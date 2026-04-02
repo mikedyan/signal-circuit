@@ -1,0 +1,127 @@
+{
+  "day": 37,
+  "title": "Signal Flow Animation",
+  "summary": "Animate signals traveling along wires during simulation for a visceral 'electricity flowing' feel. Signals stagger by topological order — inputs pulse, then signals flow through gates to outputs. Signal dots travel along bezier wire paths with glow trails. Gates intensify glow as signals arrive. Quick Test mode skips all animation. Performance capped at 60fps with guard against excessive wire animations.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add _animPhase property (0-1 float) to Wire class representing signal travel progress. Add _animDelay (ms) for stagger timing based on topological depth.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Wire class has _animPhase and _animDelay properties initialized to 0",
+        "Properties reset on new simulation run"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "During animatePulse(), compute topological depth for each wire — wires from input nodes are depth 0, wires from gates fed by depth-0 wires are depth 1, etc. Stagger wire animation start time by depth so signals flow left-to-right through the circuit.",
+      "files_to_modify": ["js/simulation.js"],
+      "acceptance_criteria": [
+        "Wires animate in topological order — input-connected wires animate first",
+        "Each depth level starts ~150ms after the previous",
+        "Signal propagation is visually sequential through the circuit"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Render animated signal dot traveling along bezier wire path using getPointOnBezier helper (already exists as _bezierPoint). Signal dot color: green (#00ff66) for value 1, dim (#334488) for value 0, with glow trail effect (3-4 trailing dots with decreasing opacity).",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Green signal dot travels along active (value=1) wires during simulation",
+        "Dim dot travels along inactive (value=0) wires",
+        "3-4 trailing dots follow the main dot with decreasing opacity",
+        "Dot travels from source pin to destination pin along the bezier curve"
+      ],
+      "depends_on": ["T1", "T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Animate input node 'pulse' when its value is being read — brief expand-contract animation. The input node should briefly scale up then back to normal when the simulation row starts.",
+      "files_to_modify": ["js/gates.js"],
+      "acceptance_criteria": [
+        "Input nodes pulse (brief scale animation) when a simulation row begins",
+        "Pulse is visible — noticeable expand then contract over ~300ms",
+        "Does not interfere with normal input node rendering"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Animate output node 'receive' when signal arrives — brief flash + value update. The output node should flash bright when the signal dot reaches it.",
+      "files_to_modify": ["js/gates.js"],
+      "acceptance_criteria": [
+        "Output nodes flash when signal arrives at them",
+        "Flash is bright and visible (~200ms duration)",
+        "Value display updates at the same moment as the flash"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T6",
+      "description": "Gate glow should intensify as signal arrives at its inputs, then pulse when it evaluates. When a wire's signal dot reaches a gate input, the gate body should briefly brighten.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "Gates brighten when signal dots arrive at their input pins",
+        "Gate pulse is synchronized with the signal flow animation",
+        "Effect is visible but not overwhelming"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T7",
+      "description": "Skip signal flow animation when using Quick Test (instant mode stays instant). Only the normal RUN button triggers the staggered signal flow.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Quick Test (Shift+Enter) produces instant results with no signal flow animation",
+        "Normal RUN shows full signal flow animation",
+        "No animation artifacts left over after Quick Test"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T8",
+      "description": "Performance guard: cap animation at 60fps, skip signal flow rendering if more than 50 active wire animations. Add a simple counter check in the render path.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Signal flow animations do not drop below 60fps on reasonable hardware",
+        "If >50 wires are animating simultaneously, signal dots are skipped",
+        "Game remains responsive during complex circuit simulations"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T9",
+      "description": "Extend the animatePulse duration to accommodate the staggered signal flow. Currently 300ms — needs to be longer to allow visual flow through deep circuits. Scale duration based on circuit depth.",
+      "files_to_modify": ["js/simulation.js"],
+      "acceptance_criteria": [
+        "Animation duration scales with circuit depth (more gates = longer animation)",
+        "Minimum duration 400ms, maximum 1200ms",
+        "Animation feels natural — not too fast, not too slow"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T10",
+      "description": "Reset all wire animation state (_animPhase, _animDelay) between simulation rows and when simulation ends. Ensure clean state for next row evaluation.",
+      "files_to_modify": ["js/simulation.js", "js/wires.js"],
+      "acceptance_criteria": [
+        "Wire animation state resets cleanly between rows",
+        "No animation artifacts carry over from previous row",
+        "Signal flow starts fresh for each truth table row"
+      ],
+      "depends_on": ["T1"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Signal flow animation plays correctly on levels with varying circuit depth (Level 1 simple, Level 30 complex)",
+    "Quick Test still works instantly with no animation",
+    "Signal dots follow correct bezier paths",
+    "Animation doesn't cause performance issues on mobile",
+    "No animation artifacts after simulation ends",
+    "Multi-row truth tables animate each row independently"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

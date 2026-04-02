@@ -165,20 +165,32 @@ class CanvasRenderer {
       this._renderGhostOverlay(ctx);
     }
 
-    // T6: Gate-colored glow during simulation
+    // T6: Gate-colored glow during simulation (enhanced Day 37: intensify on signal arrival)
     const sim = this.gameState.simulation;
     if (sim && sim.animating) {
       for (const gate of this.gameState.gates) {
         if (gate.outputValues && gate.outputValues.some(v => v === 1)) {
-          const pulse = 0.2 + 0.15 * Math.sin(performance.now() / 200);
+          // Day 37 T6: Intensify glow when signal has just arrived
+          let pulse = 0.2 + 0.15 * Math.sin(performance.now() / 200);
+          let extraBlur = 0;
+          if (gate._signalArrived) {
+            const arrivalElapsed = performance.now() - gate._signalArrived;
+            if (arrivalElapsed < 400) {
+              const arrivalT = arrivalElapsed / 400;
+              pulse += 0.35 * (1 - arrivalT); // bright flash on arrival
+              extraBlur = 10 * (1 - arrivalT);
+            } else {
+              gate._signalArrived = null; // clear after animation
+            }
+          }
           // Use gate's type-specific color instead of uniform green
           const glowColor = gate.def.color || '#00ff64';
           const r = parseInt(glowColor.slice(1, 3), 16) || 0;
           const g = parseInt(glowColor.slice(3, 5), 16) || 255;
           const b = parseInt(glowColor.slice(5, 7), 16) || 100;
-          ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.8)`;
-          ctx.shadowBlur = 15;
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${pulse})`;
+          ctx.shadowColor = 'rgba(' + r + ', ' + g + ', ' + b + ', 0.8)';
+          ctx.shadowBlur = 15 + extraBlur;
+          ctx.fillStyle = 'rgba(' + r + ', ' + g + ', ' + b + ', ' + Math.min(pulse, 0.7) + ')';
           ctx.fillRect(gate.x - 4, gate.y - 4, gate.def.width + 8, gate.def.height + 8);
           ctx.shadowColor = 'transparent';
           ctx.shadowBlur = 0;

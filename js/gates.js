@@ -380,6 +380,53 @@ class IONode {
   render(ctx) {
     const { x, y, width, height, label, value, type } = this;
 
+    // Day 37 T4: Input node pulse animation when simulation reads its value
+    if (this._signalPulse) {
+      const elapsed = performance.now() - this._signalPulse;
+      const duration = 300;
+      if (elapsed < duration) {
+        const t = elapsed / duration;
+        const scale = 1 + 0.15 * Math.sin(t * Math.PI); // expand then contract
+        const cx = x + width / 2;
+        const cy = y + height / 2;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(scale, scale);
+        ctx.translate(-cx, -cy);
+        // Pulse glow ring
+        const pulseAlpha = 0.6 * (1 - t);
+        ctx.beginPath();
+        ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 255, 100, ' + pulseAlpha * 0.3 + ')';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0, 255, 100, ' + pulseAlpha + ')';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        this._signalPulse = null;
+      }
+    }
+
+    // Day 37 T5: Output node receive flash when signal arrives
+    if (this._receiveFlash) {
+      const elapsed = performance.now() - this._receiveFlash;
+      const duration = 200;
+      if (elapsed < duration) {
+        const alpha = 0.8 * (1 - elapsed / duration);
+        const cx = x + width / 2;
+        const cy = y + height / 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+        const flashGrad = ctx.createRadialGradient(cx, cy, 4, cx, cy, 32);
+        flashGrad.addColorStop(0, 'rgba(255, 200, 50, ' + alpha + ')');
+        flashGrad.addColorStop(1, 'rgba(255, 100, 0, 0)');
+        ctx.fillStyle = flashGrad;
+        ctx.fill();
+      } else {
+        this._receiveFlash = null;
+      }
+    }
+
     // LED glow for active outputs
     if (type === 'output' && value) {
       ctx.beginPath();
@@ -410,6 +457,14 @@ class IONode {
     ctx.textBaseline = 'bottom';
     ctx.fillStyle = value ? '#ff4444' : '#4466aa';
     ctx.fillText(value.toString(), x + width / 2, y + height - 4);
+
+    // Day 37 T4: Restore transform if pulse was active
+    if (this._signalPulse) {
+      const elapsed = performance.now() - this._signalPulse;
+      if (elapsed < 300) {
+        ctx.restore();
+      }
+    }
 
     const pin = this.getPin();
     const ioPinRadius = 7;

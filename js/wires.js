@@ -71,6 +71,18 @@ class Wire {
     // T4: Wire drawing progressive reveal
     this.birthTime = performance.now();
     this.revealDuration = 300; // ms
+    // Day 37: Signal flow animation
+    this._animPhase = 0;    // 0-1 float: signal travel progress along wire
+    this._animDelay = 0;    // ms: stagger delay based on topological depth
+    this._animActive = false; // true when this wire is currently animating signal flow
+    this._animDepth = 0;    // topological depth (0 = from input node)
+  }
+
+  // Day 37: Reset signal flow animation state
+  resetSignalFlowAnim() {
+    this._animPhase = 0;
+    this._animDelay = 0;
+    this._animActive = false;
   }
 }
 
@@ -228,6 +240,22 @@ class WireManager {
     this.cancelDrawing();
     wireColorIndex = 0;
     _resetSemanticColors();
+  }
+
+  // Day 37 T10: Reset all wire signal flow animation state
+  resetAllSignalFlow() {
+    for (const wire of this.wires) {
+      wire.resetSignalFlowAnim();
+    }
+  }
+
+  // Day 37 T8: Count currently animating wires (performance guard)
+  getActiveFlowCount() {
+    let count = 0;
+    for (const wire of this.wires) {
+      if (wire._animActive && wire._animPhase > 0 && wire._animPhase < 1) count++;
+    }
+    return count;
   }
 
   // Bezier control points for a wire from (sx,sy) to (ex,ey)
@@ -407,31 +435,52 @@ class WireManager {
         if (this.gameState) this.gameState.markDirty();
       }
 
-      // Animated pulse dots during simulation (multiple trailing dots)
-      if (sim.animating && isActive && sim.animationProgress < 1) {
+      // Day 37: Staggered signal flow animation (replaces old global pulse)
+      if (sim.animating && wire._animActive && wire._animPhase > 0 && wire._animPhase <= 1) {
+        const t = wire._animPhase;
+        const dotColor = isActive ? 'rgba(0, 255, 100, 0.95)' : 'rgba(80, 100, 180, 0.6)';
+        const glowColor = isActive ? 'rgba(0, 255, 100, 0.3)' : 'rgba(80, 100, 180, 0.15)';
+        const trR = isActive ? 0 : 60;
+        const trG = isActive ? 220 : 80;
+        const trB = isActive ? 80 : 140;
+
+        // Main signal dot
+        const pulsePos = this._bezierPoint(t, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
+        ctx.beginPath();
+        ctx.arc(pulsePos.x, pulsePos.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = dotColor;
+        ctx.fill();
+        // Outer glow
+        ctx.beginPath();
+        ctx.arc(pulsePos.x, pulsePos.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = glowColor;
+        ctx.fill();
+        // Trailing dots (4 with decreasing opacity)
+        for (let trail = 1; trail <= 4; trail++) {
+          const tt = Math.max(0, t - trail * 0.07);
+          const tp = this._bezierPoint(tt, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
+          const alpha = (0.7 - trail * 0.15) * (isActive ? 1 : 0.6);
+          const size = 5 - trail * 0.8;
+          if (alpha > 0.02 && size > 0.5) {
+            ctx.beginPath();
+            ctx.arc(tp.x, tp.y, size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(' + trR + ', ' + trG + ', ' + trB + ', ' + alpha + ')';
+            ctx.fill();
+          }
+        }
+      }
+      // Legacy fallback: old-style global pulse if staggered not active
+      else if (sim.animating && isActive && sim.animationProgress < 1 && !wire._animActive) {
         const t = sim.animationProgress;
-        // Main pulse
         const pulsePos = this._bezierPoint(t, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
         ctx.beginPath();
         ctx.arc(pulsePos.x, pulsePos.y, 7, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 100, 0.95)';
         ctx.fill();
-        // Outer glow
         ctx.beginPath();
         ctx.arc(pulsePos.x, pulsePos.y, 13, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 100, 0.25)';
         ctx.fill();
-        // Trailing dots
-        for (let trail = 1; trail <= 3; trail++) {
-          const tt = Math.max(0, t - trail * 0.08);
-          const tp = this._bezierPoint(tt, sx, sy, cp.cp1x, cp.cp1y, cp.cp2x, cp.cp2y, ex, ey);
-          const alpha = 0.6 - trail * 0.15;
-          const size = 5 - trail;
-          ctx.beginPath();
-          ctx.arc(tp.x, tp.y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 200, 80, ${alpha})`;
-          ctx.fill();
-        }
       }
     }
 

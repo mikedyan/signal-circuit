@@ -1611,6 +1611,12 @@ class GameState {
         return;
       }
 
+      // Day 37: Clear signal flow animation state before starting
+      this.wireManager.resetAllSignalFlow();
+      for (const gate of this.gates) { gate._signalArrived = null; }
+      for (const node of this.inputNodes) { node._signalPulse = null; }
+      for (const node of this.outputNodes) { node._receiveFlash = null; }
+
       // RUN tension: brief charging animation
       await this._runTensionAnimation();
 
@@ -1739,6 +1745,12 @@ class GameState {
 
     this.audio.playButtonClick();
     this.ui.hideStarDisplay();
+
+    // Day 37 T7: Ensure no signal flow animation artifacts from previous runs
+    this.wireManager.resetAllSignalFlow();
+    for (const gate of this.gates) { gate._signalArrived = null; }
+    for (const node of this.inputNodes) { node._signalPulse = null; }
+    for (const node of this.outputNodes) { node._receiveFlash = null; }
 
     if (this.isSandboxMode) {
       this.runSandboxTest();

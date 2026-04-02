@@ -1,5 +1,12 @@
 # Lessons Learned
 
+## Day 37 — Signal Flow Animation
+- **Per-wire animation is cleaner than global progress**: Using `_animPhase` (0-1) on each wire with topological depth-based delays creates natural signal flow without complex global timing. Each wire independently tracks its own progress.
+- **Topological depth assignment via BFS**: Compute wire depths from input nodes (depth 0) through gates. Each wire's delay = depth * stagger_ms. This automatically creates left-to-right flow for any circuit topology.
+- **Always reset custom animation properties before BOTH test modes**: Quick Test and normal RUN both need to clear `_signalPulse`, `_receiveFlash`, `_signalArrived` to prevent ghost animations from previous runs.
+- **ctx.save()/ctx.restore() for scale transforms**: IONode pulse animation uses canvas scale — must be paired carefully and restored before pin rendering to avoid offset bugs.
+- **Performance guard pattern**: Simple wire count check (>50) to skip staggered animation on complex circuits prevents frame drops without needing FPS measurement.
+
 ## Day 25
 - **Duplicate method definitions are silent bugs in JS**: The Builder concatenated new methods below existing ones without removing originals. JavaScript overwrites the first with the last definition, so it _works_ but accumulates dead code. QA should check for duplicate method/function names after each build.
 - **Semantic wire colors dramatically improve readability**: Assigning wire colors by source pin (instead of incrementing globally) makes complex circuits immediately more parseable. Worth doing early in any circuit builder.
