@@ -1,4 +1,10 @@
 # Lessons Learned
+## Day 38 — Interactive Tutorial
+- **Service worker cache invalidation**: Always bump SW cache version AND add new files to ASSETS list when adding JS files. Cache-first strategy means new files are invisible until the SW updates.
+- **DOM overlay placement**: For `position: absolute` overlays, ensure the overlay element is a child of the `position: relative` container. Placing it as a sibling breaks positioning.
+- **Tutorial step advancement via hooks**: Using targeted `onGatePlaced()`, `onWireStarted()`, `onWireCompleted()` hooks keeps the tutorial decoupled from core game logic. No changes to the wire/gate core classes needed.
+- **Continuous render flag for animations**: Tutorial pulsing highlights need the render loop to keep running. Add the tutorial active check to the render loop condition alongside `isAnimating` and `hasActiveParticles`.
+
 
 ## Day 37 — Signal Flow Animation
 - **Per-wire animation is cleaner than global progress**: Using `_animPhase` (0-1) on each wire with topological depth-based delays creates natural signal flow without complex global timing. Each wire independently tracks its own progress.

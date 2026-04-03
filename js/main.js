@@ -182,6 +182,8 @@ class GameState {
     this._updateLastVisit();
     // Day 35 T2: AbortController for event listener cleanup
     this._abortController = new AbortController();
+    // Day 38: Interactive tutorial
+    this.tutorial = null;
   }
 
   // ── Hint Token System (Day 31) ──
@@ -826,6 +828,8 @@ class GameState {
     this.stopTimer();
     this.trackPlaytimeEnd();
     this.audio.stopAmbient();
+    // Day 38: Clean up tutorial on level exit
+    if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
     this.ui.renderLevelSelect();
     this.ui.updateProgressBar(this.progress);
     this.ui.showScreen('level-select');
@@ -852,6 +856,8 @@ class GameState {
     this.currentScreen = 'challenge-config';
     this.stopTimer();
     this.audio.stopAmbient();
+    // Day 38: Clean up tutorial on level exit
+    if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
     this.ui.showScreen('challenge-config');
     // Trigger initial leaderboard render
     const ni = parseInt(document.getElementById('input-count-slider').value);
@@ -864,6 +870,8 @@ class GameState {
     this.currentScreen = 'sandbox-config';
     this.stopTimer();
     this.audio.stopAmbient();
+    // Day 38: Clean up tutorial on level exit
+    if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
     this.ui.showScreen('sandbox-config');
   }
 
@@ -1108,6 +1116,8 @@ class GameState {
     if (this.ui) this.ui.updateUndoTimeline(); // Day 35 T6
     this.markDirty();
     this._autoSave();
+    // Day 38: Notify tutorial of gate placement
+    if (this.tutorial && this.tutorial.isActive()) this.tutorial.onGatePlaced();
     return gate;
   }
 
@@ -1340,7 +1350,11 @@ class GameState {
     this.ui.updateHintButton();
 
     // Show distributed onboarding tooltips for levels 1-4
-    if (level.id >= 1 && level.id <= 4) {
+    // Day 38: Level 1 uses interactive tutorial instead of tooltip
+    if (level.id === 1 && InteractiveTutorial.shouldShow(this)) {
+      this.tutorial = new InteractiveTutorial(this);
+      this.tutorial.start();
+    } else if (level.id >= 1 && level.id <= 4) {
       this.ui.showOnboarding(level.id);
     }
 
@@ -1597,6 +1611,8 @@ class GameState {
   }
 
   async runSimulation() {
+    // Day 38: Tutorial RUN notification
+    if (this.tutorial && this.tutorial.isActive()) this.tutorial.onRunPressed();
     if (this.isAnimating) return;
     this.isAnimating = true;
 
@@ -1967,6 +1983,7 @@ class GameState {
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
+            this._tutorialWireCompleted(wire);
             this._startTimerIfPending(); // #96
             this.audio.playWireConnect(pin.x);
             this.haptic([15, 50, 15]); // #98: double pulse on wire connect
@@ -1982,6 +1999,7 @@ class GameState {
         } else {
           this._startTimerIfPending(); // #96
           this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+          this._tutorialWireStarted(pin.gateId, pin.pinIndex, pin.pinType);
           this.markDirty();
         }
         this.wireManager.selectedWire = null;
@@ -2161,6 +2179,7 @@ class GameState {
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
+            this._tutorialWireCompleted(wire);
             this._startTimerIfPending(); // #96
             this.audio.playWireConnect(pin.x);
             this.haptic([15, 50, 15]); // #98
@@ -2186,6 +2205,7 @@ class GameState {
         } else {
           this._startTimerIfPending(); // #96
           this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+          this._tutorialWireStarted(pin.gateId, pin.pinIndex, pin.pinType);
           this.markDirty();
         }
         this.wireManager.selectedWire = null;
@@ -2550,6 +2570,18 @@ class GameState {
   }
 
   // ── T7: Auto-Save Circuit State ──
+  // Day 38: Tutorial wire event helpers
+  _tutorialWireStarted(gateId, pinIndex, pinType) {
+    if (this.tutorial && this.tutorial.isActive()) {
+      this.tutorial.onWireStarted(gateId, pinIndex, pinType);
+    }
+  }
+  _tutorialWireCompleted(wire) {
+    if (this.tutorial && this.tutorial.isActive() && wire) {
+      this.tutorial.onWireCompleted(wire.fromGateId, wire.toGateId, wire.toPinIndex);
+    }
+  }
+
   _autoSave() {
     if (!this.currentLevel || this.currentLevel.isSandbox) return;
     const levelId = this.currentLevel.id;
@@ -2931,11 +2963,13 @@ class GameState {
         if (this.wireManager.drawing) {
           const wire = this.wireManager.finishDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
           if (wire) {
+            this._tutorialWireCompleted(wire);
             this.audio.playWireConnect();
             this.undoManager.push({ type: 'addWire', wireId: wire.id, fromGateId: wire.fromGateId, fromPinIndex: wire.fromPinIndex, toGateId: wire.toGateId, toPinIndex: wire.toPinIndex });
           }
         } else {
           this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+          this._tutorialWireStarted(pin.gateId, pin.pinIndex, pin.pinType);
         }
       } else {
         const gate = this.renderer ? this.renderer.findGateAt(pos.x, pos.y) : null;
@@ -3082,7 +3116,7 @@ class GameState {
         const sim = this.simulation;
         const hasActiveParticles = this.renderer.sparkParticles.length > 0 || this.renderer.ripples.length > 0;
         if (this.needsRender || (sim && sim.animating) || 
-            hasActiveParticles ||
+            hasActiveParticles || (this.tutorial && this.tutorial.isActive()) ||
             this.wireManager.drawing) {
           this.renderer.render();
           this.needsRender = false;
@@ -3110,6 +3144,8 @@ class GameState {
     if (this.blitzTimer) clearInterval(this.blitzTimer);
     if (this.speedrunTimer) clearInterval(this.speedrunTimer);
     this.audio.stopAmbient();
+    // Day 38: Clean up tutorial on level exit
+    if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
   }
 }
 

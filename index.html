@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1775142889">
+  <link rel="stylesheet" href="css/style.css?v=1775229430">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -270,8 +270,15 @@
           <span id="tooltip-text">Click a pin to start drawing a wire</span>
           <button id="tooltip-dismiss">Got it!</button>
         </div>
+        <!-- Day 38: Interactive Tutorial Overlay -->
+        <div id="tutorial-overlay" style="display:none;">
+          <div id="tutorial-panel">
+            <span id="tutorial-step-indicator">Step 1 of 8</span>
+            <p id="tutorial-text">Drag the AND gate onto the board</p>
+            <button id="tutorial-skip-btn">Skip Tutorial</button>
+          </div>
+        </div>
       </div>
-
       <!-- Day 33 T9: Accessible Wire Panel -->
       <div id="accessible-wire-panel" style="display:none;">
         <div style="font-size:11px;color:#888;margin-bottom:4px;">🔌 Wire Connection</div>
@@ -495,14 +502,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1775142889"></script>
-  <script src="js/wires.js?v=1775142889"></script>
-  <script src="js/simulation.js?v=1775142889"></script>
-  <script src="js/levels.js?v=1775142889"></script>
-  <script src="js/audio.js?v=1775142889"></script>
-  <script src="js/achievements.js?v=1775142889"></script>
-  <script src="js/canvas.js?v=1775142889"></script>
-  <script src="js/ui.js?v=1775142889"></script>
-  <script src="js/main.js?v=1775142889"></script>
+  <script src="js/gates.js?v=1775229430"></script>
+  <script src="js/wires.js?v=1775229430"></script>
+  <script src="js/simulation.js?v=1775229430"></script>
+  <script src="js/levels.js?v=1775229430"></script>
+  <script src="js/audio.js?v=1775229430"></script>
+  <script src="js/achievements.js?v=1775229430"></script>
+  <script src="js/canvas.js?v=1775229430"></script>
+  <script src="js/ui.js?v=1775229430"></script>
+  <script src="js/tutorial.js?v=1775229430"></script>
+  <script src="js/main.js?v=1775229430"></script>
 </body>
 </html>

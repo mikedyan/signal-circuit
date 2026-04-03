@@ -1,0 +1,136 @@
+{
+  "day": 38,
+  "title": "Interactive Wire-Drawing Tutorial",
+  "summary": "Replace Level 1's passive tooltip with an interactive step-by-step guided tutorial. A semi-transparent overlay dims everything except the current target, pulsing arrows guide the player through placing their first gate and drawing wires, and each step advances only on the correct action. Skip option always available. Tutorial tracks completion in localStorage and never shows again.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Create InteractiveTutorial class in a new js/tutorial.js file. Manages step state (0-6), overlay rendering, pulse animations, and step advancement. Class should be instantiable from GameState with a reference to the game for action interception.",
+      "files_to_modify": ["js/tutorial.js"],
+      "acceptance_criteria": [
+        "InteractiveTutorial class exists with constructor(gameState)",
+        "Has start(), advance(), skip(), isActive(), getCurrentStep(), destroy() methods",
+        "Tracks current step index (0-6) and active state",
+        "Stores completion in localStorage key 'signal-circuit-tutorial-done'"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add tutorial overlay DOM: a full-screen semi-transparent overlay with a cutout spotlight, instruction text panel at the bottom, pulsing arrow indicator, and Skip Tutorial button. Overlay sits inside canvas-container with pointer-events:none except for the skip button.",
+      "files_to_modify": ["index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "DOM element #tutorial-overlay exists with semi-transparent background",
+        "Instruction text panel at bottom shows step-specific text",
+        "Skip Tutorial button is clickable at all times during tutorial",
+        "Overlay is hidden by default (display:none)"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Implement Step 1: Highlight the AND gate in the toolbox with a pulsing border. Instruction: 'Drag this gate onto the board'. Step advances when a gate is placed on the canvas (hook into addGate).",
+      "files_to_modify": ["js/tutorial.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Toolbox AND gate has pulsing yellow/gold border during step 1",
+        "Instruction text reads 'Drag the AND gate onto the board'",
+        "Step advances to step 2 when addGate is called",
+        "Pulsing stops after advancing"
+      ],
+      "depends_on": ["T1", "T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Implement Steps 2-4: Wire drawing guidance. Step 2: Highlight Input A's output pin with pulsing circle + arrow, text 'Click this pin to start a wire'. Step 3: Highlight the AND gate's first input pin, text 'Click here to connect'. Step 4: Same for Input B to AND gate's second input pin. Steps advance on successful wire start/completion via wireManager hooks.",
+      "files_to_modify": ["js/tutorial.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Step 2: Input A node's output pin pulses with gold highlight",
+        "Step 3: AND gate's input pin 0 pulses with gold highlight",
+        "After first wire completes, step advances to wire Input B",
+        "Step 4 guides wiring Input B to AND gate's input pin 1",
+        "After second wire completes, step advances"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T5",
+      "description": "Implement Step 5: Wire the AND gate output to the OUT node. Highlight AND gate's output pin, then OUT node's input pin. Step advances on wire completion.",
+      "files_to_modify": ["js/tutorial.js"],
+      "acceptance_criteria": [
+        "Step 5a: AND gate output pin pulses",
+        "Step 5b: OUT node input pin pulses after wire started",
+        "Step advances when output wire is completed"
+      ],
+      "depends_on": ["T4"]
+    },
+    {
+      "id": "T6",
+      "description": "Implement Step 6: Highlight the RUN button with pulsing glow. Text: 'Press RUN to test your circuit!' Step completes and tutorial ends when RUN is clicked. Mark tutorial as done in localStorage.",
+      "files_to_modify": ["js/tutorial.js", "js/main.js"],
+      "acceptance_criteria": [
+        "RUN button has pulsing gold border/glow during step 6",
+        "Instruction text reads 'Press RUN to test your circuit!'",
+        "Tutorial overlay disappears when RUN is pressed",
+        "localStorage 'signal-circuit-tutorial-done' set to 'true'"
+      ],
+      "depends_on": ["T5"]
+    },
+    {
+      "id": "T7",
+      "description": "Wire tutorial into Level 1 loading. When level 1 loads and tutorial not yet completed (localStorage check), start tutorial instead of the old tooltip. Suppress old tooltip for level 1 when tutorial is active.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Loading level 1 for first time triggers interactive tutorial",
+        "Old tooltip onboarding is suppressed during active tutorial",
+        "Tutorial does NOT show if already completed (localStorage)",
+        "Tutorial does NOT show for levels other than 1"
+      ],
+      "depends_on": ["T6"]
+    },
+    {
+      "id": "T8",
+      "description": "Add tutorial.js script tag to index.html. Ensure load order: after gates.js, before main.js.",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "tutorial.js loads without errors",
+        "InteractiveTutorial is available when main.js initializes"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T9",
+      "description": "Canvas rendering integration: render tutorial highlights (pulsing circles on pins, spotlight effect) in the canvas render loop. Add a renderTutorialHighlights() method to the renderer that draws pulsing gold circles at the current step's target position.",
+      "files_to_modify": ["js/canvas.js", "js/tutorial.js"],
+      "acceptance_criteria": [
+        "Pin highlights are drawn as gold pulsing circles on the canvas",
+        "Highlights match pin positions exactly",
+        "Highlights only appear when tutorial is active",
+        "Performance: no extra draw calls when tutorial is inactive"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T10",
+      "description": "Skip button and early exit: clicking 'Skip Tutorial' at any point dismisses the tutorial, marks it as done in localStorage, removes all highlights, and restores normal gameplay. Also handle edge case: if player somehow completes level 1 without tutorial (e.g., returning player), don't show tutorial.",
+      "files_to_modify": ["js/tutorial.js"],
+      "acceptance_criteria": [
+        "Skip button works at every step",
+        "All highlights and overlays are removed on skip",
+        "Tutorial marked complete on skip",
+        "Returning players who already completed level 1 don't see tutorial"
+      ],
+      "depends_on": ["T7"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Tutorial shows only on first visit to Level 1",
+    "Each step advances only on the correct action",
+    "Skip works at every step",
+    "Tutorial never appears again after completion or skip",
+    "No interference with normal gameplay after tutorial ends",
+    "Mobile touch interaction works with tutorial",
+    "Performance: no frame drops during tutorial animations"
+  ],
+  "rollback_criteria": "If tutorial breaks Level 1 normal gameplay, revert"
+}

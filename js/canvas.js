@@ -384,6 +384,12 @@ class CanvasRenderer {
       ctx.stroke();
     }
 
+
+    // Day 38: Tutorial pin highlights (world-space)
+    if (this.gameState.tutorial && this.gameState.tutorial.isActive()) {
+      this.gameState.tutorial.renderHighlights(ctx);
+    }
+
     // End world-space rendering
     ctx.restore();
 
