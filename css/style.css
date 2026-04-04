@@ -468,6 +468,173 @@ body {
   100% { transform: translateX(0); background: rgba(255, 0, 0, 0.15); }
 }
 
+
+/* ── Day 39: Truth Table Enhancements ── */
+
+/* T1: Compact mode toggle bar */
+#tt-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+#tt-controls button {
+  background: transparent;
+  border: 1px solid #555;
+  color: #aaa;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+#tt-controls button:hover {
+  border-color: #0f0;
+  color: #0f0;
+}
+
+#tt-controls button.tt-active {
+  border-color: #0f0;
+  color: #0f0;
+  background: rgba(0, 255, 0, 0.08);
+}
+
+/* T2: Row hover highlighting */
+#truth-table tbody tr:hover {
+  background: rgba(0, 255, 0, 0.08) !important;
+  cursor: pointer;
+}
+
+#truth-table tbody tr.tt-row-highlight {
+  background: rgba(0, 255, 0, 0.15) !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 0, 0.3);
+}
+
+/* T3: Column sort indicators */
+#truth-table th.tt-sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 14px;
+}
+
+#truth-table th.tt-sortable:hover {
+  color: #0f0;
+}
+
+.tt-sort-arrow {
+  font-size: 8px;
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0f0;
+  opacity: 0.8;
+}
+
+/* T5: Decimal index column */
+#truth-table .tt-decimal-col {
+  color: #555;
+  font-size: 10px;
+  font-weight: normal;
+  padding: 4px 3px;
+  min-width: 20px;
+  border-right: 2px solid #444;
+}
+
+#truth-table th.tt-decimal-col {
+  color: #666;
+  font-size: 9px;
+}
+
+/* T6: Color-coded truth table cells */
+#truth-table td.tt-val-0 {
+  color: #4466aa;
+}
+
+#truth-table td.tt-val-1 {
+  color: #00ff00;
+}
+
+/* T7: Focus Failed Rows button */
+#focus-failed-btn {
+  background: rgba(255, 80, 0, 0.12);
+  border: 1px solid rgba(255, 80, 0, 0.4);
+  color: #f80;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 6px;
+  transition: all 0.2s;
+}
+
+#focus-failed-btn:hover {
+  background: rgba(255, 80, 0, 0.2);
+  border-color: #f80;
+}
+
+@keyframes focusFailPulse {
+  0% { background: rgba(255, 0, 0, 0.4); }
+  50% { background: rgba(255, 0, 0, 0.15); }
+  100% { background: rgba(255, 0, 0, 0.4); }
+}
+
+#truth-table tr.tt-focus-pulse {
+  animation: focusFailPulse 0.6s ease-in-out 2;
+}
+
+/* T8: Sticky truth table headers */
+#truth-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #333;
+}
+
+/* T10: Tapped row feedback on mobile */
+#truth-table tbody tr.tt-tapped {
+  background: rgba(0, 255, 0, 0.25) !important;
+  transition: background 0.3s;
+}
+
+/* Light mode overrides for Day 39 features */
+body.light-mode #tt-controls button {
+  border-color: #bbb;
+  color: #666;
+}
+
+body.light-mode #tt-controls button:hover,
+body.light-mode #tt-controls button.tt-active {
+  border-color: #0a0;
+  color: #0a0;
+}
+
+body.light-mode #truth-table td.tt-val-0 {
+  color: #3355aa;
+}
+
+body.light-mode #truth-table td.tt-val-1 {
+  color: #008800;
+}
+
+body.light-mode #truth-table .tt-decimal-col {
+  color: #aaa;
+}
+
+body.light-mode #truth-table thead th {
+  background: #ddd;
+}
+
+body.light-mode #focus-failed-btn {
+  background: rgba(255, 80, 0, 0.08);
+  border-color: rgba(255, 80, 0, 0.3);
+}
 /* ── Controls ── */
 #controls {
   display: flex;

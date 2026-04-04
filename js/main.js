@@ -184,6 +184,8 @@ class GameState {
     this._abortController = new AbortController();
     // Day 38: Interactive tutorial
     this.tutorial = null;
+    // Day 39 T2: Truth table row hover → canvas highlight
+    this._highlightedInputRow = null;
   }
 
   // ── Hint Token System (Day 31) ──
@@ -1330,6 +1332,8 @@ class GameState {
 
     this.ui.updateLevelInfo();
     this.ui.updateToolbox();
+    this.ui._ttResetState(); // Day 39: Reset truth table sort/compact state on level load
+    this._highlightedInputRow = null; // Day 39 T2: Clear highlight on level load
     this.ui.updateTruthTable(null);
     this.ui.updateResultDisplay('idle', 'Build your circuit, then press RUN');
     this.ui.hideStarDisplay();
@@ -1621,6 +1625,9 @@ class GameState {
       this.ui.updateResultDisplay('idle', 'Simulating...');
       this.ui.hideStarDisplay();
 
+      // Day 39 T9: Auto-expand truth table when running simulation
+      if (this.ui) this.ui._expandTruthTable();
+
       // Sandbox mode: just evaluate and show actual truth table
       if (this.isSandboxMode) {
         await this.runSandboxTest();
@@ -1761,6 +1768,9 @@ class GameState {
 
     this.audio.playButtonClick();
     this.ui.hideStarDisplay();
+
+    // Day 39 T9: Auto-expand truth table when running simulation
+    if (this.ui) this.ui._expandTruthTable();
 
     // Day 37 T7: Ensure no signal flow animation artifacts from previous runs
     this.wireManager.resetAllSignalFlow();

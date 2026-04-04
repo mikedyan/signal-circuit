@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 38,
-  "nextDay": 39,
-  "totalItemsCompleted": 201,
-  "totalItems": 201,
-  "status": "Phase 3 Day 3 complete — Interactive Wire-Drawing Tutorial",
-  "lastRun": "2026-04-03T08:09:00-07:00",
+  "lastCompletedDay": 39,
+  "nextDay": 40,
+  "totalItemsCompleted": 211,
+  "totalItems": 211,
+  "status": "Phase 3 Day 4 complete — Truth Table Enhancement",
+  "lastRun": "2026-04-04T08:08:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -33,6 +33,11 @@
     },
     "38": {
       "items": ["InteractiveTutorial class", "Tutorial overlay DOM + CSS", "Step 1: Toolbox gate highlight", "Steps 2-4: Wire drawing guidance", "Step 5: Output wire guidance", "Step 6: RUN button highlight", "Level 1 integration + old tooltip suppression", "Script tag + load order", "Canvas pin highlight rendering", "Skip button + localStorage persistence"],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "39": {
+      "items": ["Compact mode toggle (8+ rows)", "Row hover → canvas highlight", "Column sorting with indicators", "Key rows mode for 4-input levels", "Decimal index column + tooltips", "Color-coded cells (0=blue, 1=green)", "Focus Failed Rows button", "Sticky truth table headers", "Auto-expand on simulation", "Mobile tap-to-test rows"],
       "status": "complete",
       "qa": "all-pass"
     }

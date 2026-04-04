@@ -1,0 +1,138 @@
+{
+  "day": 39,
+  "title": "Truth Table Enhancement",
+  "summary": "Make large truth tables manageable with compact/filter modes, row highlighting that pulses canvas input nodes, column sorting, binary-to-decimal tooltips, color-coded cells, sticky headers, a Focus Failed Rows button, auto-expand on simulation, and tappable rows for mobile live testing.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add Compact Mode toggle for truth tables with 8+ rows — shows only failing rows when results are available. Add a toggle button above the table that switches between 'All Rows' and 'Failing Only'. When no results exist, show all rows.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Toggle button appears above truth table when level has 8+ rows (4+ inputs)",
+        "When 'Failing Only' is active and results exist, only failed rows are shown",
+        "When no results or all pass, shows all rows regardless of toggle",
+        "Toggle state resets on level load"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add row highlighting: hover a truth table row → highlight the corresponding input combination on the canvas. Input nodes pulse with their values (green glow for 1, dim for 0). Use a CSS hover class and set gameState._highlightedInputRow.",
+      "files_to_modify": ["js/ui.js", "js/canvas.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Hovering a truth table row highlights that row visually",
+        "Input nodes on canvas pulse to show the hovered row's input values",
+        "Pulse stops when mouse leaves the row",
+        "Works on both desktop hover and mobile tap"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Add column sorting: click a column header to sort truth table by that column. Click again to reverse. Show a small sort indicator (▲/▼) on the active sort column. Default sort is by input combination (natural order).",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Clicking a column header sorts the truth table by that column",
+        "Clicking again reverses sort direction",
+        "Sort indicator arrow shown on active column",
+        "Sorting works with both input and output columns",
+        "Sort resets to natural order on level load"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "For 4-input levels (16 rows), default to a collapsed 'Show key rows' view showing first row, last row, and any failing rows. Add 'Show All ▼' / 'Show Key ▲' toggle. Key rows also include any row where output differs from previous row.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "4-input levels default to collapsed view showing key rows",
+        "Key rows include: first, last, failing rows, and rows where output changes",
+        "Toggle button switches between key rows and all rows",
+        "All rows shown if there are results and simulation has been run"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T5",
+      "description": "Add binary-to-decimal annotation: show the decimal value of each input combination in a subtle tooltip. Use a title attribute on input cells showing 'A=1,B=0 = 2 (decimal)'. Also add a small decimal column at the start.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Each truth table row has a decimal index column (#) at the left showing the row number in decimal",
+        "Hovering input cells shows tooltip with decimal value",
+        "Decimal column is styled subtly (smaller, dimmer) to not distract"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Color-code truth table cells: 0 = dim blue (#4466aa), 1 = bright green (#00ff00), matching wire signal colors. Apply to both input and output value cells.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "All 0 cells are rendered in dim blue",
+        "All 1 cells are rendered in bright green",
+        "Colors apply to inputs, expected outputs, and actual outputs",
+        "Colors work in both dark and light mode"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Add 'Focus Failed Rows' button after a failed run — scrolls to and highlights failing rows with a pulse animation. Button appears below the result display when there are failures.",
+      "files_to_modify": ["js/ui.js", "css/style.css", "index.html"],
+      "acceptance_criteria": [
+        "Button appears after a failed simulation",
+        "Clicking scrolls the truth table to the first failing row",
+        "Failing rows get a brief pulse highlight animation",
+        "Button hidden when no results or all pass",
+        "Truth table auto-expands if collapsed when Focus is clicked"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Add sticky headers for truth table so column labels stay visible when scrolling. Use position: sticky on the thead tr.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Truth table column headers stick to top when scrolling",
+        "Sticky headers have a solid background (not transparent)",
+        "Works on both mobile and desktop"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Ensure truth table auto-expands when running simulation (override manual collapse). If the user collapsed the truth table manually, expand it when RUN or Quick Test is pressed.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Running simulation expands a collapsed truth table",
+        "The chevron indicator updates to show expanded state",
+        "Works for both RUN and Quick Test"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Mobile: make truth table rows tappable — tapping sets input nodes to that row's values for live testing. On touch devices, tapping a truth table row sets the input node values and triggers live signal propagation.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "On touch devices, tapping a truth table row sets input node values to that row",
+        "Live signal propagation happens immediately after tap",
+        "Brief visual feedback on the tapped row",
+        "Works alongside existing hover highlighting"
+      ],
+      "depends_on": ["T2"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Truth table rendering with 2-input, 3-input, and 4-input levels",
+    "Column sorting behavior with results present and absent",
+    "Compact/key rows mode toggle in 4-input levels",
+    "Row hover highlighting syncing with canvas input nodes",
+    "Mobile tap behavior on truth table rows",
+    "Sticky headers on scrollable truth tables",
+    "Auto-expand on simulation for collapsed tables",
+    "Focus Failed Rows button appearance and scroll behavior"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced or truth table rendering breaks for existing levels, revert"
+}

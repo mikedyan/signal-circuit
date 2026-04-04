@@ -737,9 +737,36 @@ class UI {
   }
 
   // ── Truth Table ──
+  // ── Day 39: Truth Table State ──
+  _ttState() {
+    if (!this._ttS) {
+      this._ttS = {
+        sortCol: -1,
+        sortAsc: true,
+        compactMode: false,
+        keyRowsMode: false,
+        lastResults: null,
+      };
+    }
+    return this._ttS;
+  }
+
+  _ttResetState() {
+    this._ttS = null;
+  }
+
+  // ── Truth Table (Day 39 Enhanced) ──
   updateTruthTable(results) {
     const level = this.gameState.currentLevel;
     if (!level) return;
+
+    const tts = this._ttState();
+    if (results) tts.lastResults = results;
+    // T4: Auto-enable key rows for 4-input levels on first render (no results yet)
+    if (!results && !tts._initialized && level.inputs.length >= 4) {
+      tts.keyRowsMode = true;
+    }
+    tts._initialized = true;
 
     const table = document.getElementById('truth-table');
     table.innerHTML = '';
@@ -748,21 +775,89 @@ class UI {
     const totalCols = level.inputs.length + level.outputs.length;
     table.classList.toggle('compact-table', totalCols >= 7);
 
+    // T1/T4: Controls bar above table (compact mode, key rows)
+    this._renderTTControls(level, results);
+
+    // Build row data with original indices
+    let rows = level.truthTable.map((row, i) => ({
+      row,
+      idx: i,
+      result: results ? results[i] : null,
+    }));
+
+    // T3: Apply column sorting
+    if (tts.sortCol >= 0) {
+      const col = tts.sortCol;
+      const numInputs = level.inputs.length;
+      rows = rows.slice().sort((a, b) => {
+        let va, vb;
+        if (col < numInputs) {
+          va = a.row.inputs[col];
+          vb = b.row.inputs[col];
+        } else {
+          va = a.row.outputs[col - numInputs];
+          vb = b.row.outputs[col - numInputs];
+        }
+        return tts.sortAsc ? va - vb : vb - va;
+      });
+    }
+
+    // T1: Compact mode — show only failing rows
+    if (tts.compactMode && results) {
+      const hasFailures = rows.some(r => r.result && !r.result.pass);
+      if (hasFailures) {
+        rows = rows.filter(r => r.result && !r.result.pass);
+      }
+    }
+
+    // T4: Key rows mode for 4-input levels
+    if (tts.keyRowsMode && level.inputs.length >= 4 && !tts.compactMode) {
+      rows = this._filterKeyRows(rows, level);
+    }
+
+    // Build thead
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    for (const inp of level.inputs) {
-      const th = document.createElement('th');
-      th.textContent = inp.label;
-      headerRow.appendChild(th);
-    }
-    for (const out of level.outputs) {
-      const th = document.createElement('th');
-      th.textContent = out.label;
-      th.style.color = '#f88';
-      headerRow.appendChild(th);
-    }
-    // Check if there are any failures to show "Actual" columns
+
+    // T5: Decimal index column header
+    const thIdx = document.createElement('th');
+    thIdx.textContent = '#';
+    thIdx.className = 'tt-decimal-col';
+    headerRow.appendChild(thIdx);
+
+    const numInputs = level.inputs.length;
     const hasFailures = results && results.some(r => !r.pass);
+
+    for (let c = 0; c < level.inputs.length; c++) {
+      const th = document.createElement('th');
+      th.textContent = level.inputs[c].label;
+      th.className = 'tt-sortable';
+      if (tts.sortCol === c) {
+        const arrow = document.createElement('span');
+        arrow.className = 'tt-sort-arrow';
+        arrow.textContent = tts.sortAsc ? '▲' : '▼';
+        th.appendChild(arrow);
+      }
+      const colIdx = c;
+      th.addEventListener('click', () => this._ttToggleSort(colIdx));
+      headerRow.appendChild(th);
+    }
+    for (let c = 0; c < level.outputs.length; c++) {
+      const th = document.createElement('th');
+      th.textContent = level.outputs[c].label;
+      th.style.color = '#f88';
+      th.className = 'tt-sortable';
+      const colIdx = numInputs + c;
+      if (tts.sortCol === colIdx) {
+        const arrow = document.createElement('span');
+        arrow.className = 'tt-sort-arrow';
+        arrow.textContent = tts.sortAsc ? '▲' : '▼';
+        th.appendChild(arrow);
+      }
+      th.addEventListener('click', () => this._ttToggleSort(colIdx));
+      headerRow.appendChild(th);
+    }
+
     if (hasFailures) {
       for (const out of level.outputs) {
         const th = document.createElement('th');
@@ -780,38 +875,58 @@ class UI {
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
+    // Build tbody
     const tbody = document.createElement('tbody');
-    level.truthTable.forEach((row, i) => {
+    const isTouchDevice = this.isTouchDevice;
+    const gs = this.gameState;
+
+    for (const entry of rows) {
+      const { row, idx, result } = entry;
       const tr = document.createElement('tr');
-      if (results && results[i]) {
-        const isPass = results[i].pass;
+      tr.dataset.rowIdx = idx;
+
+      if (result) {
+        const isPass = result.pass;
         tr.className = isPass ? 'row-pass' : 'row-fail';
-        // Micro-celebration animation (skip for sandbox)
-        if (!this.gameState.isSandboxMode) {
+        if (!gs.isSandboxMode) {
           tr.classList.add(isPass ? 'row-flash-pass' : 'row-flash-fail');
         }
       }
 
-      for (const val of row.inputs) {
+      // T5: Decimal index cell
+      const tdIdx = document.createElement('td');
+      tdIdx.className = 'tt-decimal-col';
+      tdIdx.textContent = idx;
+      tr.appendChild(tdIdx);
+
+      // T6: Color-coded input cells with T5 tooltip
+      const decimalVal = row.inputs.reduce((acc, v, i) => acc + (v << (row.inputs.length - 1 - i)), 0);
+      for (let c = 0; c < row.inputs.length; c++) {
+        const val = row.inputs[c];
         const td = document.createElement('td');
         td.textContent = val;
-        tr.appendChild(td);
-      }
-      for (const val of row.outputs) {
-        const td = document.createElement('td');
-        td.textContent = val;
+        td.className = val ? 'tt-val-1' : 'tt-val-0';
+        td.title = `${level.inputs.map((inp, i) => `${inp.label}=${row.inputs[i]}`).join(',')} = ${decimalVal}`;
         tr.appendChild(td);
       }
 
-      // Show actual outputs when failures exist
+      // T6: Color-coded output cells
+      for (const val of row.outputs) {
+        const td = document.createElement('td');
+        td.textContent = val;
+        td.className = val ? 'tt-val-1' : 'tt-val-0';
+        tr.appendChild(td);
+      }
+
+      // Actual outputs when failures exist
       if (hasFailures) {
-        const actual = results && results[i] ? results[i].actualOutputs : [];
+        const actual = result ? result.actualOutputs : [];
         for (let j = 0; j < level.outputs.length; j++) {
           const td = document.createElement('td');
           td.className = 'actual-col';
           const actualVal = actual[j] !== undefined ? actual[j] : '?';
           td.textContent = actualVal;
-          if (results && results[i] && !results[i].pass) {
+          if (result && !result.pass) {
             const expected = row.outputs[j];
             td.style.color = actualVal !== expected ? '#f44' : '#0f0';
             td.style.fontWeight = actualVal !== expected ? 'bold' : 'normal';
@@ -822,16 +937,176 @@ class UI {
         }
       }
 
-      if (results && results[i]) {
+      if (result) {
         const td = document.createElement('td');
-        td.textContent = results[i].pass ? '✓' : '✗';
-        td.style.color = results[i].pass ? '#0f0' : '#f44';
+        td.textContent = result.pass ? '✓' : '✗';
+        td.style.color = result.pass ? '#0f0' : '#f44';
         tr.appendChild(td);
       }
 
+      // T2: Row hover → highlight input nodes on canvas
+      tr.addEventListener('mouseenter', () => {
+        gs._highlightedInputRow = row.inputs;
+        gs.markDirty();
+      });
+      tr.addEventListener('mouseleave', () => {
+        gs._highlightedInputRow = null;
+        gs.markDirty();
+      });
+
+      // T10: Mobile tap → set input values for live testing
+      if (isTouchDevice) {
+        tr.addEventListener('click', () => {
+          for (let n = 0; n < gs.inputNodes.length && n < row.inputs.length; n++) {
+            gs.inputNodes[n].value = row.inputs[n];
+          }
+          gs._propagateLiveSignals();
+          gs.audio.playClick();
+          // Brief highlight feedback
+          tr.classList.add('tt-tapped');
+          setTimeout(() => tr.classList.remove('tt-tapped'), 400);
+        });
+      }
+
       tbody.appendChild(tr);
-    });
+    }
     table.appendChild(tbody);
+
+    // T7: Show/hide Focus Failed Rows button
+    this._updateFocusFailedBtn(results);
+  }
+
+  // T1/T4: Render truth table control buttons
+  _renderTTControls(level, results) {
+    const section = document.getElementById('truth-table-section');
+    let controls = document.getElementById('tt-controls');
+    if (controls) controls.remove();
+
+    const numRows = level.truthTable.length;
+    const tts = this._ttState();
+
+    // Only show controls if table has 8+ rows
+    if (numRows < 8) return;
+
+    controls = document.createElement('div');
+    controls.id = 'tt-controls';
+
+    // T1: Compact mode toggle
+    const compactBtn = document.createElement('button');
+    compactBtn.textContent = tts.compactMode ? 'All Rows' : 'Failing Only';
+    if (tts.compactMode) compactBtn.classList.add('tt-active');
+    compactBtn.addEventListener('click', () => {
+      tts.compactMode = !tts.compactMode;
+      if (tts.compactMode) tts.keyRowsMode = false;
+      this.updateTruthTable(tts.lastResults);
+    });
+    controls.appendChild(compactBtn);
+
+    // T4: Key rows mode for 4-input levels
+    if (level.inputs.length >= 4) {
+      const keyBtn = document.createElement('button');
+      keyBtn.textContent = tts.keyRowsMode ? 'Show All' : 'Key Rows';
+      if (tts.keyRowsMode) keyBtn.classList.add('tt-active');
+      keyBtn.addEventListener('click', () => {
+        tts.keyRowsMode = !tts.keyRowsMode;
+        if (tts.keyRowsMode) tts.compactMode = false;
+        this.updateTruthTable(tts.lastResults);
+      });
+      controls.appendChild(keyBtn);
+    }
+
+    // Sort reset button if sorting is active
+    if (tts.sortCol >= 0) {
+      const resetBtn = document.createElement('button');
+      resetBtn.textContent = '↺ Reset Sort';
+      resetBtn.addEventListener('click', () => {
+        tts.sortCol = -1;
+        tts.sortAsc = true;
+        this.updateTruthTable(tts.lastResults);
+      });
+      controls.appendChild(resetBtn);
+    }
+
+    // Insert controls before the table wrapper
+    const wrapper = document.getElementById('truth-table-wrapper');
+    section.insertBefore(controls, wrapper);
+  }
+
+  // T3: Toggle sort on column click
+  _ttToggleSort(colIdx) {
+    const tts = this._ttState();
+    if (tts.sortCol === colIdx) {
+      tts.sortAsc = !tts.sortAsc;
+    } else {
+      tts.sortCol = colIdx;
+      tts.sortAsc = true;
+    }
+    this.updateTruthTable(tts.lastResults);
+  }
+
+  // T4: Filter to key rows (first, last, output-change boundaries, failing)
+  _filterKeyRows(rows, level) {
+    if (rows.length <= 6) return rows; // Not worth filtering
+    const keySet = new Set();
+    keySet.add(0); // First
+    keySet.add(rows.length - 1); // Last
+
+    // Rows where output changes from previous
+    for (let i = 1; i < rows.length; i++) {
+      const prevOut = rows[i - 1].row.outputs;
+      const currOut = rows[i].row.outputs;
+      if (prevOut.some((v, j) => v !== currOut[j])) {
+        keySet.add(i);
+        keySet.add(i - 1); // Include the row before change too
+      }
+    }
+
+    // Failing rows
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].result && !rows[i].result.pass) keySet.add(i);
+    }
+
+    return rows.filter((_, i) => keySet.has(i));
+  }
+
+  // T7: Focus Failed Rows button
+  _updateFocusFailedBtn(results) {
+    const btn = document.getElementById('focus-failed-btn');
+    if (!btn) return;
+
+    const hasFailures = results && results.some(r => !r.pass);
+    btn.style.display = hasFailures ? '' : 'none';
+
+    btn.onclick = () => {
+      // T9: Auto-expand truth table if collapsed
+      this._expandTruthTable();
+
+      // Find first failing row in the table
+      const table = document.getElementById('truth-table');
+      const failRow = table.querySelector('tr.row-fail');
+      if (failRow) {
+        failRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Pulse all failing rows
+        const failRows = table.querySelectorAll('tr.row-fail');
+        failRows.forEach(r => {
+          r.classList.remove('tt-focus-pulse');
+          void r.offsetWidth;
+          r.classList.add('tt-focus-pulse');
+          setTimeout(() => r.classList.remove('tt-focus-pulse'), 1300);
+        });
+      }
+    };
+  }
+
+  // T9: Expand truth table if collapsed
+  _expandTruthTable() {
+    const wrapper = document.getElementById('truth-table-wrapper');
+    const chevron = document.getElementById('truth-table-chevron');
+    if (wrapper && wrapper.style.display === 'none') {
+      wrapper.style.display = '';
+      if (chevron) chevron.textContent = '▼';
+      try { localStorage.setItem('signal-circuit-tt-collapsed', 'false'); } catch (e) {}
+    }
   }
 
   updateResultDisplay(state, message) {
@@ -1000,6 +1275,8 @@ class UI {
     if (aestheticsEl) aestheticsEl.style.display = 'none';
     const shareCardBtn = document.getElementById('share-card-btn');
     if (shareCardBtn) shareCardBtn.style.display = 'none';
+    const focusBtn = document.getElementById("focus-failed-btn");
+    if (focusBtn) focusBtn.style.display = "none";
   }
 
   showChallengeResult(gateCount, level) {

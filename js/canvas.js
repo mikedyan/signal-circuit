@@ -160,6 +160,33 @@ class CanvasRenderer {
       }
     }
 
+
+    // Day 39 T2: Truth table row hover → highlight input nodes on canvas
+    if (this.gameState._highlightedInputRow) {
+      const hlRow = this.gameState._highlightedInputRow;
+      const pulse = 0.5 + 0.3 * Math.sin(performance.now() / 300);
+      for (let i = 0; i < this.gameState.inputNodes.length && i < hlRow.length; i++) {
+        const node = this.gameState.inputNodes[i];
+        const val = hlRow[i];
+        const cx = node.x + node.width / 2;
+        const cy = node.y + node.height / 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+        const color = val ? `rgba(0, 255, 0, ${pulse * 0.4})` : `rgba(68, 102, 170, ${pulse * 0.35})`;
+        const grad = ctx.createRadialGradient(cx, cy, 8, cx, cy, 28);
+        grad.addColorStop(0, color);
+        grad.addColorStop(1, val ? "rgba(0, 255, 0, 0)" : "rgba(68, 102, 170, 0)");
+        ctx.fillStyle = grad;
+        ctx.fill();
+        // Show the value text
+        ctx.fillStyle = val ? "#0f0" : "#4466aa";
+        ctx.font = "bold 14px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(val), cx, cy - 22);
+      }
+      this.gameState.markDirty(); // Keep animating pulse
+    }
     // T10: Ghost overlay rendering (behind active gates)
     if (this.gameState.showGhost && this.gameState.ghostOverlay) {
       this._renderGhostOverlay(ctx);

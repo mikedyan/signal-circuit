@@ -1,4 +1,10 @@
 # Lessons Learned
+## Day 39 — Truth Table Enhancement
+- **Lazy state objects for UI components**: Using a `_ttState()` method that lazy-initializes and returns a state object (with `_ttResetState()` to clear) keeps component state clean without polluting the constructor. Resets on level load, persists within a session.
+- **Canvas highlight via game state bridge**: Setting `_highlightedInputRow` on the game state and reading it in the render loop cleanly bridges DOM hover events to canvas rendering. No coupling between UI and renderer classes needed.
+- **Auto-init defaults based on level properties**: For 4-input levels, auto-enabling key rows mode on first render (flagged with `_initialized`) gives a better default UX without requiring explicit per-level configuration.
+- **Color-coded cell classes vs inline styles**: Using CSS classes (`tt-val-0`, `tt-val-1`) instead of inline color styles makes the coloring work with light mode, colorblind mode, and other theme toggles via CSS overrides.
+
 ## Day 38 — Interactive Tutorial
 - **Service worker cache invalidation**: Always bump SW cache version AND add new files to ASSETS list when adding JS files. Cache-first strategy means new files are invisible until the SW updates.
 - **DOM overlay placement**: For `position: absolute` overlays, ensure the overlay element is a child of the `position: relative` container. Placing it as a sibling breaks positioning.
