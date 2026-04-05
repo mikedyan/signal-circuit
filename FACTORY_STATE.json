@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 39,
-  "nextDay": 40,
-  "totalItemsCompleted": 211,
-  "totalItems": 211,
-  "status": "Phase 3 Day 4 complete — Truth Table Enhancement",
-  "lastRun": "2026-04-04T08:08:00-07:00",
+  "lastCompletedDay": 40,
+  "nextDay": 41,
+  "totalItemsCompleted": 221,
+  "totalItems": 221,
+  "status": "Phase 3 Day 5 complete — Cosmetic Unlock System",
+  "lastRun": "2026-04-05T08:07:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -38,6 +38,11 @@
     },
     "39": {
       "items": ["Compact mode toggle (8+ rows)", "Row hover → canvas highlight", "Column sorting with indicators", "Key rows mode for 4-input levels", "Decimal index column + tooltips", "Color-coded cells (0=blue, 1=green)", "Focus Failed Rows button", "Sticky truth table headers", "Auto-expand on simulation", "Mobile tap-to-test rows"],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "40": {
+      "items": ["CosmeticManager class", "6 wire color palettes", "4 gate skins (IC/Neon/Retro/Minimal)", "4 board themes (Breadboard/PCB/Dark/Blueprint)", "Customization modal + UI", "Wire rendering integration", "Gate skin rendering (3 alternate renderers)", "Board theme rendering (3 alternate renderers)", "Unlock toast system", "UI event wiring + persistence"],
       "status": "complete",
       "qa": "all-pass"
     }

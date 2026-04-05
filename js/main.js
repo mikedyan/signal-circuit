@@ -18,6 +18,7 @@ function toggleInfoPanel() {
   }, 300);
 }
 
+const COSMETICS_KEY = 'signal-circuit-cosmetics';
 const STORAGE_KEY = 'signal-circuit-progress';
 const LEADERBOARD_KEY = 'signal-circuit-leaderboard';
 const STATS_KEY = 'signal-circuit-stats';
@@ -75,6 +76,229 @@ const SafeStorage = {
   },
 };
 
+// ── Cosmetic Unlock System (Day 40) ──
+
+const COSMETIC_WIRE_COLORS = [
+  { id: 'classic', name: 'Classic', desc: 'Standard jumper wire palette', condition: null, palette: null },
+  { id: 'blue', name: 'Arctic Blue', desc: 'Cool blue-toned wires', condition: { type: 'stars', count: 10 },
+    palette: ['#2288ff','#44aaff','#66ccff','#0066dd','#3399ee','#1177cc','#55bbff','#0088ff','#77aadd','#aaccff'] },
+  { id: 'orange', name: 'Ember', desc: 'Warm orange and amber wires', condition: { type: 'stars', count: 25 },
+    palette: ['#ff8822','#ffaa44','#ff6600','#cc5500','#ee7711','#ffbb55','#dd6622','#ff9933','#cc7733','#ee8844'] },
+  { id: 'purple', name: 'Ultraviolet', desc: 'Deep purple and violet wires', condition: { type: 'stars', count: 50 },
+    palette: ['#aa44ff','#cc66ff','#8833dd','#bb55ee','#9944cc','#dd88ff','#7722bb','#ee99ff','#6611aa','#cc77ee'] },
+  { id: 'rainbow', name: 'Prismatic', desc: 'Full rainbow spectrum', condition: { type: 'all3star' },
+    palette: ['#ff4444','#ff8800','#ffcc00','#44dd44','#00cccc','#4488ff','#8844ff','#cc44cc','#ff4488','#88ff44'] },
+  { id: 'gold', name: 'Gold Circuit', desc: 'Prestigious gold wires', condition: { type: 'perfectCampaign' },
+    palette: ['#ffd700','#ffcc33','#daa520','#f0c040','#e6b422','#ccaa00','#ffdd55','#c8a020','#e8c840','#ddb840'] },
+];
+
+const COSMETIC_GATE_SKINS = [
+  { id: 'ic_chip', name: 'IC Chip', desc: 'Classic integrated circuit look', condition: null },
+  { id: 'neon', name: 'Neon', desc: 'Bright outlines with glow effects', condition: { type: 'chapter', chapter: 2 } },
+  { id: 'retro', name: 'Retro', desc: 'Rounded vintage electronics style', condition: { type: 'chapter', chapter: 4 } },
+  { id: 'minimal', name: 'Minimal', desc: 'Clean flat design, no frills', condition: { type: 'halfPerfect' } },
+];
+
+const COSMETIC_BOARD_THEMES = [
+  { id: 'breadboard', name: 'Breadboard', desc: 'Classic prototyping board', condition: null },
+  { id: 'pcb_green', name: 'PCB Green', desc: 'Printed circuit board aesthetic', condition: { type: 'chapter', chapter: 3 } },
+  { id: 'dark_circuit', name: 'Dark Circuit', desc: 'Near-black with cyan traces', condition: { type: 'chapter', chapter: 5 } },
+  { id: 'blueprint', name: 'Blueprint', desc: 'White background with blue grid', condition: { type: 'allChapters' } },
+];
+
+class CosmeticManager {
+  constructor(gameState) {
+    this.gameState = gameState;
+    this.wireColors = COSMETIC_WIRE_COLORS;
+    this.gateSkins = COSMETIC_GATE_SKINS;
+    this.boardThemes = COSMETIC_BOARD_THEMES;
+    this._load();
+  }
+
+  _load() {
+    try {
+      const saved = SafeStorage.getItem(COSMETICS_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.activeWireColor = data.wireColor || 'classic';
+        this.activeGateSkin = data.gateSkin || 'ic_chip';
+        this.activeBoardTheme = data.boardTheme || 'breadboard';
+        return;
+      }
+    } catch (e) {}
+    this.activeWireColor = 'classic';
+    this.activeGateSkin = 'ic_chip';
+    this.activeBoardTheme = 'breadboard';
+  }
+
+  _save() {
+    SafeStorage.setItem(COSMETICS_KEY, JSON.stringify({
+      wireColor: this.activeWireColor,
+      gateSkin: this.activeGateSkin,
+      boardTheme: this.activeBoardTheme,
+    }));
+  }
+
+  setWireColor(id) {
+    if (this.isUnlocked('wireColor', id)) {
+      this.activeWireColor = id;
+      this._save();
+      if (this.gameState) this.gameState.markDirty();
+    }
+  }
+
+  setGateSkin(id) {
+    if (this.isUnlocked('gateSkin', id)) {
+      this.activeGateSkin = id;
+      this._save();
+      if (this.gameState) this.gameState.markDirty();
+    }
+  }
+
+  setBoardTheme(id) {
+    if (this.isUnlocked('boardTheme', id)) {
+      this.activeBoardTheme = id;
+      this._save();
+      if (this.gameState) this.gameState.markDirty();
+    }
+  }
+
+  getActiveWirePalette() {
+    const c = this.wireColors.find(w => w.id === this.activeWireColor);
+    return (c && c.palette) ? c.palette : null;
+  }
+
+  getActiveGateSkin() { return this.activeGateSkin; }
+  getActiveBoardTheme() { return this.activeBoardTheme; }
+
+  isUnlocked(category, id) {
+    let items;
+    if (category === 'wireColor') items = this.wireColors;
+    else if (category === 'gateSkin') items = this.gateSkins;
+    else if (category === 'boardTheme') items = this.boardThemes;
+    else return false;
+    const item = items.find(i => i.id === id);
+    if (!item) return false;
+    return this._checkCondition(item.condition);
+  }
+
+  _checkCondition(cond) {
+    if (!cond) return true;
+    const gs = this.gameState;
+    if (!gs) return false;
+    const progress = gs.progress;
+
+    switch (cond.type) {
+      case 'stars': {
+        let total = 0;
+        for (const data of Object.values(progress.levels || {})) {
+          total += (data.stars || 0);
+        }
+        return total >= cond.count;
+      }
+      case 'chapter': {
+        const chapters = getChapters();
+        const ch = chapters.find(c => c.id === cond.chapter);
+        if (!ch) return false;
+        return ch.levels.every(lid => {
+          const p = progress.levels[lid];
+          return p && p.completed;
+        });
+      }
+      case 'all3star':
+      case 'perfectCampaign': {
+        const allLevels = typeof LEVELS !== 'undefined' ? LEVELS : [];
+        if (allLevels.length === 0) return false;
+        return allLevels.every(l => {
+          const p = progress.levels[l.id];
+          return p && p.stars === 3;
+        });
+      }
+      case 'halfPerfect': {
+        const allLevels2 = typeof LEVELS !== 'undefined' ? LEVELS : [];
+        if (allLevels2.length === 0) return false;
+        let count = 0;
+        for (const l of allLevels2) {
+          const p = progress.levels[l.id];
+          if (p && p.stars === 3) count++;
+        }
+        return count >= Math.ceil(allLevels2.length / 2);
+      }
+      case 'allChapters': {
+        const chapters2 = getChapters();
+        return chapters2.filter(c => !c.isBridge).every(ch => {
+          return ch.levels.every(lid => {
+            const p = progress.levels[lid];
+            return p && p.completed;
+          });
+        });
+      }
+      default:
+        return false;
+    }
+  }
+
+  checkUnlocks() {
+    const newUnlocks = [];
+    const allItems = [
+      ...this.wireColors.map(c => ({ ...c, category: 'wireColor' })),
+      ...this.gateSkins.map(c => ({ ...c, category: 'gateSkin' })),
+      ...this.boardThemes.map(c => ({ ...c, category: 'boardTheme' })),
+    ];
+    if (!this._prevUnlocked) {
+      this._prevUnlocked = new Set();
+      for (const item of allItems) {
+        if (this._checkCondition(item.condition)) this._prevUnlocked.add(item.id);
+      }
+      return newUnlocks;
+    }
+    for (const item of allItems) {
+      if (this._prevUnlocked.has(item.id)) continue;
+      if (this._checkCondition(item.condition)) {
+        this._prevUnlocked.add(item.id);
+        newUnlocks.push(item.name);
+      }
+    }
+    return newUnlocks;
+  }
+
+  getAllForUI() {
+    return {
+      wireColors: this.wireColors.map(c => ({
+        ...c,
+        unlocked: this._checkCondition(c.condition),
+        active: c.id === this.activeWireColor,
+        conditionText: this._conditionText(c.condition),
+      })),
+      gateSkins: this.gateSkins.map(c => ({
+        ...c,
+        unlocked: this._checkCondition(c.condition),
+        active: c.id === this.activeGateSkin,
+        conditionText: this._conditionText(c.condition),
+      })),
+      boardThemes: this.boardThemes.map(c => ({
+        ...c,
+        unlocked: this._checkCondition(c.condition),
+        active: c.id === this.activeBoardTheme,
+        conditionText: this._conditionText(c.condition),
+      })),
+    };
+  }
+
+  _conditionText(cond) {
+    if (!cond) return 'Free';
+    switch (cond.type) {
+      case 'stars': return 'Earn ' + cond.count + ' total stars';
+      case 'chapter': return 'Complete Chapter ' + cond.chapter;
+      case 'all3star': return '3-star every campaign level';
+      case 'perfectCampaign': return 'Perfect all campaign levels';
+      case 'halfPerfect': return '3-star 50% of campaign levels';
+      case 'allChapters': return 'Complete all chapters';
+      default: return '???';
+    }
+  }
+}
+
 class UndoManager {
   constructor() {
     this.undoStack = [];
@@ -129,6 +353,7 @@ class GameState {
     this.isChallengeMode = false;
     this.audio = new AudioEngine();
     this.achievements = new AchievementManager();
+    this.cosmetics = new CosmeticManager(this);
     this.timerStart = null;
     this.timerInterval = null;
     this.timerRunning = false;
@@ -405,6 +630,8 @@ class GameState {
 
     // T8: Update streak on app start
     this.streakData = this.updateStreak();
+    // Day 40: Seed cosmetic unlock baseline
+    if (this.cosmetics) this.cosmetics.checkUnlocks();
     this.ui.updateStreakDisplay(this.streakData);
 
     // Day 33 T10: Welcome back for lapsed players (check before placement test)
@@ -791,6 +1018,18 @@ class GameState {
 
     // Check for chapter completion
     this._checkChapterCompletion(levelId);
+
+    // Day 40: Check cosmetic unlocks
+    if (this.cosmetics) {
+      const newCosmetics = this.cosmetics.checkUnlocks();
+      if (newCosmetics.length > 0 && this.ui) {
+        setTimeout(() => {
+          for (const name of newCosmetics) {
+            this.ui.showCosmeticUnlockToast(name);
+          }
+        }, 3000);
+      }
+    }
 
     // Check for milestones
     if (this.ui) {

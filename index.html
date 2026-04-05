@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1775315737">
+  <link rel="stylesheet" href="css/style.css?v=1775402303">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -72,6 +72,9 @@
           <button id="encyclopedia-btn" class="challenge-btn info-btn" aria-label="Gate Encyclopedia">📚 Gate Encyclopedia</button>
           <button id="achievements-btn" class="challenge-btn info-btn" aria-label="Achievements">🏆 Achievements</button>
           <button id="stats-btn" class="challenge-btn info-btn" aria-label="Stats">📊 Stats</button>
+        </div>
+        <div id="info-buttons-row-cosmetics">
+          <button id="customize-btn" class="challenge-btn info-btn" aria-label="Customize">🎨 Customize</button>
         </div>
         <div id="info-buttons-row-2">
           <button id="mastery-tree-btn" class="challenge-btn info-btn" aria-label="Mastery Tree">🌳 Mastery Tree</button>
@@ -443,6 +446,15 @@
   </div>
 
   <!-- Confirm Modal -->
+  <!-- Day 40: Cosmetic Customization Modal -->
+  <div id="cosmetic-modal" style="display:none;">
+    <div id="cosmetic-content">
+      <h3>🎨 Customize</h3>
+      <div id="cosmetic-sections"></div>
+      <button id="cosmetic-close">Close</button>
+    </div>
+  </div>
+
   <div id="confirm-modal" style="display:none;">
     <div id="confirm-modal-content">
       <p id="confirm-modal-message"></p>
@@ -503,15 +515,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1775315737"></script>
-  <script src="js/wires.js?v=1775315737"></script>
-  <script src="js/simulation.js?v=1775315737"></script>
-  <script src="js/levels.js?v=1775315737"></script>
-  <script src="js/audio.js?v=1775315737"></script>
-  <script src="js/achievements.js?v=1775315737"></script>
-  <script src="js/canvas.js?v=1775315737"></script>
-  <script src="js/ui.js?v=1775315737"></script>
-  <script src="js/tutorial.js?v=1775315737"></script>
-  <script src="js/main.js?v=1775315737"></script>
+  <script src="js/gates.js?v=1775402303"></script>
+  <script src="js/wires.js?v=1775402303"></script>
+  <script src="js/simulation.js?v=1775402303"></script>
+  <script src="js/levels.js?v=1775402303"></script>
+  <script src="js/audio.js?v=1775402303"></script>
+  <script src="js/achievements.js?v=1775402303"></script>
+  <script src="js/canvas.js?v=1775402303"></script>
+  <script src="js/ui.js?v=1775402303"></script>
+  <script src="js/tutorial.js?v=1775402303"></script>
+  <script src="js/main.js?v=1775402303"></script>
 </body>
 </html>

@@ -1,4 +1,10 @@
 # Lessons Learned
+## Day 40 — Cosmetic Unlock System
+- **Non-invasive rendering overlays**: Using early-return dispatch (`if (skin !== 'ic_chip') { this._renderSkin(ctx, isSelected, skin); return; }`) keeps the default render path completely unchanged. Zero regression risk on existing visuals. Same pattern works for board themes.
+- **Delta-based unlock detection**: Seed a baseline Set of unlocked IDs on first `checkUnlocks()` call, then detect new unlocks by comparing against the baseline on subsequent calls. Prevents false "NEW UNLOCK!" toasts on page reload.
+- **Cosmetic priority chain**: For wire colors: colorblind mode > cosmetic palette > default. Accessibility needs always take priority over aesthetic preferences. Check accessibility flags first in `getWireColors()`.
+- **Global access via `window.game`**: Rendering code (gates.js, wires.js, canvas.js) loads before main.js, so they can't import CosmeticManager directly. Using `window.game.cosmetics` as the access path works because render methods are only called after initialization. Always guard with `typeof window !== 'undefined' && window.game && window.game.cosmetics`.
+
 ## Day 39 — Truth Table Enhancement
 - **Lazy state objects for UI components**: Using a `_ttState()` method that lazy-initializes and returns a state object (with `_ttResetState()` to clear) keeps component state clean without polluting the constructor. Resets on level load, persists within a session.
 - **Canvas highlight via game state bridge**: Setting `_highlightedInputRow` on the game state and reading it in the render loop cleanly bridges DOM hover events to canvas rendering. No coupling between UI and renderer classes needed.

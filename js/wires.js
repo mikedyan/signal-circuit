@@ -31,6 +31,11 @@ const WIRE_COLORS_COLORBLIND = [
 function getWireColors() {
   try {
     if (document.body.classList.contains('colorblind-mode')) return WIRE_COLORS_COLORBLIND;
+    // Day 40: Check cosmetic wire palette
+    if (typeof window !== 'undefined' && window.game && window.game.cosmetics) {
+      const palette = window.game.cosmetics.getActiveWirePalette();
+      if (palette) return palette;
+    }
   } catch (e) {}
   return WIRE_COLORS_DEFAULT;
 }

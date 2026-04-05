@@ -225,6 +225,13 @@ class Gate {
   }
 
   render(ctx, isSelected) {
+    // Day 40: Dispatch to alternate skin renderer
+    const skin = (typeof window !== 'undefined' && window.game && window.game.cosmetics)
+      ? window.game.cosmetics.getActiveGateSkin() : 'ic_chip';
+    if (skin !== 'ic_chip') {
+      this._renderSkin(ctx, isSelected, skin);
+      return;
+    }
     const { width, height, name, color } = this.def;
 
     // Placement animation
@@ -352,6 +359,163 @@ class Gate {
     });
   }
 }
+
+
+  // Day 40: Alternate gate skin renderers
+  _renderSkin(ctx, isSelected, skin) {
+    const { width, height, name, color } = this.def;
+    const elapsed = performance.now() - this.placeTime;
+    let scale = 1;
+    if (elapsed < this.animDuration) {
+      const t = elapsed / this.animDuration;
+      scale = t < 0.6 ? (t / 0.6) * 1.15 : 1.15 - (t - 0.6) / 0.4 * 0.15;
+    }
+    const cx = this.x + width / 2;
+    const cy = this.y + height / 2;
+    const x = cx - (width * scale) / 2;
+    const y = cy - (height * scale) / 2;
+    const sw = width * scale;
+    const sh = height * scale;
+
+    if (skin === 'neon') this._renderNeon(ctx, isSelected, x, y, sw, sh, scale, name, color);
+    else if (skin === 'retro') this._renderRetro(ctx, isSelected, x, y, sw, sh, scale, name, color);
+    else if (skin === 'minimal') this._renderMinimal(ctx, isSelected, x, y, sw, sh, scale, name, color);
+    // Pins are the same for all skins
+    this._renderPins(ctx, scale);
+  }
+
+  _renderNeon(ctx, isSelected, x, y, sw, sh, scale, name, color) {
+    // Neon: dark fill, bright colored outlines, glowing text
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    roundRect(ctx, x, y, sw, sh, 6);
+    ctx.fill();
+    ctx.strokeStyle = isSelected ? '#fff' : color;
+    ctx.lineWidth = isSelected ? 3 : 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    roundRect(ctx, x, y, sw, sh, 6);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    // Gate symbol
+    this._drawGateSymbol(ctx, x + sw / 2, y + sh / 2 - 6 * scale, color);
+    // Glowing label
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.font = 'bold ' + Math.round(11 * scale) + 'px Courier New';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(name, x + sw / 2, y + sh / 2 + 6 * scale);
+    ctx.shadowBlur = 0;
+  }
+
+  _renderRetro(ctx, isSelected, x, y, sw, sh, scale, name, color) {
+    // Retro: rounded, warm tones, softer shadows
+    const r = parseInt(color.slice(1, 3), 16) || 180;
+    const g = parseInt(color.slice(3, 5), 16) || 150;
+    const b = parseInt(color.slice(5, 7), 16) || 100;
+    // Soft shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    roundRect(ctx, x + 3, y + 3, sw, sh, 10);
+    ctx.fill();
+    // Body with warm gradient
+    const bg = ctx.createLinearGradient(x, y, x, y + sh);
+    bg.addColorStop(0, 'rgb(' + Math.min(255, r + 40) + ',' + Math.min(255, g + 30) + ',' + Math.min(255, b + 20) + ')');
+    bg.addColorStop(1, 'rgb(' + r + ',' + g + ',' + b + ')');
+    ctx.fillStyle = bg;
+    roundRect(ctx, x, y, sw, sh, 10);
+    ctx.fill();
+    ctx.strokeStyle = isSelected ? '#fff' : 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = isSelected ? 2.5 : 1.5;
+    roundRect(ctx, x, y, sw, sh, 10);
+    ctx.stroke();
+    // Label
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = 'bold ' + Math.round(12 * scale) + 'px Georgia, serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, x + sw / 2, y + sh / 2);
+  }
+
+  _renderMinimal(ctx, isSelected, x, y, sw, sh, scale, name, color) {
+    // Minimal: flat white, thin border, no shadow
+    ctx.fillStyle = '#f8f8f8';
+    roundRect(ctx, x, y, sw, sh, 2);
+    ctx.fill();
+    ctx.strokeStyle = isSelected ? '#0a0' : '#999';
+    ctx.lineWidth = isSelected ? 2 : 1;
+    roundRect(ctx, x, y, sw, sh, 2);
+    ctx.stroke();
+    // Label
+    ctx.fillStyle = '#333';
+    ctx.font = Math.round(11 * scale) + 'px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, x + sw / 2, y + sh / 2);
+  }
+
+  _renderPins(ctx, scale) {
+    const breathe = 0.6 + 0.4 * Math.sin(performance.now() / 600);
+    const pinRadius = 7;
+    const inputPins = this.getInputPins();
+    inputPins.forEach((pin, i) => {
+      ctx.strokeStyle = '#999';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pin.x - 12, pin.y);
+      ctx.lineTo(pin.x, pin.y);
+      ctx.stroke();
+      const val = this.inputValues[i];
+      if (!val) {
+        ctx.beginPath();
+        ctx.arc(pin.x - 12, pin.y, pinRadius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(60, 80, 140, ' + (breathe * 0.15) + ')';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(pin.x - 12, pin.y, pinRadius, 0, Math.PI * 2);
+      ctx.fillStyle = val ? '#ff3333' : '#3a5588';
+      ctx.fill();
+      ctx.strokeStyle = val ? '#ff6666' : '#667';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      if (val) {
+        ctx.beginPath();
+        ctx.arc(pin.x - 12, pin.y, pinRadius + 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 50, 50, 0.25)';
+        ctx.fill();
+      }
+    });
+    const outputPins = this.getOutputPins();
+    outputPins.forEach((pin, i) => {
+      ctx.strokeStyle = '#999';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(pin.x, pin.y);
+      ctx.lineTo(pin.x + 12, pin.y);
+      ctx.stroke();
+      const val = this.outputValues[i];
+      if (!val) {
+        ctx.beginPath();
+        ctx.arc(pin.x + 12, pin.y, pinRadius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(60, 80, 140, ' + (breathe * 0.15) + ')';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(pin.x + 12, pin.y, pinRadius, 0, Math.PI * 2);
+      ctx.fillStyle = val ? '#ff3333' : '#3a5588';
+      ctx.fill();
+      ctx.strokeStyle = val ? '#ff6666' : '#667';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      if (val) {
+        ctx.beginPath();
+        ctx.arc(pin.x + 12, pin.y, pinRadius + 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 50, 50, 0.25)';
+        ctx.fill();
+      }
+    });
+  }
 
 class IONode {
   constructor(type, label, x, y, id) {

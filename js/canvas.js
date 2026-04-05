@@ -445,6 +445,14 @@ class CanvasRenderer {
     const w = right - left;
     const h = bottom - top;
 
+    // Day 40: Board theme dispatch
+    const boardTheme = (typeof window !== 'undefined' && window.game && window.game.cosmetics)
+      ? window.game.cosmetics.getActiveBoardTheme() : 'breadboard';
+    if (boardTheme !== 'breadboard') {
+      this._drawThemedBoard(ctx, vw, boardTheme);
+      return;
+    }
+
     // Day 35 T5: Light mode canvas adaptation
     const isLight = document.body.classList.contains('light-mode');
 
@@ -760,6 +768,120 @@ class CanvasRenderer {
     ctx.setLineDash([]);
 
     ctx.restore();
+  }
+
+
+  // Day 40: Themed board renderers
+  _drawThemedBoard(ctx, vw, theme) {
+    const { left, top, right, bottom } = vw;
+    const w = right - left;
+    const h = bottom - top;
+    const scale = this.viewTransform.scale;
+
+    if (theme === 'pcb_green') {
+      // PCB Green: dark green bg, white silkscreen traces, silver pads
+      ctx.fillStyle = '#0a4a0a';
+      ctx.fillRect(left, top, w, h);
+      // Silkscreen traces
+      ctx.strokeStyle = 'rgba(220, 220, 200, 0.12)';
+      ctx.lineWidth = 1;
+      const gridStartY = Math.floor(top / 40) * 40;
+      for (let y = gridStartY; y <= bottom; y += 40) {
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+      }
+      const gridStartX = Math.floor(left / 40) * 40;
+      for (let x = gridStartX; x <= right; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
+      }
+      // Silver pads
+      if (scale > 0.4) {
+        const gridSize = 20;
+        const hsx = Math.ceil(left / gridSize) * gridSize;
+        const hsy = Math.ceil(top / gridSize) * gridSize;
+        for (let x = hsx; x < right; x += gridSize) {
+          for (let y = hsy; y < bottom; y += gridSize) {
+            ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#b0b0a0'; ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#c8c8b8'; ctx.fill();
+          }
+        }
+      }
+      // Power rails
+      ctx.strokeStyle = 'rgba(255, 60, 60, 0.5)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(left, 30); ctx.lineTo(right, 30); ctx.stroke();
+      ctx.strokeStyle = 'rgba(60, 60, 255, 0.5)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(left, 370); ctx.lineTo(right, 370); ctx.stroke();
+    } else if (theme === 'dark_circuit') {
+      // Dark Circuit: near-black, faint cyan traces, minimal grid
+      ctx.fillStyle = '#080810';
+      ctx.fillRect(left, top, w, h);
+      ctx.strokeStyle = 'rgba(0, 200, 220, 0.06)';
+      ctx.lineWidth = 1;
+      const gridStartY = Math.floor(top / 40) * 40;
+      for (let y = gridStartY; y <= bottom; y += 40) {
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+      }
+      const gridStartX = Math.floor(left / 40) * 40;
+      for (let x = gridStartX; x <= right; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
+      }
+      // Sparse dots
+      if (scale > 0.5) {
+        const gridSize = 40;
+        const hsx = Math.ceil(left / gridSize) * gridSize;
+        const hsy = Math.ceil(top / gridSize) * gridSize;
+        for (let x = hsx; x < right; x += gridSize) {
+          for (let y = hsy; y < bottom; y += gridSize) {
+            ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 200, 220, 0.15)'; ctx.fill();
+          }
+        }
+      }
+      // Power rails
+      ctx.strokeStyle = 'rgba(255, 50, 50, 0.3)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(left, 30); ctx.lineTo(right, 30); ctx.stroke();
+      ctx.strokeStyle = 'rgba(50, 50, 255, 0.3)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(left, 370); ctx.lineTo(right, 370); ctx.stroke();
+    } else if (theme === 'blueprint') {
+      // Blueprint: white bg, blue grid, blue-on-white
+      ctx.fillStyle = '#f0f4ff';
+      ctx.fillRect(left, top, w, h);
+      ctx.strokeStyle = 'rgba(60, 80, 180, 0.15)';
+      ctx.lineWidth = 1;
+      const gridStartY = Math.floor(top / 40) * 40;
+      for (let y = gridStartY; y <= bottom; y += 40) {
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+      }
+      const gridStartX = Math.floor(left / 40) * 40;
+      for (let x = gridStartX; x <= right; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
+      }
+      // Fine grid
+      if (scale > 0.4) {
+        ctx.strokeStyle = 'rgba(60, 80, 180, 0.06)';
+        const fineSize = 20;
+        const fsx = Math.ceil(left / fineSize) * fineSize;
+        const fsy = Math.ceil(top / fineSize) * fineSize;
+        for (let x = fsx; x < right; x += fineSize) {
+          ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
+        }
+        for (let y = fsy; y < bottom; y += fineSize) {
+          ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+        }
+      }
+      // Power rails
+      ctx.strokeStyle = 'rgba(200, 50, 50, 0.4)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(left, 30); ctx.lineTo(right, 30); ctx.stroke();
+      ctx.strokeStyle = 'rgba(50, 50, 200, 0.4)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(left, 370); ctx.lineTo(right, 370); ctx.stroke();
+    }
+
+    // Active traces during simulation (shared across themes)
+    const sim = this.gameState.simulation;
+    if (sim && sim.animating) {
+      this._renderActiveTraces(ctx, right, bottom);
+    }
   }
 
   findPinAt(mx, my, threshold) {

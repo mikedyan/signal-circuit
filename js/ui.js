@@ -43,6 +43,7 @@ class UI {
     this.setupAccessibleWiring(); // Day 33 T9
     this.setupLightMode(); // Day 35 T5
     this.setupUndoTimeline(); // Day 35 T6
+    this.setupCosmeticModal(); // Day 40
   }
 
   // ── Colorblind Mode Toggle ──
@@ -3668,4 +3669,113 @@ class UI {
     const currentDot = track.querySelector('.current');
     if (currentDot) currentDot.scrollIntoView({ inline: 'center', behavior: 'smooth' });
   }
+
+  // ── Day 40: Cosmetic Customization Modal ──
+
+  setupCosmeticModal() {
+    const btn = document.getElementById('customize-btn');
+    const modal = document.getElementById('cosmetic-modal');
+    const closeBtn = document.getElementById('cosmetic-close');
+    if (!btn || !modal) return;
+
+    btn.addEventListener('click', () => {
+      this.renderCosmeticModal();
+      modal.style.display = 'flex';
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    }
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+
+  renderCosmeticModal() {
+    const sections = document.getElementById('cosmetic-sections');
+    if (!sections || !this.gameState.cosmetics) return;
+    const data = this.gameState.cosmetics.getAllForUI();
+
+    let html = '';
+
+    // Wire Colors
+    html += '<div class="cosmetic-section-title">Wire Colors</div>';
+    html += '<div class="cosmetic-grid">';
+    for (const c of data.wireColors) {
+      const cls = (c.active ? ' cosmetic-active' : '') + (!c.unlocked ? ' cosmetic-locked' : '');
+      html += '<div class="cosmetic-card' + cls + '" data-category="wireColor" data-id="' + c.id + '">';
+      html += '<div class="cosmetic-card-preview">';
+      if (c.palette) {
+        for (let i = 0; i < Math.min(5, c.palette.length); i++) {
+          html += '<span class="cosmetic-swatch" style="background:' + c.palette[i] + '"></span>';
+        }
+      } else {
+        const defaults = ['#4488ff', '#ff6644', '#44cc44', '#cc44cc', '#ffaa22'];
+        for (const col of defaults) {
+          html += '<span class="cosmetic-swatch" style="background:' + col + '"></span>';
+        }
+      }
+      html += '</div>';
+      html += '<div class="cosmetic-card-name">' + c.name + '</div>';
+      html += '<div class="cosmetic-card-desc">' + c.desc + '</div>';
+      if (!c.unlocked) html += '<div class="cosmetic-card-condition">' + c.conditionText + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+
+    // Gate Skins
+    html += '<div class="cosmetic-section-title">Gate Skins</div>';
+    html += '<div class="cosmetic-grid">';
+    for (const c of data.gateSkins) {
+      const cls = (c.active ? ' cosmetic-active' : '') + (!c.unlocked ? ' cosmetic-locked' : '');
+      const skinEmojis = { ic_chip: '🔲', neon: '💡', retro: '📻', minimal: '⬜' };
+      html += '<div class="cosmetic-card' + cls + '" data-category="gateSkin" data-id="' + c.id + '">';
+      html += '<div class="cosmetic-card-preview"><span style="font-size:20px">' + (skinEmojis[c.id] || '🔲') + '</span></div>';
+      html += '<div class="cosmetic-card-name">' + c.name + '</div>';
+      html += '<div class="cosmetic-card-desc">' + c.desc + '</div>';
+      if (!c.unlocked) html += '<div class="cosmetic-card-condition">' + c.conditionText + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+
+    // Board Themes
+    html += '<div class="cosmetic-section-title">Board Themes</div>';
+    html += '<div class="cosmetic-grid">';
+    for (const c of data.boardThemes) {
+      const cls = (c.active ? ' cosmetic-active' : '') + (!c.unlocked ? ' cosmetic-locked' : '');
+      const themeColors = { breadboard: '#ece8d8', pcb_green: '#0a4a0a', dark_circuit: '#080810', blueprint: '#f0f4ff' };
+      html += '<div class="cosmetic-card' + cls + '" data-category="boardTheme" data-id="' + c.id + '">';
+      html += '<div class="cosmetic-card-preview"><span style="display:inline-block;width:40px;height:20px;border-radius:4px;background:' + (themeColors[c.id] || '#888') + ';border:1px solid #555;"></span></div>';
+      html += '<div class="cosmetic-card-name">' + c.name + '</div>';
+      html += '<div class="cosmetic-card-desc">' + c.desc + '</div>';
+      if (!c.unlocked) html += '<div class="cosmetic-card-condition">' + c.conditionText + '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+
+    sections.innerHTML = html;
+
+    // Attach click handlers
+    sections.querySelectorAll('.cosmetic-card:not(.cosmetic-locked)').forEach(card => {
+      card.addEventListener('click', () => {
+        const cat = card.dataset.category;
+        const id = card.dataset.id;
+        if (cat === 'wireColor') this.gameState.cosmetics.setWireColor(id);
+        else if (cat === 'gateSkin') this.gameState.cosmetics.setGateSkin(id);
+        else if (cat === 'boardTheme') this.gameState.cosmetics.setBoardTheme(id);
+        this.renderCosmeticModal();
+        if (this.gameState.audio) this.gameState.audio.playButtonClick();
+      });
+    });
+  }
+
+  showCosmeticUnlockToast(name) {
+    const toast = document.createElement('div');
+    toast.className = 'cosmetic-unlock-toast';
+    toast.textContent = '\uD83C\uDFA8 New cosmetic unlocked: ' + name;
+    document.body.appendChild(toast);
+    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4100);
+  }
+
 }

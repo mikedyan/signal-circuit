@@ -1,0 +1,134 @@
+{
+  "day": 40,
+  "title": "Cosmetic Unlock System",
+  "summary": "Add a cosmetic unlock system where players earn visual customizations through gameplay progress. Wire colors, gate skins, and board themes unlock via star thresholds and chapter completions. A new Customization section on the level select screen lets players preview and select cosmetics. All selections persist in localStorage.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Create CosmeticManager class with categories: wireColors, gateSkins, boardThemes. Each cosmetic has an id, name, unlock condition (stars threshold or achievement), preview description, and locked/unlocked state. Load/save to localStorage.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "CosmeticManager class exists with wireColors, gateSkins, boardThemes arrays",
+        "Each cosmetic has: id, name, description, unlockCondition, isUnlocked() method",
+        "Selections persist in localStorage under 'signal-circuit-cosmetics' key",
+        "getActiveWireColor(), getActiveGateSkin(), getActiveBoardTheme() methods return current selections"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Define wire color cosmetics: default green (free), blue (10 stars), orange (25 stars), purple (50 stars), rainbow (all 3-star), gold (perfect campaign — 3-star all levels). Wire colors change the WIRE_COLORS_DEFAULT palette used in wires.js.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "6 wire color options defined with star/achievement unlock conditions",
+        "checkUnlocks() method evaluates conditions against current progress",
+        "Default wire color is 'classic' (existing green-based palette)"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Define gate skin cosmetics: default IC chip (free), neon (Chapter 2 complete), retro (Chapter 4 complete), minimal (50% 3-star). Gate skins change the rendering style in Gate.render().",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "4 gate skin options defined with chapter/star unlock conditions",
+        "Each skin has a distinct visual style description"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T4",
+      "description": "Define board theme cosmetics: default breadboard (free), PCB green (Chapter 3 complete), dark circuit (Chapter 5 complete), blueprint (all chapters complete). Board themes change drawBreadboard() in canvas.js.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "4 board theme options defined with chapter completion unlock conditions",
+        "Each theme has a distinct visual description"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T5",
+      "description": "Add Customization button and modal to level select screen. Show three sections (Wire Colors, Gate Skins, Board Themes) with preview thumbnails. Locked cosmetics show lock icon + unlock condition. Selected cosmetic has green checkmark.",
+      "files_to_modify": ["index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "🎨 Customize button visible on level select screen",
+        "Modal shows all cosmetics grouped by category",
+        "Locked cosmetics show lock icon and condition text",
+        "Selected cosmetic highlighted with checkmark",
+        "Click on unlocked cosmetic selects it"
+      ],
+      "depends_on": ["T1", "T2", "T3", "T4"]
+    },
+    {
+      "id": "T6",
+      "description": "Wire rendering respects active wire color cosmetic. Modify wires.js to check CosmeticManager for active wire palette and use it instead of hardcoded WIRE_COLORS_DEFAULT.",
+      "files_to_modify": ["js/wires.js"],
+      "acceptance_criteria": [
+        "Selecting blue wire color makes all new wires use blue-based palette",
+        "Rainbow mode cycles through full rainbow hues",
+        "Gold mode uses gold/amber shades",
+        "Existing wires update when palette changes (on next level load)"
+      ],
+      "depends_on": ["T1", "T2"]
+    },
+    {
+      "id": "T7",
+      "description": "Gate rendering respects active gate skin cosmetic. Add alternate render paths in Gate.render() for neon, retro, and minimal skins.",
+      "files_to_modify": ["js/gates.js"],
+      "acceptance_criteria": [
+        "Neon skin: bright colored outlines, dark fill, glowing text",
+        "Retro skin: rounded corners, softer colors, serif labels",
+        "Minimal skin: flat white rectangles, no shadow, thin borders",
+        "Default IC chip skin remains unchanged"
+      ],
+      "depends_on": ["T1", "T3"]
+    },
+    {
+      "id": "T8",
+      "description": "Board rendering respects active board theme cosmetic. Add alternate drawBreadboard() styles in canvas.js for PCB green, dark circuit, and blueprint themes.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "PCB green: dark green background, white silkscreen traces, silver pads",
+        "Dark circuit: near-black background, faint cyan traces, minimal grid",
+        "Blueprint: white background, blue grid lines, blue-on-white aesthetic",
+        "Default breadboard theme remains unchanged"
+      ],
+      "depends_on": ["T1", "T4"]
+    },
+    {
+      "id": "T9",
+      "description": "Show NEW UNLOCK! toast when a cosmetic is earned after level completion. Check unlocks on every level complete and show toast if new cosmetics are available.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "After level completion, checkUnlocks() is called",
+        "If new cosmetics were unlocked, toast shows '🎨 New cosmetic unlocked: {name}'",
+        "Toast appears after the star display animation"
+      ],
+      "depends_on": ["T1", "T5"]
+    },
+    {
+      "id": "T10",
+      "description": "Wire Customization UI and rendering integration. Connect CosmeticManager to UI event handlers and ensure game.cosmetics is accessible from wires.js, gates.js, and canvas.js rendering paths.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "game.cosmetics is initialized in GameState constructor",
+        "UI modal renders dynamically from CosmeticManager data",
+        "Selecting a cosmetic immediately updates game state and marks dirty",
+        "Cosmetic selections survive page reload"
+      ],
+      "depends_on": ["T5", "T6", "T7", "T8"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Verify wire colors change when cosmetic is selected",
+    "Verify gate skins render correctly for each option",
+    "Verify board themes render correctly for each option",
+    "Verify unlock conditions are correctly evaluated",
+    "Verify cosmetic selections persist across page reload",
+    "Verify NEW UNLOCK toast shows after earning a cosmetic",
+    "Verify light mode and colorblind mode still work with custom cosmetics",
+    "Verify mobile layout of customization modal"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
