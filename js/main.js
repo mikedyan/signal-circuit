@@ -630,6 +630,11 @@ class GameState {
 
     // T8: Update streak on app start
     this.streakData = this.updateStreak();
+    // Day 41: Check streak achievement
+    if (this.streakData && this.streakData.streak >= 14) {
+      const streakAchs = this.achievements.checkStreakAchievement(this.streakData.streak);
+      if (streakAchs.length > 0) setTimeout(() => this.ui.showAchievementToasts(streakAchs), 2000);
+    }
     // Day 40: Seed cosmetic unlock baseline
     if (this.cosmetics) this.cosmetics.checkUnlocks();
     this.ui.updateStreakDisplay(this.streakData);
@@ -1119,6 +1124,8 @@ class GameState {
   startChallenge(numInputs, numOutputs) {
     this.isChallengeMode = true;
     this.isSandboxMode = false;
+    // Day 41: Track mode exploration
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('random'));
     const level = generateChallenge(numInputs, numOutputs);
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
@@ -1132,6 +1139,8 @@ class GameState {
   startDailyChallenge() {
     this.isChallengeMode = false;
     this.isSandboxMode = false;
+    // Day 41: Track mode exploration
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('daily'));
     const level = generateDailyChallenge();
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
@@ -1145,6 +1154,8 @@ class GameState {
   startSandbox(numInputs, numOutputs) {
     this.isSandboxMode = true;
     this.isChallengeMode = false;
+    // Day 41: Track mode exploration
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('sandbox'));
     const level = generateSandboxLevel(numInputs || 2, numOutputs || 1);
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
@@ -1159,6 +1170,8 @@ class GameState {
     this._saveLevelSelectScroll(); // #95
     this.isChallengeMode = false;
     this.isSandboxMode = false;
+    // Day 41: Track mode exploration
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('campaign'));
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
     this.audio.startAmbient();
@@ -1954,8 +1967,14 @@ class GameState {
               if (aesthetics.score >= 85 && this.achievements.unlock('clean_circuit')) {
                 newAchs.push('clean_circuit');
               }
+              // Day 41: Perfectionist achievement
+              const perfAchs = this.achievements.checkPerfectionist(aesthetics.score, gateCount);
+              newAchs.push(...perfAchs);
               if (this.currentLevel.isDaily) {
                 if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
+                // Day 41: Track daily challenge completion for streak/total
+                const dailyAchs = this.achievements.trackDailyChallengeComplete();
+                newAchs.push(...dailyAchs);
                 // Show share button for daily challenge
                 this.ui.showShareButton(gateCount, stars, elapsed);
                 this.earnHintToken('daily challenge');
@@ -2061,8 +2080,14 @@ class GameState {
         if (aesthetics.score >= 85 && this.achievements.unlock('clean_circuit')) {
           newAchs.push('clean_circuit');
         }
+        // Day 41: Perfectionist achievement
+        const perfAchs2 = this.achievements.checkPerfectionist(aesthetics.score, gateCount);
+        newAchs.push(...perfAchs2);
         if (this.currentLevel.isDaily) {
           if (this.achievements.unlock('daily_solver')) newAchs.push('daily_solver');
+          // Day 41: Track daily challenge completion for streak/total
+          const dailyAchs2 = this.achievements.trackDailyChallengeComplete();
+          newAchs.push(...dailyAchs2);
           this.ui.showShareButton(gateCount, stars, elapsed);
           this.earnHintToken('daily challenge');
           this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
@@ -2971,6 +2996,8 @@ class GameState {
     this.isChallengeMode = true;
     this.isSandboxMode = false;
     this.blitzStart = Date.now();
+    // Day 41: Track mode exploration
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('blitz'));
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
     this.audio.startAmbient();
@@ -3048,6 +3075,8 @@ class GameState {
     const allLevels = LEVELS.map(l => l.id);
     if (allLevels.length === 0) return;
     this.speedrunMode = true;
+    // Day 41: Track mode exploration
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('speedrun'));
     this.speedrunLevelIdx = 0;
     this.speedrunSplits = [];
     this.isChallengeMode = false;

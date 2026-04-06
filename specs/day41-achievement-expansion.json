@@ -1,0 +1,128 @@
+{
+  "day": 41,
+  "title": "Achievement Expansion — 15 New Engagement Achievements",
+  "summary": "Add 15 new achievements focused on daily engagement, streaks, mastery milestones, and gameplay variety. These achievements incentivize returning daily, exploring all game modes, and mastering optimization. Requires tracking new stats (daily challenge streaks, modes explored, NAND-only solves) and wiring check logic into existing completion flows.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add 'Week Warrior' achievement (silver): Complete 7 daily challenges in a row. Track consecutive daily challenge completions in stats. Must be 7 distinct calendar days of daily challenge completion.",
+      "files_to_modify": ["js/achievements.js", "js/main.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'week_warrior' with tier 'silver'",
+        "stats tracks dailyChallengeStreak (incremented on daily challenge completion, reset if a day is missed)",
+        "Achievement unlocks when dailyChallengeStreak >= 7",
+        "trackChallengeComplete checks for daily-specific streak separately from general challenge count"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add 'Month of Logic' achievement (gold): Complete 30 daily challenges total. Uses existing stats.challengesCompleted but specifically for daily challenges.",
+      "files_to_modify": ["js/achievements.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'month_of_logic' with tier 'gold'",
+        "stats tracks dailyChallengesTotal separately from random challenges",
+        "Achievement unlocks when dailyChallengesTotal >= 30"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Add 'Streak Master' achievement (gold): Reach a 14-day play streak. Check streak data on updateStreak() call.",
+      "files_to_modify": ["js/achievements.js", "js/main.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'streak_master' with tier 'gold'",
+        "Achievement check runs inside updateStreak() when streak >= 14",
+        "Toast displays when first unlocked"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Add 'Minimalist' achievement (silver): Solve 10 levels at optimal gate count (exactly optimalGates). Track in stats.optimalSolves.",
+      "files_to_modify": ["js/achievements.js", "js/main.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'minimalist' with tier 'silver'",
+        "stats.optimalSolves incremented when gateCount <= level.optimalGates on completion",
+        "Achievement unlocks when optimalSolves >= 10"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Add 'Speed Circuit' achievement (silver): Complete any Chapter 4+ level in under 60 seconds. Chapter 4 = levels 21+ (chapter id 5+).",
+      "files_to_modify": ["js/achievements.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'speed_circuit' with tier 'silver'",
+        "Checked in checkAfterCompletion when levelId >= 21 and elapsed < 60",
+        "Achievement unlocks on first qualifying completion"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Add 'Explorer' achievement (bronze): Try all 6 game modes (campaign, daily, random challenge, blitz, speedrun, sandbox). Track modes in stats.modesPlayed set.",
+      "files_to_modify": ["js/achievements.js", "js/main.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'explorer' with tier 'bronze'",
+        "stats.modesPlayed is a persisted array/set tracking which modes have been entered",
+        "Each mode entry point (startLevel, startDailyChallenge, startChallenge, startBlitzMode, startSpeedrunMode, startSandbox) records the mode",
+        "Achievement unlocks when all 6 modes have been tried"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Add 'Social Butterfly' achievement (bronze): Share a friend challenge link. Track when showChallengeFriendButton's share action is triggered.",
+      "files_to_modify": ["js/achievements.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'social_butterfly' with tier 'bronze'",
+        "Achievement unlocks when the friend challenge URL is copied/shared",
+        "Toast displays on first share"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "Add 'Creator' achievement (bronze): Create and play a custom level via the level creator. Track when a custom level URL is generated.",
+      "files_to_modify": ["js/achievements.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'creator' with tier 'bronze'",
+        "Achievement unlocks when custom level creation flow completes (URL generated)",
+        "Toast displays on first creation"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Add 'Universal Builder' achievement (silver): Solve any level using only NAND gates when other gates were available. Check gate types on completion.",
+      "files_to_modify": ["js/achievements.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'universal_builder' with tier 'silver'",
+        "On level completion, check if all placed gates are NAND AND level.availableGates includes non-NAND types",
+        "Achievement unlocks on first qualifying solve"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Add 'Perfectionist' achievement (gold): Achieve 100% aesthetics score on any level with 3+ gates. Check aesthetics score in completion flow.",
+      "files_to_modify": ["js/achievements.js", "js/main.js"],
+      "acceptance_criteria": [
+        "ACHIEVEMENTS array contains 'perfectionist' with tier 'gold'",
+        "On completion, if gates.length >= 3 and aesthetics.score === 100, unlock achievement",
+        "Toast displays on unlock"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Verify all 15 new achievements appear in the achievements modal with correct tier and description",
+    "Verify existing achievements still work after the additions",
+    "Verify daily challenge streak tracking distinguishes daily from random challenges",
+    "Verify mode tracking persists across sessions via localStorage",
+    "Verify NAND-only detection works correctly (all gates must be NAND, and other gates must be available)"
+  ],
+  "rollback_criteria": "If any existing achievement or completion flow is broken, revert"
+}

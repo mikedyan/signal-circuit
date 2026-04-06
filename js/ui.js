@@ -2725,6 +2725,9 @@ class UI {
     const data = this._getCreatorData();
     const encoded = btoa(JSON.stringify(data));
     const url = window.location.origin + window.location.pathname + '#custom=' + encoded;
+    // Day 41: Track custom level creation for Creator achievement
+    const creatorAchs = this.gameState.achievements.trackCustomLevelCreated();
+    this.showAchievementToasts(creatorAchs);
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
@@ -3198,6 +3201,9 @@ class UI {
     btn.onclick = () => {
       const hash = encodeFriendChallenge(level, gateCount);
       const url = window.location.origin + window.location.pathname + hash;
+      // Day 41: Track social share for Social Butterfly achievement
+      const shareAchs = this.gameState.achievements.trackFriendChallengeShare();
+      this.showAchievementToasts(shareAchs);
       navigator.clipboard.writeText(url).then(() => {
         btn.textContent = '✅ Link Copied!';
         setTimeout(() => { btn.textContent = '🤝 Challenge Friend'; }, 2000);

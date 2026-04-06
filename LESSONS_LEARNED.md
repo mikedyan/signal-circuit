@@ -1,4 +1,10 @@
 # Lessons Learned
+## Day 41 — Achievement Expansion
+- **Stats schema migration with spread defaults**: Using `{ ...defaults, ...(data.stats || {}) }` cleanly handles loading old saves that lack new fields. No explicit migration code needed — new fields get default values, existing fields are preserved. Always define a full defaults object for this pattern.
+- **Separate tracking for similar-but-distinct events**: Daily challenges and random challenges look similar but need separate counters (dailyChallengesTotal vs challengesCompleted) and separate streak logic. When adding new achievement types, audit whether existing counters truly match or need splitting.
+- **Mode tracking at entry points**: Each game mode has a clear entry function (startLevel, startDailyChallenge, startChallenge, startSandbox, startBlitzMode, startSpeedrunMode) — ideal hook points for tracking. Call tracking before mode-specific setup so the array persists even if setup fails.
+- **Achievement condition checks need gameState access**: Some achievements (like Universal Builder) need to inspect the actual game state (gates array, level config). Pass gameState to checkAfterCompletion and use it directly rather than storing derived state separately.
+
 ## Day 40 — Cosmetic Unlock System
 - **Non-invasive rendering overlays**: Using early-return dispatch (`if (skin !== 'ic_chip') { this._renderSkin(ctx, isSelected, skin); return; }`) keeps the default render path completely unchanged. Zero regression risk on existing visuals. Same pattern works for board themes.
 - **Delta-based unlock detection**: Seed a baseline Set of unlocked IDs on first `checkUnlocks()` call, then detect new unlocks by comparing against the baseline on subsequent calls. Prevents false "NEW UNLOCK!" toasts on page reload.
