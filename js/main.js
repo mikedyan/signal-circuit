@@ -411,6 +411,11 @@ class GameState {
     this.tutorial = null;
     // Day 39 T2: Truth table row hover → canvas highlight
     this._highlightedInputRow = null;
+    // Day 42 T8: Error explanation traces for canvas highlighting
+    this._failureTraces = null;
+    this._errorHighlightGates = [];
+    this._errorHighlightWires = [];
+    this._errorHighlightUntil = 0;
   }
 
   // ── Hint Token System (Day 31) ──
@@ -1586,6 +1591,7 @@ class GameState {
     this.ui.updateToolbox();
     this.ui._ttResetState(); // Day 39: Reset truth table sort/compact state on level load
     this._highlightedInputRow = null; // Day 39 T2: Clear highlight on level load
+    this._clearFailureTraces(); // Day 42: Clear error traces on level load
     this.ui.updateTruthTable(null);
     this.ui.updateResultDisplay('idle', 'Build your circuit, then press RUN');
     this.ui.hideStarDisplay();
@@ -1876,6 +1882,8 @@ class GameState {
       this.audio.playButtonClick();
       this.ui.updateResultDisplay('idle', 'Simulating...');
       this.ui.hideStarDisplay();
+      // Day 42 T8: Clear previous failure traces
+      this._clearFailureTraces();
 
       // Day 39 T9: Auto-expand truth table when running simulation
       if (this.ui) this.ui._expandTruthTable();
@@ -1989,6 +1997,11 @@ class GameState {
               }
             }
           } else {
+            // Day 42 T9: Compute and store failure traces
+            const failTraces = this._computeFailureTraces(results);
+            this._failureTraces = failTraces;
+            this.ui.updateTruthTable(results, failTraces);
+
             const passCount = results.filter(r => r.pass).length;
             const total = results.length;
             const failCount = total - passCount;
@@ -2026,6 +2039,8 @@ class GameState {
 
     this.audio.playButtonClick();
     this.ui.hideStarDisplay();
+    // Day 42 T8: Clear previous failure traces
+    this._clearFailureTraces();
 
     // Day 39 T9: Auto-expand truth table when running simulation
     if (this.ui) this.ui._expandTruthTable();
@@ -2096,6 +2111,11 @@ class GameState {
         if (this.speedrunMode) setTimeout(() => this._speedrunAdvance(), 1200);
       }
     } else {
+      // Day 42 T9: Compute and store failure traces
+      const failTraces = this._computeFailureTraces(results);
+      this._failureTraces = failTraces;
+      this.ui.updateTruthTable(results, failTraces);
+
       const passCount = results.filter(r => r.pass).length;
       const total = results.length;
       const failCount = total - passCount;
@@ -3424,6 +3444,50 @@ class GameState {
     this.audio.stopAmbient();
     // Day 38: Clean up tutorial on level exit
     if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
+  }
+
+  // Day 42 T9: Compute failure traces for all failing rows
+  _computeFailureTraces(results) {
+    if (!results || !this.currentLevel) return null;
+    var level = this.currentLevel;
+    var tracesByRow = {};
+    var constantOutputs = this.simulation.detectConstantOutputs(results);
+
+    for (var i = 0; i < results.length; i++) {
+      var r = results[i];
+      if (r.pass) continue;
+      var rowTraces = this.simulation.traceFailurePath(r.inputs, r.expectedOutputs);
+      // Attach constant output hints
+      if (rowTraces && rowTraces.length > 0) {
+        var outputLabels = level.outputs.map(function(o) { return o.label; });
+        for (var ti = 0; ti < rowTraces.length; ti++) {
+          var trace = rowTraces[ti];
+          // Find the output index by label
+          var outIdx = outputLabels.indexOf(trace.outputLabel);
+          if (outIdx >= 0 && constantOutputs[outIdx] !== undefined) {
+            trace._constantHint = constantOutputs[outIdx];
+          }
+        }
+      }
+      tracesByRow[i] = rowTraces;
+    }
+    return tracesByRow;
+  }
+
+  // Day 42 T7: Show error highlight on canvas for specific gates/wires
+  _showErrorHighlight(gateIds, wireIds) {
+    this._errorHighlightGates = gateIds || [];
+    this._errorHighlightWires = wireIds || [];
+    this._errorHighlightUntil = performance.now() + 2500;
+    this.markDirty();
+  }
+
+  // Day 42 T8: Clear failure traces
+  _clearFailureTraces() {
+    this._failureTraces = null;
+    this._errorHighlightGates = [];
+    this._errorHighlightWires = [];
+    this._errorHighlightUntil = 0;
   }
 }
 

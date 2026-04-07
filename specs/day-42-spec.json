@@ -1,0 +1,130 @@
+{
+  "day": 42,
+  "title": "Error Explanation System",
+  "summary": "When simulation fails, provide detailed gate-level diagnosis explaining WHY each row failed. Trace signal paths from inputs through gates to outputs, highlight the specific gate whose output diverged from expected, and show expandable explanations in the truth table. Includes disconnected output detection, always-X detection, gate-level trace display, and a 'Show me' button that highlights the traced path on the canvas.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "After failed simulation, trace the signal path for each failing row. In simulation.js, add a method `traceFailurePath(inputValues, expectedOutputs)` that evaluates the circuit and returns a trace object: for each output that is wrong, record the chain of gates from input to output with their actual values.",
+      "files_to_modify": ["js/simulation.js"],
+      "acceptance_criteria": [
+        "traceFailurePath returns an array of trace objects, one per wrong output",
+        "Each trace contains: outputLabel, expected, actual, path (array of {gateId, gateType, inputValues, outputValue})",
+        "Trace depth is limited to 3 gates max"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Show 'Expected OUT=X, Got OUT=Y' with highlighted path from inputs to output showing where the signal diverged. After a failed run, the failing output node on the canvas should flash red. Highlight the specific gate whose output was wrong in red.",
+      "files_to_modify": ["js/main.js", "js/canvas.js"],
+      "acceptance_criteria": [
+        "After failed simulation, canvas highlights wrong output nodes in red",
+        "The gate whose output diverged is highlighted with red glow on canvas",
+        "Highlights clear on next simulation or level load"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Add expandable 'Why did this fail?' section below each failing row in the truth table. Clicking it shows the gate-level trace in monospace font with color-coded values (green=1, red=0). Format: 'A=1 → AND(1,0) = 0 → NOT(0) = 1 → OUT gets 1, but expected 0'.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Each failing row in the truth table has an expandable 'Why?' link",
+        "Expanding shows the gate trace in monospace with color-coded 0/1 values",
+        "Trace is human-readable with arrows between gates",
+        "Trace depth limited to 3 gates"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T4",
+      "description": "For disconnected outputs, show 'Output [name] is not connected to any gate'. Detect this before simulation and display the message in the result area.",
+      "files_to_modify": ["js/simulation.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "If an output node has no incoming wire, the trace says 'Output [name] is not connected'",
+        "This message appears in the expandable trace section for the relevant rows"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T5",
+      "description": "For always-0 or always-1 outputs, detect and suggest 'Your circuit always outputs X regardless of inputs'. Check across all truth table results for a constant output.",
+      "files_to_modify": ["js/simulation.js"],
+      "acceptance_criteria": [
+        "After failed simulation, if an output is constant across all rows, trace includes 'always outputs X' hint",
+        "Detection runs after all rows are evaluated"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T6",
+      "description": "Style the error explanation UI: monospace font for traces, green text for '1' values, red/dim for '0' values, subtle background for the expanded section. Add CSS for `.error-trace`, `.trace-val-0`, `.trace-val-1`, `.trace-expand-btn`.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Trace text uses monospace font",
+        "1-values are green, 0-values are red/dim",
+        "Expand button is subtle but clickable",
+        "Expanded section has distinct background"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Add 'Show me' button in the expanded trace that briefly highlights the traced signal path on the canvas. When clicked, flash the involved gates and wires for 2 seconds with a bright overlay.",
+      "files_to_modify": ["js/ui.js", "js/main.js", "js/canvas.js"],
+      "acceptance_criteria": [
+        "'Show me' button appears in each expanded trace section",
+        "Clicking it highlights the relevant gates and wires on canvas for ~2 seconds",
+        "Highlight uses a bright color (e.g., yellow glow) distinct from normal rendering",
+        "Highlight auto-clears after 2 seconds"
+      ],
+      "depends_on": ["T1", "T2", "T3"]
+    },
+    {
+      "id": "T8",
+      "description": "Store last failure traces on GameState so canvas renderer can access them for highlighting. Add `_failureTraces` property, cleared on level load and new simulation.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "GameState has _failureTraces property",
+        "It is populated after failed simulation with trace data",
+        "It is cleared on level load, clearCircuit, and new simulation start"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T9",
+      "description": "Integrate the error explanation into the existing simulation flow. After runSimulation and runQuickTest produce failure results, call the trace method and populate the truth table with expandable explanations. Also store traces on GameState for canvas highlighting.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "After failed animated or quick simulation, traces are computed and passed to updateTruthTable",
+        "Traces are stored on GameState._failureTraces",
+        "Truth table rows show expandable 'Why?' for failed rows"
+      ],
+      "depends_on": ["T1", "T3", "T8"]
+    },
+    {
+      "id": "T10",
+      "description": "Canvas rendering: when _failureTraces has highlighted gates/wires (from 'Show me'), render a bright glow around those gates and a brighter wire color for involved wires. Check for `_errorHighlightUntil` timestamp to auto-clear.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "Canvas renders error highlight glow on gates listed in _errorHighlightGates",
+        "Canvas renders brighter wires for wires listed in _errorHighlightWires",
+        "Highlight auto-clears when performance.now() > _errorHighlightUntil",
+        "Highlight is visually distinct (yellow/orange glow)"
+      ],
+      "depends_on": ["T8"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Test with a simple wrong circuit (e.g., OR gate where AND is needed) — verify trace shows correct path",
+    "Test with disconnected output — verify 'not connected' message",
+    "Test with always-0 circuit — verify 'always outputs 0' hint",
+    "Test 'Show me' button — verify canvas highlights then clears",
+    "Test that explanations don't appear for passing rows",
+    "Test with complex 3+ gate circuits — verify trace depth limit works",
+    "Regression: verify normal success flow still works correctly"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced in simulation or truth table rendering, revert"
+}

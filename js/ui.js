@@ -757,12 +757,13 @@ class UI {
   }
 
   // ── Truth Table (Day 39 Enhanced) ──
-  updateTruthTable(results) {
+  updateTruthTable(results, traces) {
     const level = this.gameState.currentLevel;
     if (!level) return;
 
     const tts = this._ttState();
     if (results) tts.lastResults = results;
+    if (traces !== undefined) tts.lastTraces = traces;
     // T4: Auto-enable key rows for 4-input levels on first render (no results yet)
     if (!results && !tts._initialized && level.inputs.length >= 4) {
       tts.keyRowsMode = true;
@@ -970,6 +971,21 @@ class UI {
       }
 
       tbody.appendChild(tr);
+
+      // Day 42 T3: Expandable error trace for failing rows
+      if (result && !result.pass) {
+        const allTraces = tts.lastTraces;
+        const rowTraces = allTraces ? allTraces[idx] : null;
+        if (rowTraces && rowTraces.length > 0) {
+          const traceTr = document.createElement('tr');
+          traceTr.className = 'error-trace-row';
+          const traceTd = document.createElement('td');
+          traceTd.colSpan = 100;
+          traceTd.innerHTML = this._buildTraceHtml(rowTraces, idx);
+          traceTr.appendChild(traceTd);
+          tbody.appendChild(traceTr);
+        }
+      }
     }
     table.appendChild(tbody);
 
@@ -1068,6 +1084,49 @@ class UI {
     }
 
     return rows.filter((_, i) => keySet.has(i));
+  }
+
+  // Day 42 T3: Build HTML for error trace expansion
+  _buildTraceHtml(rowTraces, rowIdx) {
+    let html = '';
+    for (const trace of rowTraces) {
+      const traceId = 'trace-' + rowIdx + '-' + trace.outputLabel;
+      // Why? toggle button
+      html += '<div style="margin:2px 0;">';
+      const toggleFn = 'var s=document.getElementById(this.dataset.tid);if(s){s.classList.toggle(\'expanded\');this.textContent=s.classList.contains(\'expanded\')?\'\u25BC Why?\':\'\u25B6 Why?\'}';
+      html += '<span class="error-trace-btn" data-tid="' + traceId + '" onclick="' + toggleFn + '">\u25B6 Why?</span>';
+      html += ' <span style="color:#888;font-size:10px;">Expected ' + trace.outputLabel + '=<span class="trace-val-' + trace.expected + '">' + trace.expected + '</span>, got <span class="trace-val-' + trace.actual + '">' + trace.actual + '</span></span>';
+      // Expandable section
+      html += '<div class="error-trace-section" id="' + traceId + '">';
+      if (trace.disconnected) {
+        html += '<div class="trace-disconnect-msg">\u26A0 ' + trace.message + '</div>';
+      } else {
+        html += '<div style="margin-bottom:4px;">';
+        for (let pi = 0; pi < trace.path.length; pi++) {
+          const step = trace.path[pi];
+          if (pi > 0) html += '<span class="trace-arrow"> \u2192 </span>';
+          if (step.type === 'input') {
+            html += '<span>' + step.label + '=<span class="trace-val-' + step.value + '">' + step.value + '</span></span>';
+          } else if (step.type === 'gate') {
+            const insHtml = step.inputValues.map(v => '<span class="trace-val-' + v + '">' + v + '</span>').join(',');
+            html += '<span class="trace-gate-name">' + step.gateType + '</span>(' + insHtml + ') = <span class="trace-val-' + step.outputValue + '">' + step.outputValue + '</span>';
+          }
+        }
+        html += '<span class="trace-arrow"> \u2192 </span>';
+        html += '<span>' + trace.outputLabel + ' gets <span class="trace-val-' + trace.actual + '">' + trace.actual + '</span>, expected <span class="trace-val-' + trace.expected + '">' + trace.expected + '</span></span>';
+        html += '</div>';
+      }
+      // Constant output hint
+      if (trace._constantHint !== undefined) {
+        html += '<div class="trace-constant-msg">\uD83D\uDCA1 Your circuit always outputs ' + trace._constantHint + ' for ' + trace.outputLabel + ' regardless of inputs</div>';
+      }
+      // Show me button
+      if (trace.gateIds.length > 0 || trace.wireIds.length > 0) {
+        html += '<button class="trace-show-me-btn" onclick="if(window.game){window.game._showErrorHighlight(' + JSON.stringify(trace.gateIds) + ',' + JSON.stringify(trace.wireIds) + ')}">\uD83D\uDD0D Show me</button>';
+      }
+      html += '</div></div>';
+    }
+    return html;
   }
 
   // T7: Focus Failed Rows button

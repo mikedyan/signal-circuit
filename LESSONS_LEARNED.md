@@ -112,3 +112,10 @@
 - **Slider inputs** — use `input` event (not `change`) for live updates as user drags.
 - **Leaderboard storage** — separate localStorage key from progress. Key by difficulty (e.g., "2x1") for per-difficulty rankings.
 - **Sandbox evaluation** — generate all 2^N input combos programmatically and evaluate once per row. No animation needed — instant results.
+
+## Day 42 — Error Explanation System
+- **Backward trace from wrong outputs**: Starting at the output node and following incoming wires backward through gates is the natural approach for "why did this fail?" explanations. Max depth of 3 keeps traces readable while covering most circuits.
+- **Prototype methods for appending behavior**: Using `Simulation.prototype.traceFailurePath = function(...)` allows adding methods to existing classes without rewriting the class body. Safe for append-only file edits.
+- **Storing traces by row index**: Using `tracesByRow[rowIndex]` maps cleanly to the truth table rendering, where each row already has an index. Avoids needing to cross-reference.
+- **Canvas highlight with auto-clear timestamp**: Using `performance.now() + duration` for `_errorHighlightUntil` is cleaner than setTimeout — no timer cleanup needed, and the render loop naturally stops when the time expires.
+- **Inline onclick for dynamic HTML**: When generating HTML via innerHTML in truth table rows, inline onclick handlers that reference `window.game` are the simplest approach. More complex event delegation isn't worth it for these small, transient DOM elements.

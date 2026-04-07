@@ -305,3 +305,127 @@ class Simulation {
     return this.animateSignalFlow();
   }
 }
+
+// Day 42 T1: Trace signal paths for failing outputs
+Simulation.prototype.traceFailurePath = function(inputValues, expectedOutputs) {
+  const gs = this.gameState;
+  const wires = gs.wireManager.wires;
+  const actualOutputs = this.evaluateOnce(inputValues);
+  const traces = [];
+
+  for (let oi = 0; oi < gs.outputNodes.length; oi++) {
+    const outNode = gs.outputNodes[oi];
+    const expected = expectedOutputs[oi];
+    const actual = actualOutputs[oi];
+    if (actual === expected) continue;
+
+    // T4: Check if output is disconnected
+    const incomingWire = wires.find(w => w.toGateId === outNode.id);
+    if (!incomingWire) {
+      traces.push({
+        outputLabel: outNode.label,
+        outputNodeId: outNode.id,
+        expected: expected,
+        actual: actual,
+        disconnected: true,
+        path: [],
+        gateIds: [],
+        wireIds: [],
+        message: 'Output ' + outNode.label + ' is not connected to any gate',
+      });
+      continue;
+    }
+
+    // Trace backward from output through gates, max depth 3
+    var path = [];
+    var gateIds = [];
+    var wireIds = [incomingWire.id];
+    var currentNodeId = incomingWire.fromGateId;
+    var currentPinIndex = incomingWire.fromPinIndex;
+    var depth = 0;
+    var maxDepth = 3;
+
+    while (depth < maxDepth) {
+      var node = gs.findNode(currentNodeId);
+      if (!node) break;
+
+      if (node instanceof IONode) {
+        path.unshift({
+          nodeId: node.id,
+          label: node.label,
+          type: 'input',
+          value: node.value,
+        });
+        break;
+      }
+
+      if (node instanceof Gate) {
+        gateIds.push(node.id);
+        var inputVals = node.inputValues ? node.inputValues.slice() : [];
+        var outputVal = node.outputValues ? node.outputValues[currentPinIndex] : 0;
+        path.unshift({
+          nodeId: node.id,
+          gateType: node.type,
+          type: 'gate',
+          inputValues: inputVals,
+          outputValue: outputVal,
+        });
+
+        // Follow first input wire to go deeper
+        var inWire = wires.find(function(w) { return w.toGateId === node.id && w.toPinIndex === 0; });
+        if (inWire) {
+          wireIds.push(inWire.id);
+          currentNodeId = inWire.fromGateId;
+          currentPinIndex = inWire.fromPinIndex;
+          depth++;
+        } else {
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+
+    // Build human-readable message
+    var message = '';
+    for (var pi = 0; pi < path.length; pi++) {
+      var step = path[pi];
+      if (step.type === 'input') {
+        message += step.label + '=' + step.value;
+      } else if (step.type === 'gate') {
+        var ins = step.inputValues.map(function(v) { return String(v); }).join(',');
+        message += ' \u2192 ' + step.gateType + '(' + ins + ') = ' + step.outputValue;
+      }
+    }
+    message += ' \u2192 ' + outNode.label + ' gets ' + actual + ', but expected ' + expected;
+
+    traces.push({
+      outputLabel: outNode.label,
+      outputNodeId: outNode.id,
+      expected: expected,
+      actual: actual,
+      disconnected: false,
+      path: path,
+      gateIds: gateIds,
+      wireIds: wireIds,
+      message: message,
+    });
+  }
+
+  return traces;
+};
+
+// Day 42 T5: Detect outputs that are always-0 or always-1
+Simulation.prototype.detectConstantOutputs = function(results) {
+  if (!results || results.length < 2) return {};
+  var numOutputs = results[0].actualOutputs.length;
+  var constants = {};
+  for (var oi = 0; oi < numOutputs; oi++) {
+    var firstVal = results[0].actualOutputs[oi];
+    var isConstant = results.every(function(r) { return r.actualOutputs[oi] === firstVal; });
+    if (isConstant) {
+      constants[oi] = firstVal;
+    }
+  }
+  return constants;
+};

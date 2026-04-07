@@ -236,6 +236,57 @@ class CanvasRenderer {
       }
     }
 
+    // Day 42 T10: Error highlight glow on gates and wires
+    if (this.gameState._errorHighlightUntil && performance.now() < this.gameState._errorHighlightUntil) {
+      const hlGates = this.gameState._errorHighlightGates || [];
+      const hlWires = this.gameState._errorHighlightWires || [];
+      const pulse = 0.5 + 0.3 * Math.sin(performance.now() / 200);
+
+      // Highlight gates
+      for (const gateId of hlGates) {
+        const gate = this.gameState.gates.find(function(g) { return g.id === gateId; });
+        if (gate) {
+          ctx.save();
+          ctx.shadowColor = 'rgba(255, 200, 0, 0.9)';
+          ctx.shadowBlur = 18;
+          ctx.strokeStyle = 'rgba(255, 200, 0, ' + pulse + ')';
+          ctx.lineWidth = 3;
+          roundRect(ctx, gate.x - 4, gate.y - 4, gate.def.width + 8, gate.def.height + 8, 8);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+      }
+
+      // Highlight wires
+      for (const wireId of hlWires) {
+        const wire = this.gameState.wireManager.wires.find(function(w) { return w.id === wireId; });
+        if (wire) {
+          const endpoints = this.gameState.wireManager.getWireEndpoints(wire);
+          if (endpoints) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 200, 0, ' + (pulse * 0.8) + ')';
+            ctx.lineWidth = 4;
+            ctx.shadowColor = 'rgba(255, 200, 0, 0.6)';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(endpoints.fromPin.x, endpoints.fromPin.y);
+            // Simple straight line for highlight
+            ctx.lineTo(endpoints.toPin.x, endpoints.toPin.y);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.restore();
+          }
+        }
+      }
+      this.gameState.markDirty(); // Keep animating the pulse
+    } else if (this.gameState._errorHighlightUntil && performance.now() >= this.gameState._errorHighlightUntil) {
+      // Auto-clear expired highlights
+      this.gameState._errorHighlightGates = [];
+      this.gameState._errorHighlightWires = [];
+      this.gameState._errorHighlightUntil = 0;
+    }
+
     // Gates
     for (const gate of this.gameState.gates) {
       const isSelected = this.gameState.selectedGate === gate;

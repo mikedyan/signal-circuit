@@ -5128,3 +5128,96 @@ body.light-mode .undo-dot.future {
   animation: toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 3.6s forwards;
   pointer-events: none;
 }
+
+/* Day 42: Error Explanation System */
+.error-trace-btn {
+  display: inline-block;
+  font-size: 10px;
+  color: #f90;
+  cursor: pointer;
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 153, 0, 0.3);
+  border-radius: 4px;
+  background: rgba(255, 153, 0, 0.08);
+  margin-left: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+.error-trace-btn:hover {
+  background: rgba(255, 153, 0, 0.2);
+  color: #fc0;
+}
+.error-trace-section {
+  display: none;
+  padding: 6px 8px;
+  margin-top: 4px;
+  background: rgba(255, 100, 0, 0.06);
+  border-left: 3px solid rgba(255, 153, 0, 0.5);
+  border-radius: 0 4px 4px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #ccc;
+}
+.error-trace-section.expanded {
+  display: block;
+}
+.trace-val-0 {
+  color: #f44;
+  font-weight: bold;
+}
+.trace-val-1 {
+  color: #4f4;
+  font-weight: bold;
+}
+.trace-arrow {
+  color: #888;
+  margin: 0 2px;
+}
+.trace-gate-name {
+  color: #fc0;
+  font-weight: bold;
+}
+.trace-expected {
+  color: #888;
+}
+.trace-disconnect-msg {
+  color: #f90;
+  font-style: italic;
+}
+.trace-constant-msg {
+  color: #f90;
+  font-size: 10px;
+  margin-top: 3px;
+}
+.trace-show-me-btn {
+  display: inline-block;
+  font-size: 10px;
+  color: #0cf;
+  cursor: pointer;
+  padding: 2px 8px;
+  border: 1px solid rgba(0, 204, 255, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 204, 255, 0.08);
+  margin-top: 4px;
+  transition: background 0.2s;
+}
+.trace-show-me-btn:hover {
+  background: rgba(0, 204, 255, 0.2);
+}
+/* Light mode overrides for error trace */
+.light-mode .error-trace-section {
+  background: rgba(255, 140, 0, 0.08);
+  color: #333;
+}
+.light-mode .trace-val-0 {
+  color: #c00;
+}
+.light-mode .trace-val-1 {
+  color: #080;
+}
+.light-mode .trace-arrow {
+  color: #888;
+}
+.light-mode .trace-gate-name {
+  color: #b06000;
+}
