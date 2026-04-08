@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 42,
-  "nextDay": 43,
-  "totalItemsCompleted": 241,
-  "totalItems": 241,
-  "status": "Phase 3 Day 7 complete — Error Explanation System (10 items)",
-  "lastRun": "2026-04-07T08:08:00-07:00",
+  "lastCompletedDay": 43,
+  "nextDay": 44,
+  "totalItemsCompleted": 251,
+  "totalItems": 251,
+  "status": "Phase 3 Day 8 complete — Level Preview Thumbnails (10 items)",
+  "lastRun": "2026-04-08T08:13:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -53,6 +53,11 @@
     },
     "42": {
       "items": ["Signal path tracing (traceFailurePath)", "Canvas error gate/wire highlights", "Expandable 'Why?' trace in truth table", "Disconnected output detection", "Always-0/always-1 output detection", "Error trace CSS styling", "'Show me' canvas highlight button", "GameState _failureTraces property", "Integration with runSimulation/runQuickTest", "Canvas highlight auto-clear rendering"],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "43": {
+      "items": ["Preview data capture on level completion", "Mini-preview canvas rendering (120x80)", "Only completed levels show preview", "Enlarged preview on hover/tap (300x200)", "LRU eviction (20 preview limit)", "View Solution button with ghost overlay", "Preview update on solution improvement", "IntersectionObserver lazy loading", "CSS styling (dark + light mode)", "Bounding box auto-scaling for any circuit size"],
       "status": "complete",
       "qa": "all-pass"
     }

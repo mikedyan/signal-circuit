@@ -29,6 +29,7 @@ const REPLAY_KEY = 'signal-circuit-replays';
 const COLLECTION_KEY = 'signal-circuit-collection';
 const TOKENS_KEY = 'signal-circuit-hint-tokens';
 const PROFILE_KEY = 'signal-circuit-profile';
+const PREVIEW_KEY = 'signal-circuit-previews';
 const PLACEMENT_KEY = 'signal-circuit-placement-done';
 const SCHEMA_VERSION = 1;
 
@@ -1024,6 +1025,7 @@ class GameState {
     this._saveGhost(levelId); // T10: save solution as ghost for replay
     this._saveReplay(levelId); // Day 31: save replay
     this._saveToCollection(levelId); // Day 31: save to circuit collection
+    this._savePreview(levelId); // Day 43: save level preview thumbnail
     this._clearAutoSave(); // Clear auto-save on completion
 
     // Check for chapter completion
@@ -2986,6 +2988,64 @@ class GameState {
     } catch (e) {
       this.ui.updateGhostButton(false);
     }
+  }
+
+
+  // ── Day 43: Level Preview Thumbnails ──
+  _savePreview(levelId) {
+    if (!levelId || typeof levelId !== 'number') return;
+    try {
+      // Capture gate positions/types, wire endpoint coords, I/O node positions
+      const wireData = [];
+      for (const wire of this.wireManager.wires) {
+        const endpoints = this.wireManager.getWireEndpoints(wire);
+        if (!endpoints) continue;
+        wireData.push({
+          fx: Math.round(endpoints.fromPin.x),
+          fy: Math.round(endpoints.fromPin.y),
+          tx: Math.round(endpoints.toPin.x),
+          ty: Math.round(endpoints.toPin.y),
+        });
+      }
+      const preview = {
+        g: this.gates.map(g => ({ t: g.type, x: Math.round(g.x), y: Math.round(g.y) })),
+        w: wireData,
+        io: [
+          ...this.inputNodes.map(n => ({ t: 'i', x: Math.round(n.x), y: Math.round(n.y) })),
+          ...this.outputNodes.map(n => ({ t: 'o', x: Math.round(n.x), y: Math.round(n.y) })),
+        ],
+        ts: Date.now(),
+        gc: this.gates.length,
+      };
+
+      const all = JSON.parse(SafeStorage.getItem(PREVIEW_KEY) || '{}');
+      all[levelId] = preview;
+
+      // LRU eviction: keep only 20 most recent previews
+      const keys = Object.keys(all);
+      if (keys.length > 20) {
+        keys.sort((a, b) => (all[a].ts || 0) - (all[b].ts || 0));
+        while (Object.keys(all).length > 20) {
+          const oldest = keys.shift();
+          delete all[oldest];
+        }
+      }
+
+      SafeStorage.setItem(PREVIEW_KEY, JSON.stringify(all));
+    } catch (e) {}
+  }
+
+  getPreview(levelId) {
+    try {
+      const all = JSON.parse(SafeStorage.getItem(PREVIEW_KEY) || '{}');
+      return all[levelId] || null;
+    } catch (e) { return null; }
+  }
+
+  getAllPreviews() {
+    try {
+      return JSON.parse(SafeStorage.getItem(PREVIEW_KEY) || '{}');
+    } catch (e) { return {}; }
   }
 
   toggleGhost() {

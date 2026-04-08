@@ -119,3 +119,10 @@
 - **Storing traces by row index**: Using `tracesByRow[rowIndex]` maps cleanly to the truth table rendering, where each row already has an index. Avoids needing to cross-reference.
 - **Canvas highlight with auto-clear timestamp**: Using `performance.now() + duration` for `_errorHighlightUntil` is cleaner than setTimeout — no timer cleanup needed, and the render loop naturally stops when the time expires.
 - **Inline onclick for dynamic HTML**: When generating HTML via innerHTML in truth table rows, inline onclick handlers that reference `window.game` are the simplest approach. More complex event delegation isn't worth it for these small, transient DOM elements.
+
+## Day 43 — Level Preview Thumbnails
+- **IntersectionObserver for lazy canvas rendering**: Creating many canvas elements is cheap, but rendering to them is expensive. Using IntersectionObserver to defer rendering until visible eliminates performance impact of dozens of preview canvases off-screen.
+- **Bounding box + proportional scaling for any-size content**: Computing the bounding box of all elements, then scaling with aspect ratio preservation and centering, handles any circuit size uniformly — from 1-gate tutorials to 10-gate complex circuits.
+- **2x canvas for retina sharpness**: Setting canvas.width to 2x the CSS display size gives crisp previews on high-DPI displays. Same pattern as the main game canvas.
+- **stopPropagation on nested clickables**: Preview canvas and View Solution button sit inside the clickable level card. Without stopPropagation(), clicking the preview triggers both the preview action AND the card's click-to-play handler. Always stop propagation on nested interactive elements.
+- **Compact data keys for localStorage economy**: Using single-letter keys (g, w, io, t, fx) instead of full names (gates, wires, inputOutput, type, fromX) reduces per-preview storage by ~40%. With LRU eviction at 20 entries, total storage stays well under 50KB.

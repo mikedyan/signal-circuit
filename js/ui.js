@@ -338,6 +338,74 @@ class UI {
         }
         btn.appendChild(diffLabel);
 
+        // Day 43: Level preview thumbnail for completed levels
+        if (isCompleted) {
+          const previewData = this.gameState.getPreview(levelId);
+          if (previewData) {
+            const previewCanvas = document.createElement('canvas');
+            previewCanvas.className = 'level-preview-canvas';
+            previewCanvas.width = 240;
+            previewCanvas.height = 160;
+            previewCanvas.style.width = '120px';
+            previewCanvas.style.height = '80px';
+            previewCanvas.dataset.levelId = levelId;
+            btn.appendChild(previewCanvas);
+
+            // Lazy render via IntersectionObserver
+            if (!this._previewObserver) {
+              this._previewObserver = new IntersectionObserver((entries) => {
+                for (const entry of entries) {
+                  if (entry.isIntersecting) {
+                    const canvas = entry.target;
+                    const lid = parseInt(canvas.dataset.levelId);
+                    if (lid && !canvas.dataset.rendered) {
+                      canvas.dataset.rendered = 'true';
+                      this._renderPreviewCanvas(canvas, lid);
+                    }
+                    this._previewObserver.unobserve(canvas);
+                  }
+                }
+              }, { rootMargin: '100px' });
+            }
+            this._previewObserver.observe(previewCanvas);
+
+            // Hover/tap to enlarge
+            previewCanvas.addEventListener('mouseenter', (e) => {
+              e.stopPropagation();
+              this._showEnlargedPreview(previewCanvas, levelId, e);
+            });
+            previewCanvas.addEventListener('mouseleave', () => {
+              this._hideEnlargedPreview();
+            });
+            previewCanvas.addEventListener('click', (e) => {
+              e.stopPropagation();
+              if (this._enlargedPreview && this._enlargedPreview.style.display !== 'none') {
+                this._hideEnlargedPreview();
+              } else {
+                this._showEnlargedPreview(previewCanvas, levelId, e);
+              }
+            });
+          }
+
+          // View Solution button
+          const viewSolBtn = document.createElement('button');
+          viewSolBtn.className = 'view-solution-btn';
+          viewSolBtn.textContent = '👁 Solution';
+          viewSolBtn.title = 'View your solution with ghost overlay';
+          viewSolBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.gameState.startLevel(levelId);
+            // Enable ghost overlay after level loads
+            setTimeout(() => {
+              if (this.gameState.ghostOverlay) {
+                this.gameState.showGhost = true;
+                this.gameState.markDirty();
+              }
+            }, 200);
+          });
+          btn.appendChild(viewSolBtn);
+        }
+
         if (isUnlocked) {
           btn.addEventListener('click', () => {
             this.gameState.startLevel(levelId);
@@ -3599,6 +3667,190 @@ class UI {
   }
 
   // ── Day 32 T10: Render Spaced Repetition Review ──
+
+  // ── Day 43: Level Preview Thumbnail Rendering ──
+
+  _renderPreviewCanvas(canvas, levelId) {
+    const preview = this.gameState.getPreview(levelId);
+    if (!preview || !preview.g) return;
+
+    const ctx = canvas.getContext('2d');
+    const cw = canvas.width;   // 240 (2x for retina)
+    const ch = canvas.height;  // 160
+
+    // Compute bounding box of all elements
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    for (const g of preview.g) {
+      const def = typeof GateTypes !== 'undefined' ? GateTypes[g.t] : null;
+      const gw = def ? def.width : 80;
+      const gh = def ? def.height : 60;
+      minX = Math.min(minX, g.x);
+      minY = Math.min(minY, g.y);
+      maxX = Math.max(maxX, g.x + gw);
+      maxY = Math.max(maxY, g.y + gh);
+    }
+    for (const io of preview.io) {
+      minX = Math.min(minX, io.x);
+      minY = Math.min(minY, io.y);
+      maxX = Math.max(maxX, io.x + 50);
+      maxY = Math.max(maxY, io.y + 40);
+    }
+    for (const w of preview.w) {
+      minX = Math.min(minX, w.fx, w.tx);
+      minY = Math.min(minY, w.fy, w.ty);
+      maxX = Math.max(maxX, w.fx, w.tx);
+      maxY = Math.max(maxY, w.fy, w.ty);
+    }
+
+    if (minX === Infinity) return; // No elements
+
+    // Add padding
+    const pad = 15;
+    minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+    const bw = maxX - minX;
+    const bh = maxY - minY;
+
+    // Scale to fit canvas with aspect ratio preservation
+    const scaleX = cw / bw;
+    const scaleY = ch / bh;
+    const scale = Math.min(scaleX, scaleY);
+    const offX = (cw - bw * scale) / 2 - minX * scale;
+    const offY = (ch - bh * scale) / 2 - minY * scale;
+
+    ctx.clearRect(0, 0, cw, ch);
+
+    // Dark translucent background
+    ctx.fillStyle = 'rgba(20, 25, 35, 0.85)';
+    ctx.fillRect(0, 0, cw, ch);
+
+    ctx.save();
+    ctx.translate(offX, offY);
+    ctx.scale(scale, scale);
+
+    // Draw wires as thin lines
+    ctx.lineWidth = 2 / scale;
+    ctx.lineCap = 'round';
+    const wireColors = typeof WIRE_COLORS_DEFAULT !== 'undefined' ? WIRE_COLORS_DEFAULT : ['#4488ff'];
+    for (let i = 0; i < preview.w.length; i++) {
+      const w = preview.w[i];
+      ctx.strokeStyle = wireColors[i % wireColors.length];
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      // Simple bezier
+      const dx = w.tx - w.fx;
+      const cpOffset = Math.abs(dx) * 0.4;
+      ctx.moveTo(w.fx, w.fy);
+      ctx.bezierCurveTo(w.fx + cpOffset, w.fy, w.tx - cpOffset, w.ty, w.tx, w.ty);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1.0;
+
+    // Draw I/O nodes as colored dots
+    for (const io of preview.io) {
+      const cx = io.x + 25;
+      const cy = io.y + 20;
+      const r = 6 / Math.max(scale, 0.5);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = io.t === 'i' ? '#44cc88' : '#4488ff';
+      ctx.fill();
+      ctx.strokeStyle = io.t === 'i' ? '#33aa66' : '#3366cc';
+      ctx.lineWidth = 1.5 / scale;
+      ctx.stroke();
+    }
+
+    // Draw gates as small colored rectangles
+    for (const g of preview.g) {
+      const def = typeof GateTypes !== 'undefined' ? GateTypes[g.t] : null;
+      const gw = def ? def.width : 80;
+      const gh = def ? def.height : 60;
+      const color = def ? def.color : '#888';
+      // Fill
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.8;
+      const cr = 4 / scale;
+      ctx.beginPath();
+      ctx.moveTo(g.x + cr, g.y);
+      ctx.lineTo(g.x + gw - cr, g.y);
+      ctx.quadraticCurveTo(g.x + gw, g.y, g.x + gw, g.y + cr);
+      ctx.lineTo(g.x + gw, g.y + gh - cr);
+      ctx.quadraticCurveTo(g.x + gw, g.y + gh, g.x + gw - cr, g.y + gh);
+      ctx.lineTo(g.x + cr, g.y + gh);
+      ctx.quadraticCurveTo(g.x, g.y + gh, g.x, g.y + gh - cr);
+      ctx.lineTo(g.x, g.y + cr);
+      ctx.quadraticCurveTo(g.x, g.y, g.x + cr, g.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1.0;
+      // Gate label
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold ' + Math.round(10 / Math.max(scale, 0.3)) + 'px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(g.t, g.x + gw / 2, g.y + gh / 2);
+    }
+
+    ctx.restore();
+  }
+
+  _showEnlargedPreview(sourceCanvas, levelId, event) {
+    this._hideEnlargedPreview(); // Clean up any existing
+
+    const overlay = document.createElement('div');
+    overlay.id = 'preview-enlarged-overlay';
+    overlay.className = 'preview-enlarged-overlay';
+
+    const bigCanvas = document.createElement('canvas');
+    bigCanvas.width = 600;
+    bigCanvas.height = 400;
+    bigCanvas.style.width = '300px';
+    bigCanvas.style.height = '200px';
+    bigCanvas.className = 'preview-enlarged-canvas';
+    overlay.appendChild(bigCanvas);
+
+    // Level title
+    const level = typeof getLevel === 'function' ? getLevel(levelId) : null;
+    if (level) {
+      const title = document.createElement('div');
+      title.className = 'preview-enlarged-title';
+      title.textContent = 'Level ' + levelId + ': ' + level.title;
+      overlay.appendChild(title);
+    }
+
+    document.body.appendChild(overlay);
+    this._enlargedPreview = overlay;
+
+    // Position near the source canvas
+    const rect = sourceCanvas.getBoundingClientRect();
+    overlay.style.position = 'fixed';
+    overlay.style.zIndex = '10000';
+    // Position above or below depending on space
+    const spaceBelow = window.innerHeight - rect.bottom;
+    if (spaceBelow > 230) {
+      overlay.style.top = (rect.bottom + 8) + 'px';
+    } else {
+      overlay.style.top = Math.max(8, rect.top - 228) + 'px';
+    }
+    overlay.style.left = Math.max(8, Math.min(rect.left - 90, window.innerWidth - 320)) + 'px';
+
+    // Render enlarged version
+    this._renderPreviewCanvas(bigCanvas, levelId);
+
+    // Dismiss on click outside
+    overlay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._hideEnlargedPreview();
+    });
+  }
+
+  _hideEnlargedPreview() {
+    if (this._enlargedPreview) {
+      this._enlargedPreview.remove();
+      this._enlargedPreview = null;
+    }
+  }
+
   renderReviewSection() {
     const gs = this.gameState;
     const reviews = gs.getReviewLevels();

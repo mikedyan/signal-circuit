@@ -1,0 +1,117 @@
+{
+  "day": 43,
+  "title": "Level Preview Thumbnails",
+  "summary": "Add miniature circuit preview thumbnails to completed levels on the level select screen. After solving a level, capture a simplified snapshot of the solution (gate types + positions + wire endpoints) and store it compactly in localStorage. Render mini-previews as 120x80 canvases on level select cards, show gates as small colored rectangles, wires as thin lines, I/O nodes as dots. Add hover/tap to enlarge, lazy rendering with IntersectionObserver, and LRU eviction to limit storage.",
+  "items": [
+    {
+      "id": "T1",
+      "description": "After solving a level, capture a simplified snapshot of the solution: gate types + positions, wire from/to endpoints (resolved to absolute coordinates), I/O node positions. Store as compact JSON in localStorage under a new PREVIEW_KEY ('signal-circuit-previews').",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "On level completion, _savePreview(levelId) saves gate positions/types, wire endpoint coords, and I/O node positions to localStorage",
+        "Data is compact: only gate type/x/y, wire fromPt/toPt (resolved coords), ioNode type/x/y",
+        "Preview updates when player improves a solution (fewer gates replaces old preview)"
+      ]
+    },
+    {
+      "id": "T2",
+      "description": "Render mini-preview as a 120x80 canvas element on level select cards for completed levels. Gates as small colored rectangles, wires as thin lines, I/O nodes as colored dots.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Completed levels with saved previews show a mini canvas (120x80) on the level card",
+        "Gates render as small colored rectangles matching their gate type color",
+        "Wires render as thin lines connecting gate pins",
+        "I/O nodes render as colored dots (green for inputs, blue for outputs)"
+      ]
+    },
+    {
+      "id": "T3",
+      "description": "Only show previews for completed levels (locked/uncompleted levels show no preview canvas).",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "No preview canvas appears on locked or uncompleted level cards",
+        "Preview canvas only appears when localStorage has preview data for that level"
+      ]
+    },
+    {
+      "id": "T4",
+      "description": "Add hover/tap to enlarge preview to a 300x200 overlay positioned near the level card.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Hovering (desktop) or tapping (mobile) on a mini-preview enlarges it to 300x200",
+        "Enlarged preview appears as an overlay/popup near the card",
+        "Clicking outside or moving mouse away dismisses the enlarged view"
+      ]
+    },
+    {
+      "id": "T5",
+      "description": "Limit preview storage to last 20 levels using LRU eviction. When saving a 21st preview, evict the oldest (by save timestamp).",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Only 20 previews max stored in localStorage",
+        "When exceeding 20, the oldest preview by timestamp is evicted",
+        "Eviction is automatic and transparent to the user"
+      ]
+    },
+    {
+      "id": "T6",
+      "description": "Add 'View Solution' button on completed level cards that loads the level with the ghost overlay pre-enabled.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Completed level cards have a 'View Solution' button/icon",
+        "Clicking it loads the level and enables the ghost overlay automatically"
+      ]
+    },
+    {
+      "id": "T7",
+      "description": "Ensure previews update when player improves a solution (fewer gates). The new, better solution replaces the old preview.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Re-completing a level with fewer gates updates the stored preview",
+        "Preview timestamp updates on each save"
+      ]
+    },
+    {
+      "id": "T8",
+      "description": "Render previews lazily using IntersectionObserver — only render canvas when scrolled into view.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Preview canvases are not rendered until they scroll into the viewport",
+        "IntersectionObserver triggers rendering when card becomes visible",
+        "No performance impact from having many preview canvases off-screen"
+      ]
+    },
+    {
+      "id": "T9",
+      "description": "Add CSS styling for the preview canvas, enlarged overlay, and View Solution button.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Mini-preview canvas has rounded corners, subtle border, and fits within level card",
+        "Enlarged overlay has background blur/dark overlay",
+        "View Solution button is styled consistently with existing UI"
+      ]
+    },
+    {
+      "id": "T10",
+      "description": "Scale preview rendering to fit any circuit into the 120x80 canvas. Compute bounding box of all elements and scale/translate to fit with padding.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Circuits of any size fit within the preview canvas with consistent padding",
+        "Small circuits don't appear tiny — they're scaled up to fill available space",
+        "Large circuits scale down proportionally"
+      ]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Preview appears on completed levels only",
+    "Preview canvas renders correctly with gates, wires, and I/O nodes",
+    "Enlarged view works on both hover (desktop) and tap (mobile)",
+    "LRU eviction works when > 20 previews stored",
+    "Performance: lazy loading via IntersectionObserver",
+    "Preview updates on improved solutions",
+    "View Solution button loads ghost overlay correctly",
+    "No regression on existing level select rendering"
+  ],
+  "rollback_criteria": "If level select rendering breaks or localStorage corruption occurs, revert"
+}

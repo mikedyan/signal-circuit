@@ -5221,3 +5221,95 @@ body.light-mode .undo-dot.future {
 .light-mode .trace-gate-name {
   color: #b06000;
 }
+
+/* ── Day 43: Level Preview Thumbnails ── */
+.level-preview-canvas {
+  display: block;
+  margin: 6px auto 2px;
+  border-radius: 6px;
+  border: 1px solid rgba(100, 140, 200, 0.25);
+  background: rgba(15, 20, 30, 0.6);
+  cursor: zoom-in;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.level-preview-canvas:hover {
+  border-color: rgba(100, 160, 255, 0.5);
+  box-shadow: 0 0 8px rgba(80, 140, 255, 0.3);
+}
+
+.view-solution-btn {
+  display: block;
+  width: calc(100% - 12px);
+  margin: 4px auto 2px;
+  padding: 3px 6px;
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  color: #8ab;
+  background: rgba(40, 55, 80, 0.6);
+  border: 1px solid rgba(80, 120, 180, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-solution-btn:hover {
+  color: #bdf;
+  background: rgba(50, 70, 110, 0.8);
+  border-color: rgba(100, 160, 255, 0.5);
+}
+
+.preview-enlarged-overlay {
+  background: rgba(10, 15, 25, 0.95);
+  border: 1px solid rgba(80, 120, 200, 0.4);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(60, 100, 200, 0.2);
+  backdrop-filter: blur(8px);
+  animation: previewFadeIn 0.2s ease;
+  cursor: pointer;
+}
+
+.preview-enlarged-canvas {
+  display: block;
+  border-radius: 6px;
+}
+
+.preview-enlarged-title {
+  text-align: center;
+  font-size: 12px;
+  color: #8ab;
+  margin-top: 6px;
+  font-family: 'Courier New', monospace;
+}
+
+@keyframes previewFadeIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Light mode overrides */
+.light-mode .level-preview-canvas {
+  border-color: rgba(80, 100, 140, 0.3);
+  background: rgba(230, 235, 245, 0.6);
+}
+
+.light-mode .view-solution-btn {
+  color: #456;
+  background: rgba(200, 210, 225, 0.6);
+  border-color: rgba(100, 120, 160, 0.3);
+}
+
+.light-mode .view-solution-btn:hover {
+  color: #234;
+  background: rgba(180, 195, 215, 0.8);
+}
+
+.light-mode .preview-enlarged-overlay {
+  background: rgba(240, 243, 250, 0.97);
+  border-color: rgba(100, 120, 160, 0.4);
+}
+
+.light-mode .preview-enlarged-title {
+  color: #456;
+}
