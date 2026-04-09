@@ -126,3 +126,10 @@
 - **2x canvas for retina sharpness**: Setting canvas.width to 2x the CSS display size gives crisp previews on high-DPI displays. Same pattern as the main game canvas.
 - **stopPropagation on nested clickables**: Preview canvas and View Solution button sit inside the clickable level card. Without stopPropagation(), clicking the preview triggers both the preview action AND the card's click-to-play handler. Always stop propagation on nested interactive elements.
 - **Compact data keys for localStorage economy**: Using single-letter keys (g, w, io, t, fx) instead of full names (gates, wires, inputOutput, type, fromX) reduces per-preview storage by ~40%. With LRU eviction at 20 entries, total storage stays well under 50KB.
+
+## Day 44 — Anonymous Daily Leaderboard
+- **Pre-screen pattern for game modes**: Using a dedicated pre-screen (like challenge-config, sandbox-config) works well for modes that need context before starting. Add the screen ID to the `showScreen()` screens array, and create a `showXConfig()` method on GameState for navigation.
+- **isDaily vs isChallenge**: Daily challenges are NOT marked as `isChallenge`. Always add explicit `isDaily` branches wherever `isChallenge` is checked to avoid fall-through to campaign logic. This caused the title to break on daily challenges.
+- **Seeded PRNG for pseudo-leaderboards**: Using a different seed offset (seed+999) for leaderboard scores prevents correlation with the challenge's truth table generation while maintaining determinism. Same date always produces same leaderboard.
+- **Best-only score tracking**: Compare both gates AND time when deciding whether to update — `gateCount < existing.gates || (gateCount === existing.gates && timeSeconds < existing.time)`. This prevents worse scores from overwriting better ones while allowing time improvements at the same gate count.
+- **Bell-curve score distribution**: Using `(r1 + r2) / 2` as a simple normal-distribution approximation (central limit theorem with 2 samples) creates believable score clusters around the mean without importing a statistics library.

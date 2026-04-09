@@ -5313,3 +5313,146 @@ body.light-mode .undo-dot.future {
 .light-mode .preview-enlarged-title {
   color: #456;
 }
+
+/* ── Day 44: Daily Challenge Leaderboard ── */
+#daily-config-screen {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-color, #0a0a1e);
+  z-index: 100;
+  overflow-y: auto;
+}
+
+#daily-config-content {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+#daily-config-content h2 {
+  color: #0f0;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.daily-lb-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  transition: background 0.15s;
+}
+
+.daily-lb-entry:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.daily-lb-entry.player-entry {
+  background: rgba(0, 255, 0, 0.08);
+  border-left: 3px solid #0f0;
+}
+
+.daily-lb-rank {
+  color: #666;
+  width: 28px;
+  font-weight: bold;
+  text-align: left;
+}
+
+.daily-lb-entry:nth-child(-n+3) .daily-lb-rank {
+  color: #ffd700;
+}
+
+.daily-lb-name {
+  color: #aaa;
+  flex: 1;
+  text-align: left;
+  margin-left: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-lb-entry.player-entry .daily-lb-name {
+  color: #0f0;
+}
+
+.daily-lb-gates {
+  color: #0f0;
+  font-weight: bold;
+  width: 50px;
+  text-align: right;
+}
+
+.daily-lb-time {
+  color: #555;
+  width: 50px;
+  text-align: right;
+}
+
+.daily-lb-empty {
+  color: #555;
+  font-size: 12px;
+  text-align: center;
+  padding: 15px;
+  font-style: italic;
+}
+
+.daily-history-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+}
+
+.daily-history-date {
+  color: #888;
+  width: 80px;
+  text-align: left;
+}
+
+.daily-history-gates {
+  color: #0f0;
+  font-weight: bold;
+  width: 50px;
+  text-align: center;
+}
+
+.daily-history-time {
+  color: #666;
+  width: 50px;
+  text-align: center;
+}
+
+.daily-history-badge {
+  width: 30px;
+  text-align: right;
+}
+
+.daily-result-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: bold;
+  background: rgba(0, 255, 0, 0.1);
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  color: #0f0;
+}
+
+/* Daily rank badge on level select button */
+.daily-rank-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 14px;
+  vertical-align: middle;
+}

@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1775661559">
+  <link rel="stylesheet" href="css/style.css?v=1775747849">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -206,6 +206,33 @@
           </div>
         </div>
         <button id="start-sandbox-btn" class="challenge-btn generate-btn">🔧 Start Sandbox</button>
+      </div>
+    </div>
+
+
+    <!-- Day 44: Daily Challenge Pre-Screen with Leaderboard -->
+    <div id="daily-config-screen" style="display:none;">
+      <div id="daily-config-content">
+        <button id="daily-back-btn" aria-label="Back to level select">← Back</button>
+        <h2>📅 Daily Challenge</h2>
+        <p id="daily-date-label" style="color:#888;font-size:12px;margin-bottom:12px;"></p>
+        <p id="daily-competitive-msg" style="color:#ffd700;font-size:13px;margin-bottom:16px;font-style:italic;"></p>
+        <div id="daily-name-row" style="margin-bottom:16px;display:flex;align-items:center;gap:8px;justify-content:center;">
+          <label for="daily-display-name" style="color:#888;font-size:12px;">Your name:</label>
+          <input type="text" id="daily-display-name" maxlength="16" placeholder="Anonymous" autocomplete="off" style="background:#1a1a2e;border:1px solid #333;color:#0f0;padding:4px 8px;border-radius:4px;font-family:'Courier New',monospace;font-size:12px;width:120px;">
+        </div>
+        <button id="start-daily-btn" class="challenge-btn generate-btn">⚡ Start Today's Challenge</button>
+        <div id="daily-result-summary" style="display:none;margin:12px 0;padding:10px;background:rgba(0,255,0,0.05);border:1px solid #333;border-radius:6px;">
+          <div id="daily-result-text" style="color:#0f0;font-size:13px;"></div>
+        </div>
+        <div id="daily-leaderboard-section" style="margin-top:20px;">
+          <h3 style="font-size:13px;color:#888;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:5px;">🏆 Today's Leaderboard</h3>
+          <div id="daily-leaderboard-list"></div>
+        </div>
+        <div id="daily-history-section" style="margin-top:20px;">
+          <h3 style="font-size:13px;color:#888;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:5px;">📊 Your Last 7 Days</h3>
+          <div id="daily-history-list"></div>
+        </div>
       </div>
     </div>
 
@@ -515,15 +542,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1775661559"></script>
-  <script src="js/wires.js?v=1775661559"></script>
-  <script src="js/simulation.js?v=1775661559"></script>
-  <script src="js/levels.js?v=1775661559"></script>
-  <script src="js/audio.js?v=1775661559"></script>
-  <script src="js/achievements.js?v=1775661559"></script>
-  <script src="js/canvas.js?v=1775661559"></script>
-  <script src="js/ui.js?v=1775661559"></script>
-  <script src="js/tutorial.js?v=1775661559"></script>
-  <script src="js/main.js?v=1775661559"></script>
+  <script src="js/gates.js?v=1775747849"></script>
+  <script src="js/wires.js?v=1775747849"></script>
+  <script src="js/simulation.js?v=1775747849"></script>
+  <script src="js/levels.js?v=1775747849"></script>
+  <script src="js/audio.js?v=1775747849"></script>
+  <script src="js/achievements.js?v=1775747849"></script>
+  <script src="js/canvas.js?v=1775747849"></script>
+  <script src="js/ui.js?v=1775747849"></script>
+  <script src="js/tutorial.js?v=1775747849"></script>
+  <script src="js/main.js?v=1775747849"></script>
 </body>
 </html>

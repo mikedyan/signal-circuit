@@ -31,6 +31,7 @@ const TOKENS_KEY = 'signal-circuit-hint-tokens';
 const PROFILE_KEY = 'signal-circuit-profile';
 const PREVIEW_KEY = 'signal-circuit-previews';
 const PLACEMENT_KEY = 'signal-circuit-placement-done';
+const DAILY_LB_KEY = 'signal-circuit-daily-leaderboard';
 const SCHEMA_VERSION = 1;
 
 // F29-4: Safe localStorage wrapper — graceful fallback on quota exceeded
@@ -333,6 +334,261 @@ class UndoManager {
   }
 }
 
+
+// ── Day 44: Anonymous Daily Leaderboard ──
+class DailyLeaderboard {
+  constructor() {
+    this._cache = {};
+  }
+
+  // Seeded PRNG matching levels.js daily challenge generation
+  _seededRand(seed) {
+    let s = seed;
+    return function rand() {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      return s / 0x7fffffff;
+    };
+  }
+
+  // Get today's date seed (same seed as daily challenge generation)
+  _getDateSeed(date) {
+    const d = date || new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }
+
+  // Get today's date key (YYYY-MM-DD)
+  _getDateKey(date) {
+    const d = date || new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Generate pseudo-leaderboard of 50 anonymous scores for a given day
+  generatePseudoScores(date) {
+    const seed = this._getDateSeed(date);
+    const cacheKey = seed.toString();
+    if (this._cache[cacheKey]) return this._cache[cacheKey];
+
+    // Determine daily challenge params (mirrors generateDailyChallenge logic)
+    const rand = this._seededRand(seed);
+    const numInputs = Math.floor(rand() * 2) + 2; // 2-3 inputs
+    const optimalGates = numInputs + 1;
+
+    // Use a different seed offset for leaderboard scores
+    const lbRand = this._seededRand(seed + 999);
+
+    const scores = [];
+    for (let i = 0; i < 50; i++) {
+      // Bell-curve-ish distribution: most around optimal+2, some outliers
+      const r1 = lbRand();
+      const r2 = lbRand();
+      // Box-Muller-ish approximation for normal distribution
+      const normalish = (r1 + r2) / 2; // 0-1, centered around 0.5
+      const gateOffset = Math.round(normalish * 6); // 0-6 above optimal
+      const gates = Math.max(optimalGates, optimalGates + gateOffset);
+
+      // Time: 30-300 seconds, correlated with gate count (more gates = slower)
+      const baseTime = 30 + Math.floor(lbRand() * 120);
+      const gateTimePenalty = (gates - optimalGates) * Math.floor(15 + lbRand() * 20);
+      const time = baseTime + gateTimePenalty;
+
+      // Generate anonymous name
+      const nameIdx = Math.floor(lbRand() * DAILY_LB_NAMES.length);
+      scores.push({
+        gates: gates,
+        time: time,
+        name: DAILY_LB_NAMES[nameIdx],
+        isPlayer: false
+      });
+    }
+
+    // Sort by gates (primary), then time (secondary)
+    scores.sort((a, b) => a.gates - b.gates || a.time - b.time);
+
+    this._cache[cacheKey] = scores;
+    return scores;
+  }
+
+  // Submit the player's real score — returns { rank, percentile, isNewBest }
+  submitScore(gateCount, timeSeconds, displayName) {
+    const dateKey = this._getDateKey();
+    const scores = this.generatePseudoScores();
+
+    // Load existing daily results
+    const history = this._loadHistory();
+    const existing = history[dateKey];
+    let isNewBest = false;
+
+    if (!existing || gateCount < existing.gates || (gateCount === existing.gates && timeSeconds < existing.time)) {
+      isNewBest = !existing || gateCount < existing.gates;
+      history[dateKey] = {
+        gates: gateCount,
+        time: timeSeconds,
+        name: displayName || 'You',
+        date: dateKey
+      };
+      this._saveHistory(history);
+      // Clear cache to force recalculation with player's new score
+      delete this._cache[this._getDateSeed().toString()];
+    }
+
+    const result = history[dateKey];
+    const rank = this.getRank(result.gates, result.time);
+    const percentile = this.getPercentile(result.gates, result.time);
+
+    return { rank, percentile, isNewBest, gates: result.gates, time: result.time };
+  }
+
+  // Get rank (1-based) among pseudo-scores + player
+  getRank(gateCount, timeSeconds) {
+    const scores = this.generatePseudoScores();
+    let rank = 1;
+    for (const s of scores) {
+      if (s.gates < gateCount || (s.gates === gateCount && s.time < timeSeconds)) {
+        rank++;
+      }
+    }
+    return rank;
+  }
+
+  // Get percentile (0-100, higher = better)
+  getPercentile(gateCount, timeSeconds) {
+    const scores = this.generatePseudoScores();
+    const total = scores.length + 1; // Include player
+    let beatCount = 0;
+    for (const s of scores) {
+      if (s.gates > gateCount || (s.gates === gateCount && s.time > timeSeconds)) {
+        beatCount++;
+      }
+    }
+    return Math.round((beatCount / total) * 100);
+  }
+
+  // Get rank badge emoji based on percentile
+  getRankBadge(percentile) {
+    if (percentile >= 90) return '🥇';
+    if (percentile >= 75) return '🥈';
+    if (percentile >= 50) return '🥉';
+    return '';
+  }
+
+  // Get top N scores for display (including player if completed)
+  getTopScores(n) {
+    const scores = [...this.generatePseudoScores()];
+    const dateKey = this._getDateKey();
+    const history = this._loadHistory();
+    const playerResult = history[dateKey];
+
+    if (playerResult) {
+      scores.push({
+        gates: playerResult.gates,
+        time: playerResult.time,
+        name: playerResult.name || 'You',
+        isPlayer: true
+      });
+    }
+
+    scores.sort((a, b) => a.gates - b.gates || a.time - b.time);
+    return scores.slice(0, n);
+  }
+
+  // Get today's best pseudo-score (for competitive framing)
+  getTodaysBest() {
+    const scores = this.generatePseudoScores();
+    return scores.length > 0 ? scores[0] : null;
+  }
+
+  // Check if today's challenge has been completed
+  isTodayCompleted() {
+    const history = this._loadHistory();
+    return !!history[this._getDateKey()];
+  }
+
+  // Get today's result
+  getTodayResult() {
+    const history = this._loadHistory();
+    return history[this._getDateKey()] || null;
+  }
+
+  // Get last N days of results
+  getRecentHistory(days) {
+    const history = this._loadHistory();
+    const results = [];
+    const now = new Date();
+    for (let i = 0; i < days; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = this._getDateKey(d);
+      if (history[key]) {
+        const entry = { ...history[key], dateKey: key };
+        // Compute percentile for this day
+        const dayScores = this.generatePseudoScores(d);
+        let beatCount = 0;
+        for (const s of dayScores) {
+          if (s.gates > entry.gates || (s.gates === entry.gates && s.time > entry.time)) {
+            beatCount++;
+          }
+        }
+        entry.percentile = Math.round((beatCount / (dayScores.length + 1)) * 100);
+        entry.badge = this.getRankBadge(entry.percentile);
+        results.push(entry);
+      }
+    }
+    return results;
+  }
+
+  // Load history from localStorage
+  _loadHistory() {
+    try {
+      const saved = SafeStorage.getItem(DAILY_LB_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        // Prune entries older than 30 days
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 30);
+        const cutoffKey = cutoff.toISOString().slice(0, 10);
+        for (const key of Object.keys(data)) {
+          if (key < cutoffKey) delete data[key];
+        }
+        return data;
+      }
+    } catch (e) {}
+    return {};
+  }
+
+  // Save history to localStorage
+  _saveHistory(history) {
+    SafeStorage.setItem(DAILY_LB_KEY, JSON.stringify(history));
+  }
+
+  // Update display name for today's entry
+  setDisplayName(name) {
+    const history = this._loadHistory();
+    const dateKey = this._getDateKey();
+    if (history[dateKey]) {
+      history[dateKey].name = name.slice(0, 16) || 'You';
+      this._saveHistory(history);
+    }
+    SafeStorage.setItem('signal-circuit-daily-name', name.slice(0, 16));
+  }
+
+  // Get saved display name
+  getDisplayName() {
+    return SafeStorage.getItem('signal-circuit-daily-name') || '';
+  }
+}
+
+// Anonymous names for pseudo-leaderboard entries
+const DAILY_LB_NAMES = [
+  'logicfan42', 'circuitwiz', 'nandmaster', 'gatekeep3r', 'booleanBoss',
+  'xor_ninja', 'chipDesigner', 'wireRunner', 'truthSeeker', 'bitFlipper',
+  'nor_knight', 'muxMaster', 'flipFlop99', 'signalPro', 'andGate_ace',
+  'orOrNot', 'notBad_lol', 'gateForce', 'logicLord', 'wireWitch',
+  'bitBender', 'nandNotNor', 'circuitSam', 'boolBear', 'gateCraft',
+  'pulseRider', 'techTinkr', 'sparkPlug', 'ohmsLaw42', 'byteMe',
+  'digiDaemon', 'logicLeap', 'andOrBut', 'pinConnect', 'solderSam',
+  'pcbPilot', 'gndControl', 'vccVibes', 'rippleCarry', 'fullAdder'
+];
+
 class GameState {
   constructor() {
     this.gates = [];
@@ -417,6 +673,8 @@ class GameState {
     this._errorHighlightGates = [];
     this._errorHighlightWires = [];
     this._errorHighlightUntil = 0;
+    // Day 44: Anonymous Daily Leaderboard
+    this.dailyLeaderboard = new DailyLeaderboard();
   }
 
   // ── Hint Token System (Day 31) ──
@@ -1085,6 +1343,7 @@ class GameState {
     if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
     this.ui.renderLevelSelect();
     this.ui.updateProgressBar(this.progress);
+    this.ui.updateDailyButtonBadge(); // Day 44: Update daily rank badge
     this.ui.showScreen('level-select');
     this.isAnimating = false;
     // #95: Restore scroll position after rendering
@@ -1126,6 +1385,16 @@ class GameState {
     // Day 38: Clean up tutorial on level exit
     if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
     this.ui.showScreen('sandbox-config');
+  }
+
+  // Day 44: Daily challenge pre-screen
+  showDailyConfig() {
+    this._saveLevelSelectScroll(); // #95
+    this.currentScreen = 'daily-config';
+    this.stopTimer();
+    this.audio.stopAmbient();
+    if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
+    this.ui.showDailyScreen();
   }
 
   startChallenge(numInputs, numOutputs) {
@@ -1990,6 +2259,9 @@ class GameState {
                 this.earnHintToken('daily challenge');
                 // Day 32 T3: Challenge Friend for dailies too
                 this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
+                // Day 44: Submit to daily leaderboard
+                const lbResult = this.dailyLeaderboard.submitScore(gateCount, elapsed, this.dailyLeaderboard.getDisplayName());
+                this.ui.showDailyLeaderboardResult(lbResult);
               }
               this.ui.showAchievementToasts(newAchs);
 
@@ -2108,6 +2380,9 @@ class GameState {
           this.ui.showShareButton(gateCount, stars, elapsed);
           this.earnHintToken('daily challenge');
           this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
+          // Day 44: Submit to daily leaderboard
+          const lbResult2 = this.dailyLeaderboard.submitScore(gateCount, elapsed, this.dailyLeaderboard.getDisplayName());
+          this.ui.showDailyLeaderboardResult(lbResult2);
         }
         this.ui.showAchievementToasts(newAchs);
         if (this.speedrunMode) setTimeout(() => this._speedrunAdvance(), 1200);

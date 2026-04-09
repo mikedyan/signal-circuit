@@ -44,6 +44,8 @@ class UI {
     this.setupLightMode(); // Day 35 T5
     this.setupUndoTimeline(); // Day 35 T6
     this.setupCosmeticModal(); // Day 40
+    this.setupDailyScreen(); // Day 44
+    this.updateDailyButtonBadge(); // Day 44
   }
 
   // ── Colorblind Mode Toggle ──
@@ -444,7 +446,7 @@ class UI {
   }
 
   showScreen(screen) {
-    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen'];
+    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen', 'daily-config-screen'];
     // T6: Play transition whoosh on screen change
     if (this.gameState.audio) this.gameState.audio.playTransitionWhoosh();
 
@@ -765,6 +767,12 @@ class UI {
       document.getElementById('run-btn').textContent = '🔍 TEST';
     } else if (level.isChallenge) {
       document.getElementById('level-title').textContent = `🎲 ${level.title}`;
+      document.getElementById('level-desc').textContent = level.description;
+      document.getElementById('prev-level').disabled = true;
+      document.getElementById('next-level').disabled = true;
+      document.getElementById('run-btn').textContent = '▶ RUN';
+    } else if (level.isDaily) {
+      document.getElementById('level-title').textContent = `📅 ${level.title}`;
       document.getElementById('level-desc').textContent = level.description;
       document.getElementById('prev-level').disabled = true;
       document.getElementById('next-level').disabled = true;
@@ -1489,9 +1497,9 @@ class UI {
       this.gameState.showChallengeConfig();
     });
 
-    // Daily challenge button
+    // Daily challenge button — Day 44: Show pre-screen with leaderboard
     document.getElementById('daily-challenge-btn').addEventListener('click', () => {
-      this.gameState.startDailyChallenge();
+      this.showDailyScreen();
     });
 
     // Sandbox button on level select — show config screen
@@ -1686,7 +1694,14 @@ class UI {
       } catch (e) {}
 
       const streakText = streak > 1 ? `\n🔥 ${streak}-day streak` : '';
-      const text = `⚡ Signal Circuit — Daily Challenge\n📅 ${dateStr}\n${starEmoji} ${gateCount} gates | ⏱ ${mins}:${secs.toString().padStart(2, '0')}${streakText}\nhttps://mikedyan.github.io/signal-circuit/`;
+      // Day 44: Include leaderboard rank in share text
+      let rankText = '';
+      if (this._lastDailyLbResult) {
+        const pct = this._lastDailyLbResult.percentile;
+        const badge = this.gameState.dailyLeaderboard.getRankBadge(pct);
+        rankText = badge ? `\n${badge} Top ${100 - pct}%` : `\n📊 Top ${100 - pct}%`;
+      }
+      const text = `⚡ Signal Circuit — Daily Challenge\n📅 ${dateStr}\n${starEmoji} ${gateCount} gates | ⏱ ${mins}:${secs.toString().padStart(2, '0')}${rankText}${streakText}\nhttps://mikedyan.github.io/signal-circuit/`;
       navigator.clipboard.writeText(text).then(() => {
         btn.textContent = '✓ Copied!';
         setTimeout(() => {
@@ -1696,6 +1711,197 @@ class UI {
         btn.textContent = '⚠ Copy failed';
       });
     };
+  }
+
+  // ── Day 44: Daily Challenge Leaderboard UI ──
+
+  setupDailyScreen() {
+    const backBtn = document.getElementById('daily-back-btn');
+    const startBtn = document.getElementById('start-daily-btn');
+    const nameInput = document.getElementById('daily-display-name');
+
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        this.gameState.showLevelSelect();
+      });
+    }
+
+    if (startBtn) {
+      startBtn.addEventListener('click', () => {
+        // Save display name if entered
+        if (nameInput && nameInput.value.trim()) {
+          this.gameState.dailyLeaderboard.setDisplayName(nameInput.value.trim());
+        }
+        this.gameState.startDailyChallenge();
+      });
+    }
+
+    if (nameInput) {
+      // Load saved name
+      const savedName = this.gameState.dailyLeaderboard.getDisplayName();
+      if (savedName) nameInput.value = savedName;
+    }
+  }
+
+  showDailyScreen() {
+    // Hide all screens
+    this.showScreen('daily-config');
+
+    const dateLabel = document.getElementById('daily-date-label');
+    const competitiveMsg = document.getElementById('daily-competitive-msg');
+    const resultSummary = document.getElementById('daily-result-summary');
+    const resultText = document.getElementById('daily-result-text');
+    const nameInput = document.getElementById('daily-display-name');
+
+    // Set date
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+    if (dateLabel) dateLabel.textContent = dateStr;
+
+    // Load saved name
+    if (nameInput) {
+      const savedName = this.gameState.dailyLeaderboard.getDisplayName();
+      if (savedName) nameInput.value = savedName;
+    }
+
+    // Competitive framing (T8)
+    const lb = this.gameState.dailyLeaderboard;
+    const best = lb.getTodaysBest();
+    if (competitiveMsg && best) {
+      competitiveMsg.textContent = `Today's leader used just ${best.gates} gates — can you match them?`;
+      competitiveMsg.style.display = '';
+    }
+
+    // Show existing result if already completed (T5)
+    const todayResult = lb.getTodayResult();
+    if (resultSummary && resultText && todayResult) {
+      const pct = lb.getPercentile(todayResult.gates, todayResult.time);
+      const badge = lb.getRankBadge(pct);
+      const mins = Math.floor(todayResult.time / 60);
+      const secs = todayResult.time % 60;
+      resultText.innerHTML = `${badge} Today's result: <strong>${todayResult.gates} gates</strong> · ⏱ ${mins}:${secs.toString().padStart(2, '0')} · Top ${100 - pct}%`;
+      resultSummary.style.display = 'block';
+      // Hide competitive message if already completed
+      if (competitiveMsg) competitiveMsg.style.display = 'none';
+    } else if (resultSummary) {
+      resultSummary.style.display = 'none';
+    }
+
+    // Render leaderboard (T3)
+    this.renderDailyLeaderboard();
+
+    // Render history (T4)
+    this.renderDailyHistory();
+  }
+
+  renderDailyLeaderboard() {
+    const container = document.getElementById('daily-leaderboard-list');
+    if (!container) return;
+
+    const lb = this.gameState.dailyLeaderboard;
+    const top10 = lb.getTopScores(10);
+
+    if (top10.length === 0) {
+      container.innerHTML = '<div class="daily-lb-empty">No scores yet today</div>';
+      return;
+    }
+
+    let html = '';
+    top10.forEach((entry, idx) => {
+      const rank = idx + 1;
+      const mins = Math.floor(entry.time / 60);
+      const secs = entry.time % 60;
+      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+      const playerClass = entry.isPlayer ? ' player-entry' : '';
+      const nameDisplay = entry.isPlayer ? (entry.name || 'You') : entry.name;
+
+      html += `<div class="daily-lb-entry${playerClass}">
+        <span class="daily-lb-rank">${rank}.</span>
+        <span class="daily-lb-name">${nameDisplay}</span>
+        <span class="daily-lb-gates">${entry.gates} gates</span>
+        <span class="daily-lb-time">${timeStr}</span>
+      </div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  renderDailyHistory() {
+    const container = document.getElementById('daily-history-list');
+    if (!container) return;
+
+    const lb = this.gameState.dailyLeaderboard;
+    const history = lb.getRecentHistory(7);
+
+    if (history.length === 0) {
+      container.innerHTML = '<div class="daily-lb-empty">No daily challenges played recently</div>';
+      return;
+    }
+
+    let html = '';
+    history.forEach(entry => {
+      const mins = Math.floor(entry.time / 60);
+      const secs = entry.time % 60;
+      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+      // Format date nicely
+      const d = new Date(entry.dateKey + 'T12:00:00');
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      html += `<div class="daily-history-entry">
+        <span class="daily-history-date">${dateStr}</span>
+        <span class="daily-history-gates">${entry.gates} gates</span>
+        <span class="daily-history-time">⏱ ${timeStr}</span>
+        <span class="daily-history-badge">${entry.badge || ''}</span>
+      </div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  // Show leaderboard result after daily completion (T2)
+  showDailyLeaderboardResult(lbResult) {
+    if (!lbResult) return;
+    const badge = this.gameState.dailyLeaderboard.getRankBadge(lbResult.percentile);
+    const pctBetter = lbResult.percentile;
+
+    // Add result to the par display area
+    const parEl = document.getElementById('par-display');
+    if (parEl) {
+      const rankText = badge ? `${badge} ` : '';
+      parEl.textContent = `${rankText}You solved in ${lbResult.gates} gates — faster than ${pctBetter}% of players today!`;
+      parEl.style.display = 'block';
+      parEl.style.color = pctBetter >= 75 ? '#ffd700' : pctBetter >= 50 ? '#0f0' : '#aaa';
+    }
+
+    // Store result for share button enhancement
+    this._lastDailyLbResult = lbResult;
+  }
+
+  // Update daily challenge button on level select with rank badge (T5)
+  updateDailyButtonBadge() {
+    const btn = document.getElementById('daily-challenge-btn');
+    if (!btn) return;
+    const lb = this.gameState.dailyLeaderboard;
+    const todayResult = lb.getTodayResult();
+
+    // Get the seasonal theme text (preserve it)
+    let baseText = '📅 Daily Challenge';
+    try {
+      const theme = typeof getSeasonalTheme === 'function' ? getSeasonalTheme() : null;
+      if (theme && theme.emoji) baseText = `${theme.emoji} Daily Challenge`;
+    } catch (e) {}
+
+    if (todayResult) {
+      const pct = lb.getPercentile(todayResult.gates, todayResult.time);
+      const badge = lb.getRankBadge(pct);
+      if (badge) {
+        btn.innerHTML = `${baseText} <span class="daily-rank-badge">${badge}</span>`;
+      } else {
+        btn.innerHTML = `${baseText} <span class="daily-rank-badge">✅</span>`;
+      }
+    } else {
+      btn.textContent = baseText;
+    }
   }
 
   // ── Achievements ──

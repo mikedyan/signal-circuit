@@ -1,0 +1,140 @@
+{
+  "day": 44,
+  "title": "Anonymous Daily Leaderboard",
+  "summary": "Add a pseudo-leaderboard system for daily challenges. Since there's no backend, generate consistent 'anonymous' scores using the daily seed PRNG. After completing a daily challenge, show the player how they compare (percentile, rank). Display a top-10 leaderboard on the daily challenge screen. Track daily performance history (last 7 days). Add competitive framing and opt-in display name.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Create DailyLeaderboard class in main.js with seeded pseudo-leaderboard generation. Using the daily challenge date seed, generate 50 fake anonymous scores (gate count + time pairs). Scores should follow a believable distribution: cluster around optimalGates+1 to optimalGates+4 with a few outlier high/low scores. Store the player's own result alongside fake scores.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "DailyLeaderboard class exists with generatePseudoScores(seed, optimalGates) method",
+        "Generates 50 consistent fake scores from the date seed",
+        "Scores follow bell-curve distribution around optimal+2",
+        "Player's real score can be inserted via submitScore(gateCount, timeSeconds)",
+        "getPercentile(gateCount) returns 0-100 based on position among fake scores",
+        "getRank(gateCount) returns 1-based rank among all scores"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "After daily challenge completion, show 'You solved in X gates — faster than Y% of players today' message. Display below the star display in the results area. Include rank badge: Top 10% = 🥇, Top 25% = 🥈, Top 50% = 🥉. Integrate with both animated RUN and Quick Test completion paths.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Percentile message appears after daily challenge completion",
+        "Rank badge (🥇/🥈/🥉) shown based on percentile",
+        "Works for both normal RUN and Quick Test completion",
+        "Message format: 'You solved in X gates — faster than Y% of players today'",
+        "Only appears for daily challenges, not campaign or random"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Display top 10 anonymous scores on daily challenge button or in a pre-challenge screen. Show gate count, solve time, and rank number. Highlight the player's own entry if they've already completed today's challenge.",
+      "files_to_modify": ["js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Top 10 leaderboard visible on daily challenge screen (before starting)",
+        "Each entry shows: rank, gate count, solve time",
+        "Player's own score highlighted if present",
+        "Today's leader score shown with competitive framing",
+        "Leaderboard updates after player completes the challenge"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T4",
+      "description": "Add daily performance history tracking. Store last 7 days of daily challenge results in localStorage. Show in a mini-history section: date, gate count, rank badge, time.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Daily results stored in localStorage with date key",
+        "Last 7 days of results retrievable",
+        "History displays: date, gates, time, percentile badge",
+        "Old entries (>7 days) automatically pruned",
+        "History visible on the daily challenge pre-screen"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T5",
+      "description": "Add 'Your Daily Rank' badge on the daily challenge button on level select screen. If today's challenge is completed, show the rank badge. If not, show nothing or 'Not played'.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Daily challenge button shows rank badge if today is completed",
+        "Badge updates after completion without page refresh",
+        "No badge shown if today's challenge not attempted"
+      ],
+      "depends_on": ["T1", "T4"]
+    },
+    {
+      "id": "T6",
+      "description": "Show historical daily performance (last 7 days) in the stats dashboard. Add a 'Daily Challenge' section showing date, gates used, time, rank for each day played.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Stats dashboard has 'Daily Challenge History' section",
+        "Shows last 7 days with date, gates, time, rank badge",
+        "Empty state shows 'No daily challenges played recently'"
+      ],
+      "depends_on": ["T4"]
+    },
+    {
+      "id": "T7",
+      "description": "Rate-limit daily challenge submissions to 1 per day. If the player re-solves, update their score only if improved. Store best daily result per date.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Only best result per day is stored",
+        "Re-solving with fewer gates updates the stored result",
+        "Re-solving with more gates does NOT overwrite",
+        "Percentile recalculates with updated score"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T8",
+      "description": "Add subtle competitive framing to daily challenge. Before starting, show 'Today's leader used just X gates — can you match them?' where X is the best pseudo-score for the day.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Competitive framing message visible before starting daily challenge",
+        "Message references today's best (pseudo) score",
+        "Message disappears once player starts the challenge"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T9",
+      "description": "Include opt-in display name stored locally. Add a small input field on the daily leaderboard screen. Name appears next to the player's score in the leaderboard.",
+      "files_to_modify": ["js/ui.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "Display name input field on daily challenge screen",
+        "Name persists in localStorage across sessions",
+        "Player's leaderboard entry shows their chosen name",
+        "Default: 'You' if no name set",
+        "Max 16 characters"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T10",
+      "description": "Enhance the share result text for daily challenges to include leaderboard rank. Update the existing share button to include percentile and rank badge in the copied text.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Share text includes rank badge and percentile",
+        "Format: '⚡ Signal Circuit Daily — Top X%! 🥈'",
+        "Includes gate count, time, and streak as before"
+      ],
+      "depends_on": ["T1", "T2"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Daily leaderboard generates consistent scores for same date",
+    "Percentile calculation is accurate",
+    "Player score correctly inserted among pseudo-scores",
+    "localStorage read/write for daily history",
+    "Share text formatting with rank info",
+    "UI updates correctly after daily completion",
+    "No regression on campaign levels or other challenge modes"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}
