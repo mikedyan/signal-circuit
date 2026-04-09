@@ -358,7 +358,6 @@ class Gate {
       }
     });
   }
-}
 
 
   // Day 40: Alternate gate skin renderers
@@ -517,6 +516,7 @@ class Gate {
     });
   }
 
+}
 class IONode {
   constructor(type, label, x, y, id) {
     this.type = type;
