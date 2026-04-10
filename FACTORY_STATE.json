@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 44,
-  "nextDay": 45,
-  "totalItemsCompleted": 261,
-  "totalItems": 261,
-  "status": "Phase 3 Day 9 complete — Anonymous Daily Leaderboard (10 items)",
-  "lastRun": "2026-04-09T08:09:00-07:00",
+  "lastCompletedDay": 45,
+  "nextDay": 46,
+  "totalItemsCompleted": 271,
+  "totalItems": 271,
+  "status": "Phase 3 Day 10 complete — Gate Limit Challenge Variants (10 items)",
+  "lastRun": "2026-04-10T08:07:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -63,6 +63,11 @@
     },
     "44": {
       "items": ["DailyLeaderboard class + pseudo-score generation", "Post-completion percentile + rank badge display", "Top 10 leaderboard on daily pre-screen", "7-day daily history tracking", "Daily rank badge on level select button", "Daily history in stats dashboard", "Best-only score tracking (rate limit)", "Competitive framing message", "Opt-in display name", "Share text with rank + percentile"],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "45": {
+      "items": ["Unlock gate limit after 3-starring", "Gate budget = optimal enforcement", "Gate limit sub-row in level select", "Diamond badge completion tracking", "Gate Budget indicator in gameplay", "Efficiency Expert achievement", "No hints in gate limit mode", "Optimal comparison after completion", "Hard mode speedrun option", "Gate limit stats in dashboard"],
       "status": "complete",
       "qa": "all-pass"
     }

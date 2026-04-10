@@ -406,6 +406,21 @@ class UI {
             }, 200);
           });
           btn.appendChild(viewSolBtn);
+
+          // Day 45: Gate Limit Challenge sub-row for 3-starred levels
+          if (levelProgress && levelProgress.stars === 3) {
+            const glBtn = document.createElement('button');
+            glBtn.className = 'gate-limit-btn' + (levelProgress.gateLimitCompleted ? ' gl-completed' : '');
+            glBtn.innerHTML = levelProgress.gateLimitCompleted
+              ? '<span class="gl-diamond">⬦</span> Gate Limit ✓'
+              : '<span class="gl-trophy">🏆</span> Gate Limit';
+            glBtn.title = `Solve with exactly ${level.optimalGates} gate${level.optimalGates === 1 ? '' : 's'}`;
+            glBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.gameState.startGateLimitLevel(levelId);
+            });
+            btn.appendChild(glBtn);
+          }
         }
 
         if (isUnlocked) {
@@ -1447,6 +1462,29 @@ class UI {
     };
   }
 
+  // Day 45: Gate Limit Challenge completion display
+  showGateLimitResult(gateCount, level) {
+    const display = document.getElementById('star-display');
+    if (!display) return;
+    // Show diamond badge overlay on star display
+    const container = document.getElementById('stars-container');
+    if (container) {
+      const diamond = document.createElement('span');
+      diamond.className = 'star filled gl-diamond-big';
+      diamond.textContent = '⬦';
+      diamond.style.fontSize = '2.5em';
+      diamond.style.color = '#00e5ff';
+      setTimeout(() => diamond.classList.add('visible'), 200);
+      container.appendChild(diamond);
+    }
+    const msg = document.getElementById('star-message');
+    if (msg) {
+      const existing = msg.textContent;
+      msg.textContent = existing + ` · ⬦ Perfect efficiency! ${gateCount} gates = optimal`;
+      msg.style.color = '#00e5ff';
+    }
+  }
+
   updateSandboxTruthTable(results) {
     const level = this.gameState.currentLevel;
     if (!level) return;
@@ -2227,7 +2265,7 @@ class UI {
     const hintBtn = document.getElementById('hint-btn');
     if (!hintBtn) return;
 
-    if (!level || !level.hints || level.hints.length === 0 || gs.isSandboxMode || gs.isChallengeMode) {
+    if (!level || !level.hints || level.hints.length === 0 || gs.isSandboxMode || gs.isChallengeMode || gs.isGateLimitMode) {
       hintBtn.style.display = 'none';
       return;
     }
@@ -2275,6 +2313,19 @@ class UI {
     const count = gs.gates.filter(g => !g._locked).length;
     const countText = document.getElementById('gate-count-text');
     const starsPreview = document.getElementById('gate-stars-preview');
+
+    // Day 45: Gate Limit mode indicator
+    if (gs.isGateLimitMode && gs.gateBudget > 0) {
+      const budget = gs.gateBudget;
+      countText.innerHTML = `Budget: <span class="count">${count}</span>/${budget}`;
+      starsPreview.innerHTML = count <= budget ? '<span class="gl-diamond-live">⬦</span>' : '';
+      el.className = count <= budget ? 'optimal' : 'over';
+      if (count > budget) {
+        el.classList.add('gate-pulse');
+        setTimeout(() => el.classList.remove('gate-pulse'), 400);
+      }
+      return;
+    }
 
     if (level.isChallenge || level.isDaily) {
       // Challenge/daily: show count only, no optimal
@@ -2596,6 +2647,12 @@ class UI {
         <div class="stat-icon">🎲</div>
         <div class="stat-value">${challengesPlayed}</div>
         <div class="stat-label">Challenges Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⬦</div>
+        <div class="stat-value">${gs.getGateLimitCompletionCount()}/${totalLevels}</div>
+        <div class="stat-label">Gate Limit Challenges</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:${totalLevels > 0 ? Math.round((gs.getGateLimitCompletionCount() / totalLevels) * 100) : 0}%;background:#00e5ff"></div></div>
       </div>
     `;
   }

@@ -133,3 +133,10 @@
 - **Seeded PRNG for pseudo-leaderboards**: Using a different seed offset (seed+999) for leaderboard scores prevents correlation with the challenge's truth table generation while maintaining determinism. Same date always produces same leaderboard.
 - **Best-only score tracking**: Compare both gates AND time when deciding whether to update — `gateCount < existing.gates || (gateCount === existing.gates && timeSeconds < existing.time)`. This prevents worse scores from overwriting better ones while allowing time improvements at the same gate count.
 - **Bell-curve score distribution**: Using `(r1 + r2) / 2` as a simple normal-distribution approximation (central limit theorem with 2 samples) creates believable score clusters around the mean without importing a statistics library.
+
+## Day 45 — Gate Limit Challenge Variants
+- **Mode flags + early return in indicators**: Adding `isGateLimitMode` check before the existing challenge/daily branch in `updateGateIndicator()` with an early `return` prevents the new mode from falling through to incompatible styling logic. Always put new mode checks before existing ones.
+- **Budget enforcement at the source**: Blocking gate placement in `addGate()` rather than at simulation time gives immediate feedback. Returning `null` is safe because all callers (toolbox drag, number keys, gamepad) already handle the case.
+- **Separate completion tracking from regular progress**: Using `gateLimitCompleted` as a separate boolean on the existing progress entry (rather than a new save structure) means zero migration code. The field simply doesn't exist until earned.
+- **Achievement counter in stats object**: Storing `gateLimitCompletions` in `achievements.stats` (already persisted and loaded with defaults spread) is cleaner than a separate localStorage key. The spread defaults pattern handles missing fields gracefully.
+- **Speedrun mode variants via toggle + separate key**: A simple checkbox toggle + reading state at start + separate localStorage key for the best time gives variant speedruns without forking the speedrun logic. The `_speedrunGateLimit` flag carries through all advance calls.

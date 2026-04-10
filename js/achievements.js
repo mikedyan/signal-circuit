@@ -35,6 +35,7 @@ const ACHIEVEMENTS = [
   { id: 'month_of_logic', name: 'Month of Logic', desc: 'Complete 30 daily challenges total', icon: '🗓️', tier: 'gold' },
   { id: 'streak_master', name: 'Streak Master', desc: 'Reach a 14-day play streak', icon: '🔥', tier: 'gold' },
   { id: 'perfectionist', name: 'Perfectionist', desc: 'Achieve 100% aesthetics score with 3+ gates', icon: '💯', tier: 'gold' },
+  { id: 'efficiency_expert', name: 'Efficiency Expert', desc: 'Complete 10 gate limit challenges', icon: '⬦', tier: 'gold' },
 ];
 
 const TIER_COLORS = {
@@ -66,7 +67,7 @@ class AchievementManager {
         if (data.unlocked) {
           this.unlocked = data.unlocked;
           const defaults = {
-            challengesCompleted: 0, speedLevels: 0,
+            challengesCompleted: 0, speedLevels: 0, gateLimitCompletions: 0,
             dailyChallengesTotal: 0, dailyChallengeStreak: 0,
             lastDailyChallengeDate: null, optimalSolves: 0,
             modesPlayed: [],
@@ -333,6 +334,17 @@ class AchievementManager {
     if (newlyUnlocked.length > 0) this.save();
     return newlyUnlocked;
   }
+
+  // Day 45: Check gate limit challenge achievement
+  checkGateLimitAchievement() {
+    const newlyUnlocked = [];
+    const count = this.stats.gateLimitCompletions || 0;
+    if (count >= 10 && this.unlock('efficiency_expert')) {
+      newlyUnlocked.push('efficiency_expert');
+    }
+    return newlyUnlocked;
+  }
+
 
   // Track first wire
   trackFirstWire() {

@@ -5456,3 +5456,35 @@ body.light-mode .undo-dot.future {
   font-size: 14px;
   vertical-align: middle;
 }
+
+/* Day 45: Gate Limit Challenge Styles */
+.gate-limit-btn {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 6px;
+  color: #00e5ff;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.gate-limit-btn:hover {
+  background: rgba(0, 229, 255, 0.18);
+  border-color: #00e5ff;
+}
+.gate-limit-btn.gl-completed {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: #00e5ff;
+  color: #00e5ff;
+}
+.gl-diamond { font-size: 1.1em; color: #00e5ff; }
+.gl-trophy { font-size: 1em; }
+.gl-diamond-live { font-size: 1.3em; color: #00e5ff; filter: drop-shadow(0 0 4px #00e5ff); }
+.gl-diamond-big { color: #00e5ff !important; filter: drop-shadow(0 0 8px #00e5ff); }
+
+/* Gate indicator over-budget red flash */
+#gate-indicator.over .count { color: #f44; }
+#gate-indicator.over { border-color: #f44; }

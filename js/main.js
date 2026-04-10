@@ -675,6 +675,9 @@ class GameState {
     this._errorHighlightUntil = 0;
     // Day 44: Anonymous Daily Leaderboard
     this.dailyLeaderboard = new DailyLeaderboard();
+    // Day 45: Gate Limit Challenge mode
+    this.isGateLimitMode = false;
+    this.gateBudget = 0;
   }
 
   // ── Hint Token System (Day 31) ──
@@ -1336,6 +1339,8 @@ class GameState {
     this.currentScreen = 'level-select';
     this.isSandboxMode = false;
     this.isChallengeMode = false;
+    this.isGateLimitMode = false; // Day 45: Reset gate limit mode
+    this.gateBudget = 0;
     this.stopTimer();
     this.trackPlaytimeEnd();
     this.audio.stopAmbient();
@@ -1442,7 +1447,48 @@ class GameState {
     setTimeout(() => this.renderer.resize(), 100);
   }
 
-  startLevel(levelId) {
+  // Day 45: Gate Limit Challenge Mode
+  startGateLimitLevel(levelId) {
+    const level = getLevel(levelId);
+    if (!level) return;
+    const p = this.progress.levels[levelId];
+    if (!p || p.stars < 3) return; // Must be 3-starred
+
+    this._saveLevelSelectScroll();
+    this.isGateLimitMode = true;
+    this.gateBudget = level.optimalGates;
+    this.isChallengeMode = false;
+    this.isSandboxMode = false;
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
+    this.renderer.resize();
+    this.renderer.resetView();
+    this.loadLevel(levelId);
+    setTimeout(() => this.renderer.resize(), 100);
+  }
+
+  completeGateLimitLevel(levelId, gateCount) {
+    const level = getLevel(levelId);
+    if (!level) return;
+    if (!this.progress.levels[levelId]) return;
+    this.progress.levels[levelId].gateLimitCompleted = true;
+    this.saveProgress();
+    // Track stats for achievement
+    const stats = this.achievements.stats;
+    stats.gateLimitCompletions = (stats.gateLimitCompletions || 0) + 1;
+    this.achievements.save();
+  }
+
+  getGateLimitCompletionCount() {
+    let count = 0;
+    for (const data of Object.values(this.progress.levels || {})) {
+      if (data.gateLimitCompleted) count++;
+    }
+    return count;
+  }
+
+    startLevel(levelId) {
     this._saveLevelSelectScroll(); // #95
     this.isChallengeMode = false;
     this.isSandboxMode = false;
@@ -1623,6 +1669,16 @@ class GameState {
 
   addGate(type, x, y, skipUndo) {
     this._startTimerIfPending(); // #96
+    // Day 45: Gate budget enforcement in gate limit mode
+    if (this.isGateLimitMode && this.gateBudget > 0) {
+      const currentCount = this.gates.filter(g => !g._locked).length;
+      if (currentCount >= this.gateBudget) {
+        this.ui.updateStatusBar('⚠ Gate budget reached! Remove a gate first.');
+        this.audio.playFail();
+        this.haptic(40);
+        return null;
+      }
+    }
     const gate = new Gate(type, x, y, this.nextId++);
     this.gates.push(gate);
     this.ui.updateStatusBar(`Placed ${type} gate`);
@@ -2265,6 +2321,14 @@ class GameState {
               }
               this.ui.showAchievementToasts(newAchs);
 
+              // Day 45: Gate Limit completion
+              if (this.isGateLimitMode) {
+                this.completeGateLimitLevel(this.currentLevel.id, gateCount);
+                const glAchs = this.achievements.checkGateLimitAchievement();
+                this.ui.showAchievementToasts(glAchs);
+                this.ui.showGateLimitResult(gateCount, this.currentLevel);
+              }
+
               // Day 32 T9: Speedrun auto-advance
               if (this.speedrunMode) {
                 setTimeout(() => this._speedrunAdvance(), 1200);
@@ -2385,6 +2449,13 @@ class GameState {
           this.ui.showDailyLeaderboardResult(lbResult2);
         }
         this.ui.showAchievementToasts(newAchs);
+        // Day 45: Gate Limit completion
+        if (this.isGateLimitMode) {
+          this.completeGateLimitLevel(this.currentLevel.id, gateCount);
+          const glAchs2 = this.achievements.checkGateLimitAchievement();
+          this.ui.showAchievementToasts(glAchs2);
+          this.ui.showGateLimitResult(gateCount, this.currentLevel);
+        }
         if (this.speedrunMode) setTimeout(() => this._speedrunAdvance(), 1200);
       }
     } else {
@@ -3430,6 +3501,9 @@ class GameState {
     const allLevels = LEVELS.map(l => l.id);
     if (allLevels.length === 0) return;
     this.speedrunMode = true;
+    // Day 45: Check gate limit toggle for speedrun hard mode
+    const glToggle = document.getElementById('speedrun-gl-toggle');
+    this._speedrunGateLimit = glToggle && glToggle.checked;
     // Day 41: Track mode exploration
     this.ui.showAchievementToasts(this.achievements.trackModeExplored('speedrun'));
     this.speedrunLevelIdx = 0;
@@ -3444,6 +3518,11 @@ class GameState {
     this.renderer.resetView();
     this._showSpeedrunHud(true);
     this.loadLevel(allLevels[0]);
+    // Day 45: Apply gate limit on first speedrun level
+    if (this._speedrunGateLimit) {
+      const firstLvl = getLevel(allLevels[0]);
+      if (firstLvl) { this.isGateLimitMode = true; this.gateBudget = firstLvl.optimalGates; }
+    }
     if (this.speedrunTimer) clearInterval(this.speedrunTimer);
     this.speedrunTimer = setInterval(() => this._updateSpeedrunTimer(), 1000);
     setTimeout(() => this.renderer.resize(), 100);
@@ -3462,6 +3541,11 @@ class GameState {
     }
     this._updateSpeedrunHud();
     this.loadLevel(allLevels[this.speedrunLevelIdx]);
+    // Day 45: Apply gate limit in speedrun if enabled
+    if (this._speedrunGateLimit) {
+      const lvl = getLevel(allLevels[this.speedrunLevelIdx]);
+      if (lvl) { this.isGateLimitMode = true; this.gateBudget = lvl.optimalGates; }
+    }
   }
 
   _finishSpeedrun() {
@@ -3504,8 +3588,9 @@ class GameState {
   }
 
   _saveSpeedrunBest(seconds) {
-    const current = this._getSpeedrunBest();
-    if (current === 0 || seconds < current) SafeStorage.setItem('signal-circuit-speedrun-best', String(seconds));
+    const key = this._speedrunGateLimit ? 'signal-circuit-speedrun-gl-best' : 'signal-circuit-speedrun-best';
+    const current = parseInt(SafeStorage.getItem(key) || '0');
+    if (current === 0 || seconds < current) SafeStorage.setItem(key, String(seconds));
   }
 
   _formatSpeedrunBest() {

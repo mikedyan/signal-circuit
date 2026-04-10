@@ -1,0 +1,68 @@
+{
+  "day": 45,
+  "phase": "Phase 3 Day 10",
+  "title": "Gate Limit Challenge Variants",
+  "summary": "For every 3-starred level, unlock a 'gate limit' variant with optimal gate count as hard budget. Diamond badge tracking, achievement, stats integration.",
+  "items": [
+    {
+      "id": 1,
+      "title": "Unlock gate limit variant after 3-starring a level",
+      "files": ["js/main.js"],
+      "details": "Add isGateLimitMode flag to GameState. Add startGateLimitLevel(levelId) that sets the mode and loads the level with gateBudget = level.optimalGates. Gate limit is only available if progress.levels[id].stars === 3."
+    },
+    {
+      "id": 2,
+      "title": "Gate limit = optimal gate count enforcement",
+      "files": ["js/main.js"],
+      "details": "When isGateLimitMode is true, set this.gateBudget = level.optimalGates. In runSimulation and runQuickTest, check gates.length > gateBudget and refuse to run with a message if exceeded. Gate budget prevents adding more gates beyond limit."
+    },
+    {
+      "id": 3,
+      "title": "Gate limit sub-row in level select",
+      "files": ["js/ui.js"],
+      "details": "In renderLevelSelect(), after a completed 3-star level card, add a sub-row button '🏆 Gate Limit Challenge' with diamond badge if completed. Style with gold border. Click starts startGateLimitLevel(id)."
+    },
+    {
+      "id": 4,
+      "title": "Diamond badge completion tracking",
+      "files": ["js/main.js"],
+      "details": "Add gateLimitCompleted field to progress.levels[id]. In completeGateLimitLevel(), set this field = true and save. Track total gate limit completions across all levels."
+    },
+    {
+      "id": 5,
+      "title": "Gate Budget indicator in gameplay",
+      "files": ["js/ui.js", "js/main.js"],
+      "details": "In updateGateIndicator(), when isGateLimitMode, show 'Budget: X/Y' where Y is gateBudget. Turn red when X > Y. Add visual shake when player tries to exceed budget."
+    },
+    {
+      "id": 6,
+      "title": "Efficiency Expert achievement",
+      "files": ["js/achievements.js", "js/main.js"],
+      "details": "Add 'efficiency_expert' achievement (gold tier): 'Complete 10 gate limit challenges'. Track in achievements.stats.gateLimitCompletions. Check after each gate limit completion."
+    },
+    {
+      "id": 7,
+      "title": "No hints in gate limit mode",
+      "files": ["js/main.js", "js/ui.js"],
+      "details": "When isGateLimitMode, hide hint button entirely. No hint tokens spent. Skip hint setup in loadLevel when gate limit mode."
+    },
+    {
+      "id": 8,
+      "title": "Optimal comparison after gate limit completion",
+      "files": ["js/ui.js"],
+      "details": "After gate limit completion, show 'Perfect efficiency! You matched the optimal X-gate solution.' in the star display area. Show diamond ⬦ badge prominently."
+    },
+    {
+      "id": 9,
+      "title": "Hard mode speedrun option",
+      "files": ["js/main.js", "js/ui.js"],
+      "details": "Add checkbox/toggle in speedrun mode UI for 'Gate Limit Mode' that applies gate budgets to all speedrun levels. Track as separate best time."
+    },
+    {
+      "id": 10,
+      "title": "Gate limit stats in dashboard",
+      "files": ["js/ui.js"],
+      "details": "In stats dashboard, show 'Gate Limit Challenges: X/Y completed' with progress bar. Show in Logic Profile section."
+    }
+  ]
+}
