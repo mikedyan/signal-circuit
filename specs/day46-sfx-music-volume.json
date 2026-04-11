@@ -1,0 +1,150 @@
+{
+  "day": 46,
+  "title": "Separate SFX/Music Volume Controls",
+  "summary": "Replace the single volume slider with two independent sliders for SFX and Music. All SFX methods currently use this.masterVolume — migrate them to this._sfxVol. Music pad and ambient already use this._musicVol. Add quick-mute icons per category, audio preview on adjustment, and set sensible defaults (SFX 40%, Music 20%).",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Replace single volume slider in index.html with two sliders: 🔊 SFX and 🎵 Music, each with a quick-mute icon",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "Two separate slider rows visible in gameplay status bar",
+        "Each row has an icon (🔊 for SFX, 🎵 for Music), a slider 0-100, and a mute/unmute icon click",
+        "Old single volume-slider and volume-icon are replaced"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Style the dual volume controls in CSS — compact layout that fits the status bar",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Volume controls stack vertically with minimal spacing",
+        "Each slider is 60px wide with green thumb matching existing style",
+        "Quick-mute icons are clickable with cursor:pointer",
+        "Light mode support for slider colors",
+        "Mobile: controls don't overflow status bar"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Migrate ALL SFX methods in audio.js from this.masterVolume to this._sfxVol",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "playGatePlace uses this._sfxVol",
+        "playClick uses this._sfxVol",
+        "playWireConnect uses this._sfxVol",
+        "playWireDisconnect uses this._sfxVol",
+        "playSimPulsePass/Fail uses this._sfxVol",
+        "playSuccess uses this._sfxVol",
+        "playFail uses this._sfxVol",
+        "playButtonClick uses this._sfxVol",
+        "playStarReveal uses this._sfxVol",
+        "playAchievement uses this._sfxVol",
+        "playInvalidConnection uses this._sfxVol",
+        "playHoverTick uses this._sfxVol",
+        "playTransitionWhoosh uses this._sfxVol",
+        "playUndo/Redo uses this._sfxVol",
+        "playPinHover uses this._sfxVol",
+        "playMuteOff/On uses this._sfxVol",
+        "playDeleteKey uses this._sfxVol",
+        "playEscapeCancel uses this._sfxVol",
+        "playToolboxHover uses this._sfxVol",
+        "playMicroCelebration uses this._sfxVol",
+        "startWireProximity/updateWireProximity uses this._sfxVol",
+        "_playNoiseBurst continues to take explicit volume param (caller passes _sfxVol-based value)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Update audio.js defaults: SFX 40%, Music 20%. Stop setMasterVolume from syncing both.",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "Default sfxVolume = 0.4, musicVolume = 0.2",
+        "setMasterVolume no longer exists or is deprecated — replaced by individual setters",
+        "setSfxVolume and setMusicVolume work independently",
+        "localStorage saves and loads both volumes independently"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T5",
+      "description": "Rewire main.js setupMuteButton() → setupVolumeControls() with dual slider logic",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "SFX slider drives audio.setSfxVolume()",
+        "Music slider drives audio.setMusicVolume()",
+        "SFX mute icon toggles SFX between 0 and previous value",
+        "Music mute icon toggles Music between 0 and previous value",
+        "Initial slider positions reflect stored volumes",
+        "Volume icons update dynamically based on levels"
+      ],
+      "depends_on": ["T1", "T3", "T4"]
+    },
+    {
+      "id": "T6",
+      "description": "Add volume controls to level select settings as well (in addition to gameplay status bar)",
+      "files_to_modify": ["index.html", "js/main.js"],
+      "acceptance_criteria": [
+        "Settings section on level select has SFX and Music sliders",
+        "Changes on level select propagate to gameplay sliders and vice versa"
+      ],
+      "depends_on": ["T5"]
+    },
+    {
+      "id": "T7",
+      "description": "Add audio preview: brief sound plays when SFX slider is adjusted; brief tone when music slider is adjusted",
+      "files_to_modify": ["js/main.js", "js/audio.js"],
+      "acceptance_criteria": [
+        "Moving SFX slider plays a short click/blip at the new volume level",
+        "Moving Music slider plays a brief pad tone at the new volume",
+        "Preview is debounced (doesn't fire on every pixel of slider movement)"
+      ],
+      "depends_on": ["T5"]
+    },
+    {
+      "id": "T8",
+      "description": "Ensure volume changes apply immediately to currently-playing ambient/music sounds",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "Changing music volume while ambient is active smoothly ramps the ambient gain",
+        "Changing music volume while pad is active smoothly ramps the pad gain",
+        "Already handled in setMusicVolume — verify it works with new slider wiring"
+      ],
+      "depends_on": ["T5"]
+    },
+    {
+      "id": "T9",
+      "description": "Volume normalization: auto-reduce SFX during loud simulation sequences",
+      "files_to_modify": ["js/audio.js"],
+      "acceptance_criteria": [
+        "During row-by-row simulation (>4 rapid pulses), SFX gain is reduced by 30%",
+        "After simulation ends, SFX gain returns to normal"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T10",
+      "description": "Update service worker cache version to bust stale assets",
+      "files_to_modify": ["sw.js", "index.html"],
+      "acceptance_criteria": [
+        "Cache version bumped in sw.js",
+        "Script tags in index.html have updated cache-bust param"
+      ],
+      "depends_on": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "SFX slider independently controls all gameplay sounds",
+    "Music slider independently controls ambient + pad",
+    "Mute icons work as toggles for each category",
+    "Volume persists across page reload",
+    "Level select volume mirrors gameplay volume",
+    "Existing audio behaviors unchanged (pitch escalation, stereo pan, etc.)",
+    "Mobile layout doesn't break with dual sliders"
+  ],
+  "rollback_criteria": "If any audio is completely broken or UI layout breaks, revert all changes"
+}

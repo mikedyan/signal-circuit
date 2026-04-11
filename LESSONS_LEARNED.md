@@ -140,3 +140,10 @@
 - **Separate completion tracking from regular progress**: Using `gateLimitCompleted` as a separate boolean on the existing progress entry (rather than a new save structure) means zero migration code. The field simply doesn't exist until earned.
 - **Achievement counter in stats object**: Storing `gateLimitCompletions` in `achievements.stats` (already persisted and loaded with defaults spread) is cleaner than a separate localStorage key. The spread defaults pattern handles missing fields gracefully.
 - **Speedrun mode variants via toggle + separate key**: A simple checkbox toggle + reading state at start + separate localStorage key for the best time gives variant speedruns without forking the speedrun logic. The `_speedrunGateLimit` flag carries through all advance calls.
+
+## Day 46 — Separate SFX/Music Volume Controls
+- **Bulk `this.masterVolume *` → `this._sfxVol *` migration**: Since virtually all `this.masterVolume` usages in play methods follow the `this.masterVolume * <float>` pattern, a simple string replace catches them all. Only constructor init, property loader, and the deprecated `setMasterVolume` method use `this.masterVolume` without ` * `, so they're naturally excluded.
+- **Dual slider sync pattern**: When the same setting has UI in two screens (gameplay + level select), use `_syncVolSliders(category, val)` to update all sliders of the same category. Simpler and more reliable than cross-listening event handlers.
+- **Category-aware muted flag**: When splitting volume into categories, `this.muted` should be `sfx === 0 && music === 0`, not tied to either alone. Methods that check `this.muted` at the top (like `startAmbient`) need this dual check.
+- **Volume preview debounce at 200ms**: Fires once after the user pauses slider adjustment. Prevents audio spam during rapid drags while still feeling responsive.
+- **Sim normalization via `_effectiveSfxVol`**: A simple `_simNormFactor` (0.7 = 30% reduction) applied only in sim pulse methods prevents ear fatigue on large truth tables (8+ rows) without affecting other SFX. Resets on `resetSimPitch()`.

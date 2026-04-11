@@ -881,7 +881,7 @@ class GameState {
     this.ui = new UI(this);
 
     this.setupCanvasEvents(canvas);
-    this.setupMuteButton();
+    this.setupVolumeControls();
 
     // Zoom reset button
     const zoomResetBtn = document.getElementById('zoom-reset-btn');
@@ -987,62 +987,109 @@ class GameState {
     }
   }
 
-  setupMuteButton() {
-    // Day 34 T8: Volume slider replaces binary mute
-    const slider = document.getElementById('volume-slider');
-    const icon = document.getElementById('volume-icon');
-    if (slider && icon) {
-      // Set initial state from audio engine
-      const vol = Math.round(this.audio.masterVolume * 100);
-      slider.value = this.audio.muted ? 0 : vol;
-      this._updateVolumeIcon(icon, parseInt(slider.value));
+  // Day 46: Separate SFX/Music volume controls
+  setupVolumeControls() {
+    this._sfxPreviewTimer = null;
+    this._musicPreviewTimer = null;
 
-      slider.addEventListener('input', () => {
-        const val = parseInt(slider.value);
-        this.audio.setMasterVolume(val / 100);
-        this._updateVolumeIcon(icon, val);
-      });
+    // Wire up SFX controls (gameplay + level select)
+    this._wireVolSlider('sfx-slider', 'sfx-icon', 'sfx');
+    this._wireVolSlider('ls-sfx-slider', 'ls-sfx-icon', 'sfx');
+    // Wire up Music controls (gameplay + level select)
+    this._wireVolSlider('music-slider', 'music-icon', 'music');
+    this._wireVolSlider('ls-music-slider', 'ls-music-icon', 'music');
+  }
 
-      icon.addEventListener('click', () => {
-        if (parseInt(slider.value) > 0) {
-          this._prevVolume = parseInt(slider.value);
-          slider.value = 0;
+  _wireVolSlider(sliderId, iconId, category) {
+    const slider = document.getElementById(sliderId);
+    const icon = document.getElementById(iconId);
+    if (!slider || !icon) return;
+
+    // Set initial value from audio engine
+    const vol = category === 'sfx' ? this.audio.sfxVolume : this.audio.musicVolume;
+    slider.value = Math.round(vol * 100);
+    this._updateVolIcon(icon, parseInt(slider.value), category);
+
+    slider.addEventListener('input', () => {
+      const val = parseInt(slider.value);
+      if (category === 'sfx') {
+        this.audio.setSfxVolume(val / 100);
+      } else {
+        this.audio.setMusicVolume(val / 100);
+      }
+      this._updateVolIcon(icon, val, category);
+      this._syncVolSliders(category, val);
+      // Debounced audio preview
+      this._previewVolume(category);
+    });
+
+    icon.addEventListener('click', () => {
+      const prevKey = '_prev' + category.charAt(0).toUpperCase() + category.slice(1) + 'Vol';
+      if (parseInt(slider.value) > 0) {
+        this[prevKey] = parseInt(slider.value);
+        slider.value = 0;
+        if (category === 'sfx') {
           this.audio.playMuteOff();
-          this.audio.setMasterVolume(0);
-          this._updateVolumeIcon(icon, 0);
+          this.audio.setSfxVolume(0);
         } else {
-          const restore = this._prevVolume || 30;
-          slider.value = restore;
-          this.audio.setMasterVolume(restore / 100);
-          this._updateVolumeIcon(icon, restore);
-          this.audio.playMuteOn();
+          this.audio.setMusicVolume(0);
         }
-      });
-      return;
-    }
-
-    // Fallback: legacy mute button
-    const btn = document.getElementById('mute-btn');
-    if (!btn) return;
-    if (this.audio.isMuted) {
-      btn.textContent = '🔇';
-      btn.classList.add('muted');
-    }
-    btn.addEventListener('click', () => {
-      const newMuted = !this.audio.isMuted;
-      if (newMuted) this.audio.playMuteOff();
-      this.audio.setMute(newMuted);
-      btn.textContent = newMuted ? '🔇' : '🔊';
-      btn.classList.toggle('muted', newMuted);
-      if (!newMuted) this.audio.playMuteOn();
+        this._updateVolIcon(icon, 0, category);
+        this._syncVolSliders(category, 0);
+      } else {
+        const restore = this[prevKey] || (category === 'sfx' ? 40 : 20);
+        slider.value = restore;
+        if (category === 'sfx') {
+          this.audio.setSfxVolume(restore / 100);
+          this.audio.playMuteOn();
+        } else {
+          this.audio.setMusicVolume(restore / 100);
+        }
+        this._updateVolIcon(icon, restore, category);
+        this._syncVolSliders(category, restore);
+      }
     });
   }
 
-  _updateVolumeIcon(icon, val) {
-    if (val === 0) icon.textContent = '🔇';
-    else if (val <= 33) icon.textContent = '🔈';
-    else if (val <= 66) icon.textContent = '🔉';
-    else icon.textContent = '🔊';
+  _syncVolSliders(category, val) {
+    // Keep gameplay and level-select sliders in sync
+    const ids = category === 'sfx'
+      ? ['sfx-slider', 'ls-sfx-slider']
+      : ['music-slider', 'ls-music-slider'];
+    const iconIds = category === 'sfx'
+      ? ['sfx-icon', 'ls-sfx-icon']
+      : ['music-icon', 'ls-music-icon'];
+    ids.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+      const ic = document.getElementById(iconIds[i]);
+      if (ic) this._updateVolIcon(ic, val, category);
+    });
+  }
+
+  _updateVolIcon(icon, val, category) {
+    if (category === 'sfx') {
+      if (val === 0) icon.textContent = '🔇';
+      else if (val <= 33) icon.textContent = '🔈';
+      else if (val <= 66) icon.textContent = '🔉';
+      else icon.textContent = '🔊';
+    } else {
+      if (val === 0) icon.textContent = '🔕';
+      else icon.textContent = '🎵';
+    }
+  }
+
+  _previewVolume(category) {
+    const timerKey = '_' + category + 'PreviewTimer';
+    if (this[timerKey]) clearTimeout(this[timerKey]);
+    this[timerKey] = setTimeout(() => {
+      if (category === 'sfx') {
+        this.audio.playVolumePreviewSfx();
+      } else {
+        this.audio.playVolumePreviewMusic();
+      }
+      this[timerKey] = null;
+    }, 200);
   }
 
   // ── Progress Persistence ──

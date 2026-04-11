@@ -4549,22 +4549,35 @@ body.simplified-visual .chapter-title {
 }
 
 /* ── T8: Volume Slider ── */
-#volume-control {
+/* ── Day 46: Dual SFX/Music Volume Controls ── */
+#volume-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vol-row {
   display: flex;
   align-items: center;
+  gap: 4px;
+}
+
+.vol-row.ls-vol {
   gap: 6px;
 }
 
-#volume-icon {
-  font-size: 16px;
+.vol-icon {
+  font-size: 13px;
   cursor: pointer;
   user-select: none;
   line-height: 1;
+  min-width: 18px;
+  text-align: center;
 }
 
-#volume-slider {
-  width: 60px;
-  height: 4px;
+.vol-slider {
+  width: 54px;
+  height: 3px;
   -webkit-appearance: none;
   appearance: none;
   background: #333;
@@ -4573,25 +4586,48 @@ body.simplified-visual .chapter-title {
   cursor: pointer;
 }
 
-#volume-slider::-webkit-slider-thumb {
+.vol-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #0f0;
   cursor: pointer;
   box-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
 }
 
-#volume-slider::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+.sfx-slider::-webkit-slider-thumb {
   background: #0f0;
+}
+
+.music-slider::-webkit-slider-thumb {
+  background: #0af;
+}
+
+.vol-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
   cursor: pointer;
   border: none;
   box-shadow: 0 0 4px rgba(0, 255, 0, 0.4);
+}
+
+.sfx-slider::-moz-range-thumb {
+  background: #0f0;
+}
+
+.music-slider::-moz-range-thumb {
+  background: #0af;
+}
+
+#ls-volume-row .vol-slider {
+  width: 70px;
+  height: 4px;
+}
+
+#ls-volume-row .vol-icon {
+  font-size: 15px;
 }
 
 /* ── Day 35 T5: Light Mode ── */
@@ -4771,7 +4807,7 @@ body.light-mode .settings-btn.active {
   color: #0a6a0a;
 }
 
-body.light-mode #volume-slider {
+body.light-mode .vol-slider {
   background: #ccc;
 }
 

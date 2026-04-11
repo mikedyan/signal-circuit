@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1775862507">
+  <link rel="stylesheet" href="css/style.css?v=1775920688">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -87,6 +87,16 @@
           <button id="simplified-visual-btn" class="settings-btn" aria-label="Toggle simplified visual mode">🧩 Simplified: Off</button>
           <button id="accessible-wiring-btn" class="settings-btn" aria-label="Toggle accessible wiring mode">🔌 Accessible Wiring: Off</button>
           <button id="light-mode-btn" class="settings-btn" aria-label="Toggle light mode">🌙 Dark Mode</button>
+        </div>
+        <div id="ls-volume-row" style="margin-top:8px;display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">
+          <div class="vol-row ls-vol">
+            <span class="vol-icon" id="ls-sfx-icon" title="SFX volume" role="button" tabindex="0">🔊</span>
+            <input type="range" id="ls-sfx-slider" min="0" max="100" value="40" aria-label="SFX volume" class="vol-slider sfx-slider">
+          </div>
+          <div class="vol-row ls-vol">
+            <span class="vol-icon" id="ls-music-icon" title="Music volume" role="button" tabindex="0">🎵</span>
+            <input type="range" id="ls-music-slider" min="0" max="100" value="20" aria-label="Music volume" class="vol-slider music-slider">
+          </div>
         </div>
         <div id="sync-row" style="margin-top:8px;display:flex;gap:8px;justify-content:center;">
           <button id="export-progress-btn" class="settings-btn" aria-label="Export progress">📤 Export Progress</button>
@@ -382,10 +392,16 @@
         <div id="status-bar">
           <span id="status-text">Ready</span>
           <span id="timer-display">⏱ 0:00</span>
-          <!-- Day 34 T8: Volume slider replaces binary mute -->
-          <div id="volume-control">
-            <span id="volume-icon" title="Click to mute/unmute" aria-label="Volume" role="button" tabindex="0">🔊</span>
-            <input type="range" id="volume-slider" min="0" max="100" value="30" aria-label="Volume level">
+          <!-- Day 46: Separate SFX/Music volume controls -->
+          <div id="volume-controls">
+            <div class="vol-row">
+              <span class="vol-icon" id="sfx-icon" title="Mute/unmute SFX" aria-label="SFX volume" role="button" tabindex="0">🔊</span>
+              <input type="range" id="sfx-slider" min="0" max="100" value="40" aria-label="SFX volume level" class="vol-slider sfx-slider">
+            </div>
+            <div class="vol-row">
+              <span class="vol-icon" id="music-icon" title="Mute/unmute music" aria-label="Music volume" role="button" tabindex="0">🎵</span>
+              <input type="range" id="music-slider" min="0" max="100" value="20" aria-label="Music volume level" class="vol-slider music-slider">
+            </div>
           </div>
         </div>
 
@@ -543,15 +559,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1775862507"></script>
-  <script src="js/wires.js?v=1775862507"></script>
-  <script src="js/simulation.js?v=1775862507"></script>
-  <script src="js/levels.js?v=1775862507"></script>
-  <script src="js/audio.js?v=1775862507"></script>
-  <script src="js/achievements.js?v=1775862507"></script>
-  <script src="js/canvas.js?v=1775862507"></script>
-  <script src="js/ui.js?v=1775862507"></script>
-  <script src="js/tutorial.js?v=1775862507"></script>
-  <script src="js/main.js?v=1775862507"></script>
+  <script src="js/gates.js?v=1775920688"></script>
+  <script src="js/wires.js?v=1775920688"></script>
+  <script src="js/simulation.js?v=1775920688"></script>
+  <script src="js/levels.js?v=1775920688"></script>
+  <script src="js/audio.js?v=1775920688"></script>
+  <script src="js/achievements.js?v=1775920688"></script>
+  <script src="js/canvas.js?v=1775920688"></script>
+  <script src="js/ui.js?v=1775920688"></script>
+  <script src="js/tutorial.js?v=1775920688"></script>
+  <script src="js/main.js?v=1775920688"></script>
 </body>
 </html>

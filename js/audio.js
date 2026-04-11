@@ -12,8 +12,8 @@ class AudioEngine {
     this._wireProxOsc = null; // Day 32 T2: wire proximity oscillator
 
     // Day 34 T9: Separate SFX and Music volume channels
-    this.sfxVolume = 0.3;
-    this.musicVolume = 0.3;
+    this.sfxVolume = 0.4;
+    this.musicVolume = 0.2;
 
     // Load mute/volume state from localStorage
     try {
@@ -133,7 +133,7 @@ class AudioEngine {
     this.masterVolume = Math.max(0, Math.min(1, vol));
     this.sfxVolume = this.masterVolume;
     this.musicVolume = this.masterVolume;
-    this.muted = this.masterVolume === 0;
+    this.muted = this.sfxVolume === 0 && this.musicVolume === 0;
     if (this._musicPadGain && this.ctx) {
       this._musicPadGain.gain.linearRampToValueAtTime(
         this.musicVolume * 0.04, this.ctx.currentTime + 0.1
@@ -155,12 +155,14 @@ class AudioEngine {
   // Day 34 T9: Set SFX volume independently
   setSfxVolume(vol) {
     this.sfxVolume = Math.max(0, Math.min(1, vol));
+    this.muted = this.sfxVolume === 0 && this.musicVolume === 0;
     try { localStorage.setItem('signal-circuit-sfx-volume', this.sfxVolume.toString()); } catch (e) {}
   }
 
   // Day 34 T9: Set Music volume independently
   setMusicVolume(vol) {
     this.musicVolume = Math.max(0, Math.min(1, vol));
+    this.muted = this.sfxVolume === 0 && this.musicVolume === 0;
     if (this._musicPadGain && this.ctx) {
       this._musicPadGain.gain.linearRampToValueAtTime(
         this.musicVolume * 0.04, this.ctx.currentTime + 0.1
@@ -184,6 +186,22 @@ class AudioEngine {
     return this.muted ? 0 : this.musicVolume;
   }
 
+  // Day 46 T9: Volume normalization during rapid sim sequences
+  _startSimNormalization() {
+    this._simNormActive = true;
+    this._simNormFactor = 0.7;
+  }
+
+  _stopSimNormalization() {
+    this._simNormActive = false;
+    this._simNormFactor = 1.0;
+  }
+
+  get _effectiveSfxVol() {
+    const base = this.muted ? 0 : this.sfxVolume;
+    return base * (this._simNormFactor || 1.0);
+  }
+
   // ── Micro-randomization helper ──
   _randomize(value, variance) {
     return value * (1 + (Math.random() - 0.5) * 2 * variance);
@@ -200,7 +218,7 @@ class AudioEngine {
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
-    const vol = this.masterVolume;
+    const vol = this._sfxVol;
     const out = this._createPanner(xPosition);
 
     switch (gateType) {
@@ -354,7 +372,7 @@ class AudioEngine {
     osc.type = 'square';
     osc.frequency.setValueAtTime(this._randomize(1200, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(this._randomize(300, 0.05), now + dur1);
-    gain.gain.setValueAtTime(this.masterVolume * 0.5, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.5, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur2);
     osc.connect(gain);
     gain.connect(this._output);
@@ -366,7 +384,7 @@ class AudioEngine {
     osc2.type = 'sine';
     osc2.frequency.setValueAtTime(this._randomize(2400, 0.05), now);
     osc2.frequency.exponentialRampToValueAtTime(this._randomize(600, 0.05), now + 0.02);
-    gain2.gain.setValueAtTime(this.masterVolume * 0.2, now);
+    gain2.gain.setValueAtTime(this._sfxVol * 0.2, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
     osc2.connect(gain2);
     gain2.connect(this._output);
@@ -396,7 +414,7 @@ class AudioEngine {
     osc.frequency.setValueAtTime(this._randomize(baseFreq, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(baseFreq * 10, now + 0.04);
     osc.frequency.exponentialRampToValueAtTime(baseFreq * 5, now + 0.1);
-    gain.gain.setValueAtTime(this.masterVolume * 0.35, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
     gain.connect(out);
@@ -409,7 +427,7 @@ class AudioEngine {
     osc2.type = 'square';
     osc2.frequency.setValueAtTime(this._randomize(baseFreq * 2, 0.05), now);
     osc2.frequency.exponentialRampToValueAtTime(baseFreq * 13, now + 0.03);
-    gain2.gain.setValueAtTime(this.masterVolume * 0.15, now);
+    gain2.gain.setValueAtTime(this._sfxVol * 0.15, now);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc2.connect(gain2);
     gain2.connect(out);
@@ -417,7 +435,7 @@ class AudioEngine {
     osc2.stop(now + 0.08);
 
     // Noise crackle layer
-    this._playNoiseBurst(this._randomize(0.08, 0.1), this.masterVolume * 0.2);
+    this._playNoiseBurst(this._randomize(0.08, 0.1), this._sfxVol * 0.2);
   }
 
   // ── Sound: Wire/gate disconnection (Day 35 T1: stereo pan) ──
@@ -434,7 +452,7 @@ class AudioEngine {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(this._randomize(500, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(this._randomize(200, 0.05), now + dur * 0.8);
-    gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(gain);
     gain.connect(out);
@@ -445,6 +463,7 @@ class AudioEngine {
   // ── Sound: Simulation row pulse (escalating) ──
   resetSimPitch() {
     this._simRowIndex = 0;
+    this._stopSimNormalization();
   }
 
   playSimPulsePass() {
@@ -454,6 +473,7 @@ class AudioEngine {
     const now = ctx.currentTime;
     const row = this._simRowIndex || 0;
     this._simRowIndex = row + 1;
+    if (row >= 4 && !this._simNormActive) this._startSimNormalization();
 
     const baseFreq = this._randomize(600 + row * 100, 0.03);
     const freq = Math.min(baseFreq, 1400);
@@ -463,7 +483,7 @@ class AudioEngine {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, now);
     osc.frequency.exponentialRampToValueAtTime(freq * 0.85, now + 0.06);
-    gain.gain.setValueAtTime(this.masterVolume * 0.22, now);
+    gain.gain.setValueAtTime(this._effectiveSfxVol * 0.22, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
     osc.connect(gain);
     gain.connect(this._output);
@@ -482,7 +502,7 @@ class AudioEngine {
     osc.type = 'square';
     osc.frequency.setValueAtTime(this._randomize(400, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-    gain.gain.setValueAtTime(this.masterVolume * 0.2, now);
+    gain.gain.setValueAtTime(this._effectiveSfxVol * 0.2, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
     osc.connect(gain);
     gain.connect(this._output);
@@ -508,7 +528,7 @@ class AudioEngine {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(523.25, now);
       gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.3, now + 0.02);
+      gain.gain.linearRampToValueAtTime(this._sfxVol * 0.3, now + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.connect(gain);
       gain.connect(out);
@@ -524,7 +544,7 @@ class AudioEngine {
           osc.type = type;
           osc.frequency.setValueAtTime(freq * (j === 1 ? 2 : 1), t);
           gain.gain.setValueAtTime(0, t);
-          const vol = j === 0 ? this.masterVolume * 0.4 : this.masterVolume * 0.15;
+          const vol = j === 0 ? this._sfxVol * 0.4 : this._sfxVol * 0.15;
           gain.gain.linearRampToValueAtTime(vol, t + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
           osc.connect(gain);
@@ -539,7 +559,7 @@ class AudioEngine {
         const sGain = ctx.createGain();
         shimmer.type = i === 0 ? 'triangle' : 'sine';
         shimmer.frequency.setValueAtTime(freq, now + 0.36);
-        sGain.gain.setValueAtTime(this.masterVolume * (0.25 - i * 0.1), now + 0.36);
+        sGain.gain.setValueAtTime(this._sfxVol * (0.25 - i * 0.1), now + 0.36);
         sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
         shimmer.connect(sGain);
         sGain.connect(out);
@@ -556,7 +576,7 @@ class AudioEngine {
           osc.type = type;
           osc.frequency.setValueAtTime(freq * (j === 1 ? 2 : 1), t);
           gain.gain.setValueAtTime(0, t);
-          const vol = j === 0 ? this.masterVolume * 0.5 : this.masterVolume * 0.2;
+          const vol = j === 0 ? this._sfxVol * 0.5 : this._sfxVol * 0.2;
           gain.gain.linearRampToValueAtTime(vol, t + 0.02);
           gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
           osc.connect(gain);
@@ -571,7 +591,7 @@ class AudioEngine {
         const sGain = ctx.createGain();
         shimmer.type = i === 0 ? 'triangle' : 'sine';
         shimmer.frequency.setValueAtTime(freq, now + 0.36);
-        sGain.gain.setValueAtTime(this.masterVolume * (0.3 - i * 0.08), now + 0.36);
+        sGain.gain.setValueAtTime(this._sfxVol * (0.3 - i * 0.08), now + 0.36);
         sGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
         shimmer.connect(sGain);
         sGain.connect(out);
@@ -596,7 +616,7 @@ class AudioEngine {
       const t = now + i * this._randomize(0.15, 0.1);
       const dur = this._randomize(0.2, 0.1);
       osc.frequency.setValueAtTime(this._randomize(freq, 0.05), t);
-      gain.gain.setValueAtTime(this.masterVolume * 0.3, t);
+      gain.gain.setValueAtTime(this._sfxVol * 0.3, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
       osc.connect(gain);
       gain.connect(this._output);
@@ -618,7 +638,7 @@ class AudioEngine {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(this._randomize(600, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(this._randomize(500, 0.05), now + dur * 0.6);
-    gain.gain.setValueAtTime(this.masterVolume * 0.25, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
     osc.connect(gain);
     gain.connect(this._output);
@@ -637,7 +657,7 @@ class AudioEngine {
     // Ascending notes: C5, E5, G5 — each star gets higher pitch
     const notes = [523.25, 659.25, 783.99];
     const freq = notes[Math.min(starIndex, 2)];
-    const vol = this.masterVolume * (starIndex === totalStars - 1 ? 0.5 : 0.35);
+    const vol = this._sfxVol * (starIndex === totalStars - 1 ? 0.5 : 0.35);
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -657,7 +677,7 @@ class AudioEngine {
       const sGain = ctx.createGain();
       shimmer.type = 'triangle';
       shimmer.frequency.setValueAtTime(freq * 2, now + 0.05);
-      sGain.gain.setValueAtTime(this.masterVolume * 0.2, now + 0.05);
+      sGain.gain.setValueAtTime(this._sfxVol * 0.2, now + 0.05);
       sGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
       shimmer.connect(sGain);
       sGain.connect(out);
@@ -681,7 +701,7 @@ class AudioEngine {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, t);
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(this.masterVolume * 0.35, t + 0.01);
+      gain.gain.linearRampToValueAtTime(this._sfxVol * 0.35, t + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
       osc.connect(gain);
       gain.connect(this._output);
@@ -701,7 +721,7 @@ class AudioEngine {
     const gain = ctx.createGain();
     osc.type = 'square';
     osc.frequency.setValueAtTime(this._randomize(150, 0.05), now);
-    gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
     osc.connect(gain);
     gain.connect(this._output);
@@ -848,7 +868,7 @@ class AudioEngine {
     const gain = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(this._randomize(1800, 0.05), now);
-    gain.gain.setValueAtTime(this.masterVolume * 0.08, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.08, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
     osc.connect(gain);
     gain.connect(this._output);
@@ -882,7 +902,7 @@ class AudioEngine {
     filter.Q.setValueAtTime(2, now);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(this.masterVolume * 0.12, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.12, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
     source.connect(filter);
@@ -915,7 +935,7 @@ class AudioEngine {
     filter.Q.setValueAtTime(1.5, now);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(this.masterVolume * 0.18, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.18, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
     source.connect(filter);
@@ -948,7 +968,7 @@ class AudioEngine {
     filter.Q.setValueAtTime(1.5, now);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(this.masterVolume * 0.18, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.18, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
     source.connect(filter);
@@ -968,7 +988,7 @@ class AudioEngine {
     const gain = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(this._randomize(2200, 0.05), now);
-    gain.gain.setValueAtTime(this.masterVolume * 0.06, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.06, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
     osc.connect(gain);
     gain.connect(this._output);
@@ -988,7 +1008,7 @@ class AudioEngine {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(800, now);
     osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
-    gain.gain.setValueAtTime(this.masterVolume * 0.25, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
     osc.connect(gain);
     gain.connect(this._output);
@@ -1009,7 +1029,7 @@ class AudioEngine {
     osc.frequency.setValueAtTime(200, now);
     osc.frequency.exponentialRampToValueAtTime(800, now + 0.12);
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(this.masterVolume * 0.25, now + 0.04);
+    gain.gain.linearRampToValueAtTime(this._sfxVol * 0.25, now + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
     osc.connect(gain);
     gain.connect(this._output);
@@ -1029,7 +1049,7 @@ class AudioEngine {
     osc.type = 'square';
     osc.frequency.setValueAtTime(this._randomize(900, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-    gain.gain.setValueAtTime(this.masterVolume * 0.25, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
     osc.connect(gain);
     gain.connect(this._output);
@@ -1060,7 +1080,7 @@ class AudioEngine {
     filter.frequency.exponentialRampToValueAtTime(200, now + dur);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(this.masterVolume * 0.12, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.12, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
 
     source.connect(filter);
@@ -1075,7 +1095,7 @@ class AudioEngine {
     this._resumeIfNeeded();
     const ctx = this.ctx;
     const now = ctx.currentTime;
-    const vol = this.masterVolume * 0.08; // Very quiet
+    const vol = this._sfxVol * 0.08; // Very quiet
 
     switch (gateType) {
       case 'AND': {
@@ -1235,7 +1255,7 @@ class AudioEngine {
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(600, ctx.currentTime);
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(this.masterVolume * 0.04, ctx.currentTime + 0.2);
+    gain.gain.linearRampToValueAtTime(this._sfxVol * 0.04, ctx.currentTime + 0.2);
     osc.connect(filter);
     filter.connect(gain);
     gain.connect(this._output);
@@ -1254,7 +1274,7 @@ class AudioEngine {
     const clamped = Math.min(Math.max(distance, 0), maxDist);
     const t = 1 - (clamped / maxDist); // 1 = close, 0 = far
     const freq = 200 + t * 800; // 200Hz (far) to 1000Hz (close)
-    const vol = this.masterVolume * (0.02 + t * 0.06); // Louder when close
+    const vol = this._sfxVol * (0.02 + t * 0.06); // Louder when close
     this._wireProxOsc.frequency.linearRampToValueAtTime(freq, ctx.currentTime + 0.05);
     this._wireProxGain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.05);
   }
@@ -1287,7 +1307,7 @@ class AudioEngine {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(this._randomize(1200, 0.05), now);
     osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
-    gain.gain.setValueAtTime(this.masterVolume * 0.12, now);
+    gain.gain.setValueAtTime(this._sfxVol * 0.12, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
     gain.connect(this._output);
@@ -1387,4 +1407,45 @@ class AudioEngine {
     gain.connect(this._output);
     source.start(now);
   }
+
+  // Day 46 T7: Audio preview when adjusting sliders
+  playVolumePreviewSfx() {
+    if (!this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.06);
+    gain.gain.setValueAtTime(this._sfxVol * 0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain);
+    gain.connect(this._output);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  playVolumePreviewMusic() {
+    if (!this._ensureContext()) return;
+    this._resumeIfNeeded();
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+    const freqs = [130.81, 164.81, 196.00];
+    freqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.detune.setValueAtTime((Math.random() - 0.5) * 4, now);
+      gain.gain.setValueAtTime(this._musicVol * 0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(this._output);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    });
+  }
+
 }
