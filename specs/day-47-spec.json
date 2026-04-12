@@ -1,0 +1,123 @@
+{
+  "day": 47,
+  "phase": "Phase 3 Day 12",
+  "title": "Celebration Variety System",
+  "summary": "Different celebration animations based on chapter, star rating, and special conditions. Adds a CelebrationFactory that selects celebration type based on context: chapter-specific particle themes (circuit symbols, electric sparks, shield shimmer, gate rain), enhanced 3-star effects (spinning star burst), Pure Logic brain emoji particles, improvement-sensitive intensity, and a chapter-colored screen-wide pulse.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Chapter 1-2: Keep classic confetti as-is (current behavior is the default)",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Chapters 1 and 2 still use the existing confetti colors and particle shapes",
+        "No regression in current celebration behavior"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Chapter 3 celebration: Confetti + floating circuit symbol particles (AND, OR, XOR rendered as tiny text particles mixed into the confetti)",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "When completing a level in Chapter 3 (levels 13-17), some particles render as gate symbol text (AND, OR, XOR) instead of geometric shapes",
+        "Gate symbol particles rotate and fade like regular confetti"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Chapter 4 celebration: Electric sparks radiating from circuit center outward — particles move outward radially with yellow/cyan spark colors",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Chapter 4 (levels 21-25) uses radially-exploding spark particles from the canvas center",
+        "Spark colors are yellow, cyan, white to match electrical theme"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T4",
+      "description": "Chapter 5 celebration: Shield shimmer effect — expanding hexagonal grid pattern using concentric rings that expand outward",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Chapter 5 (levels 26-30) renders expanding concentric hexagonal rings with gold/amber shimmer",
+        "Rings fade as they expand"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T5",
+      "description": "Chapter 6 celebration: NAND/NOR gate rain — tiny gate label text particles falling from top of celebration canvas like rain",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Chapter 6 (levels 31-34) shows NAND and NOR text particles falling from the top",
+        "Particles have varied sizes and fall speeds, orange/copper color scheme"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T6",
+      "description": "3-star celebration enhancement: Add spinning star burst behind the star display — golden starburst rays that rotate",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "When earning 3 stars, a golden rotating starburst effect renders on the celebration canvas",
+        "Starburst starts bright and fades over ~2 seconds",
+        "Effect combines with the chapter-specific particles"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Pure Logic badge earned celebration: Brain emoji explosion (🧠 text particles) when level is completed without hints for the first time",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "When a level is completed with 0 hints used AND the level didn't previously have pureLogic badge, add brain emoji particles to the celebration",
+        "Brain particles mix with the chapter-specific celebration"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "description": "First-time vs improvement: First solve = gentler celebration intensity. Retry with improvement (better stars) = more intense celebration",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "First-time level completion uses standard particle count",
+        "Improvement completion (better stars than previous) uses 1.5x particle count and slightly faster velocity",
+        "Re-completion with same or worse stars uses 0.7x particle count"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T9",
+      "description": "Create CelebrationFactory that selects celebration type based on context: chapter, stars, pureLogic, isImprovement",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "CelebrationFactory method getCelebrationConfig(context) returns particle config based on chapter, stars, etc.",
+        "startCelebration reads from CelebrationFactory instead of hardcoded values",
+        "All context passed cleanly from main.js completion flow"
+      ],
+      "depends_on": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"]
+    },
+    {
+      "id": "T10",
+      "description": "Screen-wide pulse effect that matches chapter color — brief full-screen overlay flash in the chapter's signature color on any level completion",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "On level completion, the victory flash overlay uses the current chapter's color instead of always white",
+        "Pulse lasts ~500ms and fades smoothly",
+        "Falls back to white/gold for challenge mode and non-chapter contexts"
+      ],
+      "depends_on": ["T9"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Test celebration in each chapter (1-6+) to verify unique particle types",
+    "Test 1-star, 2-star, 3-star celebrations for starburst effect",
+    "Test first-time vs improvement intensity difference",
+    "Verify no regression on challenge mode celebrations",
+    "Verify Pure Logic particle trigger only on first-time no-hint completion",
+    "Check performance with max particles (3-star + improvement + pure logic)",
+    "Mobile: verify celebration canvas sizing and particle rendering"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced or existing celebrations break, revert to previous commit"
+}

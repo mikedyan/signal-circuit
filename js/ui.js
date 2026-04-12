@@ -2840,25 +2840,117 @@ class UI {
     }
   }
 
-  // ── Celebration Particles ──
-  startCelebration(stars = 2) {
+  // ── Day 47: Celebration Variety System ──
+
+  // CelebrationFactory: returns particle config based on context
+  _getCelebrationConfig(stars, context) {
+    const ctx = context || {};
+    const chapterId = ctx.chapterId || null;
+    const mode = ctx.mode || 'campaign';
+
+    // Base particle count by stars
+    let baseCount = stars === 3 ? 180 : stars === 2 ? 100 : 45;
+
+    // T8: Intensity modulation based on first-time vs improvement vs replay
+    let intensityMul = 1.0;
+    if (ctx.isImprovement) intensityMul = 1.5;
+    else if (ctx.isReplay) intensityMul = 0.7;
+
+    const particleCount = Math.min(Math.round(baseCount * intensityMul), 250);
+    const velocityMul = ctx.isImprovement ? 1.2 : 1.0;
+
+    // T1-T5: Chapter-specific particle config
+    let colors, shapes;
+    const defaultShapes = ['rect', 'circle', 'triangle'];
+
+    if (mode === 'challenge' || !chapterId || chapterId <= 2) {
+      // T1: Chapters 1-2 and challenges: classic confetti
+      if (stars === 3) {
+        colors = ['#ffd700', '#ffa500', '#ffcc00', '#fff4a3', '#ffe066', '#ffd700', '#ffd700'];
+      } else if (stars === 2) {
+        colors = ['#ffd700', '#ff4444', '#0f0', '#00c8e8', '#c050f0', '#ff8800', '#fff'];
+      } else {
+        colors = ['#999', '#777', '#aaa', '#ffd700', '#888'];
+      }
+      shapes = defaultShapes;
+    } else if (chapterId === 3) {
+      // T2: Chapter 3 — confetti + floating circuit symbols
+      colors = ['#c050f0', '#e070ff', '#9933cc', '#ffd700', '#ff88dd', '#fff'];
+      shapes = ['rect', 'circle', 'triangle', 'gate_symbol'];
+    } else if (chapterId === 4) {
+      // Chapter 3.5 (id=4): diagnostic theme
+      colors = ['#9966cc', '#bb88ee', '#7744aa', '#ffd700', '#cc99ff', '#fff'];
+      shapes = defaultShapes;
+    } else if (chapterId === 5) {
+      // T3: Chapter 4 — electric sparks radiating outward
+      colors = ['#ffdd00', '#00e8ff', '#fff', '#ffe066', '#88ddff', '#ffaa00'];
+      shapes = ['spark'];
+    } else if (chapterId === 6) {
+      // T4: Chapter 5 — shield shimmer (gold/amber hexagonal)
+      colors = ['#FFD700', '#ffaa00', '#fff4a3', '#cc8800', '#ffe066'];
+      shapes = ['hex_ring'];
+    } else if (chapterId === 7) {
+      // T5: Chapter 6 — NAND/NOR gate rain
+      colors = ['#cc6600', '#ff8844', '#dd7733', '#ffaa66', '#ffd700'];
+      shapes = ['gate_rain'];
+    } else {
+      // Bonus chapters / Discovery Lab: default confetti with chapter color
+      const chColor = ctx.chapterColor || '#ffd700';
+      colors = [chColor, '#ffd700', '#fff', '#ff8800', chColor, chColor];
+      shapes = defaultShapes;
+    }
+
+    // T10: Chapter-colored flash
+    let flashColor = null;
+    if (ctx.chapterColor && mode === 'campaign') {
+      flashColor = ctx.chapterColor;
+    }
+
+    return {
+      particleCount,
+      velocityMul,
+      colors,
+      shapes,
+      flashColor,
+      stars,
+      chapterId,
+      isPureLogicNew: !!ctx.isPureLogicNew,
+      isImprovement: !!ctx.isImprovement,
+      defaultShapes,
+    };
+  }
+
+  startCelebration(stars = 2, context) {
     this.celebrationActive = true;
     this.celebrationParticles = [];
 
-    // Scale effects by star rating (amplified for Day 22 juice)
-    // F29-2: Cap at 200 particles for performance budget
-    const particleCount = Math.min(stars === 3 ? 180 : stars === 2 ? 100 : 45, 200);
+    const config = this._getCelebrationConfig(stars, context);
+    const { particleCount, velocityMul, colors, shapes, flashColor } = config;
+
     const useFlash = stars >= 2;
     const flashDuration = stars === 3 ? 900 : 600;
 
-    // Victory flash
+    // T10: Chapter-colored victory flash
     if (useFlash) {
       const flash = document.getElementById('victory-flash');
       if (flash) {
+        if (flashColor) {
+          // Convert hex to rgba with 0.3 alpha for semi-transparent flash
+          const fc = flashColor;
+          const r = parseInt(fc.slice(1,3), 16) || 0;
+          const g = parseInt(fc.slice(3,5), 16) || 0;
+          const b = parseInt(fc.slice(5,7), 16) || 0;
+          flash.style.background = 'rgba(' + r + ',' + g + ',' + b + ',0.3)';
+        } else {
+          flash.style.background = '';
+        }
         flash.classList.remove('flash-active');
         void flash.offsetWidth;
         flash.classList.add('flash-active');
-        setTimeout(() => flash.classList.remove('flash-active'), flashDuration);
+        setTimeout(() => {
+          flash.classList.remove('flash-active');
+          flash.style.background = '';
+        }, flashDuration);
       }
     }
 
@@ -2882,86 +2974,310 @@ class UI {
     const container = canvas.parentElement;
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const cx = cw / 2;
+    const cy = ch / 2;
 
-    // Star-based color palettes
-    let colors;
-    if (stars === 3) {
-      // Gold-heavy for 3 stars
-      colors = ['#ffd700', '#ffa500', '#ffcc00', '#fff4a3', '#ffe066', '#ffd700', '#ffd700'];
-    } else if (stars === 2) {
-      // Full colors for 2 stars
-      colors = ['#ffd700', '#ff4444', '#0f0', '#00c8e8', '#c050f0', '#ff8800', '#fff'];
-    } else {
-      // Muted colors for 1 star
-      colors = ['#999', '#777', '#aaa', '#ffd700', '#888'];
+    const gateSymbols = ['AND', 'OR', 'XOR', 'NOT', 'NAND', 'NOR'];
+    const nandNorLabels = ['NAND', 'NOR', 'NAND', 'NOR'];
+
+    // T4: Shield shimmer — generate ring particles
+    if (shapes[0] === 'hex_ring') {
+      const ringCount = Math.min(Math.round(particleCount / 8), 18);
+      for (let r = 0; r < ringCount; r++) {
+        const delay = r * 0.08;
+        this.celebrationParticles.push({
+          x: cx, y: cy,
+          vx: 0, vy: 0,
+          size: 0,
+          color: colors[r % colors.length],
+          shape: 'hex_ring',
+          rotation: (r % 2) * (Math.PI / 6),
+          rotSpeed: (r % 2 === 0 ? 0.005 : -0.005),
+          life: 1,
+          decay: 0.008 + Math.random() * 0.004,
+          _ringRadius: 0,
+          _ringSpeed: 2.5 + r * 0.3,
+          _delay: delay,
+          _sides: 6,
+        });
+      }
+      // Also add some regular confetti
+      for (let i = 0; i < Math.round(particleCount * 0.4); i++) {
+        this.celebrationParticles.push({
+          x: cx + (Math.random() - 0.5) * 300,
+          y: cy + (Math.random() - 0.5) * 100,
+          vx: (Math.random() - 0.5) * 10 * velocityMul,
+          vy: -Math.random() * 8 - 2,
+          size: Math.random() * 5 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          shape: 'circle',
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.3,
+          life: 1,
+          decay: 0.007 + Math.random() * 0.006,
+        });
+      }
+    }
+    // T3: Electric sparks — radial burst
+    else if (shapes[0] === 'spark') {
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = (3 + Math.random() * 8) * velocityMul;
+        this.celebrationParticles.push({
+          x: cx + (Math.random() - 0.5) * 40,
+          y: cy + (Math.random() - 0.5) * 40,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 4 + 1.5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          shape: 'spark',
+          rotation: angle,
+          rotSpeed: 0,
+          life: 1,
+          decay: 0.01 + Math.random() * 0.008,
+          _trail: [],
+        });
+      }
+    }
+    // T5: NAND/NOR gate rain
+    else if (shapes[0] === 'gate_rain') {
+      for (let i = 0; i < particleCount; i++) {
+        this.celebrationParticles.push({
+          x: Math.random() * cw,
+          y: -Math.random() * ch * 0.5 - 20,
+          vx: (Math.random() - 0.5) * 2,
+          vy: 1.5 + Math.random() * 3,
+          size: 8 + Math.random() * 6,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          shape: 'gate_rain',
+          rotation: (Math.random() - 0.5) * 0.3,
+          rotSpeed: (Math.random() - 0.5) * 0.02,
+          life: 1,
+          decay: 0.004 + Math.random() * 0.004,
+          _label: nandNorLabels[Math.floor(Math.random() * nandNorLabels.length)],
+        });
+      }
+    }
+    // Default confetti (Chapters 1-2, challenges, and T2 circuit symbols)
+    else {
+      for (let i = 0; i < particleCount; i++) {
+        let shape = shapes[Math.floor(Math.random() * shapes.length)];
+        let label = null;
+        if (shape === 'gate_symbol') {
+          label = gateSymbols[Math.floor(Math.random() * gateSymbols.length)];
+        }
+        this.celebrationParticles.push({
+          x: cx + (Math.random() - 0.5) * 300,
+          y: cy + (Math.random() - 0.5) * 100,
+          vx: (Math.random() - 0.5) * 14 * velocityMul,
+          vy: -Math.random() * 12 - 3,
+          size: Math.random() * 7 + 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          shape: shape === 'gate_symbol' ? 'gate_symbol' : shape,
+          rotation: Math.random() * Math.PI * 2,
+          rotSpeed: (Math.random() - 0.5) * 0.4,
+          life: 1,
+          decay: 0.006 + Math.random() * 0.008,
+          _label: label,
+        });
+      }
     }
 
-    const shapes = ['rect', 'circle', 'triangle'];
-
-    // Create particles with varied shapes
-    for (let i = 0; i < particleCount; i++) {
-      this.celebrationParticles.push({
-        x: canvas.width / 2 + (Math.random() - 0.5) * 300,
-        y: canvas.height / 2 + (Math.random() - 0.5) * 100,
-        vx: (Math.random() - 0.5) * 14,
-        vy: -Math.random() * 12 - 3,
-        size: Math.random() * 7 + 3,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        shape: shapes[Math.floor(Math.random() * shapes.length)],
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.4,
-        life: 1,
-        decay: 0.006 + Math.random() * 0.008,
-      });
+    // T7: Pure Logic brain emoji particles
+    if (config.isPureLogicNew) {
+      const brainCount = 12;
+      for (let i = 0; i < brainCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 3 + Math.random() * 5;
+        this.celebrationParticles.push({
+          x: cx + (Math.random() - 0.5) * 100,
+          y: cy + (Math.random() - 0.5) * 60,
+          vx: Math.cos(angle) * speed * velocityMul,
+          vy: Math.sin(angle) * speed * velocityMul - 2,
+          size: 16 + Math.random() * 8,
+          color: '#fff',
+          shape: 'emoji',
+          rotation: 0,
+          rotSpeed: (Math.random() - 0.5) * 0.15,
+          life: 1,
+          decay: 0.005 + Math.random() * 0.004,
+          _label: '\u{1F9E0}',
+        });
+      }
     }
 
-    const ctx = canvas.getContext('2d');
+    // T6: 3-star spinning starburst
+    let starburstAngle = 0;
+    let starburstLife = 1;
+    const hasStarburst = stars === 3;
+
+    const ctx2 = canvas.getContext('2d');
     const animate = () => {
       if (!this.celebrationActive) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx2.clearRect(0, 0, cw, ch);
         return;
       }
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx2.clearRect(0, 0, cw, ch);
+
+      // T6: Draw starburst behind everything
+      if (hasStarburst && starburstLife > 0) {
+        starburstAngle += 0.015;
+        starburstLife -= 0.005;
+        const rayCount = 12;
+        const maxLen = Math.min(cw, ch) * 0.4;
+        ctx2.save();
+        ctx2.translate(cx, cy * 0.45);
+        ctx2.rotate(starburstAngle);
+        for (let i = 0; i < rayCount; i++) {
+          const a = (i / rayCount) * Math.PI * 2;
+          const len = maxLen * (0.6 + 0.4 * Math.sin(performance.now() / 300 + i));
+          ctx2.beginPath();
+          ctx2.moveTo(0, 0);
+          ctx2.lineTo(Math.cos(a) * len, Math.sin(a) * len);
+          ctx2.strokeStyle = 'rgba(255, 215, 0, ' + (starburstLife * 0.35) + ')';
+          ctx2.lineWidth = 3 + starburstLife * 4;
+          ctx2.stroke();
+        }
+        const grad = ctx2.createRadialGradient(0, 0, 5, 0, 0, 50);
+        grad.addColorStop(0, 'rgba(255, 235, 100, ' + (starburstLife * 0.5) + ')');
+        grad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+        ctx2.fillStyle = grad;
+        ctx2.beginPath();
+        ctx2.arc(0, 0, 50, 0, Math.PI * 2);
+        ctx2.fill();
+        ctx2.restore();
+      }
 
       let alive = 0;
       for (const p of this.celebrationParticles) {
         if (p.life <= 0) continue;
-        alive++;
 
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.2; // gravity
+        // Handle delay for hex rings
+        if (p._delay && p._delay > 0) {
+          p._delay -= 0.016;
+          alive++;
+          continue;
+        }
+
+        alive++;
         p.rotation += p.rotSpeed;
         p.life -= p.decay;
 
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life;
-        if (p.shape === 'circle') {
-          ctx.beginPath();
-          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (p.shape === 'triangle') {
-          ctx.beginPath();
-          ctx.moveTo(0, -p.size / 2);
-          ctx.lineTo(-p.size / 2, p.size / 2);
-          ctx.lineTo(p.size / 2, p.size / 2);
-          ctx.closePath();
-          ctx.fill();
+        ctx2.save();
+        ctx2.globalAlpha = Math.max(0, p.life);
+
+        if (p.shape === 'hex_ring') {
+          p._ringRadius += p._ringSpeed;
+          const r = p._ringRadius;
+          const sides = p._sides;
+          ctx2.translate(p.x, p.y);
+          ctx2.rotate(p.rotation);
+          ctx2.beginPath();
+          for (let s = 0; s <= sides; s++) {
+            const a = (s / sides) * Math.PI * 2;
+            const hx = Math.cos(a) * r;
+            const hy = Math.sin(a) * r;
+            if (s === 0) ctx2.moveTo(hx, hy);
+            else ctx2.lineTo(hx, hy);
+          }
+          ctx2.closePath();
+          ctx2.strokeStyle = p.color;
+          ctx2.lineWidth = 2.5 * p.life;
+          ctx2.shadowColor = p.color;
+          ctx2.shadowBlur = 8 * p.life;
+          ctx2.stroke();
+          ctx2.shadowBlur = 0;
+        } else if (p.shape === 'spark') {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.97;
+          p.vy *= 0.97;
+          if (!p._trail) p._trail = [];
+          p._trail.push({ x: p.x, y: p.y, a: p.life });
+          if (p._trail.length > 6) p._trail.shift();
+          for (let t = 0; t < p._trail.length - 1; t++) {
+            const tp = p._trail[t];
+            ctx2.beginPath();
+            ctx2.arc(tp.x, tp.y, p.size * (t / p._trail.length) * 0.6, 0, Math.PI * 2);
+            ctx2.fillStyle = p.color;
+            ctx2.globalAlpha = tp.a * (t / p._trail.length) * 0.4;
+            ctx2.fill();
+          }
+          ctx2.globalAlpha = p.life;
+          ctx2.beginPath();
+          ctx2.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx2.fillStyle = '#fff';
+          ctx2.shadowColor = p.color;
+          ctx2.shadowBlur = 10;
+          ctx2.fill();
+          ctx2.shadowBlur = 0;
+        } else if (p.shape === 'gate_rain') {
+          p.x += p.vx;
+          p.y += p.vy;
+          ctx2.translate(p.x, p.y);
+          ctx2.rotate(p.rotation);
+          ctx2.font = 'bold ' + p.size + 'px Courier New';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillStyle = p.color;
+          ctx2.shadowColor = p.color;
+          ctx2.shadowBlur = 4;
+          ctx2.fillText(p._label || 'NAND', 0, 0);
+          ctx2.shadowBlur = 0;
+        } else if (p.shape === 'gate_symbol') {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.2;
+          ctx2.translate(p.x, p.y);
+          ctx2.rotate(p.rotation);
+          ctx2.font = 'bold ' + Math.max(8, p.size * 1.5) + 'px Courier New';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillStyle = p.color;
+          ctx2.fillText(p._label || 'AND', 0, 0);
+        } else if (p.shape === 'emoji') {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.12;
+          ctx2.translate(p.x, p.y);
+          ctx2.rotate(p.rotation);
+          ctx2.font = p.size + 'px sans-serif';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillText(p._label || '\u{1F9E0}', 0, 0);
         } else {
-          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.2;
+          ctx2.translate(p.x, p.y);
+          ctx2.rotate(p.rotation);
+          ctx2.fillStyle = p.color;
+          if (p.shape === 'circle') {
+            ctx2.beginPath();
+            ctx2.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+            ctx2.fill();
+          } else if (p.shape === 'triangle') {
+            ctx2.beginPath();
+            ctx2.moveTo(0, -p.size / 2);
+            ctx2.lineTo(-p.size / 2, p.size / 2);
+            ctx2.lineTo(p.size / 2, p.size / 2);
+            ctx2.closePath();
+            ctx2.fill();
+          } else {
+            ctx2.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          }
         }
-        ctx.restore();
+        ctx2.restore();
       }
 
-      if (alive > 0) {
+      if (alive > 0 || (hasStarburst && starburstLife > 0)) {
         requestAnimationFrame(animate);
       } else {
         this.celebrationActive = false;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx2.clearRect(0, 0, cw, ch);
       }
     };
 

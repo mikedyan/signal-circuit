@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 46,
-  "nextDay": 47,
-  "totalItemsCompleted": 281,
-  "totalItems": 281,
-  "status": "Phase 3 Day 11 complete — Separate SFX/Music Volume Controls (10 items)",
-  "lastRun": "2026-04-11T08:12:00-07:00",
+  "lastCompletedDay": 47,
+  "nextDay": 48,
+  "totalItemsCompleted": 291,
+  "totalItems": 291,
+  "status": "Phase 3 Day 12 complete — Celebration Variety System (10 items)",
+  "lastRun": "2026-04-12T08:08:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -73,6 +73,11 @@
     },
     "46": {
       "items": ["Dual SFX/Music sliders in gameplay", "CSS styling (green SFX, cyan Music thumbs)", "All SFX methods → this._sfxVol", "Defaults SFX 40% Music 20%", "setupVolumeControls with sync", "Level select volume controls", "Audio preview with debounce", "Live apply to ambient/music", "Sim normalization (_effectiveSfxVol)", "Cache bust v33"],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "47": {
+      "items": ["CelebrationFactory config dispatch", "Ch1-2 classic confetti (preserved)", "Ch3 gate symbol particles (AND/OR/XOR)", "Ch4 electric sparks (radial burst + trails)", "Ch5 shield shimmer (hexagonal rings)", "Ch6 NAND/NOR gate rain", "3-star spinning starburst", "Pure Logic brain emoji particles", "First-time/improvement/replay intensity", "Chapter-colored victory flash"],
       "status": "complete",
       "qa": "all-pass"
     }

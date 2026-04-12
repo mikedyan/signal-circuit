@@ -147,3 +147,10 @@
 - **Category-aware muted flag**: When splitting volume into categories, `this.muted` should be `sfx === 0 && music === 0`, not tied to either alone. Methods that check `this.muted` at the top (like `startAmbient`) need this dual check.
 - **Volume preview debounce at 200ms**: Fires once after the user pauses slider adjustment. Prevents audio spam during rapid drags while still feeling responsive.
 - **Sim normalization via `_effectiveSfxVol`**: A simple `_simNormFactor` (0.7 = 30% reduction) applied only in sim pulse methods prevents ear fatigue on large truth tables (8+ rows) without affecting other SFX. Resets on `resetSimPitch()`.
+
+## Day 47 — Celebration Variety System
+- **Pre-mutation state capture for context**: When you need to compare "before" vs "after" state (e.g., was this an improvement?), capture the relevant data BEFORE the mutating function call. In this case, reading `progress.levels[id]` before `completeLevel()` modifies it.
+- **Chapter ID ≠ chapter index**: CHAPTERS array uses id field (1-9) which doesn't match array index due to bonus chapters. Always use `chapter.id` from the array, not the index.
+- **Flash color needs alpha**: CSS flash animations that control opacity still need the background color to have alpha. Using solid hex as background with CSS opacity:0.6 creates overly bright flashes. Convert to `rgba(r,g,b,0.3)`.
+- **Backward-compatible context parameter**: Adding an optional `context` parameter to `startCelebration(stars, context)` means all existing call sites (milestone celebrations) continue to work without changes. Default to empty object in the factory method.
+- **Dispatch by shape[0] for unique particle types**: Using `shapes[0]` as the primary dispatch key (spark, hex_ring, gate_rain) keeps the particle generation logic clean. Default confetti shapes (rect, circle, triangle, gate_symbol) all go through the same loop.

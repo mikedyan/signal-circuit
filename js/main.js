@@ -2319,7 +2319,7 @@ class GameState {
               this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
               this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
               this.ui.showChallengeResult(gateCount, this.currentLevel);
-              this.ui.startCelebration(2);
+              this.ui.startCelebration(2, { mode: 'challenge' });
               // Track challenge achievements + earn hint token
               const chAchs = this.achievements.trackChallengeComplete();
               this.ui.showAchievementToasts(chAchs);
@@ -2333,6 +2333,18 @@ class GameState {
                 setTimeout(() => this._blitzAdvance(), 1500);
               }
             } else {
+              // Day 47: Capture pre-completion state for celebration context
+              const prevProg = this.progress.levels[this.currentLevel.id];
+              const wasCompleted = prevProg && prevProg.completed;
+              const prevStars = prevProg ? (prevProg.stars || 0) : 0;
+              const hadPureLogic = prevProg ? !!prevProg.pureLogic : false;
+              const isPureLogicNew = this.hintsUsed === 0 && !hadPureLogic;
+              const celebChapters = getChapters();
+              let celebChapter = null;
+              for (const ch of celebChapters) {
+                if (ch.levels.includes(this.currentLevel.id)) { celebChapter = ch; break; }
+              }
+
               const stars = this.completeLevel(this.currentLevel.id, gateCount);
               this.audio.playSuccess(stars);
               this.haptic([30, 50, 30, 50, 50]); // #98: celebration pattern
@@ -2341,7 +2353,16 @@ class GameState {
               // Day 31: Calculate aesthetics score
               const aesthetics = this.calculateAestheticsScore();
               this.ui.showStarDisplay(stars, gateCount, this.currentLevel, aesthetics);
-              this.ui.startCelebration(stars);
+              // Day 47: Context-aware celebration
+              this.ui.startCelebration(stars, {
+                mode: 'campaign',
+                chapterId: celebChapter ? celebChapter.id : null,
+                chapterColor: celebChapter ? celebChapter.color : null,
+                isPureLogicNew: isPureLogicNew,
+                isImprovement: wasCompleted && stars > prevStars,
+                isReplay: wasCompleted && stars <= prevStars,
+                isFirstTime: !wasCompleted,
+              });
               // Check achievements
               const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
               const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
@@ -2462,11 +2483,23 @@ class GameState {
         this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
         this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
         this.ui.showChallengeResult(gateCount, this.currentLevel);
-        this.ui.startCelebration(2);
+        this.ui.startCelebration(2, { mode: 'challenge' });
         this.earnHintToken('challenge complete');
         this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
         if (this.blitzMode) setTimeout(() => this._blitzAdvance(), 1500);
       } else {
+        // Day 47: Capture pre-completion state for celebration context
+        const prevProg2 = this.progress.levels[this.currentLevel.id];
+        const wasCompleted2 = prevProg2 && prevProg2.completed;
+        const prevStars2 = prevProg2 ? (prevProg2.stars || 0) : 0;
+        const hadPL2 = prevProg2 ? !!prevProg2.pureLogic : false;
+        const isPLNew2 = this.hintsUsed === 0 && !hadPL2;
+        const celebCh2 = getChapters();
+        let celebChap2 = null;
+        for (const ch of celebCh2) {
+          if (ch.levels.includes(this.currentLevel.id)) { celebChap2 = ch; break; }
+        }
+
         const stars = this.completeLevel(this.currentLevel.id, gateCount);
         this.audio.playSuccess(stars);
         this.haptic([30, 50, 30, 50, 50]); // #98
@@ -2474,7 +2507,16 @@ class GameState {
         this.ui.updateStatusBar('Level complete! All truth table rows match.');
         const aesthetics = this.calculateAestheticsScore();
         this.ui.showStarDisplay(stars, gateCount, this.currentLevel, aesthetics);
-        this.ui.startCelebration(stars);
+        // Day 47: Context-aware celebration
+        this.ui.startCelebration(stars, {
+          mode: 'campaign',
+          chapterId: celebChap2 ? celebChap2.id : null,
+          chapterColor: celebChap2 ? celebChap2.color : null,
+          isPureLogicNew: isPLNew2,
+          isImprovement: wasCompleted2 && stars > prevStars2,
+          isReplay: wasCompleted2 && stars <= prevStars2,
+          isFirstTime: !wasCompleted2,
+        });
         const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
         const newAchs = this.achievements.checkAfterCompletion(this, this.currentLevel.id, gateCount, elapsed, this.hintsUsed);
         if (aesthetics.score >= 85 && this.achievements.unlock('clean_circuit')) {
