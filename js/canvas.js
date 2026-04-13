@@ -329,6 +329,51 @@ class CanvasRenderer {
       ctx.restore();
     }
 
+    // Day 48: Keyboard-First Wiring Mode element highlight
+    if (this.gameState._kbWiringMode && this.gameState._kbSelectedElement) {
+      const el = this.gameState._kbSelectedElement;
+      const pulse = 0.5 + 0.4 * Math.sin(performance.now() / 180);
+      let cx, cy, radius;
+      if (el instanceof Gate) {
+        cx = el.x + el.def.width / 2;
+        cy = el.y + el.def.height / 2;
+        radius = Math.max(el.def.width, el.def.height) / 2 + 16;
+      } else if (el instanceof IONode) {
+        cx = el.x + el.width / 2;
+        cy = el.y + el.height / 2;
+        radius = 36;
+      }
+      if (cx !== undefined) {
+        // Outer glow ring
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = this.gameState._kbWiring
+          ? 'rgba(255, 200, 0, ' + pulse * 0.9 + ')'   // gold when wiring
+          : 'rgba(0, 255, 100, ' + pulse * 0.9 + ')';    // green when selecting
+        ctx.lineWidth = 3;
+        ctx.shadowColor = this.gameState._kbWiring ? 'rgba(255, 200, 0, 0.6)' : 'rgba(0, 255, 100, 0.6)';
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        // Inner glow fill
+        const grad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
+        const baseColor = this.gameState._kbWiring ? '255, 200, 0' : '0, 255, 100';
+        grad.addColorStop(0, 'rgba(' + baseColor + ', ' + pulse * 0.1 + ')');
+        grad.addColorStop(1, 'rgba(' + baseColor + ', 0)');
+        ctx.fillStyle = grad;
+        ctx.fill();
+        // KB mode indicator badge
+        ctx.font = 'bold 10px Courier New';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = this.gameState._kbWiring ? 'rgba(255, 200, 0, 0.8)' : 'rgba(0, 255, 100, 0.8)';
+        ctx.fillText('⌨', cx, cy - radius - 4);
+        ctx.restore();
+        this.gameState.markDirty(); // Keep pulsing
+      }
+    }
+
     // Compatible pin highlighting during wire drawing
     if (this.gameState.wireManager.drawing && this.gameState.wireManager.drawFrom) {
       const drawFrom = this.gameState.wireManager.drawFrom;

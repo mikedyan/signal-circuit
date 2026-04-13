@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1776006922">
+  <link rel="stylesheet" href="css/style.css?v=1776094039">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -297,6 +297,7 @@
         <div id="toolbox-top-row">
           <button id="shortcuts-btn" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">?</button>
           <button id="encyclopedia-gameplay-btn" title="Gate Encyclopedia" aria-label="Gate Encyclopedia">📚</button>
+          <button id="kb-wiring-btn" title="Keyboard Wiring Mode (K)" aria-label="Toggle keyboard wiring mode">⌨</button>
         </div>
         <h2>Parts</h2>
       </div>
@@ -549,6 +550,12 @@
       <div class="shortcut-row"><kbd>Delete</kbd> Remove selected</div>
       <div class="shortcut-row"><kbd>Right-click</kbd> Delete gate/wire</div>
       <div class="shortcut-row"><kbd>Esc</kbd> Cancel wire drawing</div>
+      <h4 style="margin:12px 0 6px;color:#0f0;font-size:12px;text-transform:uppercase;letter-spacing:1px;border-top:1px solid #333;padding-top:10px;">⌨ Keyboard Wiring</h4>
+      <div class="shortcut-row"><kbd>K</kbd> Toggle keyboard wiring mode</div>
+      <div class="shortcut-row"><kbd>Tab</kbd> Cycle elements (inputs→gates→outputs)</div>
+      <div class="shortcut-row"><kbd>Shift+Tab</kbd> Cycle in reverse</div>
+      <div class="shortcut-row"><kbd>Enter</kbd> Start wire / Complete connection</div>
+      <div class="shortcut-row"><kbd>Esc</kbd> Cancel wire in progress</div>
       <button id="shortcuts-close">Close</button>
     </div>
   </div>
@@ -559,15 +566,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1776006922"></script>
-  <script src="js/wires.js?v=1776006922"></script>
-  <script src="js/simulation.js?v=1776006922"></script>
-  <script src="js/levels.js?v=1776006922"></script>
-  <script src="js/audio.js?v=1776006922"></script>
-  <script src="js/achievements.js?v=1776006922"></script>
-  <script src="js/canvas.js?v=1776006922"></script>
-  <script src="js/ui.js?v=1776006922"></script>
-  <script src="js/tutorial.js?v=1776006922"></script>
-  <script src="js/main.js?v=1776006922"></script>
+  <script src="js/gates.js?v=1776094039"></script>
+  <script src="js/wires.js?v=1776094039"></script>
+  <script src="js/simulation.js?v=1776094039"></script>
+  <script src="js/levels.js?v=1776094039"></script>
+  <script src="js/audio.js?v=1776094039"></script>
+  <script src="js/achievements.js?v=1776094039"></script>
+  <script src="js/canvas.js?v=1776094039"></script>
+  <script src="js/ui.js?v=1776094039"></script>
+  <script src="js/tutorial.js?v=1776094039"></script>
+  <script src="js/main.js?v=1776094039"></script>
 </body>
 </html>

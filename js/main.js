@@ -678,6 +678,13 @@ class GameState {
     // Day 45: Gate Limit Challenge mode
     this.isGateLimitMode = false;
     this.gateBudget = 0;
+    // Day 48: Keyboard-First Wiring Mode
+    this._kbWiringMode = false;
+    this._kbSelectedElement = null;
+    this._kbWiring = false;
+    this._kbWireSource = null;
+    this._kbDestCandidates = [];
+    this._kbDestIndex = -1;
   }
 
   // ── Hint Token System (Day 31) ──
@@ -1388,6 +1395,8 @@ class GameState {
     this.isChallengeMode = false;
     this.isGateLimitMode = false; // Day 45: Reset gate limit mode
     this.gateBudget = 0;
+    // Day 48: Reset KB wiring state (but preserve mode preference)
+    this._kbResetOnLevelChange();
     this.stopTimer();
     this.trackPlaytimeEnd();
     this.audio.stopAmbient();
@@ -1944,6 +1953,7 @@ class GameState {
     this.gates = [];
     this.inputNodes = [];
     this.outputNodes = [];
+    this._kbResetOnLevelChange(); // Day 48: Reset KB wiring state on level change
     this.wireManager.clear();
     this.selectedGate = null;
     this.undoManager.clear();
@@ -3182,8 +3192,8 @@ class GameState {
         this.runQuickTest();
       }
 
-      // Enter: Normal run
-      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      // Enter: Normal run (skip in KB wiring mode — handled below)
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !this._kbWiringMode) {
         e.preventDefault();
         this.runSimulation();
       }
@@ -3211,8 +3221,8 @@ class GameState {
         }
       }
 
-      // Tab: Cycle through placed gates
-      if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey) {
+      // Tab: Cycle through placed gates (skip in KB wiring mode — handled below)
+      if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !this._kbWiringMode) {
         e.preventDefault();
         if (this.gates.length > 0) {
           const currentIdx = this.selectedGate ? this.gates.indexOf(this.selectedGate) : -1;
@@ -3235,6 +3245,36 @@ class GameState {
         if (e.key === 'ArrowRight') this.selectedGate.x += step;
         this.markDirty();
         this._autoSave();
+      }
+
+      // Day 48: K key toggles Keyboard Wiring mode
+      if (e.key === 'k' || e.key === 'K') {
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          this._toggleKbWiringMode();
+        }
+      }
+
+      // Day 48: KB wiring mode — Tab cycles elements, Enter connects, Escape cancels
+      if (this._kbWiringMode) {
+        if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          this._kbCycleElement(e.shiftKey ? -1 : 1);
+          return; // prevent default Tab handler above
+        }
+        if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          this._kbEnterAction();
+          return; // prevent RUN
+        }
+        if (e.key === 'Escape') {
+          if (this._kbWiring) {
+            e.preventDefault();
+            this._kbCancelWire();
+          }
+        }
       }
     }, { signal });
   }
@@ -3267,6 +3307,239 @@ class GameState {
       if (targetType === 'input') checkPin(node.x, node.y + node.height / 2);
     }
     return minDist;
+  }
+
+  // ── Day 48: Keyboard-First Wiring Mode Methods ──
+
+  _toggleKbWiringMode() {
+    this._kbWiringMode = !this._kbWiringMode;
+    if (this._kbWiringMode) {
+      this._kbSelectedElement = null;
+      this._kbWiring = false;
+      this._kbWireSource = null;
+      this._kbDestCandidates = [];
+      this._kbDestIndex = -1;
+      this.ui.updateStatusBar('⌨ Keyboard Wiring: ON — Tab to select, Enter to wire');
+      this.audio.playClick();
+      // Update toolbox button
+      const btn = document.getElementById('kb-wiring-btn');
+      if (btn) btn.classList.add('active');
+    } else {
+      this._kbSelectedElement = null;
+      this._kbWiring = false;
+      this._kbWireSource = null;
+      this._kbDestCandidates = [];
+      this._kbDestIndex = -1;
+      this.wireManager.cancelDrawing();
+      this.ui.updateStatusBar('Keyboard Wiring: OFF');
+      const btn = document.getElementById('kb-wiring-btn');
+      if (btn) btn.classList.remove('active');
+    }
+    this.markDirty();
+  }
+
+  _kbGetAllElements() {
+    // Returns elements in order: input nodes → placed gates → output nodes
+    const elements = [];
+    for (const node of this.inputNodes) elements.push(node);
+    for (const gate of this.gates) elements.push(gate);
+    for (const node of this.outputNodes) elements.push(node);
+    return elements;
+  }
+
+  _kbElementLabel(el) {
+    if (!el) return '?';
+    if (el instanceof IONode) return el.label + ' (' + el.type + ')';
+    if (el instanceof Gate) return el.type + ' gate #' + el.id;
+    return 'Element #' + el.id;
+  }
+
+  _kbCycleElement(direction) {
+    if (this._kbWiring) {
+      // Cycling through destination candidates
+      if (this._kbDestCandidates.length === 0) {
+        this.ui.updateStatusBar('⚠ No compatible destinations available');
+        return;
+      }
+      this._kbDestIndex = (this._kbDestIndex + direction + this._kbDestCandidates.length) % this._kbDestCandidates.length;
+      const dest = this._kbDestCandidates[this._kbDestIndex];
+      this._kbSelectedElement = dest.element;
+      this.selectedGate = (dest.element instanceof Gate) ? dest.element : null;
+      this.ui.updateStatusBar('Wiring to: ' + this._kbElementLabel(dest.element) + ' — Enter to connect, Esc to cancel');
+      this.audio.playClick();
+      this.markDirty();
+    } else {
+      // Cycling through all elements
+      const all = this._kbGetAllElements();
+      if (all.length === 0) return;
+      let idx = this._kbSelectedElement ? all.indexOf(this._kbSelectedElement) : -1;
+      idx = (idx + direction + all.length) % all.length;
+      this._kbSelectedElement = all[idx];
+      this.selectedGate = (this._kbSelectedElement instanceof Gate) ? this._kbSelectedElement : null;
+      this.wireManager.selectedWire = null;
+      this.ui.updateStatusBar('Selected: ' + this._kbElementLabel(this._kbSelectedElement) + ' — Enter to start wire');
+      this.audio.playClick();
+      this.markDirty();
+    }
+  }
+
+  _kbEnterAction() {
+    if (this._kbWiring) {
+      // Complete wire to currently selected destination
+      if (this._kbDestIndex < 0 || this._kbDestIndex >= this._kbDestCandidates.length) {
+        this.ui.updateStatusBar('⚠ No destination selected — Tab to pick one');
+        return;
+      }
+      const dest = this._kbDestCandidates[this._kbDestIndex];
+      const wire = this.wireManager.finishDrawing(dest.gateId, dest.pinIndex, dest.pinType, dest.x, dest.y);
+      if (wire) {
+        this._startTimerIfPending();
+        this.audio.playWireConnect(dest.x);
+        this.renderer.spawnSparks(dest.x, dest.y);
+        this.undoManager.push({
+          type: 'addWire',
+          wireId: wire.id,
+          fromGateId: wire.fromGateId,
+          fromPinIndex: wire.fromPinIndex,
+          toGateId: wire.toGateId,
+          toPinIndex: wire.toPinIndex,
+        });
+        if (this.detectCycle()) {
+          this.ui.updateStatusBar('⚠ Cycle detected — circuit may not simulate correctly');
+          wire._cycleWarning = true;
+        } else {
+          this.ui.updateStatusBar('✓ Wire connected! Tab to select next element');
+        }
+        const wireAchs = this.achievements.trackFirstWire();
+        this.ui.showAchievementToasts(wireAchs);
+      }
+      // Reset wiring state but stay in KB mode
+      this._kbWiring = false;
+      this._kbWireSource = null;
+      this._kbDestCandidates = [];
+      this._kbDestIndex = -1;
+      this._kbSelectedElement = null;
+      this.markDirty();
+      this._autoSave();
+    } else {
+      // Start wire from selected element
+      if (!this._kbSelectedElement) {
+        this.ui.updateStatusBar('⚠ No element selected — Tab to pick one first');
+        return;
+      }
+      const el = this._kbSelectedElement;
+      const pin = this._kbGetBestOutputPin(el);
+      if (!pin) {
+        this.ui.updateStatusBar('⚠ No available output pin on ' + this._kbElementLabel(el));
+        return;
+      }
+      // Start wire drawing through wireManager
+      this.wireManager.startDrawing(pin.gateId, pin.pinIndex, pin.pinType, pin.x, pin.y);
+      this._kbWiring = true;
+      this._kbWireSource = pin;
+      // Build destination candidates
+      this._kbDestCandidates = this._kbGetDestCandidates(pin);
+      this._kbDestIndex = this._kbDestCandidates.length > 0 ? 0 : -1;
+      if (this._kbDestCandidates.length > 0) {
+        this._kbSelectedElement = this._kbDestCandidates[0].element;
+        this.selectedGate = (this._kbSelectedElement instanceof Gate) ? this._kbSelectedElement : null;
+        this.ui.updateStatusBar('Wiring from: ' + this._kbElementLabel(el) + ' → Tab to pick destination, Enter to connect');
+      } else {
+        this.ui.updateStatusBar('⚠ No compatible destinations for ' + this._kbElementLabel(el));
+        this.wireManager.cancelDrawing();
+        this._kbWiring = false;
+      }
+      this._startTimerIfPending();
+      this.markDirty();
+    }
+  }
+
+  _kbGetBestOutputPin(el) {
+    // For input nodes: their pin is type 'output' (feeds into circuit)
+    if (el instanceof IONode && el.type === 'input') {
+      const p = el.getPin();
+      return { gateId: el.id, pinIndex: 0, pinType: 'output', x: p.x + 12, y: p.y };
+    }
+    // For gates: first available output pin
+    if (el instanceof Gate) {
+      const pins = el.getOutputPins();
+      if (pins.length > 0) {
+        return { gateId: el.id, pinIndex: 0, pinType: 'output', x: pins[0].x + 12, y: pins[0].y };
+      }
+    }
+    // For output nodes: their pin is type 'input' — so we start from an input pin
+    // But we can also wire TO output nodes. For KB mode, output nodes aren't typical sources.
+    // Let users start from output nodes by selecting their input pin
+    if (el instanceof IONode && el.type === 'output') {
+      // Output nodes receive wires, not send. Treat Enter on output node as no-op with message.
+      return null;
+    }
+    return null;
+  }
+
+  _kbGetDestCandidates(sourcePin) {
+    // Returns array of { element, gateId, pinIndex, pinType, x, y } for compatible dest pins
+    const candidates = [];
+    const wires = this.wireManager.wires;
+    const srcType = sourcePin.pinType; // 'output'
+    const targetType = srcType === 'output' ? 'input' : 'output';
+
+    if (targetType === 'input') {
+      // Target: gate input pins and output node input pins
+      for (const gate of this.gates) {
+        if (gate.id === sourcePin.gateId) continue; // no self-connect
+        const pins = gate.getInputPins();
+        for (let i = 0; i < pins.length; i++) {
+          const connected = wires.some(w => w.toGateId === gate.id && w.toPinIndex === i);
+          if (!connected) {
+            candidates.push({
+              element: gate,
+              gateId: gate.id,
+              pinIndex: i,
+              pinType: 'input',
+              x: pins[i].x - 12,
+              y: pins[i].y,
+            });
+          }
+        }
+      }
+      for (const node of this.outputNodes) {
+        const connected = wires.some(w => w.toGateId === node.id && w.toPinIndex === 0);
+        if (!connected) {
+          const p = node.getPin();
+          candidates.push({
+            element: node,
+            gateId: node.id,
+            pinIndex: 0,
+            pinType: 'input',
+            x: p.x - 12,
+            y: p.y,
+          });
+        }
+      }
+    }
+    return candidates;
+  }
+
+  _kbCancelWire() {
+    this.wireManager.cancelDrawing();
+    this._kbWiring = false;
+    this._kbWireSource = null;
+    this._kbDestCandidates = [];
+    this._kbDestIndex = -1;
+    this._kbSelectedElement = null;
+    this.ui.updateStatusBar('Wire cancelled — Tab to select element');
+    this.audio.playEscapeCancel();
+    this.markDirty();
+  }
+
+  _kbResetOnLevelChange() {
+    this._kbWiring = false;
+    this._kbWireSource = null;
+    this._kbDestCandidates = [];
+    this._kbDestIndex = -1;
+    this._kbSelectedElement = null;
+    // Don't disable the mode itself — user preference persists
   }
 
   async _runTensionAnimation() {

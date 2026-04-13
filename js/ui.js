@@ -2106,6 +2106,14 @@ class UI {
         overlay.style.display = 'none';
       }
     });
+
+    // Day 48: Keyboard Wiring Mode button
+    const kbBtn = document.getElementById('kb-wiring-btn');
+    if (kbBtn) {
+      kbBtn.addEventListener('click', () => {
+        if (this.gameState) this.gameState._toggleKbWiringMode();
+      });
+    }
   }
 
   // ── Progress Bar ──

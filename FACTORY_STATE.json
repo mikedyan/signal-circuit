@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 47,
-  "nextDay": 48,
-  "totalItemsCompleted": 291,
-  "totalItems": 291,
-  "status": "Phase 3 Day 12 complete — Celebration Variety System (10 items)",
-  "lastRun": "2026-04-12T08:08:00-07:00",
+  "lastCompletedDay": 48,
+  "nextDay": 49,
+  "totalItemsCompleted": 301,
+  "totalItems": 301,
+  "status": "Phase 3 Day 13 complete — Keyboard-First Wiring Mode (10 items)",
+  "lastRun": "2026-04-13T08:20:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -78,6 +78,11 @@
     },
     "47": {
       "items": ["CelebrationFactory config dispatch", "Ch1-2 classic confetti (preserved)", "Ch3 gate symbol particles (AND/OR/XOR)", "Ch4 electric sparks (radial burst + trails)", "Ch5 shield shimmer (hexagonal rings)", "Ch6 NAND/NOR gate rain", "3-star spinning starburst", "Pure Logic brain emoji particles", "First-time/improvement/replay intensity", "Chapter-colored victory flash"],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "48": {
+      "items": ["KB Wiring mode toggle (K key + button)", "Tab cycles input→gate→output elements", "Green pulsing highlight ring on selected", "Enter starts wire from output pin", "Tab cycles compatible destinations only", "Enter completes wire connection", "Escape cancels KB wire drawing", "Number key gate placement preserved", "Shortcuts overlay KB section", "Cache bust v34"],
       "status": "complete",
       "qa": "all-pass"
     }

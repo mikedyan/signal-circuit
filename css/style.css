@@ -1344,6 +1344,30 @@ body.light-mode #focus-failed-btn {
   border-color: #0f0;
 }
 
+/* Day 48: Keyboard Wiring Mode button */
+#kb-wiring-btn {
+  background: #1a1a1a;
+  color: #888;
+  border: 1px solid #444;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+#kb-wiring-btn:hover {
+  color: #0f0;
+  border-color: #0f0;
+}
+#kb-wiring-btn.active {
+  color: #0f0;
+  border-color: #0f0;
+  background: rgba(0, 255, 0, 0.1);
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+}
+
 /* ── Shortcuts Overlay ── */
 #shortcuts-overlay {
   position: fixed;

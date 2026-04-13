@@ -1,0 +1,126 @@
+{
+  "day": 48,
+  "title": "Keyboard-First Wiring Mode",
+  "summary": "Add complete keyboard workflow for circuit building: K key toggles keyboard wiring mode, Tab cycles through input nodes → placed gates → output nodes in topological order, Enter starts/completes wire connections, Escape cancels, number keys place gates with grid-snap preview. Status messages guide the user through the flow. A keyboard shortcut reference card section for wiring mode is added to the shortcuts overlay.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add 'Keyboard Wiring' mode toggle (K key or button in toolbox). When active, show a status message. Store state in gameState._kbWiringMode boolean.",
+      "files_to_modify": ["js/main.js", "index.html"],
+      "acceptance_criteria": [
+        "Pressing K toggles _kbWiringMode on/off",
+        "A toolbox button also toggles it",
+        "Status bar shows 'Keyboard Wiring: ON' when active",
+        "Mode auto-disables when leaving gameplay screen"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Tab cycles through: input nodes → placed gates → output nodes (in topological order). Shift+Tab goes backward. Only works when _kbWiringMode is true.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Tab in KB wiring mode cycles input nodes, then gates, then output nodes",
+        "Shift+Tab cycles in reverse",
+        "_kbSelectedElement stores the currently highlighted element",
+        "Status bar updates with selected element name"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Selected element gets prominent green highlight ring (different from mouse selection). Render in canvas.js.",
+      "files_to_modify": ["js/canvas.js"],
+      "acceptance_criteria": [
+        "KB-selected element has a distinct pulsing green glow ring",
+        "Ring is visually different from mouse selection highlight",
+        "Ring disappears when KB wiring mode is off"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Press Enter on selected element to start wire from it (selects first available output pin for input nodes/gates, first input pin for output nodes).",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Enter starts wire drawing from the KB-selected element's appropriate pin",
+        "Status message shows 'Wiring from: [element] → Select destination (Tab/Enter)'",
+        "Wire drawing state integrates with existing wireManager"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T5",
+      "description": "After wire starts, Tab cycles through compatible destination elements only. Press Enter to complete wire connection.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Tab only shows elements with compatible unconnected pins",
+        "Enter completes the wire connection to the selected destination",
+        "Undo/redo works for keyboard-created wires",
+        "Audio plays on wire completion"
+      ],
+      "depends_on": ["T4"]
+    },
+    {
+      "id": "T6",
+      "description": "Show 'Wiring from: [source] → Select destination (Tab/Enter)' status message during KB wire drawing.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Status message updates at each step of KB wiring",
+        "Message is clear about what action to take next"
+      ],
+      "depends_on": ["T4"]
+    },
+    {
+      "id": "T7",
+      "description": "Escape cancels wire drawing in KB mode (same as mouse).",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Escape cancels KB wire drawing",
+        "Status message reverts to normal KB wiring prompt"
+      ],
+      "depends_on": ["T4"]
+    },
+    {
+      "id": "T8",
+      "description": "Number keys (1-6) place gates at current cursor position with grid-snap preview when in KB wiring mode. Existing number key placement is enhanced.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Number keys still place gates at canvas center (existing behavior preserved)",
+        "When a KB element is selected, gates place near that element"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T9",
+      "description": "Add keyboard shortcut reference card section for wiring mode in the shortcuts overlay.",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "Shortcuts overlay includes a 'Keyboard Wiring' section",
+        "Lists K, Tab, Enter, Escape shortcuts with descriptions"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Cache bust all script and CSS tags to v34.",
+      "files_to_modify": ["index.html", "sw.js"],
+      "acceptance_criteria": [
+        "All script/CSS tags have updated cache version",
+        "Service worker cache version is bumped"
+      ],
+      "depends_on": []
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "KB wiring mode toggle on/off",
+    "Tab cycling through all elements",
+    "Complete wire creation via keyboard only",
+    "Wire undo/redo",
+    "Interaction with mouse wiring when KB mode is active",
+    "Mode doesn't interfere with normal keyboard shortcuts (Enter for RUN, etc)",
+    "Shortcuts overlay shows new section"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced affecting normal gameplay, revert"
+}

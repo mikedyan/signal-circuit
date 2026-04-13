@@ -154,3 +154,9 @@
 - **Flash color needs alpha**: CSS flash animations that control opacity still need the background color to have alpha. Using solid hex as background with CSS opacity:0.6 creates overly bright flashes. Convert to `rgba(r,g,b,0.3)`.
 - **Backward-compatible context parameter**: Adding an optional `context` parameter to `startCelebration(stars, context)` means all existing call sites (milestone celebrations) continue to work without changes. Default to empty object in the factory method.
 - **Dispatch by shape[0] for unique particle types**: Using `shapes[0]` as the primary dispatch key (spark, hex_ring, gate_rain) keeps the particle generation logic clean. Default confetti shapes (rect, circle, triangle, gate_symbol) all go through the same loop.
+
+## Day 48 — Keyboard-First Wiring Mode
+- **Guard existing handlers with mode flag**: When adding a new keyboard mode that overrides Tab/Enter, add `!this._newMode` to existing `if` conditions rather than relying solely on `stopImmediatePropagation()`. Belt and suspenders prevents the original handler from also firing in edge cases.
+- **Pin coordinate offsets are the source of truth**: Gate input pins render at `pin.x - 12`, output pins at `pin.x + 12` (visual pin circle offset from gate edge). KB wiring must construct wire endpoint coordinates using these same offsets for consistency with mouse-drawn wires.
+- **Cycling through filtered subsets needs separate state**: When Tab has dual behavior (cycle all elements vs cycle destinations), store separate state for each: `_kbDestCandidates[]` with `_kbDestIndex` for the wiring phase, vs the general `_kbSelectedElement` for the selection phase.
+- **Output nodes are wire sinks, not sources**: IONode with type='output' has a pin of type='input' (receives signal). Attempting to start a wire from an output node should show a helpful error message, not silently fail. Always check the element type when determining available pins.
