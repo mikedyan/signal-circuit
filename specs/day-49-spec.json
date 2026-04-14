@@ -1,0 +1,139 @@
+{
+  "day": 49,
+  "title": "Community Level Browser",
+  "summary": "Add a curated 'Community Levels' section to the level select screen with 20 embedded community levels, a Featured Level of the Week spotlight, difficulty ratings, client-side play tracking, share/submit functionality, and a Community Creator achievement. Levels load via existing #custom= URL mechanism.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Create COMMUNITY_LEVELS constant array with 20 curated community levels as JSON objects. Each level has: id (community_1..20), name, creator (optional), difficulty (Easy/Medium/Hard), inputCount, outputCount, truthTable, gates, featured flag. Mix of 2-input easy levels, 3-input medium, and 4-input hard.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "COMMUNITY_LEVELS array has exactly 20 entries",
+        "Each entry has: id, name, creator, difficulty, inputCount, outputCount, truthTable, gates",
+        "At least 6 Easy, 8 Medium, 6 Hard levels",
+        "One level has featured: true",
+        "Truth tables are valid (2^inputCount rows, each row has inputCount+outputCount values)"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add '🌐 Community Levels' section to the level select screen HTML (in index.html). Place it below the Challenge Mode section. Include: section header, featured spotlight container, level cards grid, and 'Submit Your Level' button.",
+      "files_to_modify": ["index.html"],
+      "acceptance_criteria": [
+        "Community section appears below challenge mode on level select",
+        "Has a section header '🌐 Community Levels'",
+        "Has #community-featured container for featured level spotlight",
+        "Has #community-levels-grid container for level cards",
+        "Has 'Submit Your Level' button that copies share URL from creator"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "description": "Implement renderCommunitySection() in ui.js that populates the community grid. Each card shows: name, creator, difficulty badge (🟢/🟡/🔴), play count (from localStorage), and completed checkmark if done. Featured level gets a spotlight card at top with gold border.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "All 20 community levels render as cards",
+        "Featured level shows as spotlight at top with gold styling",
+        "Difficulty badges: 🟢 Easy, 🟡 Medium, 🔴 Hard",
+        "Completed levels show ✅ checkmark",
+        "Cards are clickable and load the level"
+      ],
+      "depends_on": ["T1", "T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Implement community level loading. Clicking a community card converts the community level data to the same format as buildCustomLevel() and loads it via loadChallengeLevel(). Track play count in localStorage under 'communityPlays'.",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Clicking a community level card loads the level in gameplay screen",
+        "Level plays correctly with proper truth table and available gates",
+        "Play count increments in localStorage each time a community level is started",
+        "Back button returns to level select"
+      ],
+      "depends_on": ["T1", "T3"]
+    },
+    {
+      "id": "T5",
+      "description": "Track community level completions separately in localStorage under 'communityCompleted'. When a community level is solved, mark it as completed. Show completion count (e.g., '3/20 completed') in the section header.",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Solving a community level marks it completed in localStorage",
+        "Completed count shows in section header",
+        "Completed levels show ✅ on their card",
+        "Completion persists across sessions"
+      ],
+      "depends_on": ["T4"]
+    },
+    {
+      "id": "T6",
+      "description": "Add difficulty rating calculation for community levels based on inputCount, outputCount, and truth table complexity (number of non-trivial output patterns). Classify as Easy (2 inputs, 1 output), Medium (3 inputs or 2 outputs), Hard (4 inputs or 3+ outputs).",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "getCommunityDifficulty() function exists",
+        "Returns 'Easy', 'Medium', or 'Hard' based on level properties",
+        "Difficulty badges on cards match the computed difficulty"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T7",
+      "description": "Add 'Submit Your Level' button that navigates to the Level Creator screen. Also add a 'Featured Level of the Week' that rotates based on the current week number (week of year modulo 20).",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Submit button navigates to creator screen",
+        "Featured level rotates weekly based on date",
+        "Featured spotlight shows the current week's featured level with special styling"
+      ],
+      "depends_on": ["T2", "T3"]
+    },
+    {
+      "id": "T8",
+      "description": "Add CSS styling for community section: cards with circuit-themed dark backgrounds, difficulty badge colors, featured spotlight with gold border and glow, hover effects on cards, and responsive grid layout.",
+      "files_to_modify": ["css/style.css"],
+      "acceptance_criteria": [
+        "Community cards have dark circuit-themed styling",
+        "Featured level has gold border and subtle glow",
+        "Difficulty badges are color-coded",
+        "Cards have hover lift effect",
+        "Grid is responsive: 2 cols on mobile, 3-4 on desktop"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T9",
+      "description": "Add upvote counter for community levels. Client-side only: store upvotes in localStorage under 'communityUpvotes'. Each level can be upvoted once (toggle). Show heart icon with count on each card.",
+      "files_to_modify": ["js/ui.js"],
+      "acceptance_criteria": [
+        "Each card shows a heart icon with upvote count",
+        "Clicking heart toggles upvote (on/off)",
+        "Upvote state persists in localStorage",
+        "Visual feedback on upvote (heart turns red when active)"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T10",
+      "description": "Wire up 'Community Creator' achievement — earned after sharing 3+ custom levels via the creator. Update achievements.js. Also add cache bust to index.html script tags.",
+      "files_to_modify": ["js/achievements.js", "index.html"],
+      "acceptance_criteria": [
+        "Community Creator achievement triggers after 3 shared levels",
+        "Achievement shows in achievements modal",
+        "Cache bust version incremented on all script/css tags"
+      ],
+      "depends_on": ["T3"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Community levels load and play correctly",
+    "Featured level rotates properly",
+    "Completion tracking persists across reloads",
+    "Upvote toggle works and persists",
+    "Cards render correctly on mobile and desktop",
+    "Back navigation from community levels works",
+    "No regression in existing level select functionality"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced affecting existing level select or gameplay, revert"
+}

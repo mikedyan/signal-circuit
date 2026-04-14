@@ -10,6 +10,7 @@ const ACHIEVEMENTS = [
   { id: 'explorer', name: 'Explorer', desc: 'Try all 6 game modes', icon: '🧭', tier: 'bronze' },
   { id: 'social_butterfly', name: 'Social Butterfly', desc: 'Share a friend challenge link', icon: '🦋', tier: 'bronze' },
   { id: 'creator', name: 'Creator', desc: 'Create and share a custom level', icon: '🎨', tier: 'bronze' },
+  { id: 'community_creator', name: 'Community Creator', desc: 'Share 3+ custom levels with the community', icon: '🌐', tier: 'silver' },
 
   // Silver — Building skills
   { id: 'speed_demon', name: 'Speed Demon', desc: 'Complete any level in under 30 seconds', icon: '⚡', tier: 'silver' },
@@ -321,6 +322,11 @@ class AchievementManager {
   trackCustomLevelCreated() {
     const newlyUnlocked = [];
     if (this.unlock('creator')) newlyUnlocked.push('creator');
+    // Day 49: Track total custom levels shared for community_creator
+    this.stats.customLevelsShared = (this.stats.customLevelsShared || 0) + 1;
+    if (this.stats.customLevelsShared >= 3) {
+      if (this.unlock('community_creator')) newlyUnlocked.push('community_creator');
+    }
     if (newlyUnlocked.length > 0) this.save();
     return newlyUnlocked;
   }

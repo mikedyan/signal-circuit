@@ -45,6 +45,7 @@ class UI {
     this.setupUndoTimeline(); // Day 35 T6
     this.setupCosmeticModal(); // Day 40
     this.setupDailyScreen(); // Day 44
+    this.setupCommunitySection(); // Day 49
     this.updateDailyButtonBadge(); // Day 44
   }
 
@@ -458,6 +459,7 @@ class UI {
 
     // Day 32 T10: Render spaced repetition review section
     this.renderReviewSection();
+    this.renderCommunitySection(); // Day 49
   }
 
   showScreen(screen) {
@@ -3459,6 +3461,188 @@ class UI {
       prompt('Copy this link to share your level:', url);
     }
     this.gameState.audio.playButtonClick();
+  }
+
+
+  // ── Community Levels (Day 49) ──
+  setupCommunitySection() {
+    const submitBtn = document.getElementById('community-submit-btn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        this.gameState.audio.playButtonClick();
+        this.showCreatorScreen();
+      });
+    }
+  }
+
+  renderCommunitySection() {
+    const grid = document.getElementById('community-levels-grid');
+    const featuredContainer = document.getElementById('community-featured');
+    const countEl = document.getElementById('community-completed-count');
+    if (!grid || typeof COMMUNITY_LEVELS === 'undefined') return;
+
+    const completed = this._getCommunityCompleted();
+    const upvotes = this._getCommunityUpvotes();
+    const plays = this._getCommunityPlays();
+
+    // Featured level of the week (week number mod 20)
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNum = Math.floor((now - startOfYear) / (7 * 24 * 60 * 60 * 1000));
+    const featuredIdx = weekNum % COMMUNITY_LEVELS.length;
+    const featuredLevel = COMMUNITY_LEVELS[featuredIdx];
+
+    // Render featured spotlight
+    if (featuredContainer) {
+      const diff = getCommunityDifficulty(featuredLevel);
+      const diffBadge = diff === 'Easy' ? '🟢' : diff === 'Medium' ? '🟡' : '🔴';
+      const isDone = completed.includes(featuredLevel.id);
+      featuredContainer.innerHTML = `
+        <div class="community-featured-card" data-community-id="${featuredLevel.id}">
+          <div class="community-featured-badge">⭐ Featured This Week</div>
+          <div class="community-card-title">${isDone ? '✅ ' : ''}${featuredLevel.name}</div>
+          <div class="community-card-meta">
+            <span class="community-difficulty">${diffBadge} ${diff}</span>
+            <span class="community-creator">by ${featuredLevel.creator || 'Anonymous'}</span>
+          </div>
+          <div class="community-card-meta">
+            <span class="community-plays">${plays[featuredLevel.id] || 0} plays</span>
+            <span class="community-upvote ${upvotes.includes(featuredLevel.id) ? 'active' : ''}" data-id="${featuredLevel.id}">
+              ${upvotes.includes(featuredLevel.id) ? '❤️' : '🤍'} ${this._getCommunityUpvoteCount(featuredLevel.id)}
+            </span>
+          </div>
+        </div>`;
+    }
+
+    // Completed count
+    if (countEl) {
+      countEl.textContent = `(${completed.length}/${COMMUNITY_LEVELS.length} completed)`;
+    }
+
+    // Render all levels grid
+    let html = '';
+    for (const level of COMMUNITY_LEVELS) {
+      const diff = getCommunityDifficulty(level);
+      const diffBadge = diff === 'Easy' ? '🟢' : diff === 'Medium' ? '🟡' : '🔴';
+      const isDone = completed.includes(level.id);
+      const isUpvoted = upvotes.includes(level.id);
+      html += `
+        <div class="community-card" data-community-id="${level.id}">
+          <div class="community-card-title">${isDone ? '✅ ' : ''}${level.name}</div>
+          <div class="community-card-meta">
+            <span class="community-difficulty">${diffBadge} ${diff}</span>
+            <span class="community-creator">by ${level.creator || 'Anonymous'}</span>
+          </div>
+          <div class="community-card-bottom">
+            <span class="community-plays">${plays[level.id] || 0} plays</span>
+            <span class="community-upvote ${isUpvoted ? 'active' : ''}" data-id="${level.id}">
+              ${isUpvoted ? '❤️' : '🤍'} ${this._getCommunityUpvoteCount(level.id)}
+            </span>
+          </div>
+        </div>`;
+    }
+    grid.innerHTML = html;
+
+    // Wire up click events on cards
+    grid.querySelectorAll('.community-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.community-upvote')) return;
+        const id = card.dataset.communityId;
+        this.playCommunityLevel(id);
+      });
+    });
+    if (featuredContainer) {
+      const fCard = featuredContainer.querySelector('.community-featured-card');
+      if (fCard) {
+        fCard.addEventListener('click', (e) => {
+          if (e.target.closest('.community-upvote')) return;
+          this.playCommunityLevel(fCard.dataset.communityId);
+        });
+      }
+    }
+
+    // Wire up upvote buttons
+    document.querySelectorAll('.community-upvote').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        this._toggleCommunityUpvote(id);
+        this.renderCommunitySection();
+        if (this.gameState.audio) this.gameState.audio.playClick();
+      });
+    });
+  }
+
+  playCommunityLevel(id) {
+    const level = COMMUNITY_LEVELS.find(l => l.id === id);
+    if (!level) return;
+
+    // Track play count
+    const plays = this._getCommunityPlays();
+    plays[id] = (plays[id] || 0) + 1;
+    try { localStorage.setItem('communityPlays', JSON.stringify(plays)); } catch(e) {}
+
+    // Build level using same format as custom levels
+    const data = {
+      n: level.name,
+      i: level.inputCount,
+      o: level.outputCount,
+      t: level.truthTable,
+      g: level.gates,
+    };
+    const builtLevel = buildCustomLevel(data);
+    builtLevel.id = id;
+    builtLevel.isCommunityLevel = true;
+
+    const gs = this.gameState;
+    gs._saveLevelSelectScroll();
+    gs.isChallengeMode = false;
+    gs.isSandboxMode = false;
+    gs.currentScreen = 'gameplay';
+    this.showScreen('gameplay');
+    gs.audio.startAmbient();
+    gs.renderer.resize();
+    gs.renderer.resetView();
+    gs.loadChallengeLevel(builtLevel);
+    setTimeout(() => gs.renderer.resize(), 100);
+    gs.audio.playButtonClick();
+  }
+
+  _getCommunityCompleted() {
+    try {
+      return JSON.parse(localStorage.getItem('communityCompleted') || '[]');
+    } catch(e) { return []; }
+  }
+
+  _getCommunityPlays() {
+    try {
+      return JSON.parse(localStorage.getItem('communityPlays') || '{}');
+    } catch(e) { return {}; }
+  }
+
+  _getCommunityUpvotes() {
+    try {
+      return JSON.parse(localStorage.getItem('communityUpvotes') || '[]');
+    } catch(e) { return []; }
+  }
+
+  _getCommunityUpvoteCount(id) {
+    let seed = 0;
+    for (let i = 0; i < id.length; i++) seed += id.charCodeAt(i);
+    const base = (seed * 17 + 7) % 23 + 3;
+    const userUpvoted = this._getCommunityUpvotes().includes(id) ? 1 : 0;
+    return base + userUpvoted;
+  }
+
+  _toggleCommunityUpvote(id) {
+    const upvotes = this._getCommunityUpvotes();
+    const idx = upvotes.indexOf(id);
+    if (idx >= 0) {
+      upvotes.splice(idx, 1);
+    } else {
+      upvotes.push(id);
+    }
+    try { localStorage.setItem('communityUpvotes', JSON.stringify(upvotes)); } catch(e) {}
   }
 
   // ── Placement Test (Day 31 T2) ──

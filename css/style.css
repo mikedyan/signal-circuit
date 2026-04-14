@@ -5548,3 +5548,166 @@ body.light-mode .undo-dot.future {
 /* Gate indicator over-budget red flash */
 #gate-indicator.over .count { color: #f44; }
 #gate-indicator.over { border-color: #f44; }
+
+/* ── Day 49: Community Levels Section ── */
+#community-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #333;
+}
+
+#community-levels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.community-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.community-card:hover {
+  transform: translateY(-2px);
+  border-color: #0f0;
+  box-shadow: 0 4px 12px rgba(0, 255, 0, 0.1);
+}
+
+.community-card-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #eee;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.community-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.community-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #666;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.community-difficulty {
+  font-size: 11px;
+}
+
+.community-creator {
+  color: #666;
+  font-style: italic;
+  font-size: 10px;
+}
+
+.community-plays {
+  color: #555;
+  font-size: 10px;
+}
+
+.community-upvote {
+  cursor: pointer;
+  font-size: 12px;
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+
+.community-upvote:hover {
+  transform: scale(1.2);
+}
+
+.community-upvote.active {
+  color: #ff4466;
+}
+
+/* Featured card */
+.community-featured-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 50%, #16213e 100%);
+  border: 1px solid #ffd700;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.community-featured-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.25);
+}
+
+.community-featured-badge {
+  font-size: 11px;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.community-featured-card .community-card-title {
+  font-size: 16px;
+  color: #fff;
+}
+
+.community-featured-card .community-card-meta {
+  font-size: 12px;
+}
+
+#community-submit-btn {
+  width: 100%;
+}
+
+/* Light mode overrides */
+body.light-mode .community-card {
+  background: linear-gradient(135deg, #f0f0f5 0%, #e8eaf0 100%);
+  border-color: #ccc;
+}
+
+body.light-mode .community-card:hover {
+  border-color: #090;
+  box-shadow: 0 4px 12px rgba(0, 150, 0, 0.15);
+}
+
+body.light-mode .community-card-title {
+  color: #222;
+}
+
+body.light-mode .community-featured-card {
+  background: linear-gradient(135deg, #f5f0e0 0%, #e8e0f0 50%, #e0e8f0 100%);
+  border-color: #c8a000;
+}
+
+/* Mobile: 2 columns */
+@media (max-width: 480px) {
+  #community-levels-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .community-card {
+    padding: 10px;
+  }
+  .community-card-title {
+    font-size: 12px;
+  }
+}

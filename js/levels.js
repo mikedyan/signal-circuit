@@ -2001,3 +2001,161 @@ function generateSandboxLevel(numInputs, numOutputs) {
     isSandbox: true,
   };
 }
+
+// ── Community Levels (Day 49) ──
+function getCommunityDifficulty(level) {
+  if (level.inputCount >= 4 || level.outputCount >= 3) return 'Hard';
+  if (level.inputCount >= 3 || level.outputCount >= 2) return 'Medium';
+  return 'Easy';
+}
+
+const COMMUNITY_LEVELS = [
+  // === EASY (2-input, 1-output) ===
+  {
+    id: 'community_1', name: 'The Implication', creator: 'LogicLara',
+    inputCount: 2, outputCount: 1,
+    truthTable: [[0,0,1],[0,1,1],[1,0,0],[1,1,1]],
+    gates: ['AND','OR','NOT'], featured: false,
+  },
+  {
+    id: 'community_2', name: 'Inverted AND', creator: 'ChipWizard',
+    inputCount: 2, outputCount: 1,
+    truthTable: [[0,0,1],[0,1,1],[1,0,1],[1,1,0]],
+    gates: ['AND','NOT'], featured: false,
+  },
+  {
+    id: 'community_3', name: 'Either But Not A', creator: 'NandNinja',
+    inputCount: 2, outputCount: 1,
+    truthTable: [[0,0,0],[0,1,1],[1,0,0],[1,1,0]],
+    gates: ['AND','OR','NOT'], featured: false,
+  },
+  {
+    id: 'community_4', name: 'Always Agree', creator: 'BitBuilder',
+    inputCount: 2, outputCount: 1,
+    truthTable: [[0,0,1],[0,1,0],[1,0,0],[1,1,1]],
+    gates: ['XOR','NOT'], featured: false,
+  },
+  {
+    id: 'community_5', name: 'One Hot', creator: 'GateCrafter',
+    inputCount: 2, outputCount: 1,
+    truthTable: [[0,0,0],[0,1,1],[1,0,1],[1,1,0]],
+    gates: ['XOR'], featured: false,
+  },
+  {
+    id: 'community_6', name: 'Not Both', creator: 'CircuitSage',
+    inputCount: 2, outputCount: 1,
+    truthTable: [[0,0,1],[0,1,1],[1,0,1],[1,1,0]],
+    gates: ['NAND'], featured: false,
+  },
+  {
+    id: 'community_7', name: 'Silent When Apart', creator: 'WirePuller',
+    inputCount: 2, outputCount: 1,
+    truthTable: [[0,0,0],[0,1,0],[1,0,0],[1,1,1]],
+    gates: ['AND'], featured: false,
+  },
+  // === MEDIUM (3-input, 1-output or 2-input, 2-output) ===
+  {
+    id: 'community_8', name: 'Majority Vote', creator: 'LogicLara',
+    inputCount: 3, outputCount: 1,
+    truthTable: [[0,0,0,0],[0,0,1,0],[0,1,0,0],[0,1,1,1],[1,0,0,0],[1,0,1,1],[1,1,0,1],[1,1,1,1]],
+    gates: ['AND','OR'], featured: true,
+  },
+  {
+    id: 'community_9', name: 'Odd Parity', creator: 'ParityPete',
+    inputCount: 3, outputCount: 1,
+    truthTable: [[0,0,0,0],[0,0,1,1],[0,1,0,1],[0,1,1,0],[1,0,0,1],[1,0,1,0],[1,1,0,0],[1,1,1,1]],
+    gates: ['XOR'], featured: false,
+  },
+  {
+    id: 'community_10', name: 'All Or None', creator: 'BinaryBoss',
+    inputCount: 3, outputCount: 1,
+    truthTable: [[0,0,0,1],[0,0,1,0],[0,1,0,0],[0,1,1,0],[1,0,0,0],[1,0,1,0],[1,1,0,0],[1,1,1,1]],
+    gates: ['AND','OR','NOT','XOR'], featured: false,
+  },
+  {
+    id: 'community_11', name: 'Half Adder Redux', creator: 'ChipWizard',
+    inputCount: 2, outputCount: 2,
+    truthTable: [[0,0,0,0],[0,1,1,0],[1,0,1,0],[1,1,0,1]],
+    gates: ['AND','XOR'], featured: false,
+  },
+  {
+    id: 'community_12', name: 'Two-Way Switch', creator: 'NandNinja',
+    inputCount: 3, outputCount: 1,
+    truthTable: [[0,0,0,0],[0,0,1,0],[0,1,0,0],[0,1,1,1],[1,0,0,1],[1,0,1,0],[1,1,0,0],[1,1,1,1]],
+    gates: ['AND','OR','NOT'], featured: false,
+  },
+  {
+    id: 'community_13', name: 'Comparator', creator: 'BitBuilder',
+    inputCount: 2, outputCount: 2,
+    truthTable: [[0,0,0,1],[0,1,0,0],[1,0,1,0],[1,1,0,1]],
+    gates: ['AND','OR','NOT','XOR'], featured: false,
+  },
+  {
+    id: 'community_14', name: 'At Least Two', creator: 'GateCrafter',
+    inputCount: 3, outputCount: 1,
+    truthTable: [[0,0,0,0],[0,0,1,0],[0,1,0,0],[0,1,1,1],[1,0,0,0],[1,0,1,1],[1,1,0,1],[1,1,1,1]],
+    gates: ['AND','OR'], featured: false,
+  },
+  {
+    id: 'community_15', name: 'Exactly One', creator: 'CircuitSage',
+    inputCount: 3, outputCount: 1,
+    truthTable: [[0,0,0,0],[0,0,1,1],[0,1,0,1],[0,1,1,0],[1,0,0,1],[1,0,1,0],[1,1,0,0],[1,1,1,0]],
+    gates: ['AND','OR','NOT','XOR'], featured: false,
+  },
+  // === HARD (4-input) ===
+  {
+    id: 'community_16', name: 'Even Parity Check', creator: 'ParityPete',
+    inputCount: 4, outputCount: 1,
+    truthTable: [
+      [0,0,0,0,1],[0,0,0,1,0],[0,0,1,0,0],[0,0,1,1,1],
+      [0,1,0,0,0],[0,1,0,1,1],[0,1,1,0,1],[0,1,1,1,0],
+      [1,0,0,0,0],[1,0,0,1,1],[1,0,1,0,1],[1,0,1,1,0],
+      [1,1,0,0,1],[1,1,0,1,0],[1,1,1,0,0],[1,1,1,1,1]
+    ],
+    gates: ['XOR','NOT'], featured: false,
+  },
+  {
+    id: 'community_17', name: 'Priority Encoder', creator: 'BinaryBoss',
+    inputCount: 4, outputCount: 1,
+    truthTable: [
+      [0,0,0,0,0],[0,0,0,1,1],[0,0,1,0,1],[0,0,1,1,1],
+      [0,1,0,0,1],[0,1,0,1,1],[0,1,1,0,1],[0,1,1,1,1],
+      [1,0,0,0,1],[1,0,0,1,1],[1,0,1,0,1],[1,0,1,1,1],
+      [1,1,0,0,1],[1,1,0,1,1],[1,1,1,0,1],[1,1,1,1,1]
+    ],
+    gates: ['AND','OR','NOT'], featured: false,
+  },
+  {
+    id: 'community_18', name: 'Threshold 3', creator: 'LogicLara',
+    inputCount: 4, outputCount: 1,
+    truthTable: [
+      [0,0,0,0,0],[0,0,0,1,0],[0,0,1,0,0],[0,0,1,1,0],
+      [0,1,0,0,0],[0,1,0,1,0],[0,1,1,0,0],[0,1,1,1,1],
+      [1,0,0,0,0],[1,0,0,1,0],[1,0,1,0,0],[1,0,1,1,1],
+      [1,1,0,0,0],[1,1,0,1,1],[1,1,1,0,1],[1,1,1,1,1]
+    ],
+    gates: ['AND','OR'], featured: false,
+  },
+  {
+    id: 'community_19', name: 'Nibble Invert', creator: 'ChipWizard',
+    inputCount: 4, outputCount: 1,
+    truthTable: [
+      [0,0,0,0,1],[0,0,0,1,1],[0,0,1,0,1],[0,0,1,1,0],
+      [0,1,0,0,1],[0,1,0,1,0],[0,1,1,0,0],[0,1,1,1,0],
+      [1,0,0,0,1],[1,0,0,1,0],[1,0,1,0,0],[1,0,1,1,0],
+      [1,1,0,0,0],[1,1,0,1,0],[1,1,1,0,0],[1,1,1,1,0]
+    ],
+    gates: ['AND','OR','NOT'], featured: false,
+  },
+  {
+    id: 'community_20', name: 'Quad Consensus', creator: 'NandNinja',
+    inputCount: 4, outputCount: 1,
+    truthTable: [
+      [0,0,0,0,0],[0,0,0,1,0],[0,0,1,0,0],[0,0,1,1,0],
+      [0,1,0,0,0],[0,1,0,1,0],[0,1,1,0,0],[0,1,1,1,0],
+      [1,0,0,0,0],[1,0,0,1,0],[1,0,1,0,0],[1,0,1,1,0],
+      [1,1,0,0,0],[1,1,0,1,0],[1,1,1,0,0],[1,1,1,1,1]
+    ],
+    gates: ['AND'], featured: false,
+  },
+];

@@ -2326,6 +2326,16 @@ class GameState {
               );
               this.audio.playSuccess(2);
               this.haptic([30, 50, 30, 50, 50]); // #98: celebration pattern
+              // Day 49: Track community level completion
+              if (this.currentLevel && this.currentLevel.isCommunityLevel) {
+                try {
+                  const cc = JSON.parse(localStorage.getItem('communityCompleted') || '[]');
+                  if (!cc.includes(this.currentLevel.id)) {
+                    cc.push(this.currentLevel.id);
+                    localStorage.setItem('communityCompleted', JSON.stringify(cc));
+                  }
+                } catch(e) {}
+              }
               this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates`);
               this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
               this.ui.showChallengeResult(gateCount, this.currentLevel);
@@ -2358,6 +2368,16 @@ class GameState {
               const stars = this.completeLevel(this.currentLevel.id, gateCount);
               this.audio.playSuccess(stars);
               this.haptic([30, 50, 30, 50, 50]); // #98: celebration pattern
+              // Day 49: Track community level completion
+              if (this.currentLevel && this.currentLevel.isCommunityLevel) {
+                try {
+                  const cc = JSON.parse(localStorage.getItem('communityCompleted') || '[]');
+                  if (!cc.includes(this.currentLevel.id)) {
+                    cc.push(this.currentLevel.id);
+                    localStorage.setItem('communityCompleted', JSON.stringify(cc));
+                  }
+                } catch(e) {}
+              }
               this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
               this.ui.updateStatusBar('Level complete! All truth table rows match.');
               // Day 31: Calculate aesthetics score
@@ -2513,6 +2533,16 @@ class GameState {
         const stars = this.completeLevel(this.currentLevel.id, gateCount);
         this.audio.playSuccess(stars);
         this.haptic([30, 50, 30, 50, 50]); // #98
+        // Day 49: Track community level completion
+        if (this.currentLevel && this.currentLevel.isCommunityLevel) {
+          try {
+            const cc = JSON.parse(localStorage.getItem('communityCompleted') || '[]');
+            if (!cc.includes(this.currentLevel.id)) {
+              cc.push(this.currentLevel.id);
+              localStorage.setItem('communityCompleted', JSON.stringify(cc));
+            }
+          } catch(e) {}
+        }
         this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
         this.ui.updateStatusBar('Level complete! All truth table rows match.');
         const aesthetics = this.calculateAestheticsScore();
