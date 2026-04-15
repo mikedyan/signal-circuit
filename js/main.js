@@ -32,6 +32,7 @@ const PROFILE_KEY = 'signal-circuit-profile';
 const PREVIEW_KEY = 'signal-circuit-previews';
 const PLACEMENT_KEY = 'signal-circuit-placement-done';
 const DAILY_LB_KEY = 'signal-circuit-daily-leaderboard';
+const SKILL_KEY = 'signal-circuit-skill';
 const SCHEMA_VERSION = 1;
 
 // F29-4: Safe localStorage wrapper — graceful fallback on quota exceeded
@@ -589,6 +590,169 @@ const DAILY_LB_NAMES = [
   'pcbPilot', 'gndControl', 'vccVibes', 'rippleCarry', 'fullAdder'
 ];
 
+
+// ── Day 50: Adaptive Challenge Difficulty — Skill Tracker ──
+
+const SKILL_LEVELS = [
+  { id: 'novice', label: 'Novice', min: 0, max: 30, color: '#44dd44' },
+  { id: 'intermediate', label: 'Intermediate', min: 31, max: 60, color: '#00ccee' },
+  { id: 'advanced', label: 'Advanced', min: 61, max: 85, color: '#ff8800' },
+  { id: 'expert', label: 'Expert', min: 86, max: 100, color: '#ffd700' },
+];
+
+class SkillTracker {
+  constructor(gameState) {
+    this.gameState = gameState;
+    this._load();
+  }
+
+  _load() {
+    try {
+      const saved = SafeStorage.getItem(SKILL_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.score = typeof data.score === 'number' ? Math.max(0, Math.min(100, data.score)) : 0;
+        this.history = Array.isArray(data.history) ? data.history.slice(-30) : [];
+        return;
+      }
+    } catch (e) {}
+    this.score = 0;
+    this.history = [];
+  }
+
+  _save() {
+    SafeStorage.setItem(SKILL_KEY, JSON.stringify({
+      score: this.score,
+      history: this.history.slice(-30),
+    }));
+  }
+
+  // Calculate skill score from current player progress
+  calculate() {
+    const gs = this.gameState;
+    if (!gs) return 0;
+    const progress = gs.progress;
+    const totalLevels = typeof getLevelCount === 'function' ? getLevelCount() : 40;
+
+    // Factor 1: Levels completed (30% weight)
+    let completedCount = 0;
+    let totalStars = 0;
+    let totalPossibleStars = 0;
+    let hintLevels = 0;
+    let totalGateRatio = 0;
+    let gateRatioCount = 0;
+    let fastSolves = 0;
+    let solvedCount = 0;
+
+    const allLevels = typeof LEVELS !== 'undefined' ? LEVELS : [];
+    for (const level of allLevels) {
+      const p = progress.levels[level.id];
+      if (!p || !p.completed) continue;
+      completedCount++;
+      totalStars += (p.stars || 0);
+      totalPossibleStars += 3;
+
+      // Hint usage
+      if (!p.pureLogic) hintLevels++;
+
+      // Gate efficiency: bestGateCount / optimalGates (lower is better)
+      if (p.bestGateCount && level.optimalGates && level.optimalGates > 0) {
+        totalGateRatio += Math.min(2, p.bestGateCount / level.optimalGates);
+        gateRatioCount++;
+      }
+
+      // Speed: consider anything under 90s as fast for campaign
+      if (p.bestTime && p.bestTime < 90) fastSolves++;
+      solvedCount++;
+    }
+
+    // F1: Completion ratio (0-30)
+    const completionRatio = totalLevels > 0 ? completedCount / totalLevels : 0;
+    const f1 = completionRatio * 30;
+
+    // F2: Average stars (0-25)
+    const avgStars = totalPossibleStars > 0 ? totalStars / totalPossibleStars : 0;
+    const f2 = avgStars * 25;
+
+    // F3: Speed factor (0-20) — % of fast solves
+    const speedRatio = solvedCount > 0 ? fastSolves / solvedCount : 0;
+    const f3 = speedRatio * 20;
+
+    // F4: Low hint usage (0-15) — higher when fewer hints used
+    const hintRatio = solvedCount > 0 ? 1 - (hintLevels / solvedCount) : 0;
+    const f4 = Math.max(0, hintRatio) * 15;
+
+    // F5: Gate efficiency (0-10) — avg ratio near 1.0 is best
+    const avgGateRatio = gateRatioCount > 0 ? totalGateRatio / gateRatioCount : 2;
+    const efficiencyScore = Math.max(0, 1 - (avgGateRatio - 1)); // 1.0 → 1, 2.0 → 0
+    const f5 = Math.max(0, efficiencyScore) * 10;
+
+    const raw = Math.round(f1 + f2 + f3 + f4 + f5);
+    this.score = Math.max(0, Math.min(100, raw));
+
+    // Record in history
+    this.history.push({ score: this.score, ts: Date.now() });
+    if (this.history.length > 30) this.history = this.history.slice(-30);
+    this._save();
+    return this.score;
+  }
+
+  // Record result of an adaptive/challenge completion and adjust score
+  recordResult(gateCount, elapsed, hintsUsed, optimalGates) {
+    let delta = 0;
+    const gateRatio = optimalGates > 0 ? gateCount / optimalGates : 2;
+
+    // Good performance: close to optimal, fast, no hints
+    if (gateRatio <= 1.5 && elapsed < 120 && hintsUsed === 0) {
+      delta = 3; // Strong performance
+    } else if (gateRatio <= 2.0 && hintsUsed === 0) {
+      delta = 2; // Solid
+    } else if (gateRatio <= 2.5) {
+      delta = 1; // Adequate
+    } else if (gateRatio > 3.0 || hintsUsed > 1) {
+      delta = -1; // Struggled
+    } else if (gateRatio > 4.0 && hintsUsed > 2) {
+      delta = -2; // Way over
+    }
+
+    this.score = Math.max(0, Math.min(100, this.score + delta));
+    this.history.push({ score: this.score, ts: Date.now() });
+    if (this.history.length > 30) this.history = this.history.slice(-30);
+    this._save();
+    return delta;
+  }
+
+  getSkillLevel() {
+    for (const level of SKILL_LEVELS) {
+      if (this.score >= level.min && this.score <= level.max) {
+        return {
+          score: this.score,
+          level: level.id,
+          label: level.label,
+          color: level.color,
+          min: level.min,
+          max: level.max,
+        };
+      }
+    }
+    return { score: this.score, level: 'novice', label: 'Novice', color: '#44dd44', min: 0, max: 30 };
+  }
+
+  // Get skill data for export/import
+  exportData() {
+    return { score: this.score, history: this.history };
+  }
+
+  importData(data) {
+    if (data && typeof data.score === 'number') {
+      this.score = Math.max(0, Math.min(100, data.score));
+      this.history = Array.isArray(data.history) ? data.history.slice(-30) : [];
+      this._save();
+    }
+  }
+}
+
+
 class GameState {
   constructor() {
     this.gates = [];
@@ -675,6 +839,8 @@ class GameState {
     this._errorHighlightUntil = 0;
     // Day 44: Anonymous Daily Leaderboard
     this.dailyLeaderboard = new DailyLeaderboard();
+    // Day 50: Adaptive Challenge Difficulty
+    this.skillTracker = new SkillTracker(this);
     // Day 45: Gate Limit Challenge mode
     this.isGateLimitMode = false;
     this.gateBudget = 0;
@@ -911,6 +1077,8 @@ class GameState {
     }
     // Day 40: Seed cosmetic unlock baseline
     if (this.cosmetics) this.cosmetics.checkUnlocks();
+    // Day 50: Calculate initial skill score
+    if (this.skillTracker) this.skillTracker.calculate();
     this.ui.updateStreakDisplay(this.streakData);
 
     // Day 33 T10: Welcome back for lapsed players (check before placement test)
@@ -1405,6 +1573,7 @@ class GameState {
     this.ui.renderLevelSelect();
     this.ui.updateProgressBar(this.progress);
     this.ui.updateDailyButtonBadge(); // Day 44: Update daily rank badge
+    if (this.ui.updateAdaptiveButtonBadge) this.ui.updateAdaptiveButtonBadge(); // Day 50
     this.ui.showScreen('level-select');
     this.isAnimating = false;
     // #95: Restore scroll position after rendering
@@ -1494,6 +1663,39 @@ class GameState {
     // Day 41: Track mode exploration
     this.ui.showAchievementToasts(this.achievements.trackModeExplored('sandbox'));
     const level = generateSandboxLevel(numInputs || 2, numOutputs || 1);
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
+    this.renderer.resize();
+    this.renderer.resetView();
+    this.loadChallengeLevel(level);
+    setTimeout(() => this.renderer.resize(), 100);
+  }
+
+
+  // Day 50: Adaptive Challenge
+  startAdaptiveChallenge() {
+    this.isChallengeMode = true;
+    this.isSandboxMode = false;
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('adaptive'));
+    // Recalculate skill before generating
+    this.skillTracker.calculate();
+    const level = generateAdaptiveChallenge(this.skillTracker.score);
+    this.currentScreen = 'gameplay';
+    this.ui.showScreen('gameplay');
+    this.audio.startAmbient();
+    this.renderer.resize();
+    this.renderer.resetView();
+    this.loadChallengeLevel(level);
+    setTimeout(() => this.renderer.resize(), 100);
+  }
+
+  startPushMyLimits() {
+    this.isChallengeMode = true;
+    this.isSandboxMode = false;
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('adaptive'));
+    this.skillTracker.calculate();
+    const level = generatePushMyLimits(this.skillTracker.score);
     this.currentScreen = 'gameplay';
     this.ui.showScreen('gameplay');
     this.audio.startAmbient();
@@ -2344,6 +2546,11 @@ class GameState {
               const chAchs = this.achievements.trackChallengeComplete();
               this.ui.showAchievementToasts(chAchs);
               this.earnHintToken('challenge complete');
+              // Day 50: Track adaptive challenge result
+              if (this.currentLevel && this.currentLevel.isAdaptive) {
+                const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
+                this.skillTracker.recordResult(gateCount, elapsed, this.hintsUsed, this.currentLevel.optimalGates);
+              }
 
               // Day 32 T3: Show Challenge Friend button for challenges
               this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
@@ -2515,6 +2722,11 @@ class GameState {
         this.ui.showChallengeResult(gateCount, this.currentLevel);
         this.ui.startCelebration(2, { mode: 'challenge' });
         this.earnHintToken('challenge complete');
+        // Day 50: Track adaptive challenge result
+        if (this.currentLevel && this.currentLevel.isAdaptive) {
+          const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 999;
+          this.skillTracker.recordResult(gateCount, elapsed, this.hintsUsed, this.currentLevel.optimalGates);
+        }
         this.ui.showChallengeFriendButton(this.currentLevel, gateCount);
         if (this.blitzMode) setTimeout(() => this._blitzAdvance(), 1500);
       } else {
@@ -4185,6 +4397,7 @@ class GameState {
         levels: this.progress.levels,
         streak: this.getStreakData(),
         tokens: this.hintTokens,
+        skill: this.skillTracker.exportData(),
         ts: Date.now(),
       };
       return btoa(JSON.stringify(data));
@@ -4204,6 +4417,9 @@ class GameState {
       if (data.tokens) {
         this.hintTokens = data.tokens;
         this._saveHintTokens();
+      }
+      if (data.skill && this.skillTracker) {
+        this.skillTracker.importData(data.skill);
       }
       if (this.ui) {
         this.ui.renderLevelSelect();

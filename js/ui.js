@@ -47,6 +47,7 @@ class UI {
     this.setupDailyScreen(); // Day 44
     this.setupCommunitySection(); // Day 49
     this.updateDailyButtonBadge(); // Day 44
+    this.updateAdaptiveButtonBadge(); // Day 50
   }
 
   // ── Colorblind Mode Toggle ──
@@ -1547,6 +1548,15 @@ class UI {
       this.gameState.showSandboxConfig();
     });
 
+    // Day 50: Adaptive Challenge button
+    const adaptiveBtn = document.getElementById('adaptive-challenge-btn');
+    if (adaptiveBtn) {
+      adaptiveBtn.addEventListener('click', () => {
+        this.gameState._saveLevelSelectScroll();
+        this.gameState.startAdaptiveChallenge();
+      });
+    }
+
     // Challenge config back button
     document.getElementById('challenge-back-btn').addEventListener('click', () => {
       this.gameState.showLevelSelect();
@@ -1584,6 +1594,14 @@ class UI {
       const no = parseInt(outputSlider.value);
       this.gameState.startChallenge(ni, no);
     });
+
+    // Day 50: Push My Limits button
+    const pushBtn = document.getElementById('push-my-limits-btn');
+    if (pushBtn) {
+      pushBtn.addEventListener('click', () => {
+        this.gameState.startPushMyLimits();
+      });
+    }
 
     // Clear leaderboard
     document.getElementById('clear-leaderboard-btn').addEventListener('click', () => {
@@ -1942,6 +1960,17 @@ class UI {
     } else {
       btn.textContent = baseText;
     }
+  }
+
+  // Day 50: Update adaptive challenge button to show skill level
+  updateAdaptiveButtonBadge() {
+    const btn = document.getElementById('adaptive-challenge-btn');
+    if (!btn) return;
+    const gs = this.gameState;
+    if (!gs.skillTracker) { btn.textContent = '🎯 Adaptive Challenge'; return; }
+    gs.skillTracker.calculate();
+    const skill = gs.skillTracker.getSkillLevel();
+    btn.innerHTML = '🎯 Adaptive Challenge <span style="font-size:10px;color:' + skill.color + ';">' + skill.label + '</span>';
   }
 
   // ── Achievements ──
@@ -3970,6 +3999,55 @@ class UI {
     else rank = '🌱 Beginner';
 
     html += `<div class="profile-rank"><div class="profile-rank-label">${rank}</div><div class="profile-rank-bar"><div class="profile-rank-fill" style="width:${overallPct}%"></div></div><div class="profile-rank-pct">${overallPct}% complete</div></div>`;
+
+    // Day 50: Skill Level with progress bar + sparkline
+    if (gs.skillTracker) {
+      const skill = gs.skillTracker.getSkillLevel();
+      const history = gs.skillTracker.history || [];
+      const tierProgress = skill.max > skill.min
+        ? Math.round(((skill.score - skill.min) / (skill.max - skill.min)) * 100)
+        : 100;
+      const nextTier = SKILL_LEVELS ? SKILL_LEVELS.find(l => l.min > skill.max) : null;
+      const nextLabel = nextTier ? nextTier.label : 'Max';
+
+      html += '<div class="profile-skill-section" style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;">';
+      html += '<div style="font-size:13px;color:#aaa;margin-bottom:6px;">🎯 Adaptive Skill Level</div>';
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">';
+      html += '<span style="font-size:18px;font-weight:bold;color:' + skill.color + ';">' + skill.label + '</span>';
+      html += '<span style="font-size:12px;color:#888;">Score: ' + skill.score + '/100</span>';
+      html += '</div>';
+      // Progress bar to next tier
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">';
+      html += '<div style="flex:1;height:6px;background:#333;border-radius:3px;overflow:hidden;">';
+      html += '<div style="width:' + tierProgress + '%;height:100%;background:' + skill.color + ';border-radius:3px;transition:width 0.3s;"></div>';
+      html += '</div>';
+      html += '<span style="font-size:10px;color:#666;">' + tierProgress + '% to ' + nextLabel + '</span>';
+      html += '</div>';
+
+      // Sparkline of skill history
+      if (history.length >= 2) {
+        const w = 200, h = 40;
+        const points = history.map((entry, i) => {
+          const x = (i / (history.length - 1)) * w;
+          const y = h - (entry.score / 100) * h;
+          return x.toFixed(1) + ',' + y.toFixed(1);
+        }).join(' ');
+        html += '<div style="margin-top:4px;">';
+        html += '<div style="font-size:10px;color:#666;margin-bottom:2px;">Skill Progression</div>';
+        html += '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" style="display:block;">';
+        html += '<polyline points="' + points + '" fill="none" stroke="' + skill.color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />';
+        // Reference lines
+        html += '<line x1="0" y1="' + (h * 0.7) + '" x2="' + w + '" y2="' + (h * 0.7) + '" stroke="#333" stroke-width="0.5" stroke-dasharray="3,3" />';
+        html += '<line x1="0" y1="' + (h * 0.4) + '" x2="' + w + '" y2="' + (h * 0.4) + '" stroke="#333" stroke-width="0.5" stroke-dasharray="3,3" />';
+        html += '<text x="' + w + '" y="' + (h * 0.7 + 3) + '" font-size="7" fill="#555" text-anchor="end">30</text>';
+        html += '<text x="' + w + '" y="' + (h * 0.4 + 3) + '" font-size="7" fill="#555" text-anchor="end">60</text>';
+        html += '</svg>';
+        html += '</div>';
+      } else {
+        html += '<div style="font-size:10px;color:#555;margin-top:4px;">Play adaptive challenges to build skill history</div>';
+      }
+      html += '</div>';
+    }
 
     container.innerHTML = html;
   }

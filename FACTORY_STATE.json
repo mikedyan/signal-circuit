@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 49,
-  "nextDay": 50,
-  "totalItemsCompleted": 311,
-  "totalItems": 311,
-  "status": "Phase 3 Day 14 complete — Community Level Browser (10 items)",
-  "lastRun": "2026-04-14T08:09:00-07:00",
+  "lastCompletedDay": 50,
+  "nextDay": 51,
+  "totalItemsCompleted": 321,
+  "totalItems": 321,
+  "status": "Phase 3 Day 15 complete — Adaptive Challenge Difficulty (10 items)",
+  "lastRun": "2026-04-15T08:09:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -88,6 +88,11 @@
     },
     "49": {
       "items": ["COMMUNITY_LEVELS data (20 curated levels)", "Community section HTML + CSS", "Featured Level of the Week spotlight", "Card rendering (difficulty/creator/plays)", "Community level loading via buildCustomLevel", "Completion tracking (localStorage)", "Upvote system (client-side toggle)", "Submit Your Level → Creator navigation", "Community Creator achievement (3+ shares)", "Cache bust v35"],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "50": {
+      "items": ["SkillTracker class (calculate/recordResult/getSkillLevel)", "Skill levels: Novice/Intermediate/Advanced/Expert", "generateAdaptiveChallenge() tier-based generation", "Skill badge on adaptive button", "recordResult adjusts score after completion", "Skill sparkline in Logic Profile", "Push My Limits button (one tier harder)", "Adaptive Challenge button on level select", "Skill persistence + export/import", "Skill progress bar + cache bust v36"],
       "status": "complete",
       "qa": "all-pass"
     }

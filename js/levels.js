@@ -1956,6 +1956,63 @@ function getSeasonalTheme() {
   return themes[month] || themes[0];
 }
 
+
+// ── Day 50: Adaptive Challenge Generator ──
+
+function generateAdaptiveChallenge(skillScore) {
+  let numInputs, numOutputs;
+
+  if (skillScore <= 30) {
+    // Novice: 2x1 curated
+    numInputs = 2; numOutputs = 1;
+  } else if (skillScore <= 60) {
+    // Intermediate: 3x1 or 2x2
+    if (Math.random() < 0.6) { numInputs = 3; numOutputs = 1; }
+    else { numInputs = 2; numOutputs = 2; }
+  } else if (skillScore <= 85) {
+    // Advanced: 3x2
+    numInputs = 3; numOutputs = 2;
+  } else {
+    // Expert: 4x1 or 4x2
+    if (Math.random() < 0.6) { numInputs = 4; numOutputs = 1; }
+    else { numInputs = 4; numOutputs = 2; }
+  }
+
+  const level = generateChallenge(numInputs, numOutputs);
+
+  // Determine skill label
+  let skillLabel;
+  if (skillScore <= 30) skillLabel = 'Novice';
+  else if (skillScore <= 60) skillLabel = 'Intermediate';
+  else if (skillScore <= 85) skillLabel = 'Advanced';
+  else skillLabel = 'Expert';
+
+  level.title = `🎯 Adaptive: ${level.title}`;
+  level.description = `Matched to your ${skillLabel} skill level. ${level.description}`;
+  level.isAdaptive = true;
+  level.skillLabel = skillLabel;
+  level.skillScore = skillScore;
+
+  return level;
+}
+
+function generatePushMyLimits(skillScore) {
+  // One tier harder than current level
+  let boostedScore;
+  if (skillScore <= 30) boostedScore = 45; // Push Novice → Intermediate
+  else if (skillScore <= 60) boostedScore = 75; // Push Intermediate → Advanced
+  else if (skillScore <= 85) boostedScore = 95; // Push Advanced → Expert
+  else boostedScore = 100; // Expert stays Expert (hardest)
+
+  const level = generateAdaptiveChallenge(boostedScore);
+  level.title = `💪 Push: ${level.title.replace('🎯 Adaptive: ', '')}`;
+  level.description = `One tier harder than your current level! ${level.description}`;
+  level.isPushMyLimits = true;
+
+  return level;
+}
+
+
 function generateSandboxLevel(numInputs, numOutputs) {
   numInputs = numInputs || 2;
   numOutputs = numOutputs || 1;
