@@ -1,98 +1,291 @@
 {
   "project": "signal-circuit",
-  "phase": "Phase 3 — Engagement & Depth",
+  "phase": "Phase 3 \u2014 Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 50,
-  "nextDay": 51,
-  "totalItemsCompleted": 321,
-  "totalItems": 321,
-  "status": "Phase 3 Day 15 complete — Adaptive Challenge Difficulty (10 items)",
-  "lastRun": "2026-04-15T08:09:00-07:00",
+  "lastCompletedDay": 51,
+  "nextDay": 52,
+  "totalItemsCompleted": 331,
+  "totalItems": 331,
+  "status": "Phase 3 Day 16 complete \u2014 Solution Replay Viewer (10 items)",
+  "lastRun": "2026-04-16T08:12:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
-    "strengths": ["Procedural audio engine (9/10)", "Breadboard aesthetic", "Accessibility story", "Educational depth"],
-    "weaknesses": ["Replayability (5/10)", "Addictiveness (6/10)", "No social features", "Difficulty cliff Ch3→Ch4"]
+    "strengths": [
+      "Procedural audio engine (9/10)",
+      "Breadboard aesthetic",
+      "Accessibility story",
+      "Educational depth"
+    ],
+    "weaknesses": [
+      "Replayability (5/10)",
+      "Addictiveness (6/10)",
+      "No social features",
+      "Difficulty cliff Ch3\u2192Ch4"
+    ]
   },
   "phase3Focus": "Fix replayability, deepen engagement, smooth difficulty curve",
   "days": {
     "35": {
-      "items": ["#171 Stereo Panning", "#172 AbortController Pattern", "#173 Particle Pool", "#174 Cache-Busting", "#175 Light Mode", "#176 Undo Timeline"],
+      "items": [
+        "#171 Stereo Panning",
+        "#172 AbortController Pattern",
+        "#173 Particle Pool",
+        "#174 Cache-Busting",
+        "#175 Light Mode",
+        "#176 Undo Timeline"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "36": {
-      "items": ["Bridge Level 18: 2-Input Decoder", "Bridge Level 19: Bit Comparator", "Bridge Level 20: Data Selector", "Chapter 3.5 added", "Level renumbering 18-37→21-40"],
+      "items": [
+        "Bridge Level 18: 2-Input Decoder",
+        "Bridge Level 19: Bit Comparator",
+        "Bridge Level 20: Data Selector",
+        "Chapter 3.5 added",
+        "Level renumbering 18-37\u219221-40"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "37": {
-      "items": ["Wire _animPhase property", "Topological depth stagger", "Signal dot rendering (green/dim)", "Input node pulse animation", "Output node receive flash", "Gate glow intensification on signal arrival", "Quick Test animation skip", "Performance guard (>50 wires)", "Duration scaling with circuit depth", "Reset signal flow between rows"],
+      "items": [
+        "Wire _animPhase property",
+        "Topological depth stagger",
+        "Signal dot rendering (green/dim)",
+        "Input node pulse animation",
+        "Output node receive flash",
+        "Gate glow intensification on signal arrival",
+        "Quick Test animation skip",
+        "Performance guard (>50 wires)",
+        "Duration scaling with circuit depth",
+        "Reset signal flow between rows"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "38": {
-      "items": ["InteractiveTutorial class", "Tutorial overlay DOM + CSS", "Step 1: Toolbox gate highlight", "Steps 2-4: Wire drawing guidance", "Step 5: Output wire guidance", "Step 6: RUN button highlight", "Level 1 integration + old tooltip suppression", "Script tag + load order", "Canvas pin highlight rendering", "Skip button + localStorage persistence"],
+      "items": [
+        "InteractiveTutorial class",
+        "Tutorial overlay DOM + CSS",
+        "Step 1: Toolbox gate highlight",
+        "Steps 2-4: Wire drawing guidance",
+        "Step 5: Output wire guidance",
+        "Step 6: RUN button highlight",
+        "Level 1 integration + old tooltip suppression",
+        "Script tag + load order",
+        "Canvas pin highlight rendering",
+        "Skip button + localStorage persistence"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "39": {
-      "items": ["Compact mode toggle (8+ rows)", "Row hover → canvas highlight", "Column sorting with indicators", "Key rows mode for 4-input levels", "Decimal index column + tooltips", "Color-coded cells (0=blue, 1=green)", "Focus Failed Rows button", "Sticky truth table headers", "Auto-expand on simulation", "Mobile tap-to-test rows"],
+      "items": [
+        "Compact mode toggle (8+ rows)",
+        "Row hover \u2192 canvas highlight",
+        "Column sorting with indicators",
+        "Key rows mode for 4-input levels",
+        "Decimal index column + tooltips",
+        "Color-coded cells (0=blue, 1=green)",
+        "Focus Failed Rows button",
+        "Sticky truth table headers",
+        "Auto-expand on simulation",
+        "Mobile tap-to-test rows"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "40": {
-      "items": ["CosmeticManager class", "6 wire color palettes", "4 gate skins (IC/Neon/Retro/Minimal)", "4 board themes (Breadboard/PCB/Dark/Blueprint)", "Customization modal + UI", "Wire rendering integration", "Gate skin rendering (3 alternate renderers)", "Board theme rendering (3 alternate renderers)", "Unlock toast system", "UI event wiring + persistence"],
+      "items": [
+        "CosmeticManager class",
+        "6 wire color palettes",
+        "4 gate skins (IC/Neon/Retro/Minimal)",
+        "4 board themes (Breadboard/PCB/Dark/Blueprint)",
+        "Customization modal + UI",
+        "Wire rendering integration",
+        "Gate skin rendering (3 alternate renderers)",
+        "Board theme rendering (3 alternate renderers)",
+        "Unlock toast system",
+        "UI event wiring + persistence"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "41": {
-      "items": ["Week Warrior achievement", "Month of Logic achievement", "Streak Master achievement", "Minimalist achievement", "Speed Circuit achievement", "Explorer achievement (6 modes)", "Social Butterfly achievement", "Creator achievement", "Universal Builder (NAND-only)", "Perfectionist (100% aesthetics)"],
+      "items": [
+        "Week Warrior achievement",
+        "Month of Logic achievement",
+        "Streak Master achievement",
+        "Minimalist achievement",
+        "Speed Circuit achievement",
+        "Explorer achievement (6 modes)",
+        "Social Butterfly achievement",
+        "Creator achievement",
+        "Universal Builder (NAND-only)",
+        "Perfectionist (100% aesthetics)"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "42": {
-      "items": ["Signal path tracing (traceFailurePath)", "Canvas error gate/wire highlights", "Expandable 'Why?' trace in truth table", "Disconnected output detection", "Always-0/always-1 output detection", "Error trace CSS styling", "'Show me' canvas highlight button", "GameState _failureTraces property", "Integration with runSimulation/runQuickTest", "Canvas highlight auto-clear rendering"],
+      "items": [
+        "Signal path tracing (traceFailurePath)",
+        "Canvas error gate/wire highlights",
+        "Expandable 'Why?' trace in truth table",
+        "Disconnected output detection",
+        "Always-0/always-1 output detection",
+        "Error trace CSS styling",
+        "'Show me' canvas highlight button",
+        "GameState _failureTraces property",
+        "Integration with runSimulation/runQuickTest",
+        "Canvas highlight auto-clear rendering"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "43": {
-      "items": ["Preview data capture on level completion", "Mini-preview canvas rendering (120x80)", "Only completed levels show preview", "Enlarged preview on hover/tap (300x200)", "LRU eviction (20 preview limit)", "View Solution button with ghost overlay", "Preview update on solution improvement", "IntersectionObserver lazy loading", "CSS styling (dark + light mode)", "Bounding box auto-scaling for any circuit size"],
+      "items": [
+        "Preview data capture on level completion",
+        "Mini-preview canvas rendering (120x80)",
+        "Only completed levels show preview",
+        "Enlarged preview on hover/tap (300x200)",
+        "LRU eviction (20 preview limit)",
+        "View Solution button with ghost overlay",
+        "Preview update on solution improvement",
+        "IntersectionObserver lazy loading",
+        "CSS styling (dark + light mode)",
+        "Bounding box auto-scaling for any circuit size"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "44": {
-      "items": ["DailyLeaderboard class + pseudo-score generation", "Post-completion percentile + rank badge display", "Top 10 leaderboard on daily pre-screen", "7-day daily history tracking", "Daily rank badge on level select button", "Daily history in stats dashboard", "Best-only score tracking (rate limit)", "Competitive framing message", "Opt-in display name", "Share text with rank + percentile"],
+      "items": [
+        "DailyLeaderboard class + pseudo-score generation",
+        "Post-completion percentile + rank badge display",
+        "Top 10 leaderboard on daily pre-screen",
+        "7-day daily history tracking",
+        "Daily rank badge on level select button",
+        "Daily history in stats dashboard",
+        "Best-only score tracking (rate limit)",
+        "Competitive framing message",
+        "Opt-in display name",
+        "Share text with rank + percentile"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "45": {
-      "items": ["Unlock gate limit after 3-starring", "Gate budget = optimal enforcement", "Gate limit sub-row in level select", "Diamond badge completion tracking", "Gate Budget indicator in gameplay", "Efficiency Expert achievement", "No hints in gate limit mode", "Optimal comparison after completion", "Hard mode speedrun option", "Gate limit stats in dashboard"],
+      "items": [
+        "Unlock gate limit after 3-starring",
+        "Gate budget = optimal enforcement",
+        "Gate limit sub-row in level select",
+        "Diamond badge completion tracking",
+        "Gate Budget indicator in gameplay",
+        "Efficiency Expert achievement",
+        "No hints in gate limit mode",
+        "Optimal comparison after completion",
+        "Hard mode speedrun option",
+        "Gate limit stats in dashboard"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "46": {
-      "items": ["Dual SFX/Music sliders in gameplay", "CSS styling (green SFX, cyan Music thumbs)", "All SFX methods → this._sfxVol", "Defaults SFX 40% Music 20%", "setupVolumeControls with sync", "Level select volume controls", "Audio preview with debounce", "Live apply to ambient/music", "Sim normalization (_effectiveSfxVol)", "Cache bust v33"],
+      "items": [
+        "Dual SFX/Music sliders in gameplay",
+        "CSS styling (green SFX, cyan Music thumbs)",
+        "All SFX methods \u2192 this._sfxVol",
+        "Defaults SFX 40% Music 20%",
+        "setupVolumeControls with sync",
+        "Level select volume controls",
+        "Audio preview with debounce",
+        "Live apply to ambient/music",
+        "Sim normalization (_effectiveSfxVol)",
+        "Cache bust v33"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "47": {
-      "items": ["CelebrationFactory config dispatch", "Ch1-2 classic confetti (preserved)", "Ch3 gate symbol particles (AND/OR/XOR)", "Ch4 electric sparks (radial burst + trails)", "Ch5 shield shimmer (hexagonal rings)", "Ch6 NAND/NOR gate rain", "3-star spinning starburst", "Pure Logic brain emoji particles", "First-time/improvement/replay intensity", "Chapter-colored victory flash"],
+      "items": [
+        "CelebrationFactory config dispatch",
+        "Ch1-2 classic confetti (preserved)",
+        "Ch3 gate symbol particles (AND/OR/XOR)",
+        "Ch4 electric sparks (radial burst + trails)",
+        "Ch5 shield shimmer (hexagonal rings)",
+        "Ch6 NAND/NOR gate rain",
+        "3-star spinning starburst",
+        "Pure Logic brain emoji particles",
+        "First-time/improvement/replay intensity",
+        "Chapter-colored victory flash"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "48": {
-      "items": ["KB Wiring mode toggle (K key + button)", "Tab cycles input→gate→output elements", "Green pulsing highlight ring on selected", "Enter starts wire from output pin", "Tab cycles compatible destinations only", "Enter completes wire connection", "Escape cancels KB wire drawing", "Number key gate placement preserved", "Shortcuts overlay KB section", "Cache bust v34"],
+      "items": [
+        "KB Wiring mode toggle (K key + button)",
+        "Tab cycles input\u2192gate\u2192output elements",
+        "Green pulsing highlight ring on selected",
+        "Enter starts wire from output pin",
+        "Tab cycles compatible destinations only",
+        "Enter completes wire connection",
+        "Escape cancels KB wire drawing",
+        "Number key gate placement preserved",
+        "Shortcuts overlay KB section",
+        "Cache bust v34"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "49": {
-      "items": ["COMMUNITY_LEVELS data (20 curated levels)", "Community section HTML + CSS", "Featured Level of the Week spotlight", "Card rendering (difficulty/creator/plays)", "Community level loading via buildCustomLevel", "Completion tracking (localStorage)", "Upvote system (client-side toggle)", "Submit Your Level → Creator navigation", "Community Creator achievement (3+ shares)", "Cache bust v35"],
+      "items": [
+        "COMMUNITY_LEVELS data (20 curated levels)",
+        "Community section HTML + CSS",
+        "Featured Level of the Week spotlight",
+        "Card rendering (difficulty/creator/plays)",
+        "Community level loading via buildCustomLevel",
+        "Completion tracking (localStorage)",
+        "Upvote system (client-side toggle)",
+        "Submit Your Level \u2192 Creator navigation",
+        "Community Creator achievement (3+ shares)",
+        "Cache bust v35"
+      ],
       "status": "complete",
       "qa": "all-pass"
     },
     "50": {
-      "items": ["SkillTracker class (calculate/recordResult/getSkillLevel)", "Skill levels: Novice/Intermediate/Advanced/Expert", "generateAdaptiveChallenge() tier-based generation", "Skill badge on adaptive button", "recordResult adjusts score after completion", "Skill sparkline in Logic Profile", "Push My Limits button (one tier harder)", "Adaptive Challenge button on level select", "Skill persistence + export/import", "Skill progress bar + cache bust v36"],
+      "items": [
+        "SkillTracker class (calculate/recordResult/getSkillLevel)",
+        "Skill levels: Novice/Intermediate/Advanced/Expert",
+        "generateAdaptiveChallenge() tier-based generation",
+        "Skill badge on adaptive button",
+        "recordResult adjusts score after completion",
+        "Skill sparkline in Logic Profile",
+        "Push My Limits button (one tier harder)",
+        "Adaptive Challenge button on level select",
+        "Skill persistence + export/import",
+        "Skill progress bar + cache bust v36"
+      ],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "51": {
+      "items": [
+        "Watch Replay button in star display",
+        "ReplayViewer class + action playback",
+        "Playback controls overlay (play/pause, speed, skip, stop)",
+        "Progress bar with action counter",
+        "Audio cues during replay",
+        "Speed controls (1x/2x/4x)",
+        "Auto-simulation after replay",
+        "Ghost compare toggle",
+        "LRU eviction (30 replays max)",
+        "Replay status + interaction blocking"
+      ],
       "status": "complete",
       "qa": "all-pass"
     }

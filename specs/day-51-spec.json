@@ -1,0 +1,138 @@
+{
+  "day": 51,
+  "phase": "Phase 3 Day 16",
+  "title": "Solution Replay Viewer",
+  "summary": "Add a full replay viewer that plays back the player's solution step-by-step with signal flow animation. Leverages existing _replayActions recording (gate placements + wire connections with timestamps) to let players watch their solutions rebuild automatically. Includes playback controls (play/pause, speed selection, skip to end), ghost cursor, audio cues during replay, and automatic simulation with signal flow at the end. Also adds share replay via URL encoding and a compare-with-optimal ghost overlay toggle.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Add '📹 Watch Replay' button to the star display (completion screen) for levels that have a saved replay. Button only appears on completed campaign levels with replay data available.",
+      "files_to_modify": ["index.html", "js/ui.js"],
+      "acceptance_criteria": [
+        "Button with text '📹 Watch Replay' appears in star-display after completing a level",
+        "Button is hidden if no replay data exists for the level",
+        "Button is hidden in challenge/sandbox/daily modes",
+        "Clicking the button starts the replay viewer"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Create ReplayViewer class in main.js that loads replay data, clears the current circuit, and replays actions at 2x speed. Each action (addGate, addWire) is played back with the recorded time offsets divided by playback speed.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "ReplayViewer class with constructor(gameState, replayData, levelId)",
+        "start() method loads the level fresh, clears circuit, then begins playback",
+        "Actions are dispatched at correct timing (original time / speed multiplier)",
+        "Gate placements use addGate with skipUndo=true",
+        "Wire connections use addWireFromData"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Add playback controls overlay: play/pause button, speed selector (1x/2x/4x), and skip-to-end button. Controls appear as a floating bar at the bottom of the canvas area.",
+      "files_to_modify": ["index.html", "js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Replay controls bar appears at bottom of canvas during replay",
+        "Play/Pause toggle button works",
+        "Speed selector with 1x, 2x, 4x options",
+        "Skip-to-end button places all remaining gates/wires instantly",
+        "Controls disappear when replay ends"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T4",
+      "description": "Add progress bar showing replay completion percentage. Visual indicator of how far through the replay we are.",
+      "files_to_modify": ["js/ui.js", "css/style.css"],
+      "acceptance_criteria": [
+        "Progress bar fills from 0-100% during replay",
+        "Shows action count: 'Action 3/12'",
+        "Updates in real-time as actions are replayed"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T5",
+      "description": "Play original audio cues during replay — gate placement sound and wire connection sound for each action as it's replayed.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Gate placement sound plays when a gate is placed during replay",
+        "Wire connection sound plays when a wire is drawn during replay",
+        "Audio respects current SFX volume setting"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T6",
+      "description": "Add playback speed controls: 1x, 2x (default), 4x. Speed affects the timing between actions.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Default playback speed is 2x",
+        "Changing speed mid-replay adjusts remaining action timings",
+        "1x plays at original recorded speed",
+        "4x plays at 4x original speed"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T7",
+      "description": "After replay ends, automatically run simulation with signal flow animation to show the circuit working.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "After last action replayed, 1 second pause then simulation runs automatically",
+        "Full signal flow animation plays (not quick test)",
+        "Star display shows after simulation completes"
+      ],
+      "depends_on": ["T2"]
+    },
+    {
+      "id": "T8",
+      "description": "Add 'Compare with Optimal' toggle that shows ghost overlay of optimal solution alongside replay (reuses existing ghost overlay system).",
+      "files_to_modify": ["js/ui.js", "js/main.js"],
+      "acceptance_criteria": [
+        "Toggle button appears in replay controls if ghost data exists",
+        "When enabled, ghost overlay renders during replay (same as existing ghost system)",
+        "Toggle state updates the ghostOverlay render flag"
+      ],
+      "depends_on": ["T3"]
+    },
+    {
+      "id": "T9",
+      "description": "Store replay data efficiently: limit to last 30 level replays (LRU eviction), and optimize storage by storing only action type + minimal data + relative timestamp.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Maximum 30 replays stored in localStorage",
+        "LRU eviction removes oldest replays when limit exceeded",
+        "Replay data includes: actions array, totalTime, gateCount, date"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "description": "Add 'Replay Status' indicator showing the current state during replay: 'Replaying...', 'Simulation...', 'Complete'. Also disable RUN button and gate placement during replay mode.",
+      "files_to_modify": ["js/main.js", "js/ui.js"],
+      "acceptance_criteria": [
+        "Status bar shows 'Replaying solution... (action X/Y)' during playback",
+        "RUN button disabled during replay",
+        "Gate dragging and wire drawing disabled during replay",
+        "Status shows 'Replay complete' at end",
+        "A 'Stop Replay' button allows canceling replay early"
+      ],
+      "depends_on": ["T2"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Replay viewer starts and completes without errors",
+    "All playback speeds work correctly (1x, 2x, 4x)",
+    "Skip-to-end correctly places all remaining gates and wires",
+    "Simulation runs automatically after replay ends",
+    "No interaction leaks during replay (can't place gates, draw wires, or run simulation manually)",
+    "Replay controls clean up properly after replay ends",
+    "localStorage eviction works when >30 replays stored",
+    "Ghost overlay toggle works during replay"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced, revert to previous commit"
+}

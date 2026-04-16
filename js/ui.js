@@ -1358,6 +1358,18 @@ class UI {
       };
     }
 
+    // Day 51: Watch Replay button
+    const replayBtn = document.getElementById('watch-replay-btn');
+    if (replayBtn) {
+      const isCampaign = !level.isChallenge && !level.isSandbox && !level.isDaily;
+      const hasReplay = isCampaign && this.gameState.getReplay(level.id);
+      replayBtn.style.display = hasReplay ? '' : 'none';
+      replayBtn.onclick = () => {
+        this.hideStarDisplay();
+        this.gameState.startReplayViewer(level.id);
+      };
+    }
+
     // Show post-solve insight for campaign levels
     const insightEl = document.getElementById('post-solve-insight');
     if (insightEl && level.postSolveInsight) {
@@ -1431,6 +1443,9 @@ class UI {
     if (shareCardBtn) shareCardBtn.style.display = 'none';
     const focusBtn = document.getElementById("focus-failed-btn");
     if (focusBtn) focusBtn.style.display = "none";
+    // Day 51: Hide replay button
+    const replayBtn = document.getElementById('watch-replay-btn');
+    if (replayBtn) replayBtn.style.display = 'none';
   }
 
   showChallengeResult(gateCount, level) {

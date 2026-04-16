@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1776266940">
+  <link rel="stylesheet" href="css/style.css?v=1776353340">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -392,8 +392,26 @@
         <button id="share-btn" style="display:none;" aria-label="Copy result to clipboard">📋 Share Result</button>
         <button id="share-card-btn" style="display:none;" aria-label="Generate share card">📸 Share Card</button>
         <button id="challenge-friend-btn" style="display:none;" aria-label="Challenge a friend">🤝 Challenge Friend</button>
+        <button id="watch-replay-btn" style="display:none;" aria-label="Watch solution replay">📹 Watch Replay</button>
         </div>
         <button id="ghost-toggle-btn" style="display:none;">👻 Show Previous Solution</button>
+
+        <!-- Day 51: Replay Viewer Controls -->
+        <div id="replay-controls" style="display:none;">
+          <div id="replay-progress-bar"><div id="replay-progress-fill"></div></div>
+          <div id="replay-controls-row">
+            <button id="replay-play-pause" aria-label="Play/Pause replay">⏸</button>
+            <span id="replay-action-counter">0/0</span>
+            <select id="replay-speed-select" aria-label="Playback speed">
+              <option value="1">1×</option>
+              <option value="2" selected>2×</option>
+              <option value="4">4×</option>
+            </select>
+            <button id="replay-skip-end" aria-label="Skip to end">⏭</button>
+            <button id="replay-ghost-toggle" style="display:none;" aria-label="Compare with previous">👻 Compare</button>
+            <button id="replay-stop" aria-label="Stop replay">✕ Stop</button>
+          </div>
+        </div>
 
         <!-- Day 35 T6: Undo History Timeline -->
         <div id="undo-timeline" style="display:none;" aria-label="Undo history timeline">
@@ -576,15 +594,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1776266940"></script>
-  <script src="js/wires.js?v=1776266940"></script>
-  <script src="js/simulation.js?v=1776266940"></script>
-  <script src="js/levels.js?v=1776266940"></script>
-  <script src="js/audio.js?v=1776266940"></script>
-  <script src="js/achievements.js?v=1776266940"></script>
-  <script src="js/canvas.js?v=1776266940"></script>
-  <script src="js/ui.js?v=1776266940"></script>
-  <script src="js/tutorial.js?v=1776266940"></script>
-  <script src="js/main.js?v=1776266940"></script>
+  <script src="js/gates.js?v=1776353340"></script>
+  <script src="js/wires.js?v=1776353340"></script>
+  <script src="js/simulation.js?v=1776353340"></script>
+  <script src="js/levels.js?v=1776353340"></script>
+  <script src="js/audio.js?v=1776353340"></script>
+  <script src="js/achievements.js?v=1776353340"></script>
+  <script src="js/canvas.js?v=1776353340"></script>
+  <script src="js/ui.js?v=1776353340"></script>
+  <script src="js/tutorial.js?v=1776353340"></script>
+  <script src="js/main.js?v=1776353340"></script>
 </body>
 </html>

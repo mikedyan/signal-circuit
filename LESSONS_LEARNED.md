@@ -160,3 +160,10 @@
 - **Pin coordinate offsets are the source of truth**: Gate input pins render at `pin.x - 12`, output pins at `pin.x + 12` (visual pin circle offset from gate edge). KB wiring must construct wire endpoint coordinates using these same offsets for consistency with mouse-drawn wires.
 - **Cycling through filtered subsets needs separate state**: When Tab has dual behavior (cycle all elements vs cycle destinations), store separate state for each: `_kbDestCandidates[]` with `_kbDestIndex` for the wiring phase, vs the general `_kbSelectedElement` for the selection phase.
 - **Output nodes are wire sinks, not sources**: IONode with type='output' has a pin of type='input' (receives signal). Attempting to start a wire from an output node should show a helpful error message, not silently fail. Always check the element type when determining available pins.
+
+## Day 51 — Solution Replay Viewer
+- **IONode IDs change between sessions**: Because IONode IDs come from the global nextId counter, they differ each time a level loads. Any cross-session feature (like replays) must map old IONode IDs to new ones by position index, not by raw ID. Record IONode IDs at recording start and build a mapping table at replay start.
+- **Replay ID mapping pattern**: Use a simple `_idMap[oldId] = newId` dictionary. Map IONodes by index position on level load, map gates as they're placed. Wire actions look up both endpoints in the map with fallback to raw ID for backward compatibility.
+- **Max delay cap for replays**: Players may pause for minutes between actions. Capping inter-action delay at 2 seconds keeps replays watchable without needing to normalize the entire timeline.
+- **Guard interaction at the source**: Adding `if (this._replayViewerActive && !skipUndo) return null` in addGate is cleaner than trying to guard every UI entry point. The skipUndo flag distinguishes replay-initiated vs user-initiated calls.
+- **Separate overlay from completion UI**: Replay controls are a gameplay overlay (sibling of star-display), not part of the completion screen. This allows them to persist during replay and hide independently.

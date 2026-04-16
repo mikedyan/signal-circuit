@@ -851,6 +851,9 @@ class GameState {
     this._kbWireSource = null;
     this._kbDestCandidates = [];
     this._kbDestIndex = -1;
+    // Day 51: Replay Viewer state
+    this._replayViewerActive = false;
+    this._replayViewer = null;
   }
 
   // ── Hint Token System (Day 31) ──
@@ -884,6 +887,11 @@ class GameState {
   _startReplayRecording() {
     this._replayActions = [];
     this._replayStartTime = Date.now();
+    // Day 51: Record IONode IDs at start for replay mapping
+    this._replayIONodeIds = {
+      inputs: this.inputNodes.map(n => n.id),
+      outputs: this.outputNodes.map(n => n.id),
+    };
   }
 
   _recordReplayAction(type, data) {
@@ -904,7 +912,21 @@ class GameState {
         totalTime: Date.now() - this._replayStartTime,
         gateCount: this.gates.length,
         date: new Date().toISOString(),
+        ioNodeIds: this._replayIONodeIds || null, // Day 51: for replay ID mapping
       };
+      // Day 51 T9: LRU eviction — keep max 30 replays
+      const keys = Object.keys(all);
+      if (keys.length > 30) {
+        keys.sort((a, b) => {
+          const da = all[a].date || '';
+          const db = all[b].date || '';
+          return da.localeCompare(db);
+        });
+        while (Object.keys(all).length > 30) {
+          const oldest = keys.shift();
+          delete all[oldest];
+        }
+      }
       SafeStorage.setItem(REPLAY_KEY, JSON.stringify(all));
     } catch (e) {}
   }
@@ -914,6 +936,19 @@ class GameState {
       const all = JSON.parse(SafeStorage.getItem(REPLAY_KEY) || '{}');
       return all[levelId] || null;
     } catch (e) { return null; }
+  }
+
+  // ── Day 51: Start Replay Viewer ──
+  startReplayViewer(levelId) {
+    const replay = this.getReplay(levelId);
+    if (!replay) {
+      this.ui.updateStatusBar('No replay data for this level');
+      return;
+    }
+    // Load ghost overlay for the compare feature
+    this._loadGhost(levelId);
+    this._replayViewer = new ReplayViewer(this, replay, levelId);
+    this._replayViewer.start();
   }
 
   // ── Circuit Collection (Day 31) ──
@@ -1926,6 +1961,8 @@ class GameState {
   }
 
   addGate(type, x, y, skipUndo) {
+    // Day 51: Block user-initiated gate placement during replay
+    if (this._replayViewerActive && !skipUndo) return null;
     this._startTimerIfPending(); // #96
     // Day 45: Gate budget enforcement in gate limit mode
     if (this.isGateLimitMode && this.gateBudget > 0) {
@@ -2678,6 +2715,7 @@ class GameState {
   }
 
   runQuickTest() {
+    if (this._replayViewerActive) return; // Day 51: Block during replay
     if (this.isAnimating) return;
 
     this.audio.playButtonClick();
@@ -2890,6 +2928,7 @@ class GameState {
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (this.isAnimating) return;
+      if (this._replayViewerActive) return; // Day 51: Block interaction during replay
 
       // Two-finger gesture: start pinch-to-zoom + pan
       if (e.touches.length >= 2) {
@@ -3153,6 +3192,7 @@ class GameState {
     // ── Mouse support ──
     canvas.addEventListener('mousedown', (e) => {
       if (this.isAnimating) return;
+      if (this._replayViewerActive) return; // Day 51: Block interaction during replay
       const screenPos = this.renderer.getMousePos(e);
       const pos = this.renderer.screenToWorld(screenPos.x, screenPos.y);
 
@@ -4572,6 +4612,238 @@ function buildCustomLevel(data) {
 }
 
 // Initialize on page load
+
+// ── Day 51: Solution Replay Viewer ──
+class ReplayViewer {
+  constructor(gameState, replayData, levelId) {
+    this._gs = gameState;
+    this._replay = replayData;
+    this._levelId = levelId;
+    this._actionIndex = 0;
+    this._speed = 2;
+    this._paused = false;
+    this._stopped = false;
+    this._timer = null;
+    this._idMap = {}; // maps replay gate id → actual placed gate id
+    this._active = false;
+  }
+
+  start() {
+    if (!this._replay || !this._replay.actions || this._replay.actions.length === 0) return;
+    this._active = true;
+    this._gs._replayViewerActive = true;
+    this._actionIndex = 0;
+    this._idMap = {};
+    this._stopped = false;
+    this._paused = false;
+    this._speed = 2;
+
+    // Reload level fresh (clears circuit)
+    this._gs.loadLevel(this._levelId);
+    // Stop recording since we're replaying, not building
+    this._gs._replayStartTime = null;
+
+    // Build IONode ID mapping: old IDs (from recording) → new IDs (current session)
+    if (this._replay.ioNodeIds) {
+      const oldInputIds = this._replay.ioNodeIds.inputs || [];
+      const oldOutputIds = this._replay.ioNodeIds.outputs || [];
+      for (let i = 0; i < oldInputIds.length && i < this._gs.inputNodes.length; i++) {
+        this._idMap[oldInputIds[i]] = this._gs.inputNodes[i].id;
+      }
+      for (let i = 0; i < oldOutputIds.length && i < this._gs.outputNodes.length; i++) {
+        this._idMap[oldOutputIds[i]] = this._gs.outputNodes[i].id;
+      }
+    }
+
+    // Show replay controls
+    this._showControls();
+    this._updateProgress();
+    this._gs.ui.updateStatusBar('📹 Replaying solution...');
+
+    // Hide star display if showing
+    this._gs.ui.hideStarDisplay();
+
+    // Schedule first action
+    this._scheduleNext();
+  }
+
+  _showControls() {
+    const el = document.getElementById('replay-controls');
+    if (el) el.style.display = '';
+
+    // Set speed selector to default
+    const speedSel = document.getElementById('replay-speed-select');
+    if (speedSel) {
+      speedSel.value = '2';
+      speedSel.onchange = () => {
+        this._speed = parseInt(speedSel.value) || 2;
+      };
+    }
+
+    // Play/Pause
+    const ppBtn = document.getElementById('replay-play-pause');
+    if (ppBtn) {
+      ppBtn.textContent = '⏸';
+      ppBtn.onclick = () => this._togglePause();
+    }
+
+    // Skip to end
+    const skipBtn = document.getElementById('replay-skip-end');
+    if (skipBtn) {
+      skipBtn.onclick = () => this._skipToEnd();
+    }
+
+    // Stop
+    const stopBtn = document.getElementById('replay-stop');
+    if (stopBtn) {
+      stopBtn.onclick = () => this.stop();
+    }
+
+    // Ghost compare toggle
+    const ghostBtn = document.getElementById('replay-ghost-toggle');
+    if (ghostBtn) {
+      const hasGhost = this._gs.ghostOverlay && (this._gs.ghostOverlay.gates.length > 0 || this._gs.ghostOverlay.wires.length > 0);
+      ghostBtn.style.display = hasGhost ? '' : 'none';
+      if (hasGhost) {
+        this._gs.showGhost = false;
+        ghostBtn.onclick = () => {
+          this._gs.showGhost = !this._gs.showGhost;
+          ghostBtn.textContent = this._gs.showGhost ? '👻 Hide' : '👻 Compare';
+          this._gs.markDirty();
+        };
+      }
+    }
+  }
+
+  _hideControls() {
+    const el = document.getElementById('replay-controls');
+    if (el) el.style.display = 'none';
+  }
+
+  _updateProgress() {
+    const total = this._replay.actions.length;
+    const current = this._actionIndex;
+    const pct = total > 0 ? (current / total) * 100 : 0;
+
+    const fill = document.getElementById('replay-progress-fill');
+    if (fill) fill.style.width = pct + '%';
+
+    const counter = document.getElementById('replay-action-counter');
+    if (counter) counter.textContent = `${current}/${total}`;
+  }
+
+  _scheduleNext() {
+    if (this._stopped || this._paused) return;
+    if (this._actionIndex >= this._replay.actions.length) {
+      this._onReplayComplete();
+      return;
+    }
+
+    const action = this._replay.actions[this._actionIndex];
+    let delay;
+
+    if (this._actionIndex === 0) {
+      delay = 500; // Brief pause before first action
+    } else {
+      const prevAction = this._replay.actions[this._actionIndex - 1];
+      delay = Math.max(50, (action.time - prevAction.time) / this._speed);
+      // Cap max delay between actions at 2 seconds
+      delay = Math.min(delay, 2000);
+    }
+
+    this._timer = setTimeout(() => {
+      if (this._stopped) return;
+      this._executeAction(action);
+      this._actionIndex++;
+      this._updateProgress();
+      this._gs.ui.updateStatusBar(`📹 Replaying... (${this._actionIndex}/${this._replay.actions.length})`);
+      this._scheduleNext();
+    }, delay);
+  }
+
+  _executeAction(action) {
+    const gs = this._gs;
+    if (action.type === 'addGate') {
+      const gate = gs.addGate(action.data.type, action.data.x, action.data.y, true);
+      if (gate) {
+        // Map the replay's gate id to the actual gate id
+        this._idMap[action.data.id] = gate.id;
+        // Play placement audio
+        gs.audio.playGatePlace(action.data.type, action.data.x);
+      }
+    } else if (action.type === 'addWire') {
+      // Translate replay gate IDs to actual gate IDs
+      const fromId = this._idMap[action.data.fromGateId] !== undefined ? this._idMap[action.data.fromGateId] : action.data.fromGateId;
+      const toId = this._idMap[action.data.toGateId] !== undefined ? this._idMap[action.data.toGateId] : action.data.toGateId;
+      gs.addWireFromData(fromId, action.data.fromPinIndex, toId, action.data.toPinIndex);
+      // Play wire connection audio
+      gs.audio.playWireConnect();
+    }
+    gs.markDirty();
+  }
+
+  _togglePause() {
+    this._paused = !this._paused;
+    const ppBtn = document.getElementById('replay-play-pause');
+    if (ppBtn) ppBtn.textContent = this._paused ? '▶' : '⏸';
+
+    if (!this._paused) {
+      this._scheduleNext();
+    } else if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
+  }
+
+  _skipToEnd() {
+    // Cancel pending timer
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
+
+    // Execute all remaining actions instantly
+    while (this._actionIndex < this._replay.actions.length) {
+      const action = this._replay.actions[this._actionIndex];
+      this._executeAction(action);
+      this._actionIndex++;
+    }
+    this._updateProgress();
+    this._onReplayComplete();
+  }
+
+  _onReplayComplete() {
+    this._updateProgress();
+    this._gs.ui.updateStatusBar('📹 Replay complete — running simulation...');
+
+    // Brief pause, then run simulation with full animation
+    setTimeout(() => {
+      if (this._stopped) return;
+      this._hideControls();
+      this._active = false;
+      this._gs._replayViewerActive = false;
+      this._gs.runSimulation();
+    }, 1000);
+  }
+
+  stop() {
+    this._stopped = true;
+    this._active = false;
+    this._gs._replayViewerActive = false;
+    if (this._timer) {
+      clearTimeout(this._timer);
+      this._timer = null;
+    }
+    this._hideControls();
+    this._gs.ui.updateStatusBar('Replay stopped');
+    // Reload the level to clean state
+    this._gs.loadLevel(this._levelId);
+  }
+
+  isActive() {
+    return this._active;
+  }
+}
 window.addEventListener('DOMContentLoaded', () => {
   const game = new GameState();
   game.init();
