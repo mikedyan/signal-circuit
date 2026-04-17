@@ -1,0 +1,139 @@
+{
+  "day": 52,
+  "title": "PWA Offline + Push Notifications",
+  "summary": "Harden offline support with thorough service worker caching and versioning, add offline status indicator, ensure daily challenge works offline, add Install App prompt, and implement push notification infrastructure for daily challenge reminders, weekly puzzle alerts, and streak at-risk warnings. All notifications are opt-in with per-type toggles in settings.",
+  "tasks": [
+    {
+      "id": "T1",
+      "description": "Audit and update the service worker to ensure ALL game assets (JS, CSS, HTML, manifest, SVG icons) are cached for offline play. Add all JS files from the current load order and the CSS file. Use a versioned cache name that can be bumped each deploy.",
+      "files_to_modify": ["sw.js"],
+      "acceptance_criteria": [
+        "sw.js ASSETS array includes every file referenced in index.html script/link tags",
+        "Cache name includes a version that can be bumped",
+        "Install event pre-caches all ASSETS",
+        "Old caches are cleaned up on activate"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T2",
+      "description": "Add cache versioning: when CACHE_NAME changes, the activate event must clean old caches. Ensure the sw.js already does this (verify/fix). Add a cache-first strategy with network fallback for non-cached resources.",
+      "files_to_modify": ["sw.js"],
+      "acceptance_criteria": [
+        "Activate event deletes all caches except current CACHE_NAME",
+        "Fetch event uses cache-first, then network fallback",
+        "Non-precached requests fall through to network and optionally get cached on the fly"
+      ],
+      "depends_on": ["T1"]
+    },
+    {
+      "id": "T3",
+      "description": "Add offline indicator: show subtle '📴 Offline' badge when navigator.onLine is false. Display it in a fixed position at the top of the screen. Remove when back online.",
+      "files_to_modify": ["index.html", "css/style.css", "js/main.js"],
+      "acceptance_criteria": [
+        "A fixed-position badge appears at top-center when offline",
+        "Badge disappears when connection restored",
+        "Badge has subtle styling matching game aesthetic (dark background, green text)",
+        "Does not block gameplay interaction"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "description": "Ensure daily challenge generation works offline — it uses a date-based seed so it should work without network. Verify and add a comment confirming this in levels.js.",
+      "files_to_modify": ["js/levels.js"],
+      "acceptance_criteria": [
+        "Daily challenge generation uses only date-based seed, no network calls",
+        "Comment in generateDailyChallenge confirms offline compatibility"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "description": "Add 'Install App' prompt for mobile users. Listen for the beforeinstallprompt event, save the deferred prompt, then show a subtle install banner after the 3rd session (tracked in localStorage). Banner has 'Install' and 'Not now' buttons.",
+      "files_to_modify": ["js/main.js", "index.html", "css/style.css"],
+      "acceptance_criteria": [
+        "beforeinstallprompt event is captured and deferred",
+        "Install banner only shows after 3+ sessions",
+        "Banner shows at bottom of level select screen with Install and Dismiss buttons",
+        "'Not now' hides banner and doesn't show again for 7 days",
+        "Install button triggers the deferred prompt",
+        "Session count tracked in localStorage"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T6",
+      "description": "Add notification permission request infrastructure. Create a NotificationManager class in main.js that handles permission requests, stores preferences, and provides methods for scheduling local notifications. Request permission subtly after 3+ sessions (same trigger as install prompt).",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "NotificationManager class with requestPermission(), scheduleNotification(), getPreferences(), setPreference() methods",
+        "Permission requested only after 3+ sessions",
+        "Permission result stored in localStorage",
+        "Graceful degradation when Notification API is not available"
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "description": "Daily challenge notification: schedule a local notification at the player's typical play time saying 'Today's Daily Challenge is ready!'. Use the service worker's showNotification API if permission granted. Typical play time estimated from last 7 daily challenge completion timestamps, defaulting to 10am.",
+      "files_to_modify": ["js/main.js", "sw.js"],
+      "acceptance_criteria": [
+        "Daily notification scheduled via setTimeout/setInterval for current session",
+        "Shows only if daily challenge not yet completed today",
+        "Default time is 10:00am local, updated based on play history",
+        "Notification text includes challenge emoji and encouragement"
+      ],
+      "depends_on": ["T6"]
+    },
+    {
+      "id": "T8",
+      "description": "Weekly notification: 'New Puzzle of the Week!' notification triggered on session start if it's a new week and the weekly puzzle hasn't been played.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "Weekly notification shown on session start if new week detected",
+        "Only shows once per week",
+        "Week boundary tracked in localStorage",
+        "Notification appears as in-app toast rather than system notification to be less intrusive"
+      ],
+      "depends_on": ["T6"]
+    },
+    {
+      "id": "T9",
+      "description": "Streak at-risk notification: show an in-app alert/toast when a play streak of 3+ days would expire tonight (no play recorded today and it's after 6pm). Also schedule a system notification for 8pm if streak is at risk.",
+      "files_to_modify": ["js/main.js"],
+      "acceptance_criteria": [
+        "In-app toast shown on session start if streak at risk (3+ streak, no play today, after 6pm)",
+        "Toast says something like 'Your 5-day streak expires tonight — play now!'",
+        "System notification scheduled for 8pm if streak at risk and permission granted",
+        "Doesn't show if streak is 0 or already played today"
+      ],
+      "depends_on": ["T6"]
+    },
+    {
+      "id": "T10",
+      "description": "Add notification settings section in the settings area of level select screen. Three toggles: Daily Challenge, Weekly Puzzle, Streak Alerts. Each stored in localStorage and respected by the notification system. Update cache bust version.",
+      "files_to_modify": ["index.html", "css/style.css", "js/main.js", "sw.js"],
+      "acceptance_criteria": [
+        "Three toggle buttons in settings row for notification types",
+        "Toggles persist in localStorage",
+        "NotificationManager reads these preferences before showing any notification",
+        "All notification types default to ON when permission is first granted",
+        "Cache bust version incremented in index.html script/link tags and sw.js CACHE_NAME"
+      ],
+      "depends_on": ["T6", "T7", "T8", "T9"]
+    }
+  ],
+  "bugs_to_fix": [],
+  "testing_focus": [
+    "Offline mode works — game loads and plays without network",
+    "Service worker caches all assets correctly",
+    "Offline indicator appears/disappears correctly",
+    "Install prompt shows at right time and works",
+    "Notification permission flow is smooth",
+    "Notification settings toggles work and persist",
+    "Streak at-risk detection logic is correct",
+    "No regressions to existing gameplay"
+  ],
+  "rollback_criteria": "If any P0 bug is introduced affecting core gameplay or save/load, revert to previous commit"
+}

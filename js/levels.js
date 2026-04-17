@@ -1496,6 +1496,7 @@ const LEVELS = [
 ];
 
 // ── Daily Challenge Generator ──
+// Day 52: Offline-compatible — uses date-based seed only, no network calls needed
 function generateDailyChallenge() {
   const today = new Date();
   const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();

@@ -167,3 +167,12 @@
 - **Max delay cap for replays**: Players may pause for minutes between actions. Capping inter-action delay at 2 seconds keeps replays watchable without needing to normalize the entire timeline.
 - **Guard interaction at the source**: Adding `if (this._replayViewerActive && !skipUndo) return null` in addGate is cleaner than trying to guard every UI entry point. The skipUndo flag distinguishes replay-initiated vs user-initiated calls.
 - **Separate overlay from completion UI**: Replay controls are a gameplay overlay (sibling of star-display), not part of the completion screen. This allows them to persist during replay and hide independently.
+
+## Day 52 — PWA Offline + Push Notifications
+- **Service worker on-the-fly caching**: Adding a `cache.put()` in the fetch handler for non-precached requests ensures that dynamically loaded resources are also available offline after first visit. Use `response.clone()` since Response body can only be consumed once.
+- **Offline navigation fallback**: When a navigation request fails offline and isn't cached, fall back to `/index.html` since it's a single-page app. This prevents the browser's default offline error page.
+- **beforeinstallprompt must be deferred**: The install prompt can only be triggered inside a user gesture. Capture the event, store it, then call `.prompt()` later in a button click handler.
+- **Session counting for engagement gating**: Using a simple localStorage counter incremented on each page load is the most reliable way to gate features (install prompt, notification permission) behind "user has used the app N times."
+- **Notification permission on user action only**: Never auto-request notification permission — it causes instant dismissal/denial. Instead, tie the permission request to the user explicitly toggling a notification setting ON.
+- **In-app toasts > system notifications for web games**: System notifications require permission, may not work on all browsers, and can feel intrusive. In-app toasts (CSS-animated DOM elements) are always available and better match the game's aesthetic.
+- **Week number calculation for weekly features**: Use ISO 8601 week numbering (UTC-based) for consistent cross-timezone behavior. Store `YYYY-WNN` as the dedup key.

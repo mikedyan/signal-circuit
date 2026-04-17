@@ -4891,3 +4891,317 @@ window.addEventListener('DOMContentLoaded', () => {
     game.trackPlaytimeEnd();
   });
 });
+
+
+// ── Day 52: PWA Offline + Push Notifications ──
+
+const NOTIF_PREFS_KEY = 'signal-circuit-notif-prefs';
+const SESSION_COUNT_KEY = 'signal-circuit-session-count';
+const INSTALL_DISMISS_KEY = 'signal-circuit-install-dismiss';
+const WEEKLY_NOTIF_KEY = 'signal-circuit-weekly-notif';
+
+class NotificationManager {
+  constructor() {
+    this._deferredInstallPrompt = null;
+    this._prefs = this._loadPrefs();
+    this._sessionCount = this._getSessionCount();
+  }
+
+  _loadPrefs() {
+    try {
+      const saved = SafeStorage.getItem(NOTIF_PREFS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { daily: true, weekly: true, streak: true, permissionGranted: false };
+  }
+
+  _savePrefs() {
+    SafeStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(this._prefs));
+  }
+
+  getPreferences() { return { ...this._prefs }; }
+
+  setPreference(type, enabled) {
+    if (type in this._prefs) {
+      this._prefs[type] = enabled;
+      this._savePrefs();
+    }
+  }
+
+  _getSessionCount() {
+    try {
+      const count = parseInt(SafeStorage.getItem(SESSION_COUNT_KEY) || '0');
+      return isNaN(count) ? 0 : count;
+    } catch (e) { return 0; }
+  }
+
+  _incrementSession() {
+    this._sessionCount++;
+    SafeStorage.setItem(SESSION_COUNT_KEY, String(this._sessionCount));
+  }
+
+  async requestPermission() {
+    if (!('Notification' in window)) return 'unavailable';
+    if (Notification.permission === 'granted') {
+      this._prefs.permissionGranted = true;
+      this._savePrefs();
+      return 'granted';
+    }
+    if (Notification.permission === 'denied') return 'denied';
+    try {
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        this._prefs.permissionGranted = true;
+        this._savePrefs();
+      }
+      return result;
+    } catch (e) {
+      return 'error';
+    }
+  }
+
+  async scheduleNotification(title, body, tag) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        await reg.showNotification(title, {
+          body,
+          icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>",
+          tag: tag || 'signal-circuit',
+        });
+        return true;
+      }
+      new Notification(title, { body, tag: tag || 'signal-circuit' });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  scheduleDailyReminder(game) {
+    if (!this._prefs.daily) return;
+    if (game.dailyLeaderboard && game.dailyLeaderboard.isTodayCompleted()) return;
+    const typicalHour = this._getTypicalPlayHour(game);
+    const now = new Date();
+    if (now.getHours() >= typicalHour + 1) return;
+    const msUntilTarget = this._msUntilHour(typicalHour);
+    if (msUntilTarget > 0 && msUntilTarget < 24 * 60 * 60 * 1000) {
+      setTimeout(() => {
+        if (game.dailyLeaderboard && !game.dailyLeaderboard.isTodayCompleted()) {
+          this.scheduleNotification(
+            '🔔 Daily Challenge Ready!',
+            "Today's logic puzzle is waiting. Can you crack it?",
+            'signal-circuit-daily'
+          );
+        }
+      }, msUntilTarget);
+    }
+  }
+
+  _getTypicalPlayHour(game) {
+    try {
+      const history = game.dailyLeaderboard.getRecentHistory(7);
+      // Future: analyze timestamps to find typical play hour
+    } catch (e) {}
+    return 10; // Default 10am
+  }
+
+  _msUntilHour(hour) {
+    const now = new Date();
+    const target = new Date(now);
+    target.setHours(hour, 0, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1);
+    return target - now;
+  }
+
+  checkWeeklyNotification() {
+    if (!this._prefs.weekly) return false;
+    const now = new Date();
+    const weekKey = now.getFullYear() + '-W' + this._getWeekNumber(now);
+    const lastShown = SafeStorage.getItem(WEEKLY_NOTIF_KEY);
+    if (lastShown === weekKey) return false;
+    SafeStorage.setItem(WEEKLY_NOTIF_KEY, weekKey);
+    return true;
+  }
+
+  _getWeekNumber(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+
+  checkStreakAtRisk(game) {
+    if (!this._prefs.streak) return false;
+    const streakData = game.getStreakData();
+    if (!streakData || streakData.streak < 3) return false;
+    const today = new Date().toISOString().slice(0, 10);
+    if (streakData.lastPlayDate === today) return false;
+    const hour = new Date().getHours();
+    if (hour < 18) return false;
+    return true;
+  }
+
+  scheduleStreakNotification(game) {
+    if (!this._prefs.streak) return;
+    const streakData = game.getStreakData();
+    if (!streakData || streakData.streak < 3) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if (streakData.lastPlayDate === today) return;
+    const msUntil8pm = this._msUntilHour(20);
+    if (msUntil8pm > 0 && msUntil8pm < 12 * 60 * 60 * 1000) {
+      setTimeout(() => {
+        const current = game.getStreakData();
+        if (current && current.lastPlayDate !== new Date().toISOString().slice(0, 10) && current.streak >= 3) {
+          this.scheduleNotification(
+            '🔥 Streak at Risk!',
+            'Your ' + current.streak + '-day streak expires tonight! Play now to keep it alive.',
+            'signal-circuit-streak'
+          );
+        }
+      }, msUntil8pm);
+    }
+  }
+
+  setupInstallPrompt() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this._deferredInstallPrompt = e;
+      if (this._sessionCount >= 3) {
+        this._maybeShowInstallBanner();
+      }
+    });
+  }
+
+  _maybeShowInstallBanner() {
+    if (!this._deferredInstallPrompt) return;
+    try {
+      const dismissTime = parseInt(SafeStorage.getItem(INSTALL_DISMISS_KEY) || '0');
+      if (dismissTime > 0 && (Date.now() - dismissTime) < 7 * 24 * 60 * 60 * 1000) return;
+    } catch (e) {}
+    const prompt = document.getElementById('install-prompt');
+    if (prompt) prompt.style.display = 'flex';
+    const installBtn = document.getElementById('install-btn');
+    const dismissBtn = document.getElementById('install-dismiss');
+    if (installBtn) {
+      installBtn.onclick = async () => {
+        if (this._deferredInstallPrompt) {
+          this._deferredInstallPrompt.prompt();
+          await this._deferredInstallPrompt.userChoice;
+          this._deferredInstallPrompt = null;
+        }
+        if (prompt) prompt.style.display = 'none';
+      };
+    }
+    if (dismissBtn) {
+      dismissBtn.onclick = () => {
+        SafeStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+        if (prompt) prompt.style.display = 'none';
+      };
+    }
+  }
+
+  setupOfflineIndicator() {
+    const badge = document.getElementById('offline-badge');
+    if (!badge) return;
+    const update = () => { badge.style.display = navigator.onLine ? 'none' : 'block'; };
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    update();
+  }
+
+  setupSettingsUI() {
+    const types = [
+      { id: 'notif-daily-btn', key: 'daily', emoji: '🔔', label: 'Daily' },
+      { id: 'notif-weekly-btn', key: 'weekly', emoji: '📅', label: 'Weekly' },
+      { id: 'notif-streak-btn', key: 'streak', emoji: '🔥', label: 'Streak' },
+    ];
+    for (const t of types) {
+      const btn = document.getElementById(t.id);
+      if (!btn) continue;
+      const on = this._prefs[t.key];
+      btn.textContent = t.emoji + ' ' + t.label + ': ' + (on ? 'On' : 'Off');
+      btn.style.opacity = on ? '1' : '0.5';
+      btn.addEventListener('click', async () => {
+        const newVal = !this._prefs[t.key];
+        if (newVal && !this._prefs.permissionGranted && 'Notification' in window) {
+          const result = await this.requestPermission();
+          if (result !== 'granted') return;
+        }
+        this._prefs[t.key] = newVal;
+        this._savePrefs();
+        btn.textContent = t.emoji + ' ' + t.label + ': ' + (newVal ? 'On' : 'Off');
+        btn.style.opacity = newVal ? '1' : '0.5';
+      });
+    }
+  }
+
+  init(game) {
+    this._incrementSession();
+    this.setupOfflineIndicator();
+    this.setupInstallPrompt();
+    this.setupSettingsUI();
+    if (this._prefs.permissionGranted || (typeof Notification !== 'undefined' && Notification.permission === 'granted')) {
+      this.scheduleDailyReminder(game);
+      this.scheduleStreakNotification(game);
+    }
+    if (this.checkWeeklyNotification()) {
+      setTimeout(() => this._showWeeklyToast(), 3500);
+    }
+    if (this.checkStreakAtRisk(game)) {
+      const streakData = game.getStreakData();
+      setTimeout(() => this._showStreakRiskToast(streakData.streak), 2500);
+    }
+  }
+
+  _showWeeklyToast() {
+    let toast = document.getElementById('weekly-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'weekly-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = '🏗️ New Puzzle of the Week is here!';
+    toast.style.display = 'block';
+    toast.style.animation = 'none';
+    void toast.offsetWidth;
+    toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 5.6s forwards';
+    setTimeout(() => { toast.style.display = 'none'; }, 6100);
+  }
+
+  _showStreakRiskToast(streak) {
+    let toast = document.getElementById('streak-risk-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'streak-risk-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = '🔥 Your ' + streak + '-day streak expires tonight — play now!';
+    toast.style.display = 'block';
+    toast.style.animation = 'none';
+    void toast.offsetWidth;
+    toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 7.6s forwards';
+    setTimeout(() => { toast.style.display = 'none'; }, 8100);
+  }
+}
+
+window._notifManager = null;
+
+// Initialize notification manager after game is ready
+(function() {
+  const initNotif = () => {
+    if (window.game && !window._notifManager) {
+      window._notifManager = new NotificationManager();
+      window._notifManager.init(window.game);
+    }
+  };
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(initNotif, 500);
+  } else {
+    window.addEventListener('DOMContentLoaded', () => setTimeout(initNotif, 500));
+  }
+  setTimeout(initNotif, 1000);
+  setTimeout(initNotif, 2000);
+})();

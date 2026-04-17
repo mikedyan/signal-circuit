@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1776353340">
+  <link rel="stylesheet" href="css/style.css?v=1776439740">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -20,6 +20,14 @@
       </div>
     </div>
   </noscript>
+  <!-- Day 52: Offline indicator -->
+  <div id="offline-badge" style="display:none;">📴 Offline</div>
+  <!-- Day 52: Install App prompt -->
+  <div id="install-prompt" style="display:none;">
+    <span>⚡ Install Signal Circuit for offline play!</span>
+    <button id="install-btn" class="settings-btn" style="background:#0f0;color:#000;font-weight:bold;">Install</button>
+    <button id="install-dismiss" class="settings-btn" style="color:#888;">Not now</button>
+  </div>
   <!-- ARIA live region for screen reader announcements -->
   <div id="sr-status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
   <div id="app" role="main">
@@ -106,6 +114,12 @@
             <span class="vol-icon" id="ls-music-icon" title="Music volume" role="button" tabindex="0">🎵</span>
             <input type="range" id="ls-music-slider" min="0" max="100" value="20" aria-label="Music volume" class="vol-slider music-slider">
           </div>
+        </div>
+        <!-- Day 52: Notification Settings -->
+        <div id="notif-settings-row" style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <button id="notif-daily-btn" class="settings-btn" aria-label="Toggle daily challenge notification">🔔 Daily: On</button>
+          <button id="notif-weekly-btn" class="settings-btn" aria-label="Toggle weekly puzzle notification">📅 Weekly: On</button>
+          <button id="notif-streak-btn" class="settings-btn" aria-label="Toggle streak alert notification">🔥 Streak: On</button>
         </div>
         <div id="sync-row" style="margin-top:8px;display:flex;gap:8px;justify-content:center;">
           <button id="export-progress-btn" class="settings-btn" aria-label="Export progress">📤 Export Progress</button>
@@ -594,15 +608,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1776353340"></script>
-  <script src="js/wires.js?v=1776353340"></script>
-  <script src="js/simulation.js?v=1776353340"></script>
-  <script src="js/levels.js?v=1776353340"></script>
-  <script src="js/audio.js?v=1776353340"></script>
-  <script src="js/achievements.js?v=1776353340"></script>
-  <script src="js/canvas.js?v=1776353340"></script>
-  <script src="js/ui.js?v=1776353340"></script>
-  <script src="js/tutorial.js?v=1776353340"></script>
-  <script src="js/main.js?v=1776353340"></script>
+  <script src="js/gates.js?v=1776439740"></script>
+  <script src="js/wires.js?v=1776439740"></script>
+  <script src="js/simulation.js?v=1776439740"></script>
+  <script src="js/levels.js?v=1776439740"></script>
+  <script src="js/audio.js?v=1776439740"></script>
+  <script src="js/achievements.js?v=1776439740"></script>
+  <script src="js/canvas.js?v=1776439740"></script>
+  <script src="js/ui.js?v=1776439740"></script>
+  <script src="js/tutorial.js?v=1776439740"></script>
+  <script src="js/main.js?v=1776439740"></script>
 </body>
 </html>

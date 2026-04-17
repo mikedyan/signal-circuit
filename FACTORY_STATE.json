@@ -1,13 +1,13 @@
 {
   "project": "signal-circuit",
-  "phase": "Phase 3 \u2014 Engagement & Depth",
+  "phase": "Phase 3 — Engagement & Depth",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 51,
-  "nextDay": 52,
-  "totalItemsCompleted": 331,
-  "totalItems": 331,
-  "status": "Phase 3 Day 16 complete \u2014 Solution Replay Viewer (10 items)",
-  "lastRun": "2026-04-16T08:12:00-07:00",
+  "lastCompletedDay": 52,
+  "nextDay": 53,
+  "totalItemsCompleted": 341,
+  "totalItems": 341,
+  "status": "Phase 3 Day 17 complete — PWA Offline + Push Notifications (10 items)",
+  "lastRun": "2026-04-17T08:09:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -21,7 +21,7 @@
       "Replayability (5/10)",
       "Addictiveness (6/10)",
       "No social features",
-      "Difficulty cliff Ch3\u2192Ch4"
+      "Difficulty cliff Ch3→Ch4"
     ]
   },
   "phase3Focus": "Fix replayability, deepen engagement, smooth difficulty curve",
@@ -44,7 +44,7 @@
         "Bridge Level 19: Bit Comparator",
         "Bridge Level 20: Data Selector",
         "Chapter 3.5 added",
-        "Level renumbering 18-37\u219221-40"
+        "Level renumbering 18-37→21-40"
       ],
       "status": "complete",
       "qa": "all-pass"
@@ -84,7 +84,7 @@
     "39": {
       "items": [
         "Compact mode toggle (8+ rows)",
-        "Row hover \u2192 canvas highlight",
+        "Row hover → canvas highlight",
         "Column sorting with indicators",
         "Key rows mode for 4-input levels",
         "Decimal index column + tooltips",
@@ -197,7 +197,7 @@
       "items": [
         "Dual SFX/Music sliders in gameplay",
         "CSS styling (green SFX, cyan Music thumbs)",
-        "All SFX methods \u2192 this._sfxVol",
+        "All SFX methods → this._sfxVol",
         "Defaults SFX 40% Music 20%",
         "setupVolumeControls with sync",
         "Level select volume controls",
@@ -228,7 +228,7 @@
     "48": {
       "items": [
         "KB Wiring mode toggle (K key + button)",
-        "Tab cycles input\u2192gate\u2192output elements",
+        "Tab cycles input→gate→output elements",
         "Green pulsing highlight ring on selected",
         "Enter starts wire from output pin",
         "Tab cycles compatible destinations only",
@@ -250,7 +250,7 @@
         "Community level loading via buildCustomLevel",
         "Completion tracking (localStorage)",
         "Upvote system (client-side toggle)",
-        "Submit Your Level \u2192 Creator navigation",
+        "Submit Your Level → Creator navigation",
         "Community Creator achievement (3+ shares)",
         "Cache bust v35"
       ],
@@ -285,6 +285,22 @@
         "Ghost compare toggle",
         "LRU eviction (30 replays max)",
         "Replay status + interaction blocking"
+      ],
+      "status": "complete",
+      "qa": "all-pass"
+    },
+    "52": {
+      "items": [
+        "Service worker asset audit + complete caching",
+        "Cache versioning v38 + old cache cleanup",
+        "Offline indicator badge (📴)",
+        "Daily challenge offline verification",
+        "Install App prompt (beforeinstallprompt)",
+        "NotificationManager class + permission flow",
+        "Daily challenge notification scheduling",
+        "Weekly puzzle in-app toast",
+        "Streak at-risk detection + toast/notification",
+        "Notification settings toggles (Daily/Weekly/Streak)"
       ],
       "status": "complete",
       "qa": "all-pass"
