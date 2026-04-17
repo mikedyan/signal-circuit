@@ -1,12 +1,12 @@
 {
   "project": "signal-circuit",
-  "phase": "Phase 3 — Engagement & Depth",
+  "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
   "lastCompletedDay": 52,
   "nextDay": 53,
   "totalItemsCompleted": 341,
   "totalItems": 341,
-  "status": "Phase 3 Day 17 complete — PWA Offline + Push Notifications (10 items)",
+  "status": "Phase 3 Day 17 complete \u2014 PWA Offline + Push Notifications (10 items)",
   "lastRun": "2026-04-17T08:09:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
@@ -21,7 +21,7 @@
       "Replayability (5/10)",
       "Addictiveness (6/10)",
       "No social features",
-      "Difficulty cliff Ch3→Ch4"
+      "Difficulty cliff Ch3\u2192Ch4"
     ]
   },
   "phase3Focus": "Fix replayability, deepen engagement, smooth difficulty curve",
@@ -44,7 +44,7 @@
         "Bridge Level 19: Bit Comparator",
         "Bridge Level 20: Data Selector",
         "Chapter 3.5 added",
-        "Level renumbering 18-37→21-40"
+        "Level renumbering 18-37\u219221-40"
       ],
       "status": "complete",
       "qa": "all-pass"
@@ -84,7 +84,7 @@
     "39": {
       "items": [
         "Compact mode toggle (8+ rows)",
-        "Row hover → canvas highlight",
+        "Row hover \u2192 canvas highlight",
         "Column sorting with indicators",
         "Key rows mode for 4-input levels",
         "Decimal index column + tooltips",
@@ -197,7 +197,7 @@
       "items": [
         "Dual SFX/Music sliders in gameplay",
         "CSS styling (green SFX, cyan Music thumbs)",
-        "All SFX methods → this._sfxVol",
+        "All SFX methods \u2192 this._sfxVol",
         "Defaults SFX 40% Music 20%",
         "setupVolumeControls with sync",
         "Level select volume controls",
@@ -228,7 +228,7 @@
     "48": {
       "items": [
         "KB Wiring mode toggle (K key + button)",
-        "Tab cycles input→gate→output elements",
+        "Tab cycles input\u2192gate\u2192output elements",
         "Green pulsing highlight ring on selected",
         "Enter starts wire from output pin",
         "Tab cycles compatible destinations only",
@@ -250,7 +250,7 @@
         "Community level loading via buildCustomLevel",
         "Completion tracking (localStorage)",
         "Upvote system (client-side toggle)",
-        "Submit Your Level → Creator navigation",
+        "Submit Your Level \u2192 Creator navigation",
         "Community Creator achievement (3+ shares)",
         "Cache bust v35"
       ],
@@ -293,7 +293,7 @@
       "items": [
         "Service worker asset audit + complete caching",
         "Cache versioning v38 + old cache cleanup",
-        "Offline indicator badge (📴)",
+        "Offline indicator badge (\ud83d\udcf4)",
         "Daily challenge offline verification",
         "Install App prompt (beforeinstallprompt)",
         "NotificationManager class + permission flow",
@@ -305,5 +305,13 @@
       "status": "complete",
       "qa": "all-pass"
     }
-  }
+  },
+  "cycleStart": "2026-04-18",
+  "cycleEnd": "2026-07-16",
+  "weekType": "build",
+  "weekDay": 1,
+  "cycleNumber": 1,
+  "cycleDay": 1,
+  "weekSchedule": "build \u2192 harden \u2192 prune (3-week rotation)",
+  "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md"
 }
