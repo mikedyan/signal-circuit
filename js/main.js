@@ -33,6 +33,7 @@ const PREVIEW_KEY = 'signal-circuit-previews';
 const PLACEMENT_KEY = 'signal-circuit-placement-done';
 const DAILY_LB_KEY = 'signal-circuit-daily-leaderboard';
 const SKILL_KEY = 'signal-circuit-skill';
+const SUBCIRCUIT_KEY = 'signal-circuit-subcircuits';
 const SCHEMA_VERSION = 1;
 
 // F29-4: Safe localStorage wrapper — graceful fallback on quota exceeded
@@ -853,6 +854,8 @@ class GameState {
     this._kbDestIndex = -1;
     // Day 51: Replay Viewer state
     this._replayViewerActive = false;
+    // Day 53: Sub-Circuit Abstraction
+    this.subCircuits = new SubCircuitManager(this);
     this._replayViewer = null;
   }
 
@@ -1976,7 +1979,8 @@ class GameState {
     }
     const gate = new Gate(type, x, y, this.nextId++);
     this.gates.push(gate);
-    this.ui.updateStatusBar(`Placed ${type} gate`);
+    const displayName = (GateTypes[type] && GateTypes[type].fullName) || type;
+    this.ui.updateStatusBar(`Placed ${displayName} gate`);
     this.audio.playGatePlace(type, x);
     this.haptic(15); // #98: short pulse on gate place
     // Impact ripple effect
@@ -5205,3 +5209,150 @@ window._notifManager = null;
   setTimeout(initNotif, 1000);
   setTimeout(initNotif, 2000);
 })();
+
+// ── Day 53: Sub-Circuit Abstraction System ──
+class SubCircuitManager {
+  constructor(gameState) {
+    this.gameState = gameState;
+    this.circuits = this._load();
+    this.MAX_CIRCUITS = 10;
+  }
+
+  _load() {
+    try {
+      const saved = SafeStorage.getItem(SUBCIRCUIT_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
+  }
+
+  _save() {
+    // LRU eviction: keep newest MAX_CIRCUITS
+    while (this.circuits.length > this.MAX_CIRCUITS) {
+      this.circuits.shift(); // Remove oldest (front of array)
+    }
+    SafeStorage.setItem(SUBCIRCUIT_KEY, JSON.stringify(this.circuits));
+  }
+
+  // Save current level's solution as a sub-circuit
+  saveFromLevel(levelId, customName) {
+    const gs = this.gameState;
+    const level = gs.currentLevel;
+    if (!level) return null;
+
+    const name = customName || level.title || ('Sub-Circuit ' + (this.circuits.length + 1));
+
+    // Build the truth table output map for the first output
+    // For multi-output levels, we store ALL outputs as an array per input combination
+    const inputCount = level.inputs.length;
+    const outputCount = level.outputs.length;
+
+    // Create output map: for each input combination, store the array of output values
+    const outputMap = [];
+    for (const row of level.truthTable) {
+      outputMap.push(row.outputs.slice());
+    }
+
+    // Assign a color based on the level's chapter
+    const chapters = typeof getChapters === 'function' ? getChapters() : [];
+    let color = '#00bcd4'; // default teal
+    for (const ch of chapters) {
+      if (ch.levels && ch.levels.includes(levelId)) {
+        color = ch.color || '#00bcd4';
+        break;
+      }
+    }
+
+    const id = Date.now();
+    const entry = {
+      id,
+      name,
+      inputCount,
+      outputCount,
+      outputMap, // Array of [outputs] arrays, indexed by truth table row
+      color,
+      originalGateCount: gs.gates.filter(g => !g._locked).length,
+      levelId,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Check for duplicate (same levelId) — replace if exists
+    const existingIdx = this.circuits.findIndex(c => c.levelId === levelId);
+    if (existingIdx >= 0) {
+      this.circuits[existingIdx] = entry;
+    } else {
+      this.circuits.push(entry);
+    }
+
+    this._save();
+
+    // Track for achievement
+    const stats = gs.achievements.stats || {};
+    stats.subCircuitsCreated = (stats.subCircuitsCreated || 0) + (existingIdx >= 0 ? 0 : 1);
+    gs.achievements.stats = stats;
+    gs.achievements.save();
+    gs.achievements.checkAll(gs);
+
+    return entry;
+  }
+
+  // Remove a sub-circuit by id
+  remove(id) {
+    this.circuits = this.circuits.filter(c => c.id !== id);
+    this._save();
+  }
+
+  // Get all saved sub-circuits
+  getAll() {
+    return this.circuits.slice();
+  }
+
+  // Get a specific sub-circuit by id
+  getById(id) {
+    return this.circuits.find(c => c.id === id) || null;
+  }
+
+  // Register sub-circuits as dynamic gate types for the current session
+  registerGateTypes() {
+    for (const sc of this.circuits) {
+      const gateKey = 'SUB_' + sc.id;
+      if (GateTypes[gateKey]) continue; // Already registered
+
+      GateTypes[gateKey] = {
+        name: sc.name.length > 8 ? sc.name.substring(0, 7) + '…' : sc.name,
+        fullName: sc.name,
+        inputs: sc.inputCount,
+        outputs: sc.outputCount || 1,
+        isSubCircuit: true,
+        subCircuitId: sc.id,
+        outputMap: sc.outputMap,
+        color: sc.color || '#00bcd4',
+        width: 90,
+        height: Math.max(60, (Math.max(sc.inputCount, sc.outputCount || 1) + 1) * 25),
+        logic: function() {
+          // Evaluated via evaluateSubCircuit instead
+          return 0;
+        },
+      };
+    }
+  }
+
+  // Evaluate a sub-circuit gate given its input values
+  evaluateSubCircuit(gateType, inputValues) {
+    const def = GateTypes[gateType];
+    if (!def || !def.isSubCircuit || !def.outputMap) return [0];
+
+    // Convert input values to a row index (binary to decimal, MSB first)
+    let rowIndex = 0;
+    for (let i = 0; i < inputValues.length; i++) {
+      rowIndex = (rowIndex << 1) | (inputValues[i] ? 1 : 0);
+    }
+
+    // Look up in the output map
+    if (rowIndex >= 0 && rowIndex < def.outputMap.length) {
+      const outputs = def.outputMap[rowIndex];
+      return Array.isArray(outputs) ? outputs : [outputs];
+    }
+    return new Array(def.outputs || 1).fill(0);
+  }
+}

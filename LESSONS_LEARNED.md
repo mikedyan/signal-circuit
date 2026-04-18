@@ -176,3 +176,10 @@
 - **Notification permission on user action only**: Never auto-request notification permission — it causes instant dismissal/denial. Instead, tie the permission request to the user explicitly toggling a notification setting ON.
 - **In-app toasts > system notifications for web games**: System notifications require permission, may not work on all browsers, and can feel intrusive. In-app toasts (CSS-animated DOM elements) are always available and better match the game's aesthetic.
 - **Week number calculation for weekly features**: Use ISO 8601 week numbering (UTC-based) for consistent cross-timezone behavior. Store `YYYY-WNN` as the dedup key.
+
+## Day 53 — Sub-Circuit Abstraction System
+- **Dynamic GateTypes registration**: Sub-circuits register themselves in the global `GateTypes` object at runtime using `SUB_{id}` keys. This avoids modifying the static gate definitions while making custom gates work with existing placement, wiring, and rendering code.
+- **Truth table as evaluation engine**: Instead of simulating an internal circuit, sub-circuits store their truth table output map and look up results by converting input values to a binary index. Simpler, faster, and handles any input/output count.
+- **Gate.evaluate() dispatch pattern**: Adding a sub-circuit check at the top of `evaluate()` with early return keeps the default path clean. The `isSubCircuit` flag on the GateType def makes the check nearly free.
+- **Toolbox extension via mode flags**: Checking `isSandboxMode || isChallengeMode || isDaily` to conditionally add custom gates keeps them out of campaign mode (preserving puzzle integrity) while making them available in creative modes.
+- **Status bar display name**: Sub-circuit gate types have IDs like `SUB_1776526103859` — adding a `fullName` property to the GateType def and falling back to it in the status bar prevents ugly ID strings from showing to the player.

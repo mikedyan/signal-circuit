@@ -37,6 +37,7 @@ const ACHIEVEMENTS = [
   { id: 'streak_master', name: 'Streak Master', desc: 'Reach a 14-day play streak', icon: '🔥', tier: 'gold' },
   { id: 'perfectionist', name: 'Perfectionist', desc: 'Achieve 100% aesthetics score with 3+ gates', icon: '💯', tier: 'gold' },
   { id: 'efficiency_expert', name: 'Efficiency Expert', desc: 'Complete 10 gate limit challenges', icon: '⬦', tier: 'gold' },
+  { id: 'circuit_architect', name: 'Circuit Architect', desc: 'Create 5 custom sub-circuits from solved levels', icon: '🏗️', tier: 'silver' },
 ];
 
 const TIER_COLORS = {
@@ -351,6 +352,25 @@ class AchievementManager {
     return newlyUnlocked;
   }
 
+
+  // Day 53: Check sub-circuit creation achievement
+  checkAll(gameState) {
+    const newlyUnlocked = [];
+    const count = this.stats.subCircuitsCreated || 0;
+    if (count >= 5 && this.unlock('circuit_architect')) {
+      newlyUnlocked.push('circuit_architect');
+    }
+    if (newlyUnlocked.length > 0) {
+      this.save();
+      if (gameState && gameState.ui) {
+        for (const id of newlyUnlocked) {
+          const ach = ACHIEVEMENTS.find(a => a.id === id);
+          if (ach) gameState.ui.showAchievementToast(ach);
+        }
+      }
+    }
+    return newlyUnlocked;
+  }
 
   // Track first wire
   trackFirstWire() {

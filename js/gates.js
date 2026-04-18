@@ -118,6 +118,14 @@ class Gate {
   }
 
   evaluate() {
+    // Day 53: Sub-circuit evaluation via truth table lookup
+    if (this.def.isSubCircuit && window.game && window.game.subCircuits) {
+      const outputs = window.game.subCircuits.evaluateSubCircuit(this.type, this.inputValues);
+      for (let i = 0; i < outputs.length && i < this.outputValues.length; i++) {
+        this.outputValues[i] = outputs[i];
+      }
+      return;
+    }
     if (this.def.inputs === 1) {
       this.outputValues[0] = this.def.logic(this.inputValues[0]);
     } else {
@@ -225,6 +233,11 @@ class Gate {
   }
 
   render(ctx, isSelected) {
+    // Day 53: Sub-circuit custom rendering
+    if (this.def.isSubCircuit) {
+      this._renderSubCircuit(ctx, isSelected);
+      return;
+    }
     // Day 40: Dispatch to alternate skin renderer
     const skin = (typeof window !== 'undefined' && window.game && window.game.cosmetics)
       ? window.game.cosmetics.getActiveGateSkin() : 'ic_chip';
@@ -514,6 +527,80 @@ class Gate {
         ctx.fill();
       }
     });
+  }
+
+
+  // Day 53: Sub-circuit custom rendering — distinct purple/teal block
+  _renderSubCircuit(ctx, isSelected) {
+    const { width, height, color, name } = this.def;
+    const elapsed = performance.now() - this.placeTime;
+    let scale = 1;
+    if (elapsed < this.animDuration) {
+      const t = elapsed / this.animDuration;
+      scale = t < 0.6 ? (t / 0.6) * 1.15 : 1.15 - (t - 0.6) / 0.4 * 0.15;
+    }
+    const cx = this.x + width / 2;
+    const cy = this.y + height / 2;
+    const x = cx - (width * scale) / 2;
+    const y = cy - (height * scale) / 2;
+    const sw = width * scale;
+    const sh = height * scale;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    roundRect(ctx, x + 3, y + 3, sw, sh, 5);
+    ctx.fill();
+
+    // Body — gradient with sub-circuit color
+    const bodyGrad = ctx.createLinearGradient(x, y, x, y + sh);
+    bodyGrad.addColorStop(0, '#1a2a3a');
+    bodyGrad.addColorStop(0.5, '#0f1f2f');
+    bodyGrad.addColorStop(1, '#0a1520');
+    ctx.fillStyle = bodyGrad;
+    roundRect(ctx, x, y, sw, sh, 5);
+    ctx.fill();
+
+    // Border — double line effect
+    ctx.strokeStyle = isSelected ? '#0f0' : (color || '#00bcd4');
+    ctx.lineWidth = isSelected ? 3 : 2;
+    roundRect(ctx, x, y, sw, sh, 5);
+    ctx.stroke();
+
+    // Inner border accent
+    ctx.strokeStyle = 'rgba(' + (isSelected ? '0,255,0' : '0,188,212') + ',0.15)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, x + 3, y + 3, sw - 6, sh - 6, 3);
+    ctx.stroke();
+
+    // IC chip notch (same as regular gates for consistency)
+    ctx.beginPath();
+    ctx.arc(x + 12 * scale, y, 4 * scale, 0, Math.PI);
+    ctx.fillStyle = '#2a3a4a';
+    ctx.fill();
+
+    // Sub-circuit icon: small circuit symbol
+    const iconY = y + 10 * scale;
+    ctx.font = Math.round(10 * scale) + 'px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = (color || '#00bcd4') + '88';
+    ctx.fillText('⚡', x + sw / 2, iconY);
+
+    // Name label
+    ctx.fillStyle = color || '#00bcd4';
+    ctx.font = 'bold ' + Math.round(10 * scale) + 'px Courier New';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, x + sw / 2, cy);
+
+    // Pin count indicator
+    ctx.fillStyle = '#556';
+    ctx.font = Math.round(8 * scale) + 'px monospace';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(this.def.inputs + '→' + this.def.outputs, x + sw / 2, y + sh - 3 * scale);
+
+    // Render pins
+    this._renderPins(ctx, scale);
   }
 
 }

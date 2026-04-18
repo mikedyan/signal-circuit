@@ -574,6 +574,57 @@ class UI {
       el.addEventListener('touchstart', (e) => this.startToolboxDragTouch(e, gateType), { passive: false });
       this.gateContainer.appendChild(el);
     }
+
+    // Day 53: Add custom sub-circuit gates to toolbox in sandbox/challenge/adaptive modes
+    if ((gs.isSandboxMode || gs.isChallengeMode || level.isDaily) && gs.subCircuits) {
+      gs.subCircuits.registerGateTypes();
+      const circuits = gs.subCircuits.getAll();
+      if (circuits.length > 0) {
+        // Separator
+        const sep = document.createElement('div');
+        sep.className = 'toolbox-separator';
+        sep.textContent = '— Custom —';
+        this.gateContainer.appendChild(sep);
+
+        for (const sc of circuits) {
+          const gateKey = 'SUB_' + sc.id;
+          const def = GateTypes[gateKey];
+          if (!def) continue;
+
+          const el = document.createElement('div');
+          el.className = 'tool-gate tool-gate-sub';
+          el.textContent = def.name;
+          el.dataset.gateType = gateKey;
+          el.style.borderLeftColor = sc.color || '#00bcd4';
+          el.style.color = sc.color || '#00bcd4';
+          el.title = sc.name + ' (' + sc.inputCount + ' in → ' + (sc.outputCount || 1) + ' out)';
+
+          const dots = document.createElement('div');
+          dots.className = 'pin-dots';
+          for (let i = 0; i < sc.inputCount; i++) {
+            const dot = document.createElement('span');
+            dot.className = 'pin-dot';
+            dots.appendChild(dot);
+          }
+          const arrow = document.createElement('span');
+          arrow.textContent = '→';
+          arrow.style.color = '#666';
+          arrow.style.fontSize = '10px';
+          dots.appendChild(arrow);
+          for (let i = 0; i < (sc.outputCount || 1); i++) {
+            const dot = document.createElement('span');
+            dot.className = 'pin-dot';
+            dot.style.background = sc.color || '#00bcd4';
+            dots.appendChild(dot);
+          }
+          el.appendChild(dots);
+
+          el.addEventListener('mousedown', (e) => this.startToolboxDrag(e, gateKey));
+          el.addEventListener('touchstart', (e) => this.startToolboxDragTouch(e, gateKey), { passive: false });
+          this.gateContainer.appendChild(el);
+        }
+      }
+    }
   }
 
   // Day 34 T3: Enhanced drag ghost with gate preview
@@ -1370,6 +1421,16 @@ class UI {
       };
     }
 
+    // Day 53: Save as Custom Gate button
+    const subCircuitBtn = document.getElementById('save-subcircuit-btn');
+    if (subCircuitBtn) {
+      const isCampaign = !level.isChallenge && !level.isSandbox && !level.isDaily;
+      subCircuitBtn.style.display = isCampaign ? '' : 'none';
+      subCircuitBtn.onclick = () => {
+        this._promptSaveSubCircuit(level);
+      };
+    }
+
     // Show post-solve insight for campaign levels
     const insightEl = document.getElementById('post-solve-insight');
     if (insightEl && level.postSolveInsight) {
@@ -1418,6 +1479,35 @@ class UI {
       } else {
         retryBtn.style.display = 'none';
       }
+    }
+  }
+
+  // Day 53: Prompt to save current level as sub-circuit
+  _promptSaveSubCircuit(level) {
+    const gs = this.gameState;
+    if (!gs.subCircuits) return;
+
+    const defaultName = level.title || 'My Circuit';
+    const name = prompt('Name your custom gate:', defaultName);
+    if (!name) return; // Cancelled
+
+    const entry = gs.subCircuits.saveFromLevel(level.id, name.trim());
+    if (entry) {
+      // Register the new gate type immediately
+      gs.subCircuits.registerGateTypes();
+
+      // Show confirmation toast
+      const toast = document.getElementById('achievement-toast');
+      if (toast) {
+        toast.innerHTML = '🔧 Saved <strong>' + entry.name + '</strong> as custom gate!';
+        toast.style.display = 'block';
+        toast.style.animation = 'none';
+        void toast.offsetWidth;
+        toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 3.6s forwards';
+        setTimeout(() => { toast.style.display = 'none'; }, 4100);
+      }
+
+      gs.audio.playAchievement();
     }
   }
 
