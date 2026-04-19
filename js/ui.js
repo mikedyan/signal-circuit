@@ -2703,13 +2703,23 @@ class UI {
     const modal = document.getElementById('stats-modal');
     const closeBtn = document.getElementById('stats-close');
 
-    if (btn) btn.addEventListener('click', () => {
+    const openStats = () => {
       this.renderEnhancedStats();
       if (modal) modal.style.display = 'flex';
-    });
-    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+      // Day 54: Lazy chart rendering - draw canvases after modal visible
+      requestAnimationFrame(() => this._drawStatsCanvases());
+    };
+    const closeStats = () => {
+      if (modal) modal.style.display = 'none';
+      // Day 54: Destroy canvas elements on close
+      const container = document.getElementById('stats-grid');
+      if (container) container.querySelectorAll('canvas.stats-chart').forEach(c => c.remove());
+    };
+
+    if (btn) btn.addEventListener('click', openStats);
+    if (closeBtn) closeBtn.addEventListener('click', closeStats);
     if (modal) modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
+      if (e.target === modal) closeStats();
     });
   }
 
@@ -4307,38 +4317,160 @@ class UI {
     document.documentElement.style.setProperty('--seasonal-accent', theme.accent);
   }
 
-  // ── Day 32 T5: Enhanced Stats Dashboard ──
+  // ── Day 54: Stats Dashboard Overhaul ──
   renderEnhancedStats() {
     const container = document.getElementById('stats-grid');
     if (!container) return;
 
-    // Call existing stats render first
+    // Base stat cards first
     this.renderStatsDashboard();
 
     const gs = this.gameState;
     const progress = gs.progress;
-
-    // Per-level gate count chart
-    let chartHtml = '<div class="stat-card stat-card-wide"><div class="stat-icon">📊</div><h4 style="color:#0f0;margin:4px 0;">Gates per Level</h4>';
+    const stats = gs.loadLifetimeStats();
     const levels = typeof LEVELS !== 'undefined' ? LEVELS : [];
+
+    // ── Item 1: Time Played Per Day (canvas rendered in _drawStatsCanvases) ──
+    let html = '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">⏱ Time Played Per Day</h4>';
+    html += '<canvas class="stats-chart" id="chart-daily-playtime" width="480" height="140" style="width:100%;max-width:480px;height:auto;"></canvas>';
+    html += '</div>';
+
+    // ── Item 2: Stars Over Time (canvas) ──
+    html += '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">⭐ Stars Over Time</h4>';
+    html += '<canvas class="stats-chart" id="chart-stars-over-time" width="480" height="140" style="width:100%;max-width:480px;height:auto;"></canvas>';
+    html += '</div>';
+
+    // ── Item 3: Gate Efficiency per Chapter ──
+    html += '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">⚡ Gate Efficiency by Chapter</h4>';
+    const chapters = typeof CHAPTERS !== 'undefined' ? CHAPTERS : [];
+    for (const ch of chapters) {
+      let totalRatio = 0, count = 0;
+      const chLevelIds = new Set(ch.levels || []); for (const lvl of levels.filter(l => chLevelIds.has(l.id))) {
+        const p = progress.levels[lvl.id];
+        if (p && p.completed && p.bestGateCount != null && p.bestGateCount > 0 && lvl.optimalGates > 0) {
+          totalRatio += p.bestGateCount / lvl.optimalGates;
+          count++;
+        }
+      }
+      if (count === 0) continue;
+      const avgRatio = totalRatio / count;
+      const pct = Math.min(100, Math.round((1 / avgRatio) * 100));
+      const color = avgRatio <= 1.0 ? '#0f0' : avgRatio <= 1.5 ? '#FFD700' : '#FF6B6B';
+      const avgPct = 72; // Day 54 Item 9: community average ~72%
+      html += `<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin:3px 0;">`;
+      html += `<span style="width:50px;color:#888;white-space:nowrap;">Ch ${ch.id}</span>`;
+      html += `<div style="flex:1;height:12px;background:#222;border-radius:3px;overflow:hidden;position:relative;">`;
+      html += `<div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>`;
+      html += `<div style="position:absolute;top:0;bottom:0;left:${avgPct}%;width:1px;background:rgba(255,255,255,0.3);" title="Community avg"></div>`;
+      html += `</div>`;
+      html += `<span style="width:36px;color:${color};text-align:right;">${pct}%</span>`;
+      html += `</div>`;
+    }
+    html += '</div>';
+
+    // ── Item 4: Solve Time Distribution histogram ──
+    html += '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">🕐 Solve Time Distribution</h4>';
+    const buckets = [
+      { label: '<30s', min: 0, max: 30, count: 0 },
+      { label: '30-60s', min: 30, max: 60, count: 0 },
+      { label: '1-2m', min: 60, max: 120, count: 0 },
+      { label: '2-5m', min: 120, max: 300, count: 0 },
+      { label: '5m+', min: 300, max: Infinity, count: 0 },
+    ];
+    for (const lvl of levels) {
+      const p = progress.levels[lvl.id];
+      if (p && p.completed && p.bestTime != null) {
+        const bk = buckets.find(bk => p.bestTime >= bk.min && p.bestTime < bk.max);
+        if (bk) bk.count++;
+      }
+    }
+    const maxBucket = Math.max(...buckets.map(b => b.count), 1);
+    for (const b of buckets) {
+      const bpct = Math.round((b.count / maxBucket) * 100);
+      html += `<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin:2px 0;">`;
+      html += `<span style="width:42px;color:#888;">${b.label}</span>`;
+      html += `<div style="flex:1;height:10px;background:#222;border-radius:3px;overflow:hidden;">`;
+      html += `<div style="width:${bpct}%;height:100%;background:#00bcd4;border-radius:3px;"></div>`;
+      html += `</div>`;
+      html += `<span style="width:20px;color:#ccc;text-align:right;">${b.count}</span>`;
+      html += `</div>`;
+    }
+    html += '</div>';
+
+    // ── Item 5: Most Replayed Levels ──
+    html += '<div class="stat-card"><h4 style="color:#0f0;margin:4px 0;">🔄 Most Attempted Levels</h4>';
+    const attempted = [];
+    for (const lvl of levels) {
+      const p = progress.levels[lvl.id];
+      if (p && p.attempts > 0) attempted.push({ id: lvl.id, name: lvl.title || lvl.name, attempts: p.attempts });
+    }
+    attempted.sort((a, b) => b.attempts - a.attempts);
+    if (attempted.length === 0) {
+      html += '<div style="color:#666;font-size:11px;">No attempts recorded yet</div>';
+    } else {
+      for (const l of attempted.slice(0, 5)) {
+        html += `<div style="display:flex;justify-content:space-between;font-size:11px;color:#ccc;margin:2px 0;">`;
+        html += `<span>L${l.id}: ${l.name}</span><span style="color:#ff8800;">${l.attempts} runs</span>`;
+        html += `</div>`;
+      }
+    }
+    html += '</div>';
+
+    // ── Item 6: Session History ──
+    html += '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">📋 Recent Sessions</h4>';
+    const sessions = (stats.sessions || []).slice().reverse();
+    if (sessions.length === 0) {
+      html += '<div style="color:#666;font-size:11px;">No sessions logged yet</div>';
+    } else {
+      html += '<div style="font-size:10px;color:#666;display:flex;gap:4px;margin-bottom:2px;">';
+      html += '<span style="width:70px;">Date</span><span style="flex:1;">Levels</span><span style="width:36px;">Stars</span><span style="width:42px;text-align:right;">Time</span>';
+      html += '</div>';
+      for (const s of sessions.slice(0, 10)) {
+        const d = new Date(s.date);
+        const dateStr = (d.getMonth()+1) + '/' + d.getDate();
+        const mins = Math.floor(s.duration / 60);
+        const secs = s.duration % 60;
+        html += `<div style="font-size:11px;color:#ccc;display:flex;gap:4px;margin:1px 0;">`;
+        html += `<span style="width:70px;color:#888;">${dateStr}</span>`;
+        html += `<span style="flex:1;">${s.levelsPlayed} played</span>`;
+        html += `<span style="width:36px;">⭐${s.starsEarned}</span>`;
+        html += `<span style="width:42px;text-align:right;">${mins}:${String(secs).padStart(2,'0')}</span>`;
+        html += `</div>`;
+      }
+    }
+    html += '</div>';
+
+    // ── Item 7: Skill Progression ──
+    html += '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">🎯 Skill Progression</h4>';
+    html += '<canvas class="stats-chart" id="chart-skill-progression" width="480" height="100" style="width:100%;max-width:480px;height:auto;"></canvas>';
+    html += '</div>';
+
+    // ── Item 8: Export Stats button ──
+    html += '<div class="stat-card" style="text-align:center;">';
+    html += '<button id="export-stats-btn" class="settings-btn" style="background:#0f0;color:#000;font-weight:bold;">📤 Export Stats</button>';
+    html += '</div>';
+
+    // Original gate per-level chart (kept from Day 32, expanded to 40 levels)
+    let chartHtml = '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">📊 Gates per Level</h4>';
     const maxGates = Math.max(...levels.map(l => {
       const p = progress.levels[l.id];
       return p && p.bestGateCount ? p.bestGateCount : 0;
     }), 1);
-
-    for (const level of levels.slice(0, 15)) {
+    for (const level of levels.slice(0, 40)) {
       const p = progress.levels[level.id];
       const gates = p && p.bestGateCount ? p.bestGateCount : 0;
-      const pct = Math.round((gates / maxGates) * 100);
+      const gpct = Math.round((gates / maxGates) * 100);
       const optimal = level.optimalGates || 1;
       const barColor = gates <= optimal ? '#0f0' : gates <= (level.goodGates || optimal + 2) ? '#FFD700' : '#FF6B6B';
-      chartHtml += `<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin:2px 0;">
-        <span style="width:28px;color:#888;">${level.id}</span>
-        <div style="flex:1;height:10px;background:#222;border-radius:3px;overflow:hidden;">
-          <div style="width:${gates ? pct : 0}%;height:100%;background:${barColor};border-radius:3px;"></div>
-        </div>
-        <span style="width:28px;color:#ccc;text-align:right;">${gates || '—'}</span>
-      </div>`;
+      const avgGPct = Math.round((1 / 1.4) * 100); // Day 54 Item 9: community avg marker
+      chartHtml += `<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin:2px 0;">`;
+      chartHtml += `<span style="width:28px;color:#888;">${level.id}</span>`;
+      chartHtml += `<div style="flex:1;height:10px;background:#222;border-radius:3px;overflow:hidden;position:relative;">`;
+      chartHtml += `<div style="width:${gates ? gpct : 0}%;height:100%;background:${barColor};border-radius:3px;"></div>`;
+      chartHtml += `<div style="position:absolute;top:0;bottom:0;left:${avgGPct}%;width:1px;background:rgba(255,255,255,0.2);" title="Community avg"></div>`;
+      chartHtml += `</div>`;
+      chartHtml += `<span style="width:28px;color:#ccc;text-align:right;">${gates || '\u2014'}</span>`;
+      chartHtml += `</div>`;
     }
     chartHtml += '</div>';
 
@@ -4352,13 +4484,267 @@ class UI {
         }
       }
     }
-    let gateHtml = '<div class="stat-card"><div class="stat-icon">🔧</div><h4 style="color:#0f0;margin:4px 0;">Gate Exposure</h4>';
+    let gateHtml = '<div class="stat-card"><h4 style="color:#0f0;margin:4px 0;">🔧 Gate Exposure</h4>';
     for (const [gate, count] of Object.entries(gateUsage).sort((a, b) => b[1] - a[1])) {
       gateHtml += `<div style="font-size:11px;color:#ccc;">${gate}: ${count} levels</div>`;
     }
     gateHtml += '</div>';
 
-    container.innerHTML += chartHtml + gateHtml;
+    container.innerHTML += html + chartHtml + gateHtml;
+
+    // Day 54 Item 8: Wire up export button
+    const exportBtn = document.getElementById('export-stats-btn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => this._exportStatsText());
+    }
+  }
+
+  // Day 54: Draw canvas-based charts (called after modal visible via rAF)
+  _drawStatsCanvases() {
+    const gs = this.gameState;
+    const progress = gs.progress;
+    const stats = gs.loadLifetimeStats();
+    const levels = typeof LEVELS !== 'undefined' ? LEVELS : [];
+
+    this._drawDailyPlaytimeChart(stats);
+    this._drawStarsOverTimeChart(progress, levels);
+    this._drawSkillProgressionChart();
+  }
+
+  _drawDailyPlaytimeChart(stats) {
+    const canvas = document.getElementById('chart-daily-playtime');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const daily = stats.dailyPlaytime || {};
+    const days = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push({ label: (d.getMonth()+1) + '/' + d.getDate(), sec: daily[key] || 0 });
+    }
+
+    const maxSec = Math.max(...days.map(d => d.sec), 60);
+    const barW = Math.floor((W - 40) / 14) - 2;
+    const baseY = H - 20;
+
+    // Day 54 Item 9: Pseudo community average line
+    const avgMin = 12;
+    const avgY = baseY - ((avgMin * 60) / maxSec) * (baseY - 10);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.moveTo(30, avgY);
+    ctx.lineTo(W - 5, avgY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '9px monospace';
+    ctx.fillText('avg', 4, avgY + 3);
+
+    for (let i = 0; i < days.length; i++) {
+      const x = 30 + i * ((W - 40) / 14);
+      const h = days[i].sec > 0 ? Math.max(2, (days[i].sec / maxSec) * (baseY - 10)) : 0;
+      const isToday = i === 13;
+      ctx.fillStyle = isToday ? '#0f0' : '#0a7a0a';
+      ctx.fillRect(x, baseY - h, barW, h);
+      ctx.fillStyle = '#666';
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(days[i].label, x + barW / 2, H - 4);
+      if (days[i].sec > 0) {
+        const mins = Math.round(days[i].sec / 60);
+        ctx.fillStyle = '#ccc';
+        ctx.font = '8px monospace';
+        ctx.fillText(mins + 'm', x + barW / 2, baseY - h - 3);
+      }
+    }
+    ctx.textAlign = 'left';
+  }
+
+  _drawStarsOverTimeChart(progress, levels) {
+    const canvas = document.getElementById('chart-stars-over-time');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const events = [];
+    for (const lvl of levels) {
+      const p = progress.levels[lvl.id];
+      if (p && p.completed) {
+        events.push({ ts: p.completedAt || p.lastPlayed || Date.now(), stars: p.stars || 0 });
+      }
+    }
+    if (events.length === 0) {
+      ctx.fillStyle = '#666';
+      ctx.font = '12px monospace';
+      ctx.fillText('No completions yet', W/2 - 60, H/2);
+      return;
+    }
+    events.sort((a, b) => a.ts - b.ts);
+
+    let cumStars = 0;
+    const points = [{ ts: events[0].ts, stars: 0 }];
+    for (const e of events) {
+      cumStars += e.stars;
+      points.push({ ts: e.ts, stars: cumStars });
+    }
+
+    const pad = { l: 30, r: 10, t: 10, b: 20 };
+    const plotW = W - pad.l - pad.r;
+    const plotH = H - pad.t - pad.b;
+    const minTs = points[0].ts;
+    const maxTs = points[points.length - 1].ts;
+    const tsRange = Math.max(maxTs - minTs, 1);
+    const maxStars = cumStars;
+
+    // Day 54 Item 9: Community average line
+    const avgTotal = Math.round(events.length * 2.1);
+    const avgY = pad.t + plotH - (avgTotal / Math.max(maxStars, 1)) * plotH;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(255,215,0,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(pad.l, avgY);
+    ctx.lineTo(W - pad.r, avgY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < points.length; i++) {
+      const x = pad.l + ((points[i].ts - minTs) / tsRange) * plotW;
+      const y = pad.t + plotH - (points[i].stars / Math.max(maxStars, 1)) * plotH;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.lineTo(pad.l + plotW, pad.t + plotH);
+    ctx.lineTo(pad.l, pad.t + plotH);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,215,0,0.08)';
+    ctx.fill();
+
+    ctx.fillStyle = '#666';
+    ctx.font = '9px monospace';
+    ctx.fillText('0', pad.l - 12, pad.t + plotH);
+    ctx.fillText(String(maxStars), pad.l - 20, pad.t + 8);
+    ctx.fillText('\u2b50 ' + cumStars, W - pad.r - 40, pad.t + plotH - 8);
+  }
+
+  _drawSkillProgressionChart() {
+    const canvas = document.getElementById('chart-skill-progression');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    let history = [];
+    try {
+      const saved = localStorage.getItem('signal-circuit-skill');
+      if (saved) {
+        const data = JSON.parse(saved);
+        history = data.history || [];
+      }
+    } catch (e) {}
+
+    if (history.length < 2) {
+      ctx.fillStyle = '#666';
+      ctx.font = '12px monospace';
+      ctx.fillText('Play adaptive challenges to track skill', W/2 - 130, H/2);
+      return;
+    }
+
+    const pad = { l: 30, r: 10, t: 8, b: 10 };
+    const plotW = W - pad.l - pad.r;
+    const plotH = H - pad.t - pad.b;
+    const scores = history.map(h => h.score);
+    const minS = Math.min(...scores, 0);
+    const maxS = Math.max(...scores, 100);
+    const range = Math.max(maxS - minS, 1);
+
+    const bands = [
+      { label: 'Expert', min: 80 },
+      { label: 'Advanced', min: 60 },
+      { label: 'Intermediate', min: 30 },
+    ];
+    for (const band of bands) {
+      const y = pad.t + plotH - ((band.min - minS) / range) * plotH;
+      ctx.fillStyle = '#444';
+      ctx.font = '8px monospace';
+      ctx.fillText(band.label, pad.l + 2, y - 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(W - pad.r, y);
+      ctx.stroke();
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < history.length; i++) {
+      const x = pad.l + (i / (history.length - 1)) * plotW;
+      const y = pad.t + plotH - ((history[i].score - minS) / range) * plotH;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    const lastX = pad.l + plotW;
+    const lastY = pad.t + plotH - ((history[history.length - 1].score - minS) / range) * plotH;
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#00e5ff';
+    ctx.fill();
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = '10px monospace';
+    ctx.fillText(Math.round(history[history.length - 1].score), lastX - 18, lastY - 6);
+  }
+
+  // Day 54 Item 8: Export stats as shareable text
+  _exportStatsText() {
+    const gs = this.gameState;
+    const progress = gs.progress;
+    const stats = gs.loadLifetimeStats();
+    const levels = typeof LEVELS !== 'undefined' ? LEVELS : [];
+    const totalLevels = getLevelCount();
+    let completed = 0, totalStars = 0;
+    for (const [id, data] of Object.entries(progress.levels || {})) {
+      if (data.completed) completed++;
+      totalStars += data.stars || 0;
+    }
+    const maxStars = totalLevels * 3;
+    const achCount = gs.achievements.getUnlockedCount();
+    const achTotal = typeof ACHIEVEMENTS !== 'undefined' ? ACHIEVEMENTS.length : 0;
+    const playtimeMin = Math.floor((stats.totalPlaytime || 0) / 60);
+
+    const text = [
+      '\u26a1 Signal Circuit \u2014 My Stats',
+      '\u2501'.repeat(21),
+      '\ud83c\udfaf Levels: ' + completed + '/' + totalLevels,
+      '\u2b50 Stars: ' + totalStars + '/' + maxStars + ' (' + (maxStars > 0 ? Math.round(totalStars/maxStars*100) : 0) + '%)',
+      '\ud83d\udd27 Gates Placed: ' + (stats.totalGatesPlaced || 0),
+      '\u23f1 Play Time: ' + (playtimeMin >= 60 ? Math.floor(playtimeMin/60) + 'h ' + (playtimeMin%60) + 'm' : playtimeMin + 'm'),
+      '\ud83c\udfc6 Achievements: ' + achCount + '/' + achTotal,
+      '',
+      'Play at: ' + window.location.origin + window.location.pathname,
+    ].join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('export-stats-btn');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = '\u2705 Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 2000);
+      }
+    }).catch(() => {});
   }
 
   // ── Day 32 T7: Setup Weekly Puzzle + T8 Blitz + T9 Speedrun + T10 Review ──

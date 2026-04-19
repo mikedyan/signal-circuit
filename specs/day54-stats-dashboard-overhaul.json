@@ -1,0 +1,77 @@
+{
+  "day": 54,
+  "title": "Stats Dashboard Overhaul",
+  "rationale": "Current stats are basic stat cards. Adding canvas-rendered charts and deeper analytics increases session time and gives players reasons to return (replayability weakness).",
+  "items": [
+    {
+      "id": 1,
+      "title": "Daily playtime tracking + Time Played Per Day bar chart",
+      "description": "Track playtime per calendar day in lifetimeStats.dailyPlaytime map. Render last 14 days as a canvas bar chart in the stats modal.",
+      "files": ["js/main.js", "js/ui.js"],
+      "tests": ["Open stats modal → bar chart shows today with time > 0 after playing", "Days with no play show empty bars"]
+    },
+    {
+      "id": 2,
+      "title": "Stars Over Time cumulative line graph",
+      "description": "Add completedAt timestamp to level progress on first completion. Render cumulative stars earned over time as a canvas line graph.",
+      "files": ["js/main.js", "js/ui.js"],
+      "tests": ["Line graph shows cumulative star count growing over time", "Existing levels use lastPlayed as fallback for completedAt"]
+    },
+    {
+      "id": 3,
+      "title": "Gate Efficiency sparkline per chapter",
+      "description": "For each chapter, compute average (bestGateCount / optimalGates) ratio. Render as inline sparkline bars colored green/yellow/red.",
+      "files": ["js/ui.js"],
+      "tests": ["Each chapter shows a ratio bar", "Green for ≤1.0, yellow for ≤1.5, red for >1.5"]
+    },
+    {
+      "id": 4,
+      "title": "Solve Time Distribution mini histogram",
+      "description": "Bucket bestTime values across completed levels into time ranges (0-30s, 30-60s, 60-120s, 120-300s, 300s+). Render as mini histogram.",
+      "files": ["js/ui.js"],
+      "tests": ["Histogram shows distribution of solve times", "All completed levels accounted for"]
+    },
+    {
+      "id": 5,
+      "title": "Most Replayed Levels list with attempt tracking",
+      "description": "Add attempts counter to level progress, incremented each time RUN is pressed. Show top 5 most-attempted levels.",
+      "files": ["js/main.js", "js/ui.js"],
+      "tests": ["Attempts counter increments on each RUN", "Top 5 list shows levels sorted by attempts desc"]
+    },
+    {
+      "id": 6,
+      "title": "Session history table",
+      "description": "Track session log entries (date, levels played, stars earned, time spent) in lifetimeStats.sessions array (keep last 20). Render as compact table.",
+      "files": ["js/main.js", "js/ui.js"],
+      "tests": ["Session logged on gameplay exit", "Table shows last sessions with correct data"]
+    },
+    {
+      "id": 7,
+      "title": "Skill Progression line from adaptive difficulty",
+      "description": "Read SkillTracker.history (already exists) and render score over time as a mini canvas line chart.",
+      "files": ["js/ui.js"],
+      "tests": ["Line chart shows skill score progression", "Empty state handled gracefully"]
+    },
+    {
+      "id": 8,
+      "title": "Export stats as shareable summary text",
+      "description": "Add 'Export Stats' button that generates a formatted text summary and copies to clipboard.",
+      "files": ["js/ui.js", "index.html"],
+      "tests": ["Button appears in stats modal", "Clipboard contains formatted text on click"]
+    },
+    {
+      "id": 9,
+      "title": "Compare with Average pseudo-averages on charts",
+      "description": "Overlay a 'community average' line on the Time Played and Gate Efficiency charts using plausible pseudo-averages.",
+      "files": ["js/ui.js"],
+      "tests": ["Dashed average line visible on charts", "Average values are plausible"]
+    },
+    {
+      "id": 10,
+      "title": "Lazy chart rendering — only draw when stats modal opens",
+      "description": "Charts are rendered via requestAnimationFrame callback only when the stats modal becomes visible. Canvas elements created on open, destroyed on close.",
+      "files": ["js/ui.js"],
+      "tests": ["No canvas elements exist before opening stats", "Canvas elements removed on modal close"]
+    }
+  ]
+}

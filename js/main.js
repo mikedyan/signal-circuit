@@ -1404,9 +1404,39 @@ class GameState {
     if (elapsed > 0 && elapsed < 86400) { // Sanity cap at 24h
       const stats = this.loadLifetimeStats();
       stats.totalPlaytime = (stats.totalPlaytime || 0) + elapsed;
+      // Day 54: Track daily playtime
+      const today = new Date().toISOString().slice(0, 10);
+      if (!stats.dailyPlaytime) stats.dailyPlaytime = {};
+      stats.dailyPlaytime[today] = (stats.dailyPlaytime[today] || 0) + elapsed;
+      // Keep only last 30 days
+      const keys = Object.keys(stats.dailyPlaytime).sort();
+      while (keys.length > 30) { delete stats.dailyPlaytime[keys.shift()]; }
       this.saveLifetimeStats(stats);
     }
     this._sessionStart = Date.now(); // Reset for next interval
+  }
+
+  // Day 54: Session logging for stats dashboard
+  _logSession() {
+    if (!this._sessionStartTime) return;
+    const elapsed = Math.floor((Date.now() - this._sessionStartTime) / 1000);
+    if (elapsed < 5) return; // Skip trivially short sessions
+    const stats = this.loadLifetimeStats();
+    if (!stats.sessions) stats.sessions = [];
+    // Count levels played and stars earned this session
+    const sessionLevels = this._sessionLevelsPlayed || 0;
+    const sessionStars = this._sessionStarsEarned || 0;
+    stats.sessions.push({
+      date: Date.now(),
+      levelsPlayed: sessionLevels,
+      starsEarned: sessionStars,
+      duration: elapsed
+    });
+    // Keep last 20 sessions
+    while (stats.sessions.length > 20) stats.sessions.shift();
+    this.saveLifetimeStats(stats);
+    this._sessionLevelsPlayed = 0;
+    this._sessionStarsEarned = 0;
   }
 
   // ── Streak System (T8 Day 26) ──
@@ -1529,12 +1559,15 @@ class GameState {
         bestTime: existing ? Math.min(existing.bestTime || elapsed, elapsed) : elapsed,
         pureLogic: pureLogic || (existing && existing.pureLogic), // Once earned, keep it
         lastPlayed: Date.now(), // Day 32 T10: track for spaced repetition
+        completedAt: (existing && existing.completedAt) || Date.now(), // Day 54: first completion timestamp
+        attempts: (existing && existing.attempts) || 0, // Day 54: preserve attempt count
       };
     } else {
       if (gateCount < (existing.bestGateCount || Infinity)) existing.bestGateCount = gateCount;
       if (elapsed < (existing.bestTime || Infinity)) existing.bestTime = elapsed;
       if (pureLogic) existing.pureLogic = true;
       existing.lastPlayed = Date.now(); // Day 32 T10
+      if (!existing.completedAt) existing.completedAt = Date.now(); // Day 54: backfill
     }
 
     // Clear bookmark if it was bookmarked
@@ -1543,6 +1576,9 @@ class GameState {
     }
 
     this.saveProgress();
+    // Day 54: Track session-level stats
+    this._sessionLevelsPlayed = (this._sessionLevelsPlayed || 0) + 1;
+    this._sessionStarsEarned = (this._sessionStarsEarned || 0) + stars;
     this._saveGhost(levelId); // T10: save solution as ghost for replay
     this._saveReplay(levelId); // Day 31: save replay
     this._saveToCollection(levelId); // Day 31: save to circuit collection
@@ -1605,6 +1641,8 @@ class GameState {
     this._kbResetOnLevelChange();
     this.stopTimer();
     this.trackPlaytimeEnd();
+    // Day 54: Log session entry
+    this._logSession();
     this.audio.stopAmbient();
     // Day 38: Clean up tutorial on level exit
     if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
@@ -2504,6 +2542,14 @@ class GameState {
     if (this.tutorial && this.tutorial.isActive()) this.tutorial.onRunPressed();
     if (this.isAnimating) return;
     this.isAnimating = true;
+
+    // Day 54: Track attempt count per level
+    if (this.currentLevel && !this.isSandboxMode) {
+      const lvlId = this.currentLevel.id;
+      if (!this.progress.levels[lvlId]) this.progress.levels[lvlId] = {};
+      this.progress.levels[lvlId].attempts = (this.progress.levels[lvlId].attempts || 0) + 1;
+      this.saveProgress();
+    }
 
     try {
       this.audio.playButtonClick();
