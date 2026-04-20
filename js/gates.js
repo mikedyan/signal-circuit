@@ -65,6 +65,17 @@ const GateTypes = {
     height: 60,
     isMystery: true,
   },
+  // Day 55: 3-input mystery gate for Mastery Challenge 4
+  MYSTERY3: {
+    name: '???',
+    inputs: 3,
+    outputs: 1,
+    logic: (a, b, c) => ((a & b) | (b & c) | (a & c)) ? 1 : 0, // Secretly Majority
+    color: '#888',
+    width: 80,
+    height: 80,
+    isMystery: true,
+  },
 };
 
 class Gate {
@@ -128,6 +139,9 @@ class Gate {
     }
     if (this.def.inputs === 1) {
       this.outputValues[0] = this.def.logic(this.inputValues[0]);
+    } else if (this.def.inputs === 3) {
+      // Day 55: 3-input gate support (MYSTERY3)
+      this.outputValues[0] = this.def.logic(this.inputValues[0], this.inputValues[1], this.inputValues[2]);
     } else {
       this.outputValues[0] = this.def.logic(this.inputValues[0], this.inputValues[1]);
     }
@@ -206,6 +220,7 @@ class Gate {
         ctx.arc(cx + s * 0.9, cy, 3, 0, Math.PI * 2);
         ctx.stroke();
         break;
+      case 'MYSTERY3':
       case 'MYSTERY':
         // Mystery gate: question mark symbol with shimmer
         ctx.font = `bold ${Math.round(s * 1.8)}px Courier New`;

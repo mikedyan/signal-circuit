@@ -1,0 +1,16 @@
+{
+  "day": 55,
+  "title": "Endgame Mastery Challenges",
+  "items": [
+    "Unlock 'Mastery Challenges' section after all 6 main chapters completed",
+    "Mastery Challenge 1: 'XOR from NANDs' — build XOR using only NAND gates (4 NAND optimal)",
+    "Mastery Challenge 2: 'Full Adder from NORs' — build carry+sum using only NOR gates",
+    "Mastery Challenge 3: '3-to-8 Decoder' — massive 3-input, 8-output decoder challenge",
+    "Mastery Challenge 4: 'Reverse Engineer v2' — 3-input mystery gate, player deduces truth table by experimentation",
+    "Mastery Challenge 5: 'The Minimalist' — implement 4-input parity using ≤6 gates",
+    "'Mastery' tab on level select, styled gold/purple with distinctive visual treatment",
+    "Mastery completion awards unique cosmetic: 'Logician' wire color (cyan-gold gradient)",
+    "Separate mastery progress tracking (doesn't affect campaign stats)",
+    "'Master Logician' achievement — complete all 5 mastery challenges"
+  ]
+}

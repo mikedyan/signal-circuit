@@ -38,6 +38,8 @@ const ACHIEVEMENTS = [
   { id: 'perfectionist', name: 'Perfectionist', desc: 'Achieve 100% aesthetics score with 3+ gates', icon: '💯', tier: 'gold' },
   { id: 'efficiency_expert', name: 'Efficiency Expert', desc: 'Complete 10 gate limit challenges', icon: '⬦', tier: 'gold' },
   { id: 'circuit_architect', name: 'Circuit Architect', desc: 'Create 5 custom sub-circuits from solved levels', icon: '🏗️', tier: 'silver' },
+  // Day 55: Mastery Challenges
+  { id: 'master_logician', name: 'Master Logician', desc: 'Complete all 5 mastery challenges', icon: '👑', tier: 'gold' },
 ];
 
 const TIER_COLORS = {
@@ -369,6 +371,23 @@ class AchievementManager {
         }
       }
     }
+    return newlyUnlocked;
+  }
+
+  // Day 55: Check mastery achievements
+  checkMasteryAchievement() {
+    const newlyUnlocked = [];
+    try {
+      const mp = JSON.parse(localStorage.getItem('signal-circuit-mastery') || '{}');
+      if (typeof getMasteryChallenges === 'function') {
+        const challenges = getMasteryChallenges();
+        const allDone = challenges.every(ch => mp[ch.id] && mp[ch.id].completed);
+        if (allDone && this.unlock('master_logician')) {
+          newlyUnlocked.push('master_logician');
+        }
+      }
+    } catch(e) {}
+    if (newlyUnlocked.length > 0) this.save();
     return newlyUnlocked;
   }
 

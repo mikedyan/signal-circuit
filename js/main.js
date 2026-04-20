@@ -773,6 +773,8 @@ class GameState {
     this.leaderboard = this.loadLeaderboard();
     this.isSandboxMode = false;
     this.isChallengeMode = false;
+    this.isMasteryMode = false; // Day 55
+    this._currentMasteryId = null; // Day 55
     this.audio = new AudioEngine();
     this.achievements = new AchievementManager();
     this.cosmetics = new CosmeticManager(this);
@@ -1635,6 +1637,8 @@ class GameState {
     this.currentScreen = 'level-select';
     this.isSandboxMode = false;
     this.isChallengeMode = false;
+    this.isMasteryMode = false; // Day 55: Reset mastery mode
+    this._currentMasteryId = null;
     this.isGateLimitMode = false; // Day 45: Reset gate limit mode
     this.gateBudget = 0;
     // Day 48: Reset KB wiring state (but preserve mode preference)
@@ -2842,6 +2846,10 @@ class GameState {
               localStorage.setItem('communityCompleted', JSON.stringify(cc));
             }
           } catch(e) {}
+        }
+        // Day 55: Track mastery challenge completion
+        if (this.isMasteryMode && this._currentMasteryId && this.ui) {
+          this.ui.completeMasteryChallenge(this._currentMasteryId, gateCount, stars);
         }
         this.ui.updateResultDisplay('pass', '✓ CIRCUIT CORRECT!');
         this.ui.updateStatusBar('Level complete! All truth table rows match.');

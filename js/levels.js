@@ -2217,3 +2217,216 @@ const COMMUNITY_LEVELS = [
     gates: ['AND'], featured: false,
   },
 ];
+
+// ── Day 55: Mastery Challenges ──
+// Unlocked after completing all main campaign chapters (1-7, levels 1-34)
+const MASTERY_CHALLENGES = [
+  {
+    id: 'mastery_1',
+    title: 'XOR from NANDs',
+    description: 'Build an XOR gate using ONLY NAND gates. NAND is universal — prove it by constructing XOR from scratch.',
+    narrative: 'The ancient schematic shows a forgotten technique: any gate from NANDs alone.',
+    postSolveInsight: '🔓 XOR from 4 NANDs: NAND(NAND(A,NAND(A,B)), NAND(B,NAND(A,B))). This is how real chips implement XOR — pure NAND fabrication.',
+    hints: [
+      'NAND(A,A) = NOT(A). Start by building the NOT gates you need.',
+      'You need 4 NAND gates. First compute NAND(A,B), then use that result cleverly.',
+      'NAND(A, NAND(A,B)) gives one half. NAND(B, NAND(A,B)) gives the other. NAND those two results together.',
+    ],
+    availableGates: ['NAND'],
+    optimalGates: 4,
+    goodGates: 5,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0] },
+      { inputs: [0, 1], outputs: [1] },
+      { inputs: [1, 0], outputs: [1] },
+      { inputs: [1, 1], outputs: [0] },
+    ],
+    isMastery: true,
+    difficulty: 'Expert',
+  },
+  {
+    id: 'mastery_2',
+    title: 'Full Adder from NORs',
+    description: 'Build a full adder (SUM + CARRY) using ONLY NOR gates. The Apollo Guidance Computer was built entirely from NOR gates.',
+    narrative: 'The Apollo engineers did it with NOR alone. Can you?',
+    postSolveInsight: '🔓 A full adder from NOR gates requires careful double-negation. The Apollo AGC used ~5,600 NOR gates to navigate astronauts to the moon.',
+    hints: [
+      'NOR(A,A) = NOT(A). Build NOT from NOR first, then construct OR and AND from NOR+NOT.',
+      'For SUM: you need XOR(XOR(A,B),Cin). Build XOR from NOR gates step by step.',
+      'For CARRY: OR(AND(A,B), AND(Cin, XOR(A,B))). Each AND and OR can be built from NOR.',
+    ],
+    availableGates: ['NOR'],
+    optimalGates: 9,
+    goodGates: 12,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'Cin', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'SUM', x: 620, y: 130 },
+      { label: 'CARRY', x: 620, y: 270 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0, 0] },
+      { inputs: [0, 0, 1], outputs: [1, 0] },
+      { inputs: [0, 1, 0], outputs: [1, 0] },
+      { inputs: [0, 1, 1], outputs: [0, 1] },
+      { inputs: [1, 0, 0], outputs: [1, 0] },
+      { inputs: [1, 0, 1], outputs: [0, 1] },
+      { inputs: [1, 1, 0], outputs: [0, 1] },
+      { inputs: [1, 1, 1], outputs: [1, 1] },
+    ],
+    isMastery: true,
+    difficulty: 'Expert',
+  },
+  {
+    id: 'mastery_3',
+    title: '3-to-8 Decoder',
+    description: 'Route a 3-bit address to exactly one of eight output channels. Only the selected channel fires. The biggest circuit yet!',
+    narrative: 'Eight output lines, one address. The ultimate routing challenge.',
+    postSolveInsight: '🔓 3-to-8 decoders are used in memory address decoding. Your 8KB RAM chip has one of these selecting which byte to read.',
+    hints: [
+      'Each output fires for exactly one 3-bit combination. Y0 when ABC=000, Y7 when ABC=111.',
+      'Compute NOT(A), NOT(B), NOT(C) first — share them across all 8 AND gates.',
+      'Y0 = NOT(A) AND NOT(B) AND NOT(C). Chain two AND gates for each 3-input AND. Reuse the NOT outputs!',
+    ],
+    availableGates: ['AND', 'OR', 'NOT'],
+    optimalGates: 11,
+    goodGates: 14,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'C', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'Y0', x: 620, y: 30 },
+      { label: 'Y1', x: 620, y: 80 },
+      { label: 'Y2', x: 620, y: 130 },
+      { label: 'Y3', x: 620, y: 180 },
+      { label: 'Y4', x: 620, y: 230 },
+      { label: 'Y5', x: 620, y: 280 },
+      { label: 'Y6', x: 620, y: 330 },
+      { label: 'Y7', x: 620, y: 380 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [1, 0, 0, 0, 0, 0, 0, 0] },
+      { inputs: [0, 0, 1], outputs: [0, 1, 0, 0, 0, 0, 0, 0] },
+      { inputs: [0, 1, 0], outputs: [0, 0, 1, 0, 0, 0, 0, 0] },
+      { inputs: [0, 1, 1], outputs: [0, 0, 0, 1, 0, 0, 0, 0] },
+      { inputs: [1, 0, 0], outputs: [0, 0, 0, 0, 1, 0, 0, 0] },
+      { inputs: [1, 0, 1], outputs: [0, 0, 0, 0, 0, 1, 0, 0] },
+      { inputs: [1, 1, 0], outputs: [0, 0, 0, 0, 0, 0, 1, 0] },
+      { inputs: [1, 1, 1], outputs: [0, 0, 0, 0, 0, 0, 0, 1] },
+    ],
+    isMastery: true,
+    difficulty: 'Expert',
+  },
+  {
+    id: 'mastery_4',
+    title: 'Reverse Engineer v2',
+    description: 'A 3-input mystery gate with unknown behavior. Experiment with inputs to discover its truth table, then reproduce it.',
+    narrative: 'An alien logic component found in the ship\'s core. Reverse-engineer it.',
+    postSolveInsight: '🔓 This was a majority gate — the most common fault-tolerant voting circuit. Reverse engineering unknown hardware is a real skill used in security research.',
+    hints: [
+      'Place a MYSTERY gate and toggle all 8 input combinations to map its behavior.',
+      'The mystery gate outputs 1 when at least 2 of 3 inputs are 1. Recognize that pattern?',
+      'It\'s a majority function! Build it with AND+OR: check all three pairs, OR the results.',
+    ],
+    availableGates: ['MYSTERY3'],
+    optimalGates: 1,
+    goodGates: 1,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'C', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 0], outputs: [0] },
+      { inputs: [0, 1, 1], outputs: [1] },
+      { inputs: [1, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 1], outputs: [1] },
+      { inputs: [1, 1, 0], outputs: [1] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+    isMastery: true,
+    isDarkGate: true,
+    difficulty: 'Expert',
+  },
+  {
+    id: 'mastery_5',
+    title: 'The Minimalist',
+    description: 'Build 4-input even parity using AT MOST 6 gates. Every gate counts. Efficiency is everything.',
+    narrative: 'The ship\'s power budget is critical. Build this circuit with minimal components.',
+    postSolveInsight: '🔓 4-input parity in just 4 gates: XOR(XOR(A,B), XOR(C,D)) then NOT. Gate minimization is a billion-dollar industry — fewer transistors = cheaper, faster, cooler chips.',
+    hints: [
+      'Even parity = NOT(odd parity). Odd parity of 4 bits = XOR all four together.',
+      'XOR is associative: XOR(XOR(A,B), XOR(C,D)) gives 4-input odd parity in 3 gates.',
+      'Three XOR gates for odd parity, one NOT to flip to even parity. Four gates total — well within budget!',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR'],
+    optimalGates: 4,
+    goodGates: 6,
+    inputs: [
+      { label: 'A', x: 60, y: 80 },
+      { label: 'B', x: 60, y: 160 },
+      { label: 'C', x: 60, y: 240 },
+      { label: 'D', x: 60, y: 320 },
+    ],
+    outputs: [
+      { label: 'P', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0, 0], outputs: [1] },
+      { inputs: [0, 0, 0, 1], outputs: [0] },
+      { inputs: [0, 0, 1, 0], outputs: [0] },
+      { inputs: [0, 0, 1, 1], outputs: [1] },
+      { inputs: [0, 1, 0, 0], outputs: [0] },
+      { inputs: [0, 1, 0, 1], outputs: [1] },
+      { inputs: [0, 1, 1, 0], outputs: [1] },
+      { inputs: [0, 1, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 0, 1], outputs: [1] },
+      { inputs: [1, 0, 1, 0], outputs: [1] },
+      { inputs: [1, 0, 1, 1], outputs: [0] },
+      { inputs: [1, 1, 0, 0], outputs: [1] },
+      { inputs: [1, 1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1, 1], outputs: [1] },
+    ],
+    isMastery: true,
+    difficulty: 'Expert',
+  },
+];
+
+function getMasteryChallenges() {
+  return MASTERY_CHALLENGES;
+}
+
+function getMasteryChallenge(id) {
+  return MASTERY_CHALLENGES.find(m => m.id === id) || null;
+}
+
+function isCampaignComplete(progress) {
+  // All main campaign levels (chapters 1-7, levels 1-34) must be completed
+  const mainChapters = CHAPTERS.filter(c => !c.isBonus);
+  for (const chapter of mainChapters) {
+    for (const levelId of chapter.levels) {
+      const p = progress.levels[levelId];
+      if (!p || !p.completed) return false;
+    }
+  }
+  return true;
+}

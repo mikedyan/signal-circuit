@@ -5965,3 +5965,61 @@ body.light-mode .community-featured-card {
 #save-subcircuit-btn:hover {
   background: rgba(0, 188, 212, 0.2);
 }
+
+/* ── Day 55: Mastery Challenges ── */
+#mastery-section {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid rgba(180, 130, 255, 0.3);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(100, 50, 180, 0.08), rgba(200, 170, 0, 0.05));
+}
+
+.mastery-title {
+  color: #c8a0ff !important;
+  border-bottom-color: #9966cc !important;
+  text-shadow: 0 0 8px rgba(180, 130, 255, 0.4);
+}
+
+#mastery-levels-grid .level-btn.mastery-level {
+  border-color: #7744aa;
+  background: linear-gradient(135deg, rgba(100, 50, 180, 0.15), rgba(200, 170, 0, 0.1));
+  position: relative;
+}
+
+#mastery-levels-grid .level-btn.mastery-level:hover {
+  border-color: #aa66dd;
+  background: linear-gradient(135deg, rgba(100, 50, 180, 0.25), rgba(200, 170, 0, 0.15));
+  box-shadow: 0 0 12px rgba(180, 130, 255, 0.3);
+}
+
+#mastery-levels-grid .level-btn.mastery-level.completed {
+  border-color: #d4af37;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(100, 50, 180, 0.1));
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+#mastery-levels-grid .level-btn.mastery-level .level-number {
+  color: #c8a0ff;
+  font-size: 14px;
+}
+
+#mastery-levels-grid .level-btn.mastery-level.completed .level-number {
+  color: #d4af37;
+}
+
+.mastery-badge {
+  font-size: 10px;
+  color: #d4af37;
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* Logician cosmetic wire preview */
+.logician-wire-preview {
+  width: 30px;
+  height: 3px;
+  background: linear-gradient(90deg, #00e5ff, #d4af37);
+  border-radius: 2px;
+  margin: 4px auto 0;
+}
