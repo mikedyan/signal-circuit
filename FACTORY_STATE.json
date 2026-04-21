@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 55,
-  "nextDay": 56,
-  "totalItemsCompleted": 351,
-  "totalItems": 351,
-  "status": "Cycle 1 Build Week Day 3 \u2014 Endgame Mastery Challenges (10 items)",
-  "lastRun": "2026-04-20T08:18:00-07:00",
+  "lastCompletedDay": 56,
+  "nextDay": 57,
+  "totalItemsCompleted": 361,
+  "totalItems": 361,
+  "status": "Cycle 1 Build Week Day 4 \u2014 Campaign Difficulty Modes (10 items)",
+  "lastRun": "2026-04-21T08:08:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -352,14 +352,30 @@
       ],
       "status": "complete",
       "qa": "code-review-pass"
+    },
+    "56": {
+      "items": [
+        "Mode selector modal (Relaxed/Standard/Hardcore)",
+        "Relaxed: free unlimited hints (no token cost)",
+        "Relaxed: encouraging failure messages + skip anytime",
+        "Hardcore: zero hints (button hidden)",
+        "Hardcore: par timer always visible",
+        "Hardcore: star thresholds 20% tighter (goodGates * 0.8)",
+        "Mode persisted in localStorage, changeable in settings",
+        "Hardcore completion badge (\u2b26) on level select cards",
+        "Hardcore Completer achievement (gold tier)",
+        "First-launch difficulty suggestion + ui.js recovery"
+      ],
+      "status": "complete",
+      "qa": "browser-tested"
     }
   },
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
   "weekType": "build",
-  "weekDay": 3,
+  "weekDay": 4,
   "cycleNumber": 1,
-  "cycleDay": 3,
+  "cycleDay": 4,
   "weekSchedule": "build \u2192 harden \u2192 prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md"
 }
