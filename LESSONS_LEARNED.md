@@ -198,3 +198,15 @@
 - **`isMasteryMode` flag pattern for parallel mode tracking**: Adding a separate `isMasteryMode` flag (not reusing `isChallengeMode`) keeps mastery completion tracked independently without interfering with existing challenge/campaign flow.
 - **Cosmetic unlock as mastery reward**: Dynamically pushing to `COSMETIC_WIRE_COLORS` array at runtime when all mastery challenges are complete, plus persisting the unlock in localStorage, keeps the reward integrated with the existing cosmetic system without modifying the base definitions.
 - **Service worker caching aggressively blocks reloads during dev**: Even after bumping `?v=` params, the SW can serve old cached responses. Must clear SW caches AND unregister SW before testing. Always bump SW `CACHE_VERSION` alongside script cache busters.
+
+## Day 55 — Endgame Mastery Challenges (Fix: ui.js Recovery)
+- **File zeroing is a catastrophic silent bug**: Day 55 accidentally zeroed ui.js (5438 lines → 0 bytes) during the commit. The game loaded on GitHub Pages with no UI class, effectively broken. Always verify `wc -l` on key files before committing, especially after complex edits.
+- **Git history as backup**: `git show <commit>:path` reliably recovers any file version. Using `b65bb66:js/ui.js` recovered the full Day 54 UI class immediately.
+- **Mastery section rendering**: Checking `isCampaignComplete()` before showing the mastery section correctly gates expert content. Using a separate localStorage key (`signal-circuit-mastery`) keeps mastery progress independent from campaign progress.
+
+## Day 56 — Campaign Difficulty Modes
+- **Mode as behavior modifier, not forked code**: Using `isRelaxedMode()` and `isHardcoreMode()` checks at key decision points (hint spending, star calculation, timer visibility, skip button, failure messages) avoids duplicating the entire game loop. Keep the core path unchanged and gate behavior with mode checks.
+- **Guard in `updateHintButton`, not just `resetHintState`**: The hint button is updated from multiple call sites (level load, hint use, UI sync). Hiding the button only in `resetHintState` fails because `updateHintButton` re-shows it. The fix: add mode checks at the top of `updateHintButton` with early return — the centralized authority wins.
+- **Python string escaping + JS template literals = pain**: Using Python's `content.replace()` to inject JavaScript template literals (backticks, `${}`) causes double-escaping: `\`` and `\$` appear in the output. Solution: use raw strings in Python or avoid template literals in injected code. Always run `node -c file.js` after automated edits.
+- **Tighter star thresholds via `goodGates` multiplier**: Reducing `goodGates` by 20% (`Math.floor(level.goodGates * 0.8)`) with a floor of `optimalGates + 1` keeps the 3-star threshold unchanged while making 2-star harder. This feels appropriately challenging without being unfair.
+- **Separate `hardcoreCompleted` flag per level**: Instead of a separate progress structure, adding a boolean field to the existing level progress entry means zero migration code. The spread defaults pattern handles missing fields gracefully.

@@ -40,6 +40,7 @@ const ACHIEVEMENTS = [
   { id: 'circuit_architect', name: 'Circuit Architect', desc: 'Create 5 custom sub-circuits from solved levels', icon: '🏗️', tier: 'silver' },
   // Day 55: Mastery Challenges
   { id: 'master_logician', name: 'Master Logician', desc: 'Complete all 5 mastery challenges', icon: '👑', tier: 'gold' },
+  { id: 'hardcore_completer', name: 'Hardcore Completer', desc: 'Complete all campaign levels in Hardcore mode', icon: '⬦', tier: 'gold' },
 ];
 
 const TIER_COLORS = {

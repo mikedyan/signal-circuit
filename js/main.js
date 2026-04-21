@@ -34,6 +34,7 @@ const PLACEMENT_KEY = 'signal-circuit-placement-done';
 const DAILY_LB_KEY = 'signal-circuit-daily-leaderboard';
 const SKILL_KEY = 'signal-circuit-skill';
 const SUBCIRCUIT_KEY = 'signal-circuit-subcircuits';
+const DIFFICULTY_KEY = 'signal-circuit-difficulty-mode';
 const SCHEMA_VERSION = 1;
 
 // F29-4: Safe localStorage wrapper — graceful fallback on quota exceeded
@@ -859,6 +860,9 @@ class GameState {
     // Day 53: Sub-Circuit Abstraction
     this.subCircuits = new SubCircuitManager(this);
     this._replayViewer = null;
+    // Day 56: Campaign Difficulty Mode
+    this.difficultyMode = this._loadDifficultyMode();
+    this._hardcoreFailCount = 0;
   }
 
   // ── Hint Token System (Day 31) ──
@@ -874,8 +878,30 @@ class GameState {
     SafeStorage.setItem(TOKENS_KEY, JSON.stringify(this.hintTokens));
   }
 
+  // ── Day 56: Campaign Difficulty Mode ──
+  _loadDifficultyMode() {
+    try {
+      var saved = SafeStorage.getItem(DIFFICULTY_KEY);
+      if (saved === 'relaxed' || saved === 'hardcore') return saved;
+    } catch (e) {}
+    return 'standard';
+  }
+
+  setDifficultyMode(mode) {
+    if (mode === 'relaxed' || mode === 'hardcore' || mode === 'standard') {
+      this.difficultyMode = mode;
+      SafeStorage.setItem(DIFFICULTY_KEY, mode);
+    }
+  }
+
+  isRelaxedMode() { return this.difficultyMode === 'relaxed'; }
+  isHardcoreMode() { return this.difficultyMode === 'hardcore'; }
+
   spendHintToken() {
     if (this.hintTokens.tokens <= 0) return false;
+    // Day 56: Relaxed mode = free hints, Hardcore mode = no hints
+    if (this.isRelaxedMode()) return true;
+    if (this.isHardcoreMode()) return false;
     this.hintTokens.tokens--;
     this._saveHintTokens();
     return true;
@@ -1169,7 +1195,15 @@ class GameState {
       }
     } catch (e) { return; }
 
-    // Show after intro animation settles
+    // Day 56: Show difficulty selector before placement test for brand new players
+    if (!SafeStorage.getItem(DIFFICULTY_KEY)) {
+      setTimeout(() => {
+        if (this.ui) this.ui.showFirstLaunchDifficultyModal();
+      }, 3000);
+    }
+
+    // Show after intro animation settles (+ extra delay for difficulty modal)
+    const placementDelay = !SafeStorage.getItem(DIFFICULTY_KEY) ? 6000 : 3500;
     setTimeout(() => {
       if (this.ui) this.ui.showPlacementTest();
     }, 3500);
@@ -1536,8 +1570,10 @@ class GameState {
 
   calculateStars(gateCount, level) {
     let stars;
+    // Day 56: Hardcore mode has tighter star thresholds (goodGates reduced by 20%)
+    const goodThreshold = this.isHardcoreMode() ? Math.max(level.optimalGates + 1, Math.floor(level.goodGates * 0.8)) : level.goodGates;
     if (gateCount <= level.optimalGates) stars = 3;
-    else if (gateCount <= level.goodGates) stars = 2;
+    else if (gateCount <= goodThreshold) stars = 2;
     else stars = 1;
 
     // T8: Hints no longer reduce stars. Pure Logic badge tracked separately.
@@ -1560,6 +1596,7 @@ class GameState {
         bestGateCount: existing ? Math.min(existing.bestGateCount || gateCount, gateCount) : gateCount,
         bestTime: existing ? Math.min(existing.bestTime || elapsed, elapsed) : elapsed,
         pureLogic: pureLogic || (existing && existing.pureLogic), // Once earned, keep it
+        hardcoreCompleted: (this.isHardcoreMode() ? true : (existing && existing.hardcoreCompleted)), // Day 56
         lastPlayed: Date.now(), // Day 32 T10: track for spaced repetition
         completedAt: (existing && existing.completedAt) || Date.now(), // Day 54: first completion timestamp
         attempts: (existing && existing.attempts) || 0, // Day 54: preserve attempt count
@@ -1568,6 +1605,7 @@ class GameState {
       if (gateCount < (existing.bestGateCount || Infinity)) existing.bestGateCount = gateCount;
       if (elapsed < (existing.bestTime || Infinity)) existing.bestTime = elapsed;
       if (pureLogic) existing.pureLogic = true;
+      if (this.isHardcoreMode()) existing.hardcoreCompleted = true; // Day 56
       existing.lastPlayed = Date.now(); // Day 32 T10
       if (!existing.completedAt) existing.completedAt = Date.now(); // Day 54: backfill
     }
@@ -1858,6 +1896,8 @@ class GameState {
       if (!this.currentLevel || !this.currentLevel.hints) return;
       if (this.hintsUsed >= this.currentLevel.hints.length) return;
       if (this.isSandboxMode || this.isChallengeMode) return;
+      // Day 56: Hardcore mode has no hints
+      if (this.isHardcoreMode()) { this.ui.updateStatusBar("⚡ Hardcore mode — no hints available"); this.audio.playFail(); return; }
 
       // Day 31: Hint token economy
       if (!this.spendHintToken()) {
@@ -1906,6 +1946,8 @@ class GameState {
   showSkipButton() {
     if (this.skipVisible) return;
     if (this.isChallengeMode || this.isSandboxMode) return;
+    // Day 56: Hardcore mode never shows skip button
+    if (this.isHardcoreMode()) return;
     this.skipVisible = true;
     document.getElementById('skip-btn').style.display = '';
   }
@@ -1916,18 +1958,37 @@ class GameState {
     this.skipVisible = false;
     this.activeHintHighlights = null;
     this.levelStartTime = Date.now();
+    this._hardcoreFailCount = 0; // Day 56: Reset fail count per level
 
     document.getElementById('skip-btn').style.display = 'none';
     document.getElementById('hint-display').style.display = 'none';
-    if (this.ui) this.ui.updateHintButton(this.hintTokens.tokens);
 
-    // Show skip after 60 seconds
-    if (this._skipTimer) clearTimeout(this._skipTimer);
-    this._skipTimer = setTimeout(() => {
-      if (this.currentScreen === 'gameplay' && !this.isChallengeMode && !this.isSandboxMode) {
-        this.showSkipButton();
+    // Day 56: Mode-specific hint button behavior
+    if (this.isHardcoreMode()) {
+      document.getElementById('hint-btn').style.display = 'none';
+    } else {
+      document.getElementById('hint-btn').style.display = '';
+      if (this.isRelaxedMode()) {
+        document.getElementById('hint-btn').textContent = '\ud83d\udca1 Hint (Free)';
+      } else if (this.ui) {
+        this.ui.updateHintButton(this.hintTokens.tokens);
       }
-    }, 60000);
+    }
+
+    // Day 56: Relaxed mode shows skip immediately
+    if (this.isRelaxedMode()) {
+      this.showSkipButton();
+    }
+
+    // Show skip after 60 seconds (standard mode)
+    if (this._skipTimer) clearTimeout(this._skipTimer);
+    if (!this.isRelaxedMode() && !this.isHardcoreMode()) {
+      this._skipTimer = setTimeout(() => {
+        if (this.currentScreen === 'gameplay' && !this.isChallengeMode && !this.isSandboxMode) {
+          this.showSkipButton();
+        }
+      }, 60000);
+    }
   }
 
   startTimer() {
@@ -1936,7 +1997,14 @@ class GameState {
     const timerEl = document.getElementById('timer-display');
     if (timerEl) {
       // Hide timer during campaign play, show in challenge mode
-      timerEl.style.display = (this.isChallengeMode || this.isSandboxMode) ? '' : 'none';
+      // Day 56: Hardcore always shows timer, Relaxed always hides it
+      if (this.isHardcoreMode()) {
+        timerEl.style.display = '';
+      } else if (this.isRelaxedMode()) {
+        timerEl.style.display = 'none';
+      } else {
+        timerEl.style.display = (this.isChallengeMode || this.isSandboxMode) ? '' : 'none';
+      }
     }
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => this.updateTimerDisplay(), 1000);
@@ -2715,6 +2783,18 @@ class GameState {
                 const lbResult = this.dailyLeaderboard.submitScore(gateCount, elapsed, this.dailyLeaderboard.getDisplayName());
                 this.ui.showDailyLeaderboardResult(lbResult);
               }
+
+              // Day 56: Check Hardcore Completer achievement
+              if (this.isHardcoreMode()) {
+                const allLevels = typeof LEVELS !== 'undefined' ? LEVELS : [];
+                const allHardcore = allLevels.length > 0 && allLevels.every(l => {
+                  const p = this.progress.levels[l.id];
+                  return p && p.hardcoreCompleted;
+                });
+                if (allHardcore && this.achievements.unlock('hardcore_completer')) {
+                  newAchs.push('hardcore_completer');
+                }
+              }
               this.ui.showAchievementToasts(newAchs);
 
               // Day 45: Gate Limit completion
@@ -2748,14 +2828,27 @@ class GameState {
               this._shakeScreen(shakeIntensity);
               this.haptic(40); // #98: medium buzz for near-miss
               const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
-              this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
-              this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+              // Day 56: Mode-specific failure messages
+              if (this.isRelaxedMode()) {
+                this.ui.updateResultDisplay('almost', `Almost there! Just ${failCount} row${failCount > 1 ? 's' : ''} to go — you've got this! 💪`);
+                this.ui.updateStatusBar(`You're so close! Try tweaking the circuit near row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+              } else {
+                this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
+                this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+              }
+              if (this.isHardcoreMode()) { this._hardcoreFailCount++; this.ui.updateStatusBar(`Attempt ${this._hardcoreFailCount} — ${failCount} row${failCount > 1 ? 's' : ''} wrong`); }
             } else {
               this.audio.playFail();
               this._shakeScreen(shakeIntensity);
               this.haptic(80); // #98: long buzz for failure
-              this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
-              this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+              if (this.isRelaxedMode()) {
+                this.ui.updateResultDisplay('fail', `${passCount}/${total} rows correct — keep going! 🔧`);
+                this.ui.updateStatusBar('Not quite yet, but every attempt teaches you something!');
+              } else {
+                this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
+                this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+              }
+              if (this.isHardcoreMode()) { this._hardcoreFailCount++; this.ui.updateStatusBar(`Attempt ${this._hardcoreFailCount} — ${total - passCount} rows wrong`); }
             }
           }
         }
@@ -2885,6 +2978,18 @@ class GameState {
           const lbResult2 = this.dailyLeaderboard.submitScore(gateCount, elapsed, this.dailyLeaderboard.getDisplayName());
           this.ui.showDailyLeaderboardResult(lbResult2);
         }
+
+        // Day 56: Check Hardcore Completer achievement
+        if (this.isHardcoreMode()) {
+          const allLevelsQT = typeof LEVELS !== 'undefined' ? LEVELS : [];
+          const allHardcoreQT = allLevelsQT.length > 0 && allLevelsQT.every(l => {
+            const p = this.progress.levels[l.id];
+            return p && p.hardcoreCompleted;
+          });
+          if (allHardcoreQT && this.achievements.unlock('hardcore_completer')) {
+            newAchs.push('hardcore_completer');
+          }
+        }
         this.ui.showAchievementToasts(newAchs);
         // Day 45: Gate Limit completion
         if (this.isGateLimitMode) {
@@ -2912,14 +3017,27 @@ class GameState {
         this._shakeScreen(shakeIntensity);
         this.haptic(40); // #98
         const failingRows = results.map((r, i) => r.pass ? null : i + 1).filter(Boolean);
-        this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
-        this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+        // Day 56: Mode-specific failure messages
+        if (this.isRelaxedMode()) {
+          this.ui.updateResultDisplay('almost', `Almost there! Just ${failCount} row${failCount > 1 ? 's' : ''} to go — you've got this! 💪`);
+          this.ui.updateStatusBar(`You're so close! Try tweaking near row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+        } else {
+          this.ui.updateResultDisplay('almost', `Almost! ${failCount === 1 ? 'Just 1 row' : `Just ${failCount} rows`} off`);
+          this.ui.updateStatusBar(`So close! Check row${failCount > 1 ? 's' : ''} ${failingRows.join(', ')}`);
+        }
+        if (this.isHardcoreMode()) { this._hardcoreFailCount++; this.ui.updateStatusBar(`Attempt ${this._hardcoreFailCount} — ${failCount} row${failCount > 1 ? 's' : ''} wrong`); }
       } else {
         this.audio.playFail();
         this._shakeScreen(shakeIntensity);
         this.haptic(80); // #98
-        this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
-        this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+        if (this.isRelaxedMode()) {
+          this.ui.updateResultDisplay('fail', `${passCount}/${total} rows correct — keep going! 🔧`);
+          this.ui.updateStatusBar('Not quite yet, but every attempt teaches!');
+        } else {
+          this.ui.updateResultDisplay('fail', `✗ ${passCount}/${total} rows correct`);
+          this.ui.updateStatusBar('Some rows don\'t match. Check your circuit.');
+        }
+        if (this.isHardcoreMode()) { this._hardcoreFailCount++; this.ui.updateStatusBar(`Attempt ${this._hardcoreFailCount} — ${total - passCount} rows wrong`); }
       }
     }
   }
