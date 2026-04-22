@@ -5,10 +5,10 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
   <meta name="theme-color" content="#00ff00">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1776785133">
+  <link rel="stylesheet" href="css/style.css?v=1776871255">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -581,6 +581,12 @@
 
   <!-- Mobile delete button -->
   <div id="mobile-delete-btn" style="display:none;">🗑</div>
+  <!-- Day 57: Double-tap gate context menu -->
+  <div id="gate-context-menu" style="display:none;">
+    <button class="gate-ctx-btn" data-action="delete">🗑 Delete</button>
+    <button class="gate-ctx-btn" data-action="duplicate">📋 Duplicate</button>
+    <button class="gate-ctx-btn" data-action="info">ℹ️ Info</button>
+  </div>
 
   <!-- Drag ghost element -->
   <div id="drag-ghost"></div>
@@ -617,15 +623,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1776785133"></script>
-  <script src="js/wires.js?v=1776785133"></script>
-  <script src="js/simulation.js?v=1776785133"></script>
-  <script src="js/levels.js?v=1776785133"></script>
-  <script src="js/audio.js?v=1776785133"></script>
-  <script src="js/achievements.js?v=1776785133"></script>
-  <script src="js/canvas.js?v=1776785133"></script>
-  <script src="js/ui.js?v=1776785133"></script>
-  <script src="js/tutorial.js?v=1776785133"></script>
-  <script src="js/main.js?v=1776785133"></script>
+  <script src="js/gates.js?v=1776871255"></script>
+  <script src="js/wires.js?v=1776871255"></script>
+  <script src="js/simulation.js?v=1776871255"></script>
+  <script src="js/levels.js?v=1776871255"></script>
+  <script src="js/audio.js?v=1776871255"></script>
+  <script src="js/achievements.js?v=1776871255"></script>
+  <script src="js/canvas.js?v=1776871255"></script>
+  <script src="js/ui.js?v=1776871255"></script>
+  <script src="js/tutorial.js?v=1776871255"></script>
+  <script src="js/main.js?v=1776871255"></script>
 </body>
 </html>

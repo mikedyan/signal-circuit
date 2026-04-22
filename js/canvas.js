@@ -983,7 +983,7 @@ class CanvasRenderer {
   findPinAt(mx, my, threshold) {
     if (!threshold) {
       const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const base = isMobile ? 36 : 18;
+      const base = isMobile ? 44 : 18; // Day 57: 44px Apple HIG minimum
       // Adjust for zoom: keep consistent screen-space touch target
       const scale = this.viewTransform ? this.viewTransform.scale : 1;
       threshold = Math.min(base / scale, 60);

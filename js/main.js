@@ -1070,6 +1070,58 @@ class GameState {
     } catch (e) {}
   }
 
+  // Day 57: Double-tap gate context menu
+  _showGateContextMenu(gate, touch) {
+    const menu = document.getElementById('gate-context-menu');
+    if (!menu) return;
+    this.haptic(25);
+
+    // Position near the touch point
+    const x = Math.min(touch.clientX, window.innerWidth - 160);
+    const y = Math.max(touch.clientY - 120, 10);
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+    menu.style.display = 'flex';
+    menu._targetGate = gate;
+
+    // Wire up handlers (once)
+    if (!menu._wired) {
+      menu._wired = true;
+      menu.addEventListener('click', (e) => {
+        const btn = e.target.closest('.gate-ctx-btn');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const g = menu._targetGate;
+        if (!g) return;
+
+        if (action === 'delete') {
+          this.removeGate(g);
+          this.haptic(30);
+        } else if (action === 'duplicate') {
+          const newGate = this.addGate(g.type, g.x + 40, g.y + 40);
+          if (newGate) {
+            this.selectedGate = newGate;
+            this.haptic(15);
+          }
+        } else if (action === 'info') {
+          const def = g.def || GateTypes[g.type];
+          if (def) {
+            this.ui.updateStatusBar(def.name + ': ' + (def.desc || g.type));
+          }
+        }
+        menu.style.display = 'none';
+        this.markDirty();
+      });
+
+      // Dismiss on outside tap
+      document.addEventListener('touchstart', (e) => {
+        if (!menu.contains(e.target) && menu.style.display !== 'none') {
+          menu.style.display = 'none';
+        }
+      });
+    }
+  }
+
   // #96: Start timer on first user action (not level load)
   _startTimerIfPending() {
     if (this.timerPending && !this.timerRunning) {
@@ -3081,6 +3133,10 @@ class GameState {
     let longPressTimer = null;
     let touchMoved = false;
 
+    // Day 57: Double-tap gate context menu tracking
+    let lastGateTapTime = 0;
+    let lastGateTapId = null;
+
     // ── I/O node drag ──
     let isDraggingIONode = false;
     let dragIONode = null;
@@ -3352,11 +3408,21 @@ class GameState {
         this.markDirty();
       }
 
-      // Gate tap-to-connect (when tapped without dragging)
+      // Gate tap-to-connect OR double-tap context menu (Day 57)
       if (isDraggingGate && dragGate && !touchMoved) {
-        if (this.tapConnectSource !== null) {
+        const now = Date.now();
+        if (lastGateTapId === dragGate.id && now - lastGateTapTime < 350) {
+          // Double-tap detected — show context menu
+          lastGateTapTime = 0;
+          lastGateTapId = null;
+          this._showGateContextMenu(dragGate, e.changedTouches[0]);
+        } else if (this.tapConnectSource !== null) {
           this._executeTapConnect(dragGate.id);
+          lastGateTapTime = 0;
+          lastGateTapId = null;
         } else {
+          lastGateTapTime = now;
+          lastGateTapId = dragGate.id;
           this._setTapConnectSource(dragGate.id);
         }
       }

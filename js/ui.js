@@ -245,6 +245,33 @@ class UI {
       });
     });
     this.renderLevelSelect();
+
+    // Day 57: Pull-to-refresh on level select
+    if (this.isTouchDevice) {
+      const lsContent = document.getElementById('level-select-content');
+      let pullStartY = 0;
+      let pulling = false;
+      lsContent.addEventListener('touchstart', (e) => {
+        if (lsContent.scrollTop <= 0) {
+          pullStartY = e.touches[0].clientY;
+          pulling = true;
+        }
+      }, { passive: true });
+      lsContent.addEventListener('touchmove', (e) => {
+        if (!pulling) return;
+        const dy = e.touches[0].clientY - pullStartY;
+        if (dy > 80 && lsContent.scrollTop <= 0) {
+          pulling = false;
+          this.renderLevelSelect();
+          this.gameState.audio.playClick();
+          // Brief visual feedback
+          lsContent.style.transition = 'transform 0.2s';
+          lsContent.style.transform = 'translateY(8px)';
+          setTimeout(() => { lsContent.style.transform = ''; }, 200);
+        }
+      }, { passive: true });
+      lsContent.addEventListener('touchend', () => { pulling = false; }, { passive: true });
+    }
   }
 
   renderLevelSelect() {
@@ -757,8 +784,12 @@ class UI {
   // ── Controls ──
   setupControls() {
     document.getElementById('run-btn').addEventListener('click', () => {
+      this.gameState.haptic(40); // Day 57: Haptic on RUN press
       this.gameState.runSimulation();
     });
+
+
+
 
     document.getElementById('quick-test-btn').addEventListener('click', () => {
       this.gameState.runQuickTest();
