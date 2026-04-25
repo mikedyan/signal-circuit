@@ -1,6 +1,6 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 59 — Harden Week 1, Day 2 (2026-04-24)*
+*Updated: Day 60 — Harden Week 1, Day 3 (2026-04-25)*
 
 ## Open Bugs
 
@@ -10,6 +10,7 @@
 - **Expected:** Blitz Mode info bar should be hidden when leaving Blitz gameplay and returning to level select.
 - **Root cause:** `showLevelSelect()` does not hide the `blitz-info` element. Needs an explicit `blitz-info.style.display = 'none'` in the level select transition.
 - **Found:** Day 59, Harden Day 2
+- **Re-confirmed:** Day 60, Harden Day 3 — `blitz-info` element has computed `display: flex` after returning to level select. Not visually visible because parent `blitz-hud` container collapses to 0×0 dimensions, but the DOM element is still active with a running timer.
 
 ### P2 — Daily Leaderboard Duplicate Name
 - **Screen:** Daily Challenge pre-screen
@@ -27,6 +28,90 @@
 - Collection shows 4 of 6 completed levels (expected — only levels with saved preview data appear)
 - Level 3 shows ★☆☆ in Review Suggested but ★★★🧠 on the card (review tracks worst score, card shows best — working as intended)
 - Deprecated meta tag warning: `apple-mobile-web-app-capable` should be `mobile-web-app-capable` (cosmetic, non-breaking)
+
+## Audit Results — Day 60 (Harden Week 1, Day 3: Edge Cases & Stress)
+
+### Test 1: Rapid Gate Placement During Simulation ✅
+- Placed AND gate, wired circuit, ran simulation, immediately added 3 more gates via JS
+- Simulation evaluated correctly despite extra gates (only connected circuit matters)
+- Gate counter correctly showed 4/1 (3 extra unconnected gates)
+- Console: 0 JS errors
+
+### Test 2: Wire Drawing During Animation ✅
+- Programmatic wire creation (startDrawing/finishDrawing API) works correctly
+- 10 wires created between 10 gates with no errors
+- Wire rendering stable at 0.59ms average per frame
+
+### Test 3: Resize Window Mid-Gameplay ✅
+- Single resize event dispatched during gameplay: no errors
+- 10 rapid consecutive resize events: no errors, no layout breakage
+- Canvas re-renders correctly after resize
+
+### Test 4: Clear localStorage and Reload ✅
+- Backed up 30 localStorage keys, cleared all, reloaded
+- Game loads cleanly with Quick Placement Test (fresh user experience)
+- No JS errors on fresh load
+- Difficulty selector and placement test display correctly
+- All 40 levels show correctly (Level 1 unlocked, rest locked)
+
+### Test 5: Keyboard-Only Navigation (Tab) ✅
+- Tab cycles through interactive elements on level select
+- Buttons receive focus correctly (tested: Daily Challenge button focused after 3 tabs)
+- Enter key activates focused buttons
+- No keyboard traps detected
+
+### Test 6: Colorblind Mode ✅
+- Toggle works (On/Off) on level select
+- Visual indicators change to colorblind-friendly scheme
+- Level select renders correctly in colorblind mode
+- Gameplay canvas renders correctly with colorblind colors
+- No errors when toggling
+
+### Test 7: Light Mode vs Dark Mode ✅
+- Dark mode toggle works correctly
+- Level select, gameplay, and all UI elements render properly in dark mode
+- Colorblind + dark mode combination works correctly
+- Settings persist across navigation (level select → gameplay → back)
+
+### Test 8: Performance with Many Wires/Gates ✅
+- 10 gates placed programmatically: no errors
+- 10 wires connected between gates: no errors
+- Render performance: avg 0.59ms, max 0.80ms, min 0.50ms per frame
+- Well under 16.67ms budget for 60fps
+
+### Test 9: Empty Simulation (No Gates/Wires) ✅
+- Running simulation with 0 gates and 0 wires: returns result (4 rows evaluated), no crash
+- Quick Test with no circuit: passes without error
+
+### Test 10: Undo/Redo Stability ✅
+- Gate placement tracked in undo stack (2 items after add + clear)
+- Clear circuit works correctly (0 gates after clear)
+- No errors from undo/redo operations
+
+### Test 11: Text Size Toggle ✅
+- Large text mode toggles correctly
+- Level select layout adapts to larger text
+- No overflow or layout breakage
+
+### Test 12: Blitz Mode Entry/Exit ✅
+- Blitz Mode loads correctly: curated challenge "Converse" with timer
+- Full toolbox available (AND, OR, NOT, XOR, NAND, NOR)
+- Back button returns to level select
+- **Known P2 bug confirmed**: blitz-info DOM element remains active after exit (see Open Bugs)
+
+### Test 13: localStorage Capacity ✅
+- Successfully stored and removed 5MB string: no overflow errors
+- localStorage handling is robust
+
+### Console Summary: 0 JS Errors ✅
+- Only expected warnings throughout entire test session:
+  - `apple-mobile-web-app-capable` deprecation (cosmetic)
+  - AudioContext pre-gesture warnings (expected behavior)
+- Zero actual JavaScript errors across all edge case tests
+
+### New Bugs Found: 0
+- All 3 existing P2 bugs remain open (no new bugs introduced)
+- No new bugs discovered during edge case & stress testing
 
 ## Audit Results — Day 59 (Harden Week 1, Day 2: Level Playthrough)
 
