@@ -380,6 +380,8 @@ class DailyLeaderboard {
     const lbRand = this._seededRand(seed + 999);
 
     const scores = [];
+    // Day 61 (Harden Day 4): track used names to enforce uniqueness — fixes P2 duplicate name bug
+    const usedNames = new Set();
     for (let i = 0; i < 50; i++) {
       // Bell-curve-ish distribution: most around optimal+2, some outliers
       const r1 = lbRand();
@@ -394,12 +396,24 @@ class DailyLeaderboard {
       const gateTimePenalty = (gates - optimalGates) * Math.floor(15 + lbRand() * 20);
       const time = baseTime + gateTimePenalty;
 
-      // Generate anonymous name
-      const nameIdx = Math.floor(lbRand() * DAILY_LB_NAMES.length);
+      // Generate anonymous name — enforce uniqueness by walking the name list on collision
+      let nameIdx = Math.floor(lbRand() * DAILY_LB_NAMES.length);
+      let pickedName = DAILY_LB_NAMES[nameIdx];
+      let probes = 0;
+      while (usedNames.has(pickedName) && probes < DAILY_LB_NAMES.length) {
+        nameIdx = (nameIdx + 1) % DAILY_LB_NAMES.length;
+        pickedName = DAILY_LB_NAMES[nameIdx];
+        probes++;
+      }
+      // If the entire pool is exhausted, suffix a numeric tag for stability
+      if (usedNames.has(pickedName)) {
+        pickedName = pickedName + '_' + i;
+      }
+      usedNames.add(pickedName);
       scores.push({
         gates: gates,
         time: time,
-        name: DAILY_LB_NAMES[nameIdx],
+        name: pickedName,
         isPlayer: false
       });
     }
