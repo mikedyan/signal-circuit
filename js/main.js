@@ -1733,6 +1733,13 @@ class GameState {
     this.gateBudget = 0;
     // Day 48: Reset KB wiring state (but preserve mode preference)
     this._kbResetOnLevelChange();
+    // Day 61 (Harden Day 4): Defensive Blitz/Speedrun HUD cleanup — fixes P2 blitz-info persistence
+    if (this.blitzMode || this.blitzTimer) {
+      if (this.blitzTimer) { clearInterval(this.blitzTimer); this.blitzTimer = null; }
+      this.blitzMode = false;
+      const _bh = document.getElementById('blitz-hud');
+      if (_bh) _bh.style.display = 'none';
+    }
     this.stopTimer();
     this.trackPlaytimeEnd();
     // Day 54: Log session entry
