@@ -4479,7 +4479,12 @@ class UI {
 
     // ── Item 6: Session History ──
     html += '<div class="stat-card stat-card-wide"><h4 style="color:#0f0;margin:4px 0;">📋 Recent Sessions</h4>';
-    const sessions = (stats.sessions || []).slice().reverse();
+    // Day 61 (Harden Day 4): Filter empty sessions from display — fixes P2 stats empty-row bug
+    // (also covers any legacy 0-level rows already persisted)
+    const sessions = (stats.sessions || [])
+      .filter(s => s && (s.levelsPlayed || 0) > 0)
+      .slice()
+      .reverse();
     if (sessions.length === 0) {
       html += '<div style="color:#666;font-size:11px;">No sessions logged yet</div>';
     } else {

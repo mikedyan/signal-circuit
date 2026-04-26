@@ -1523,11 +1523,18 @@ class GameState {
     if (!this._sessionStartTime) return;
     const elapsed = Math.floor((Date.now() - this._sessionStartTime) / 1000);
     if (elapsed < 5) return; // Skip trivially short sessions
-    const stats = this.loadLifetimeStats();
-    if (!stats.sessions) stats.sessions = [];
     // Count levels played and stars earned this session
     const sessionLevels = this._sessionLevelsPlayed || 0;
     const sessionStars = this._sessionStarsEarned || 0;
+    // Day 61 (Harden Day 4): Don't record sessions where no level was actually played —
+    // fixes P2 "empty sessions in stats" bug. Page navigations no longer create rows.
+    if (sessionLevels <= 0) {
+      this._sessionLevelsPlayed = 0;
+      this._sessionStarsEarned = 0;
+      return;
+    }
+    const stats = this.loadLifetimeStats();
+    if (!stats.sessions) stats.sessions = [];
     stats.sessions.push({
       date: Date.now(),
       levelsPlayed: sessionLevels,
