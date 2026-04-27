@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 61,
-  "nextDay": 62,
-  "totalItemsCompleted": 371,
-  "totalItems": 371,
-  "status": "Cycle 1 Harden Week Day 4 \u2014 Fix Everything (3/3 P2 bugs fixed, 0 open, headless verified across 10 date seeds)",
-  "lastRun": "2026-04-26T08:15:00-07:00",
+  "lastCompletedDay": 62,
+  "nextDay": 63,
+  "totalItemsCompleted": 386,
+  "totalItems": 386,
+  "status": "Cycle 1 Harden Week COMPLETE \u2014 3 P2 bugs found, 3/3 fixed, 0 open. Live regression pass clean. Ready for Prune Week.",
+  "lastRun": "2026-04-27T08:30:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -482,14 +482,42 @@
         "P1": 0,
         "P2": 0
       }
+    },
+    "62": {
+      "items": [
+        "Live regression on https://mikedyan.github.io/signal-circuit/ (v=1777216661, sw v42)",
+        "Build identity verified \u2014 10 JS modules cache-busted",
+        "Level 1 entry: gameplay-screen, GameState OK, canvas 1640x1668, 4 truth-table rows",
+        "Daily Challenge mode \u2192 daily-config-screen \u2705",
+        "Random Challenge mode \u2192 challenge-config-screen \u2705",
+        "Blitz mode immediate start \u2192 gameplay-screen \u2705",
+        "Speedrun mode immediate start \u2192 gameplay-screen \u2705",
+        "Sandbox mode \u2192 sandbox-config-screen \u2705",
+        "Stats / Achievements / Encyclopedia / Customize / Profile / Collection modals all open",
+        "Day 61 fix #1 verified live: blitzHudCount=0 on level-select after Blitz exit",
+        "Day 61 fix #2 verified live: 10/10 date seeds, 50/50 unique names + top-10 unique",
+        "Day 61 fix #3 verified live: _logSession + renderStats filter logic in place",
+        "Console: 0 errors (only standard AudioContext autoplay warnings)",
+        "Wrote reviews/harden-cycle-1-week-summary.md",
+        "0 new bugs found during regression sweep"
+      ],
+      "status": "complete",
+      "qa": "harden-regression",
+      "bugsFound": 0,
+      "bugsFixed": 0,
+      "severity": {
+        "P0": 0,
+        "P1": 0,
+        "P2": 0
+      }
     }
   },
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
-  "weekType": "harden",
-  "weekDay": 4,
+  "weekType": "prune",
+  "weekDay": 0,
   "cycleNumber": 1,
-  "cycleDay": 9,
+  "cycleDay": 10,
   "weekSchedule": "build \u2192 harden \u2192 prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md",
   "hardenWeek": {
@@ -499,6 +527,8 @@
     "auditComplete": true,
     "playthroughComplete": true,
     "edgeCasesComplete": true,
-    "fixDayComplete": true
+    "fixDayComplete": true,
+    "regressionComplete": true,
+    "summary": "reviews/harden-cycle-1-week-summary.md"
   }
 }
