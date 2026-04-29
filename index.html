@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1777216661">
+  <link rel="stylesheet" href="css/style.css?v=1777737600">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -90,8 +90,9 @@
           <div id="mastery-levels-grid" class="level-grid"></div>
         </div>
 
-        <button id="create-level-btn" class="challenge-btn" style="margin-top:10px;" aria-label="Create custom level">✏️ Create Level</button>
+        <button id="create-level-btn" class="challenge-btn" style="margin-top:10px;" aria-label="Open level creator">✏️ Creator</button>
         <button id="how-to-play-btn" class="challenge-btn" style="margin-top:10px;" aria-label="How to Play">📖 How to Play</button>
+        <button id="open-settings-btn" class="challenge-btn" style="margin-top:10px;" aria-label="Open settings">⚙️ Settings</button>
         <div id="info-buttons-row">
           <button id="encyclopedia-btn" class="challenge-btn info-btn" aria-label="Gate Encyclopedia">📚 Gate Encyclopedia</button>
           <button id="achievements-btn" class="challenge-btn info-btn" aria-label="Achievements">🏆 Achievements</button>
@@ -105,35 +106,54 @@
           <button id="collection-btn" class="challenge-btn info-btn" aria-label="Circuit Collection">🗂️ Collection</button>
           <button id="profile-btn" class="challenge-btn info-btn" aria-label="Logic Profile">🧬 Logic Profile</button>
         </div>
-        <div id="settings-row">
-          <button id="colorblind-toggle-btn" class="settings-btn" aria-label="Toggle colorblind mode">👁 Colorblind Mode: Off</button>
-          <button id="fontsize-toggle-btn" class="settings-btn" aria-label="Toggle text size">🔤 Text: Normal</button>
-          <button id="simplified-visual-btn" class="settings-btn" aria-label="Toggle simplified visual mode">🧩 Simplified: Off</button>
-          <button id="accessible-wiring-btn" class="settings-btn" aria-label="Toggle accessible wiring mode">🔌 Accessible Wiring: Off</button>
-          <button id="light-mode-btn" class="settings-btn" aria-label="Toggle light mode">🌙 Dark Mode</button>
-          <button id="difficulty-mode-btn" class="settings-btn" aria-label="Change difficulty mode">🔧 Mode: Standard</button>
-        </div>
-        <div id="ls-volume-row" style="margin-top:8px;display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">
-          <div class="vol-row ls-vol">
-            <span class="vol-icon" id="ls-sfx-icon" title="SFX volume" role="button" tabindex="0">🔊</span>
-            <input type="range" id="ls-sfx-slider" min="0" max="100" value="40" aria-label="SFX volume" class="vol-slider sfx-slider">
+      </div>
+    </div>
+
+    <!-- Day 64 (Prune): Consolidated Settings Modal -->
+    <div id="settings-modal" style="display:none;">
+      <div id="settings-content">
+        <h3>⚙️ Settings</h3>
+        <div class="settings-section">
+          <h4>Display & Accessibility</h4>
+          <div id="settings-row">
+            <button id="colorblind-toggle-btn" class="settings-btn" aria-label="Toggle colorblind mode">👁 Colorblind Mode: Off</button>
+            <button id="fontsize-toggle-btn" class="settings-btn" aria-label="Toggle text size">🔤 Text: Normal</button>
+            <button id="simplified-visual-btn" class="settings-btn" aria-label="Toggle simplified visual mode">🧩 Simplified: Off</button>
+            <button id="accessible-wiring-btn" class="settings-btn" aria-label="Toggle accessible wiring mode">🔌 Accessible Wiring: Off</button>
+            <button id="light-mode-btn" class="settings-btn" aria-label="Toggle light mode">🌙 Dark Mode</button>
+            <button id="difficulty-mode-btn" class="settings-btn" aria-label="Change difficulty mode">🔧 Mode: Standard</button>
           </div>
-          <div class="vol-row ls-vol">
-            <span class="vol-icon" id="ls-music-icon" title="Music volume" role="button" tabindex="0">🎵</span>
-            <input type="range" id="ls-music-slider" min="0" max="100" value="20" aria-label="Music volume" class="vol-slider music-slider">
+        </div>
+        <div class="settings-section">
+          <h4>Audio</h4>
+          <div id="ls-volume-row" style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;">
+            <div class="vol-row ls-vol">
+              <span class="vol-icon" id="ls-sfx-icon" title="SFX volume" role="button" tabindex="0">🔊</span>
+              <input type="range" id="ls-sfx-slider" min="0" max="100" value="40" aria-label="SFX volume" class="vol-slider sfx-slider">
+            </div>
+            <div class="vol-row ls-vol">
+              <span class="vol-icon" id="ls-music-icon" title="Music volume" role="button" tabindex="0">🎵</span>
+              <input type="range" id="ls-music-slider" min="0" max="100" value="20" aria-label="Music volume" class="vol-slider music-slider">
+            </div>
           </div>
         </div>
-        <!-- Day 52: Notification Settings -->
-        <div id="notif-settings-row" style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-          <button id="notif-daily-btn" class="settings-btn" aria-label="Toggle daily challenge notification">🔔 Daily: On</button>
-          <button id="notif-weekly-btn" class="settings-btn" aria-label="Toggle weekly puzzle notification">📅 Weekly: On</button>
-          <button id="notif-streak-btn" class="settings-btn" aria-label="Toggle streak alert notification">🔥 Streak: On</button>
+        <div class="settings-section">
+          <h4>Notifications</h4>
+          <div id="notif-settings-row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button id="notif-daily-btn" class="settings-btn" aria-label="Toggle daily challenge notification">🔔 Daily: On</button>
+            <button id="notif-weekly-btn" class="settings-btn" aria-label="Toggle weekly puzzle notification">📅 Weekly: On</button>
+            <button id="notif-streak-btn" class="settings-btn" aria-label="Toggle streak alert notification">🔥 Streak: On</button>
+          </div>
         </div>
-        <div id="sync-row" style="margin-top:8px;display:flex;gap:8px;justify-content:center;">
-          <button id="export-progress-btn" class="settings-btn" aria-label="Export progress">📤 Export Progress</button>
-          <button id="import-progress-btn" class="settings-btn" aria-label="Import progress">📥 Import Progress</button>
+        <div class="settings-section">
+          <h4>Data</h4>
+          <div id="sync-row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button id="export-progress-btn" class="settings-btn" aria-label="Export progress">📤 Export Progress</button>
+            <button id="import-progress-btn" class="settings-btn" aria-label="Import progress">📥 Import Progress</button>
+            <button id="reset-progress-btn" class="settings-btn" aria-label="Reset all progress">⚠ Reset Progress</button>
+          </div>
         </div>
-        <button id="reset-progress-btn" aria-label="Reset all progress">Reset Progress</button>
+        <button id="settings-close">Close</button>
       </div>
     </div>
 
@@ -623,15 +643,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1777216661"></script>
-  <script src="js/wires.js?v=1777216661"></script>
-  <script src="js/simulation.js?v=1777216661"></script>
-  <script src="js/levels.js?v=1777216661"></script>
-  <script src="js/audio.js?v=1777216661"></script>
-  <script src="js/achievements.js?v=1777216661"></script>
-  <script src="js/canvas.js?v=1777216661"></script>
-  <script src="js/ui.js?v=1777216661"></script>
-  <script src="js/tutorial.js?v=1777216661"></script>
-  <script src="js/main.js?v=1777216661"></script>
+  <script src="js/gates.js?v=1777737600"></script>
+  <script src="js/wires.js?v=1777737600"></script>
+  <script src="js/simulation.js?v=1777737600"></script>
+  <script src="js/levels.js?v=1777737600"></script>
+  <script src="js/audio.js?v=1777737600"></script>
+  <script src="js/achievements.js?v=1777737600"></script>
+  <script src="js/canvas.js?v=1777737600"></script>
+  <script src="js/ui.js?v=1777737600"></script>
+  <script src="js/tutorial.js?v=1777737600"></script>
+  <script src="js/main.js?v=1777737600"></script>
 </body>
 </html>

@@ -6248,3 +6248,84 @@ body.light-mode .community-featured-card {
 
   #toolbox::-webkit-scrollbar { display: none; }
 }
+
+/* ── Day 64 (Prune): Consolidated Settings Modal ── */
+#settings-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#settings-content {
+  background: #1a1a2e;
+  border: 2px solid #0f0;
+  border-radius: 12px;
+  padding: 22px;
+  max-width: 520px;
+  width: 92%;
+  max-height: 84vh;
+  overflow-y: auto;
+}
+#settings-content h3 {
+  color: #0f0;
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 18px;
+}
+.settings-section {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2a2a3e;
+}
+.settings-section:last-of-type {
+  border-bottom: none;
+}
+.settings-section h4 {
+  color: #0f0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0 0 8px;
+  font-weight: normal;
+  opacity: 0.75;
+}
+.settings-section #settings-row,
+.settings-section #notif-settings-row,
+.settings-section #sync-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+  margin: 0;
+}
+#settings-close {
+  display: block;
+  margin: 14px auto 0;
+  background: #0a0;
+  color: #fff;
+  border: none;
+  padding: 8px 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+#settings-close:hover {
+  background: #0c0;
+}
+body.light-mode #settings-content {
+  background: #f4f4f4;
+  border-color: #2a8;
+  color: #222;
+}
+body.light-mode #settings-content h3,
+body.light-mode .settings-section h4 {
+  color: #2a8;
+}
+body.light-mode .settings-section {
+  border-bottom-color: #ddd;
+}
+

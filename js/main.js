@@ -1250,6 +1250,13 @@ class GameState {
 
   // ── Placement Test (Day 31) ──
   _checkPlacementTest() {
+    // Day 64 (Prune cut #4): Skip placement test by default — the campaign
+    // teaches the same content. Power users / QA can opt in via ?placement.
+    let placementOptIn = false;
+    try {
+      placementOptIn = /[?&]placement(=1|=true)?(&|$)/.test(window.location.search);
+    } catch (e) { /* no-op */ }
+
     // Only show for brand new players (no progress, no placement test done)
     try {
       if (SafeStorage.getItem(PLACEMENT_KEY) === 'true') return;
@@ -1261,15 +1268,20 @@ class GameState {
       }
     } catch (e) { return; }
 
-    // Day 56: Show difficulty selector before placement test for brand new players
+    // Day 56: Show first-launch difficulty selector for brand new players (kept).
     if (!SafeStorage.getItem(DIFFICULTY_KEY)) {
       setTimeout(() => {
         if (this.ui) this.ui.showFirstLaunchDifficultyModal();
       }, 3000);
     }
 
-    // Show after intro animation settles (+ extra delay for difficulty modal)
-    const placementDelay = !SafeStorage.getItem(DIFFICULTY_KEY) ? 6000 : 3500;
+    if (!placementOptIn) {
+      // Mark as done so we never auto-show; the campaign opens to Level 1.
+      SafeStorage.setItem(PLACEMENT_KEY, 'true');
+      return;
+    }
+
+    // Opt-in path — show after intro animation settles.
     setTimeout(() => {
       if (this.ui) this.ui.showPlacementTest();
     }, 3500);

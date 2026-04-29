@@ -244,6 +244,7 @@ class UI {
         this.renderLevelSelect();
       });
     });
+    this.setupSettingsModal(); // Day 64: consolidated settings modal
     this.renderLevelSelect();
 
     // Day 57: Pull-to-refresh on level select
@@ -498,6 +499,82 @@ class UI {
     this.renderReviewSection();
     this.renderCommunitySection(); // Day 49
     this.renderMasterySection(); // Day 55
+    this.applyProgressGating(); // Day 64: gate secondary modes by completion
+  }
+
+  // Day 64 (Prune): Consolidated Settings Modal
+  setupSettingsModal() {
+    if (this._settingsModalWired) return;
+    this._settingsModalWired = true;
+    const open = document.getElementById('open-settings-btn');
+    const modal = document.getElementById('settings-modal');
+    const close = document.getElementById('settings-close');
+    if (!open || !modal) return;
+    const show = () => {
+      this.gameState.audio.playButtonClick();
+      modal.style.display = 'flex';
+    };
+    const hide = () => { modal.style.display = 'none'; };
+    open.addEventListener('click', show);
+    if (close) close.addEventListener('click', hide);
+    // Click outside content to close
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) hide();
+    });
+    // Esc closes
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display !== 'none') hide();
+    });
+  }
+
+  // Day 64 (Prune): Hide secondary modes/info on cold start. Reveal in tiers.
+  applyProgressGating() {
+    const progress = this.gameState.progress || { levels: {} };
+    let completed = 0;
+    for (const k in progress.levels) {
+      if (progress.levels[k] && progress.levels[k].completed) completed++;
+    }
+    // Tier 1 reveal threshold (end of Ch1 ≈ 6 levels) and Tier 2 (end of Ch2 ≈ 12 levels)
+    const tier1 = completed >= 6;
+    const tier2 = completed >= 12;
+    const setVis = (id, visible, displayMode = '') => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = visible ? displayMode : 'none';
+    };
+    // Always-on: weekly + daily are most-engaged; daily is the headline
+    setVis('daily-challenge-btn', tier1);
+    setVis('encyclopedia-btn', tier1);
+    setVis('stats-btn', tier1);
+    // Full reveal at tier 2
+    setVis('weekly-puzzle-btn', tier2);
+    setVis('adaptive-challenge-btn', tier2);
+    setVis('random-challenge-btn', tier2);
+    setVis('blitz-mode-btn', tier2);
+    setVis('speedrun-btn', tier2);
+    setVis('sandbox-btn', tier2);
+    setVis('achievements-btn', tier2);
+    setVis('customize-btn', tier2);
+    setVis('mastery-tree-btn', tier2);
+    setVis('collection-btn', tier2);
+    setVis('profile-btn', tier2);
+    setVis('create-level-btn', tier2);
+    // Community section + redundant submit duplicate
+    setVis('community-section', tier2);
+    setVis('community-submit-btn', false); // Cut #2: merged into Creator
+    // Hide entire challenge-section header if no buttons inside are visible
+    const challengeSection = document.getElementById('challenge-section');
+    if (challengeSection) {
+      const anyChallengeVisible = tier1 || tier2;
+      challengeSection.style.display = anyChallengeVisible ? '' : 'none';
+    }
+    // Hide info button rows whose buttons are all gated off
+    const infoRow = document.getElementById('info-buttons-row');
+    if (infoRow) infoRow.style.display = tier1 ? '' : 'none';
+    const cosmeticsRow = document.getElementById('info-buttons-row-cosmetics');
+    if (cosmeticsRow) cosmeticsRow.style.display = tier2 ? '' : 'none';
+    const infoRow2 = document.getElementById('info-buttons-row-2');
+    if (infoRow2) infoRow2.style.display = tier2 ? '' : 'none';
   }
 
   showScreen(screen) {
@@ -904,10 +981,11 @@ class UI {
     }
 
     // #91: Cross-level "Used In" forward references
+    // Day 64 (Prune): only surface refs the player has actually unlocked.
     const usedInEl = document.getElementById('used-in-refs');
     if (usedInEl) {
       if (level.id && !level.isSandbox && !level.isChallenge && !level.isDaily) {
-        const refs = getForwardReferences(level.id);
+        const refs = getForwardReferences(level.id).filter(id => this.gameState.isLevelUnlocked(id));
         if (refs.length > 0) {
           const refList = refs.slice(0, 8).map(id => `L${id}`).join(', ');
           const extra = refs.length > 8 ? ` +${refs.length - 8} more` : '';
