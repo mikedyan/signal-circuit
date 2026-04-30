@@ -1827,16 +1827,6 @@ class GameState {
     this.ui.showScreen('sandbox-config');
   }
 
-  // Day 44: Daily challenge pre-screen
-  showDailyConfig() {
-    this._saveLevelSelectScroll(); // #95
-    this.currentScreen = 'daily-config';
-    this.stopTimer();
-    this.audio.stopAmbient();
-    if (this.tutorial) { this.tutorial.destroy(); this.tutorial = null; }
-    this.ui.showDailyScreen();
-  }
-
   startChallenge(numInputs, numOutputs) {
     this.isChallengeMode = true;
     this.isSandboxMode = false;
@@ -4314,12 +4304,6 @@ class GameState {
     } catch (e) { return null; }
   }
 
-  getAllPreviews() {
-    try {
-      return JSON.parse(SafeStorage.getItem(PREVIEW_KEY) || '{}');
-    } catch (e) { return {}; }
-  }
-
   toggleGhost() {
     if (!this.ghostOverlay) return;
     this.showGhost = !this.showGhost;
@@ -4704,11 +4688,6 @@ class GameState {
     this.ui.updateGateIndicator();
     this.markDirty();
     return true;
-  }
-
-  // ── Day 33 T5: Check if a gate is locked (pre-placed) ──
-  isGateLocked(gateId) {
-    return this._lockedGateIds.has(gateId);
   }
 
   // ── Day 33 T8: Cross-Device Sync ──
@@ -5201,15 +5180,6 @@ class NotificationManager {
     SafeStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(this._prefs));
   }
 
-  getPreferences() { return { ...this._prefs }; }
-
-  setPreference(type, enabled) {
-    if (type in this._prefs) {
-      this._prefs[type] = enabled;
-      this._savePrefs();
-    }
-  }
-
   _getSessionCount() {
     try {
       const count = parseInt(SafeStorage.getItem(SESSION_COUNT_KEY) || '0');
@@ -5583,11 +5553,6 @@ class SubCircuitManager {
   // Get all saved sub-circuits
   getAll() {
     return this.circuits.slice();
-  }
-
-  // Get a specific sub-circuit by id
-  getById(id) {
-    return this.circuits.find(c => c.id === id) || null;
   }
 
   // Register sub-circuits as dynamic gate types for the current session

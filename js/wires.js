@@ -254,15 +254,6 @@ class WireManager {
     }
   }
 
-  // Day 37 T8: Count currently animating wires (performance guard)
-  getActiveFlowCount() {
-    let count = 0;
-    for (const wire of this.wires) {
-      if (wire._animActive && wire._animPhase > 0 && wire._animPhase < 1) count++;
-    }
-    return count;
-  }
-
   // Bezier control points for a wire from (sx,sy) to (ex,ey)
   _bezierControlPoints(sx, sy, ex, ey) {
     const dx = Math.abs(ex - sx);
@@ -599,17 +590,4 @@ class WireManager {
   }
 }
 
-// Utility: distance from point to line segment (kept for compatibility)
-function distToSegment(px, py, x1, y1, x2, y2) {
-  const A = px - x1;
-  const B = py - y1;
-  const C = x2 - x1;
-  const D = y2 - y1;
-  const dot = A * C + B * D;
-  const lenSq = C * C + D * D;
-  let t = lenSq !== 0 ? dot / lenSq : -1;
-  t = Math.max(0, Math.min(1, t));
-  const xx = x1 + t * C;
-  const yy = y1 + t * D;
-  return Math.hypot(px - xx, py - yy);
-}
+

@@ -375,23 +375,6 @@ class AchievementManager {
     return newlyUnlocked;
   }
 
-  // Day 55: Check mastery achievements
-  checkMasteryAchievement() {
-    const newlyUnlocked = [];
-    try {
-      const mp = JSON.parse(localStorage.getItem('signal-circuit-mastery') || '{}');
-      if (typeof getMasteryChallenges === 'function') {
-        const challenges = getMasteryChallenges();
-        const allDone = challenges.every(ch => mp[ch.id] && mp[ch.id].completed);
-        if (allDone && this.unlock('master_logician')) {
-          newlyUnlocked.push('master_logician');
-        }
-      }
-    } catch(e) {}
-    if (newlyUnlocked.length > 0) this.save();
-    return newlyUnlocked;
-  }
-
   // Track first wire
   trackFirstWire() {
     if (this.unlock('first_wire')) return ['first_wire'];

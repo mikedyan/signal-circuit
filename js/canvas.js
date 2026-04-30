@@ -47,14 +47,6 @@ class CanvasRenderer {
     };
   }
 
-  worldToScreen(wx, wy) {
-    const vt = this.viewTransform;
-    return {
-      x: wx * vt.scale + vt.x,
-      y: wy * vt.scale + vt.y,
-    };
-  }
-
   zoomAt(newScale, screenX, screenY) {
     const vt = this.viewTransform;
     const clamped = Math.min(this.maxScale, Math.max(this.minScale, newScale));
@@ -63,13 +55,6 @@ class CanvasRenderer {
     vt.scale = clamped;
     vt.x = screenX - worldX * clamped;
     vt.y = screenY - worldY * clamped;
-    this.gameState.markDirty();
-    this._updateZoomButton();
-  }
-
-  pan(dx, dy) {
-    this.viewTransform.x += dx;
-    this.viewTransform.y += dy;
     this.gameState.markDirty();
     this._updateZoomButton();
   }

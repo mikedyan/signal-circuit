@@ -2415,10 +2415,6 @@ function getMasteryChallenges() {
   return MASTERY_CHALLENGES;
 }
 
-function getMasteryChallenge(id) {
-  return MASTERY_CHALLENGES.find(m => m.id === id) || null;
-}
-
 function isCampaignComplete(progress) {
   // All main campaign levels (chapters 1-7, levels 1-34) must be completed
   const mainChapters = CHAPTERS.filter(c => !c.isBonus);

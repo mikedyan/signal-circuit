@@ -1630,11 +1630,6 @@ class UI {
     }
   }
 
-  hideChallengeFriendButton() {
-    const btn = document.getElementById('challenge-friend-btn');
-    if (btn) btn.style.display = 'none';
-  }
-
   hideStarDisplay() {
     document.getElementById('star-display').style.display = 'none';
     document.getElementById('share-btn').style.display = 'none';
@@ -2680,14 +2675,6 @@ class UI {
       infoEl.style.display = 'block';
       infoEl.style.color = '#666';
       infoEl.style.fontSize = '10px';
-    }
-  }
-
-  // ── Gate Count Display (legacy for sandbox) ──
-  updateGateCount() {
-    const el = document.getElementById('gate-count-display');
-    if (el) {
-      el.innerHTML = `Gates used: <span>${this.gameState.gates.length}</span>`;
     }
   }
 

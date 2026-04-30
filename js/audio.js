@@ -117,39 +117,8 @@ class AudioEngine {
     }
   }
 
-  setMute(muted) {
-    this.muted = muted;
-    try {
-      localStorage.setItem('signal-circuit-muted', muted ? 'true' : 'false');
-    } catch (e) {}
-  }
-
   get isMuted() {
     return this.muted;
-  }
-
-  // Day 34 T8: Set master volume (0-1)
-  setMasterVolume(vol) {
-    this.masterVolume = Math.max(0, Math.min(1, vol));
-    this.sfxVolume = this.masterVolume;
-    this.musicVolume = this.masterVolume;
-    this.muted = this.sfxVolume === 0 && this.musicVolume === 0;
-    if (this._musicPadGain && this.ctx) {
-      this._musicPadGain.gain.linearRampToValueAtTime(
-        this.musicVolume * 0.04, this.ctx.currentTime + 0.1
-      );
-    }
-    if (this._ambientNodes && this._ambientNodes.ambientGain && this.ctx) {
-      this._ambientNodes.ambientGain.gain.linearRampToValueAtTime(
-        this.musicVolume * 0.03, this.ctx.currentTime + 0.1
-      );
-    }
-    try {
-      localStorage.setItem('signal-circuit-master-volume', this.masterVolume.toString());
-      localStorage.setItem('signal-circuit-sfx-volume', this.sfxVolume.toString());
-      localStorage.setItem('signal-circuit-music-volume', this.musicVolume.toString());
-      localStorage.setItem('signal-circuit-muted', this.muted ? 'true' : 'false');
-    } catch (e) {}
   }
 
   // Day 34 T9: Set SFX volume independently
@@ -508,10 +477,6 @@ class AudioEngine {
     gain.connect(this._output);
     osc.start(now);
     osc.stop(now + 0.1);
-  }
-
-  playSimPulse() {
-    this.playSimPulsePass();
   }
 
   // ── Sound: Success jingle (rich ascending chord) ──

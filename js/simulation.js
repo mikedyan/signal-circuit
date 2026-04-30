@@ -300,10 +300,6 @@ class Simulation {
     });
   }
 
-  // Legacy: Animate a pulse through all wires (kept for backward compat)
-  animatePulse() {
-    return this.animateSignalFlow();
-  }
 }
 
 // Day 42 T1: Trace signal paths for failing outputs
