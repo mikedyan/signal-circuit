@@ -109,10 +109,12 @@ body {
 }
 
 .level-btn.locked {
-  opacity: 0.55;
+  /* Day 66 Polish #3: de-emphasize locked cards so unlocked ones lead the eye */
+  opacity: 0.42;
+  filter: grayscale(0.5);
   cursor: not-allowed;
   position: relative;
-  border-color: #333;
+  border-color: #2a2a2a;
 }
 
 .level-btn.locked::after {
@@ -4653,8 +4655,11 @@ body.light-mode .level-btn.completed {
 }
 
 body.light-mode .level-btn.locked {
+  /* Day 66 Polish #3: same treatment in light mode (kept readable) */
   background: #f0f0f0;
   border-color: #ddd;
+  opacity: 0.6;
+  filter: grayscale(0.5);
 }
 
 body.light-mode .level-number {

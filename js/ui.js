@@ -472,8 +472,9 @@ class UI {
           });
         }
 
-        // Day 34 T6: Level select micro-interactions
-        // Staggered fade-in
+        // Day 34 T6: Level select micro-interactions — staggered fade-in.
+        // Day 66 Polish: clear inline opacity at the end so locked-card CSS
+        // (opacity: 0.42 + grayscale) takes over and fades them into the bg.
         const btnIdx = chapter.levels.indexOf(levelId);
         btn.style.opacity = '0';
         btn.style.transform = 'translateY(8px)';
@@ -481,6 +482,13 @@ class UI {
           btn.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
           btn.style.opacity = '1';
           btn.style.transform = 'translateY(0)';
+          // Hand opacity back to the stylesheet after the fade-in completes
+          // so .level-btn.locked { opacity: 0.42 } can apply.
+          setTimeout(() => {
+            btn.style.opacity = '';
+            btn.style.transform = '';
+            btn.style.transition = '';
+          }, 320);
         }, 40 * btnIdx);
 
         // Pulse glow on newly-unlocked but incomplete levels
@@ -2186,10 +2194,10 @@ class UI {
     const btn = document.getElementById('adaptive-challenge-btn');
     if (!btn) return;
     const gs = this.gameState;
-    if (!gs.skillTracker) { btn.textContent = '🎯 Adaptive Challenge'; return; }
+    if (!gs.skillTracker) { btn.textContent = '🎯 Adaptive'; return; }
     gs.skillTracker.calculate();
     const skill = gs.skillTracker.getSkillLevel();
-    btn.innerHTML = '🎯 Adaptive Challenge <span style="font-size:10px;color:' + skill.color + ';">' + skill.label + '</span>';
+    btn.innerHTML = '🎯 Adaptive <span style="font-size:10px;color:' + skill.color + ';">' + skill.label + '</span>';
   }
 
   // ── Achievements ──
@@ -2384,7 +2392,16 @@ class UI {
     const fillEl = document.getElementById('progress-fill');
 
     if (textEl) textEl.textContent = `${completed}/${totalLevels} Levels`;
-    if (starsEl) starsEl.textContent = `⭐ ${totalStars}`;
+    if (starsEl) {
+      // Day 66 Polish #4: hide ⭐ 0 chip on fresh profile (no stars earned yet)
+      if (totalStars > 0) {
+        starsEl.style.display = '';
+        starsEl.textContent = `⭐ ${totalStars}`;
+      } else {
+        starsEl.style.display = 'none';
+        starsEl.textContent = '';
+      }
+    }
     if (fillEl) fillEl.style.width = pctComplete + '%';
 
     // Day 34 T5: Progress bar milestone markers

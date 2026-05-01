@@ -2,12 +2,12 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 65,
-  "nextDay": 66,
+  "lastCompletedDay": 66,
+  "nextDay": 67,
   "totalItemsCompleted": 405,
   "totalItems": 405,
-  "status": "Cycle 1 Prune Week Day 3 — Code cleanup: removed 14 orphan JS methods/functions + 10 orphan CSS rules + 1 unused selector clause across 9 source files. Net diff: 11 files, +14/-231 (insertions are cache-bust bumps). All headless verifications pass; 0 console errors.",
-  "lastRun": "2026-04-30T08:30:00-07:00",
+  "status": "Cycle 1 Prune Week Day 4 — Polish Sprint: trimmed marketing-copy subtitle to one sentence, compressed Adaptive Challenge label to '🎯 Adaptive', de-emphasised locked level cards (opacity 0.55→0.42 + grayscale(0.5) in both dark and light modes), and hid the '⭐ 0' chip on fresh profiles. Verified headless in dark + light modes with 0 console errors; core loop (level select → Level 1 entry) smoke test passes.",
+  "lastRun": "2026-05-01T08:05:00-07:00",
   "expertReview": "reviews/expert-panel-day35.md",
   "reviewScore": 7.3,
   "reviewHighlights": {
@@ -543,6 +543,26 @@
       "itemsRemoved": 1,
       "itemsSimplified": 5
     },
+    "66": {
+      "items": [
+        "index.html: subtitle 'Repair the ship's logic systems. One circuit at a time.' → 'Repair the ship's logic systems.' (Tier 3 cut #15)",
+        "index.html + js/ui.js: Adaptive Challenge button label compressed to '🎯 Adaptive' (kept aria-label='Adaptive Challenge') — covers cold-state default and updateAdaptiveButtonBadge skill-pill template (Tier 3 cut #11)",
+        "css/style.css: .level-btn.locked opacity 0.55→0.42 + filter:grayscale(0.5), border #333→#2a2a2a (Tier 2 cut #8)",
+        "css/style.css: body.light-mode .level-btn.locked + opacity 0.6 + filter:grayscale(0.5) (mirror in light mode)",
+        "js/ui.js: clear inline opacity/transform after staggered fade-in so .level-btn.locked CSS rule actually applies (root-cause fix uncovered during verification)",
+        "js/ui.js: UI.updateProgressBar() now hides #progress-stars chip when totalStars===0 on a fresh profile (Tier 3 cut #12)",
+        "sw.js: CACHE_NAME signal-circuit-v44 → v45",
+        "index.html: cache-bust ?v=1777824000 → ?v=1778083200 across 11 asset references",
+        "Headless verification (Chromium 148) — dark mode: locked opacity 0.42 + grayscale(0.5)",
+        "Headless verification — light mode: locked opacity 0.6 + grayscale(0.5), bg #f0f0f0",
+        "Headless verification — cold start: subtitle 1 sentence, adaptive shows '🎯 Adaptive Novice', star chip hidden",
+        "Headless verification — after earning 3 stars: chip reappears as '⭐ 3'",
+        "Core-loop smoke test: Level 1 entry shows toolbox gates + RUN button + back button, 0 console errors"
+      ],
+      "status": "complete",
+      "qa": "prune-polish",
+      "itemsSimplified": 4
+    },
     "65": {
       "items": [
         "levels.js: removed orphan getMasteryChallenge(id) helper",
@@ -570,9 +590,9 @@
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
   "weekType": "prune",
-  "weekDay": 3,
+  "weekDay": 4,
   "cycleNumber": 1,
-  "cycleDay": 13,
+  "cycleDay": 14,
   "weekSchedule": "build → harden → prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md",
   "hardenWeek": {
@@ -592,11 +612,17 @@
     "freshEyesComplete": true,
     "simplificationComplete": true,
     "codeCleanupComplete": true,
-    "polishComplete": false,
+    "polishComplete": true,
     "validationComplete": false,
     "itemsRemoved": 15,
-    "itemsSimplified": 5,
+    "itemsSimplified": 9,
     "tier1Complete": true,
+    "polishItems": [
+      "Subtitle compression (Tier 3 cut #15)",
+      "Adaptive Challenge label → 'Adaptive' (Tier 3 cut #11)",
+      "Locked level card de-emphasis: opacity + grayscale (Tier 2 cut #8)",
+      "Hide '⭐ 0' chip on fresh profile (Tier 3 cut #12)"
+    ],
     "deadCodeRemoved": {
       "jsMethodsAndFunctions": 14,
       "cssRules": 10,
