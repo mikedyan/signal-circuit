@@ -2,14 +2,15 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 66,
-  "nextDay": 67,
-  "totalItemsCompleted": 405,
-  "totalItems": 405,
-  "status": "Cycle 1 Prune Week Day 4 — Polish Sprint: trimmed marketing-copy subtitle to one sentence, compressed Adaptive Challenge label to '🎯 Adaptive', de-emphasised locked level cards (opacity 0.55→0.42 + grayscale(0.5) in both dark and light modes), and hid the '⭐ 0' chip on fresh profiles. Verified headless in dark + light modes with 0 console errors; core loop (level select → Level 1 entry) smoke test passes.",
-  "lastRun": "2026-05-01T08:05:00-07:00",
-  "expertReview": "reviews/expert-panel-day35.md",
-  "reviewScore": 7.3,
+  "lastCompletedDay": 67,
+  "nextDay": 68,
+  "totalItemsCompleted": 415,
+  "totalItems": 415,
+  "status": "Cycle 1 Prune Week Day 5 — Validation/Expert Panel: live regression on https://mikedyan.github.io/signal-circuit/ (?v=1778083200, sw v45), cold-start cluster reduction confirmed (5 visible buttons vs Day 35's 29), Day 66 polish all live (subtitle compressed, '🎯 Adaptive' label, locked-card opacity 0.6 + grayscale(0.5), star chip hidden on fresh profile), 'Used in' filter to unlocked levels working, Level 1 entry clean, 0 console errors. Re-scored 10 dimensions: 8.4/10 (+1.1 vs Day 35 baseline 7.3). Wrote reviews/prune-cycle-1-review.md. Cycle 1 closed.",
+  "lastRun": "2026-05-02T08:10:00-07:00",
+  "expertReview": "reviews/prune-cycle-1-review.md",
+  "reviewScore": 8.4,
+  "reviewScorePrior": 7.3,
   "reviewHighlights": {
     "strengths": [
       "Procedural audio engine (9/10)",
@@ -563,6 +564,24 @@
       "qa": "prune-polish",
       "itemsSimplified": 4
     },
+    "67": {
+      "items": [
+        "Live regression on https://mikedyan.github.io/signal-circuit/ (?v=1778083200, sw v45)",
+        "Cold-start cluster reduction verified: 5 visible buttons (was 29 at Day 35)",
+        "Subtitle = 'Repair the ship's logic systems.' (single sentence)",
+        "Adaptive button hidden on cold start (mode-gated)",
+        "Locked level cards: opacity 0.6 + grayscale(0.5) (light mode)",
+        "Star chip '⭐ 0' hidden on fresh profile",
+        "Level 1 entry: gameplay screen, RUN button, 4 truth-table rows, 820x834 canvas",
+        "Used-in forward references properly filtered to unlocked levels",
+        "Console: 0 errors",
+        "10-dimension expert panel re-scored: 8.4/10 (+1.1 from Day 35 baseline 7.3)",
+        "Wrote reviews/prune-cycle-1-review.md (Day 35 backlog tally: 22/30 shipped)"
+      ],
+      "status": "complete",
+      "qa": "prune-validation",
+      "score": 8.4
+    },
     "65": {
       "items": [
         "levels.js: removed orphan getMasteryChallenge(id) helper",
@@ -590,9 +609,9 @@
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
   "weekType": "prune",
-  "weekDay": 4,
+  "weekDay": 5,
   "cycleNumber": 1,
-  "cycleDay": 14,
+  "cycleDay": 15,
   "weekSchedule": "build → harden → prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md",
   "hardenWeek": {
@@ -613,7 +632,7 @@
     "simplificationComplete": true,
     "codeCleanupComplete": true,
     "polishComplete": true,
-    "validationComplete": false,
+    "validationComplete": true,
     "itemsRemoved": 15,
     "itemsSimplified": 9,
     "tier1Complete": true,
@@ -632,6 +651,22 @@
       "tier1": 5,
       "tier2": 4,
       "tier3": 6
-    }
+    },
+    "validationReview": "reviews/prune-cycle-1-review.md",
+    "validationScore": 8.4,
+    "validationScoreDelta": 1.1
+  },
+  "cycle1Summary": {
+    "buildDays": 21,
+    "hardenDays": 5,
+    "pruneDays": 4,
+    "totalDayTasks": 30,
+    "openBugsAtCycleEnd": 0,
+    "day35BacklogItemsShipped": 22,
+    "day35BacklogTotal": 30,
+    "finalScore": 8.4,
+    "baselineScore": 7.3,
+    "scoreDelta": 1.1,
+    "netLocDelta": -217
   }
 }
