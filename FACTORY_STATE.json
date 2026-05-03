@@ -7,7 +7,15 @@
   "totalItemsCompleted": 415,
   "totalItems": 415,
   "status": "Cycle 1 Prune Week Day 5 — Validation/Expert Panel: live regression on https://mikedyan.github.io/signal-circuit/ (?v=1778083200, sw v45), cold-start cluster reduction confirmed (5 visible buttons vs Day 35's 29), Day 66 polish all live (subtitle compressed, '🎯 Adaptive' label, locked-card opacity 0.6 + grayscale(0.5), star chip hidden on fresh profile), 'Used in' filter to unlocked levels working, Level 1 entry clean, 0 console errors. Re-scored 10 dimensions: 8.4/10 (+1.1 vs Day 35 baseline 7.3). Wrote reviews/prune-cycle-1-review.md. Cycle 1 closed.",
-  "lastRun": "2026-05-02T08:10:00-07:00",
+  "lastRun": "2026-05-03T08:06:00-07:00",
+  "lastRunNote": "Sunday rest — Cycle 1 closed at Day 67. Cycle 2 Build Week begins Monday May 4 (weekDay 1).",
+  "nextCycle": {
+    "cycleNumber": 2,
+    "weekType": "build",
+    "weekDay": 1,
+    "firstDay": 68,
+    "startDate": "2026-05-04"
+  },
   "expertReview": "reviews/prune-cycle-1-review.md",
   "reviewScore": 8.4,
   "reviewScorePrior": 7.3,
