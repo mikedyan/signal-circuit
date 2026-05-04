@@ -769,6 +769,218 @@ class SkillTracker {
 }
 
 
+// ── Day 68: Infinite Mode ───────────────────────────────
+// Endless adaptive run loop on top of generateAdaptiveChallenge.
+// 3 lives, skip costs a life, streak builds skill tier.
+const INFINITE_BEST_KEY = 'signal_circuit_infinite_v1';
+const INFINITE_TIERS = ['novice', 'intermediate', 'advanced', 'expert'];
+const INFINITE_TIER_SCORES = { novice: 15, intermediate: 45, advanced: 75, expert: 95 };
+const INFINITE_TIER_LABELS = { novice: 'Novice', intermediate: 'Intermediate', advanced: 'Advanced', expert: 'Expert' };
+
+class InfiniteRunManager {
+  constructor(game) {
+    this.game = game;
+    this.active = false;
+    this.lives = 0;
+    this.streak = 0;
+    this.totalSolved = 0;
+    this.bestStreak = 0;
+    this.runStartMs = 0;
+    this.tier = 'novice';
+    this._hintUsedThisPuzzle = false;
+    this._pureLogicCount = 0;
+    this._timerInterval = null;
+    this.best = this._loadBest();
+  }
+
+  _loadBest() {
+    try {
+      const raw = localStorage.getItem(INFINITE_BEST_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        return {
+          bestStreak: data.bestStreak || 0,
+          bestSolved: data.bestSolved || 0,
+          bestTimeSec: data.bestTimeSec || 0,
+          totalRuns: data.totalRuns || 0,
+        };
+      }
+    } catch (e) {}
+    return { bestStreak: 0, bestSolved: 0, bestTimeSec: 0, totalRuns: 0 };
+  }
+
+  _saveBest() {
+    try { localStorage.setItem(INFINITE_BEST_KEY, JSON.stringify(this.best)); } catch (e) {}
+  }
+
+  defaultStartingTier() {
+    if (!this.game || !this.game.skillTracker) return 'novice';
+    try { this.game.skillTracker.calculate(); } catch (e) {}
+    const score = (this.game.skillTracker.score || 0);
+    if (score <= 30) return 'novice';
+    if (score <= 60) return 'intermediate';
+    if (score <= 85) return 'advanced';
+    return 'expert';
+  }
+
+  startRun(tier) {
+    this.active = true;
+    this.lives = 3;
+    this.streak = 0;
+    this.totalSolved = 0;
+    this.runStartMs = Date.now();
+    this.tier = INFINITE_TIERS.indexOf(tier) >= 0 ? tier : 'novice';
+    this._hintUsedThisPuzzle = false;
+    this._pureLogicCount = 0;
+    this.best.totalRuns = (this.best.totalRuns || 0) + 1;
+    this._saveBest();
+    this._loadNextPuzzle();
+    this._startTimer();
+    this._updateHud();
+  }
+
+  _bumpTierFromStreak() {
+    if (this.streak > 0 && this.streak % 5 === 0) {
+      const idx = INFINITE_TIERS.indexOf(this.tier);
+      if (idx >= 0 && idx < INFINITE_TIERS.length - 1) {
+        this.tier = INFINITE_TIERS[idx + 1];
+      }
+    }
+  }
+
+  _loadNextPuzzle() {
+    if (!this.active) return;
+    this._hintUsedThisPuzzle = false;
+    const score = INFINITE_TIER_SCORES[this.tier] || 15;
+    let level;
+    try {
+      level = generateAdaptiveChallenge(score);
+    } catch (e) {
+      level = generateChallenge(2, 1);
+    }
+    if (!level) level = generateChallenge(2, 1);
+    level.isInfinite = true;
+    level.title = `♾️ ${INFINITE_TIER_LABELS[this.tier]} #${this.totalSolved + 1}`;
+    level.description = `Infinite Run — ${INFINITE_TIER_LABELS[this.tier]} tier`;
+    this.game.isChallengeMode = true;
+    this.game.isSandboxMode = false;
+    this.game.currentScreen = 'gameplay';
+    this.game.ui.showScreen('gameplay');
+    this.game.audio.startAmbient();
+    this.game.renderer.resize();
+    this.game.renderer.resetView();
+    this.game.loadChallengeLevel(level);
+    setTimeout(() => this.game.renderer.resize(), 60);
+  }
+
+  onSolve() {
+    if (!this.active) return;
+    this.streak++;
+    this.totalSolved++;
+    if (this.streak > this.bestStreak) this.bestStreak = this.streak;
+    if (!this._hintUsedThisPuzzle) {
+      this._pureLogicCount++;
+      if (this._pureLogicCount >= 10 && this.game.achievements.unlock('pure_logic_run')) {
+        this.game.ui.showAchievementToasts(['pure_logic_run']);
+      }
+    } else {
+      this._pureLogicCount = 0;
+    }
+    if (this.streak >= 50 && this.game.achievements.unlock('infinite_marathon')) {
+      this.game.ui.showAchievementToasts(['infinite_marathon']);
+    }
+    this._bumpTierFromStreak();
+    this._updateHud();
+    setTimeout(() => this._loadNextPuzzle(), 700);
+  }
+
+  onSkip() {
+    if (!this.active) return;
+    this.lives--;
+    this.streak = 0;
+    this._pureLogicCount = 0;
+    this._updateHud();
+    if (this.lives <= 0) {
+      this.endRun(false);
+    } else {
+      this._loadNextPuzzle();
+    }
+  }
+
+  noteHintUsed() {
+    this._hintUsedThisPuzzle = true;
+  }
+
+  endRun(byUser) {
+    if (!this.active) return;
+    this.active = false;
+    this._stopTimer();
+    const elapsed = Math.floor((Date.now() - this.runStartMs) / 1000);
+    let isNewBest = false;
+    if (this.bestStreak > (this.best.bestStreak || 0)) { this.best.bestStreak = this.bestStreak; isNewBest = true; }
+    if (this.totalSolved > (this.best.bestSolved || 0)) { this.best.bestSolved = this.totalSolved; isNewBest = true; }
+    if (elapsed > 10 && (this.totalSolved >= (this.best.bestSolved || 0)) && (this.best.bestTimeSec === 0 || this.totalSolved > 0)) {
+      this.best.bestTimeSec = elapsed;
+    }
+    this._saveBest();
+    this._hideHud();
+    this.game.isChallengeMode = false;
+    this.game.ui.showInfiniteSummary({
+      streak: this.bestStreak,
+      solved: this.totalSolved,
+      timeSec: elapsed,
+      tier: this.tier,
+      isNewBest: isNewBest,
+      byUser: !!byUser,
+    });
+  }
+
+  _startTimer() {
+    this._stopTimer();
+    this._timerInterval = setInterval(() => this._updateHud(), 1000);
+  }
+
+  _stopTimer() {
+    if (this._timerInterval) { clearInterval(this._timerInterval); this._timerInterval = null; }
+  }
+
+  _showHud() {
+    const hud = document.getElementById('infinite-hud');
+    if (hud) hud.style.display = 'flex';
+  }
+
+  _hideHud() {
+    const hud = document.getElementById('infinite-hud');
+    if (hud) hud.style.display = 'none';
+  }
+
+  _updateHud() {
+    const hud = document.getElementById('infinite-hud');
+    if (!hud) return;
+    if (this.active) {
+      hud.style.display = 'flex';
+      const livesEl = document.getElementById('ihud-lives');
+      const streakEl = document.getElementById('ihud-streak');
+      const totalEl = document.getElementById('ihud-total');
+      const timeEl = document.getElementById('ihud-time');
+      const tierEl = document.getElementById('ihud-tier');
+      if (livesEl) livesEl.textContent = '❤️'.repeat(Math.max(0, this.lives)) + '🖤'.repeat(Math.max(0, 3 - this.lives));
+      if (streakEl) streakEl.textContent = '🔥 ' + this.streak;
+      if (totalEl) totalEl.textContent = '🧮 ' + this.totalSolved;
+      if (timeEl) {
+        const sec = Math.floor((Date.now() - this.runStartMs) / 1000);
+        const mm = Math.floor(sec / 60);
+        const ss = String(sec % 60).padStart(2, '0');
+        timeEl.textContent = '⏱ ' + mm + ':' + ss;
+      }
+      if (tierEl) tierEl.textContent = INFINITE_TIER_LABELS[this.tier] || 'Novice';
+    } else {
+      hud.style.display = 'none';
+    }
+  }
+}
+
+
 class GameState {
   constructor() {
     this.gates = [];
@@ -877,6 +1089,21 @@ class GameState {
     // Day 56: Campaign Difficulty Mode
     this.difficultyMode = this._loadDifficultyMode();
     this._hardcoreFailCount = 0;
+    // Day 68: Infinite Run
+    this.infiniteRun = new InfiniteRunManager(this);
+  }
+
+  // Day 68: Infinite Mode entry points
+  showInfiniteConfig() {
+    this.ui.showScreen('infinite-pre');
+    if (this.ui.renderInfinitePreScreen) this.ui.renderInfinitePreScreen();
+  }
+
+  startInfiniteRun(tier) {
+    this.isChallengeMode = true;
+    this.isSandboxMode = false;
+    this.ui.showAchievementToasts(this.achievements.trackModeExplored('adaptive'));
+    this.infiniteRun.startRun(tier);
   }
 
   // ── Hint Token System (Day 31) ──
@@ -1989,6 +2216,8 @@ class GameState {
       }
 
       this.hintsUsed++;
+      // Day 68: Mark hint used for Infinite Run pure-logic streak
+      if (this.infiniteRun && this.infiniteRun.active) this.infiniteRun.noteHintUsed();
       if (this.hintsUsed >= 2) this.maxHintPenalty = Math.max(this.maxHintPenalty, this.hintsUsed - 1);
       // Day 34 T10: Hint sound urgency escalation
       this.audio.playHintReveal(this.hintsUsed);
@@ -2760,6 +2989,16 @@ class GameState {
             this.audio.musicResolve();
             const gateCount = this.gates.length;
 
+            if (this.infiniteRun && this.infiniteRun.active && this.currentLevel.isInfinite) {
+              // Day 68: Infinite Run — intercept and continue
+              this.audio.playSuccess(2);
+              this.haptic([30, 50, 30, 50, 50]);
+              this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates — Streak ${this.infiniteRun.streak + 1}`);
+              this.ui.updateStatusBar(`Infinite · Streak ${this.infiniteRun.streak + 1} · ${gateCount} gates`);
+              this.ui.startCelebration(1, { mode: 'challenge' });
+              this.infiniteRun.onSolve();
+              return;
+            }
             if (this.isChallengeMode && this.currentLevel.isChallenge) {
               // Challenge mode completion
               this.addLeaderboardEntry(
@@ -2980,6 +3219,16 @@ class GameState {
 
       const gateCount = this.gates.length;
 
+      if (this.infiniteRun && this.infiniteRun.active && this.currentLevel.isInfinite) {
+        // Day 68: Infinite Run — intercept Quick Test solve
+        this.audio.playSuccess(2);
+        this.haptic([30, 50, 30, 50, 50]);
+        this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates — Streak ${this.infiniteRun.streak + 1}`);
+        this.ui.updateStatusBar(`Infinite · Streak ${this.infiniteRun.streak + 1} · ${gateCount} gates`);
+        this.ui.startCelebration(1, { mode: 'challenge' });
+        this.infiniteRun.onSolve();
+        return;
+      }
       if (this.isChallengeMode && this.currentLevel.isChallenge) {
         this.addLeaderboardEntry(this.currentLevel.difficultyKey, gateCount, this.currentLevel.difficulty);
         this.audio.playSuccess(2);

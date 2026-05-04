@@ -41,6 +41,9 @@ const ACHIEVEMENTS = [
   // Day 55: Mastery Challenges
   { id: 'master_logician', name: 'Master Logician', desc: 'Complete all 5 mastery challenges', icon: '👑', tier: 'gold' },
   { id: 'hardcore_completer', name: 'Hardcore Completer', desc: 'Complete all campaign levels in Hardcore mode', icon: '⬦', tier: 'gold' },
+  // Day 68: Infinite Mode
+  { id: 'infinite_marathon', name: 'Infinite Marathon', desc: 'Reach a 50-streak in a single Infinite run', icon: '🌌', tier: 'gold' },
+  { id: 'pure_logic_run', name: 'Pure Logic Run', desc: 'Solve 10 puzzles in one Infinite run without using a hint', icon: '💡', tier: 'gold' },
 ];
 
 const TIER_COLORS = {

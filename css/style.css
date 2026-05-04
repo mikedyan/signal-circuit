@@ -6262,3 +6262,242 @@ body.light-mode .settings-section {
   border-bottom-color: #ddd;
 }
 
+
+/* ── Day 68: Infinite Mode ────────────────────────────── */
+.challenge-btn.infinite-btn {
+  background: linear-gradient(135deg, #1a0033, #002a4d);
+  border-color: #8a2be2;
+  color: #c8a2ff;
+}
+.challenge-btn.infinite-btn:hover {
+  background: linear-gradient(135deg, #2a0055, #003366);
+  color: #fff;
+}
+
+/* Pre-screen */
+#infinite-pre-screen {
+  position: fixed;
+  inset: 0;
+  background: #0a0a18;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  font-family: 'Courier New', monospace;
+}
+#infinite-pre-content {
+  background: #11112a;
+  border: 1px solid #8a2be2;
+  border-radius: 10px;
+  padding: 24px 28px;
+  max-width: 420px;
+  width: calc(100% - 32px);
+  color: #ddd;
+  text-align: center;
+}
+#infinite-pre-content h2 {
+  color: #c8a2ff;
+  margin: 0 0 6px;
+  font-size: 24px;
+}
+#infinite-pre-back-btn {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  background: transparent;
+  border: 1px solid #444;
+  color: #aaa;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+}
+#infinite-pre-back-btn:hover { color: #fff; border-color: #888; }
+#infinite-best-card {
+  margin: 14px 0 18px;
+  padding: 12px;
+  background: rgba(138, 43, 226, 0.08);
+  border: 1px solid #2a1a3a;
+  border-radius: 6px;
+}
+.infinite-best-title {
+  color: #ffd700;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+#infinite-best-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  font-size: 14px;
+  color: #c8a2ff;
+}
+#infinite-best-row span span {
+  color: #fff;
+  font-weight: bold;
+  margin-right: 4px;
+}
+.infinite-tier-row {
+  margin: 14px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.infinite-tier-row label {
+  color: #888;
+  font-size: 12px;
+}
+#infinite-tier {
+  background: #1a1a2e;
+  color: #c8a2ff;
+  border: 1px solid #444;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+}
+#infinite-tier:focus { outline: none; border-color: #8a2be2; }
+#infinite-start-btn {
+  margin-top: 4px;
+  width: 100%;
+  background: linear-gradient(135deg, #4a148c, #1565c0);
+  border-color: #8a2be2;
+  color: #fff;
+  font-size: 15px;
+  padding: 12px;
+}
+
+/* Run summary */
+#infinite-summary-screen {
+  position: fixed;
+  inset: 0;
+  background: #0a0a18;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  font-family: 'Courier New', monospace;
+}
+#infinite-summary-content {
+  background: #11112a;
+  border: 1px solid #8a2be2;
+  border-radius: 10px;
+  padding: 24px 28px;
+  max-width: 420px;
+  width: calc(100% - 32px);
+  color: #ddd;
+  text-align: center;
+}
+#infinite-summary-content h2 {
+  color: #c8a2ff;
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+#infinite-summary-stats {
+  margin: 16px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.infinite-summary-stat {
+  background: rgba(138, 43, 226, 0.08);
+  border: 1px solid #2a1a3a;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.isum-label {
+  font-size: 11px;
+  color: #888;
+}
+.isum-value {
+  font-size: 18px;
+  color: #fff;
+  font-weight: bold;
+  margin-top: 4px;
+}
+#infinite-summary-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+#infinite-summary-actions .challenge-btn { flex: 1 0 100px; min-width: 110px; }
+#infinite-again-btn {
+  background: linear-gradient(135deg, #4a148c, #1565c0);
+  border-color: #8a2be2;
+}
+
+/* HUD on canvas */
+#infinite-hud {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  background: rgba(10, 10, 24, 0.85);
+  border: 1px solid #4a148c;
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #c8a2ff;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  flex-wrap: wrap;
+  max-width: calc(100% - 16px);
+}
+#infinite-hud span { white-space: nowrap; }
+#ihud-lives { color: #ff6b6b; }
+#ihud-streak { color: #ffd700; }
+#ihud-total { color: #6bff8a; }
+#ihud-time { color: #6bd0ff; }
+#ihud-tier {
+  color: #c8a2ff;
+  background: rgba(138, 43, 226, 0.18);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  #infinite-hud { font-size: 11px; gap: 8px; padding: 4px 8px; }
+  #ihud-tier { display: none; }
+}
+
+/* Light mode mirror */
+body.light-mode #infinite-pre-screen,
+body.light-mode #infinite-summary-screen { background: #f4f4f4; }
+body.light-mode #infinite-pre-content,
+body.light-mode #infinite-summary-content {
+  background: #fff;
+  border-color: #6a1ba8;
+  color: #222;
+}
+body.light-mode #infinite-pre-content h2,
+body.light-mode #infinite-summary-content h2 { color: #6a1ba8; }
+body.light-mode #infinite-best-card { background: rgba(138, 43, 226, 0.06); border-color: #ddd; }
+body.light-mode .infinite-summary-stat { background: rgba(138, 43, 226, 0.06); border-color: #ddd; }
+body.light-mode .isum-value { color: #222; }
+body.light-mode #infinite-tier { background: #f0eaf8; color: #4a148c; border-color: #c0a0e0; }
+body.light-mode #infinite-hud { background: rgba(255, 255, 255, 0.9); border-color: #c0a0e0; color: #4a148c; }
+
+#ihud-skip-btn, #ihud-end-btn {
+  background: rgba(138, 43, 226, 0.25);
+  border: 1px solid #8a2be2;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+#ihud-skip-btn:hover, #ihud-end-btn:hover { background: rgba(138, 43, 226, 0.5); }
+#ihud-end-btn { padding: 3px 7px; font-size: 13px; line-height: 1; }

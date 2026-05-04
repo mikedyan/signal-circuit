@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1778083200">
+  <link rel="stylesheet" href="css/style.css?v=1778688000">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -68,6 +68,7 @@
             <button id="weekly-puzzle-btn" class="challenge-btn weekly-btn" aria-label="Puzzle of the Week">🏗️ Puzzle of the Week</button>
             <button id="daily-challenge-btn" class="challenge-btn daily-btn" aria-label="Daily Challenge">📅 Daily Challenge</button>
             <button id="adaptive-challenge-btn" class="challenge-btn" aria-label="Adaptive Challenge">🎯 Adaptive</button>
+            <button id="infinite-mode-btn" class="challenge-btn infinite-btn" aria-label="Infinite Run">♾️ Infinite</button>
             <button id="random-challenge-btn" class="challenge-btn" aria-label="Random Challenge">🎲 Random Challenge</button>
             <button id="blitz-mode-btn" class="challenge-btn" aria-label="Blitz Mode">🔥 Blitz Ladder</button>
             <button id="speedrun-btn" class="challenge-btn" aria-label="Speedrun Mode">🏁 Speedrun</button>
@@ -341,6 +342,53 @@
       </div>
     </div>
 
+    <!-- Day 68: Infinite Mode Pre-screen -->
+    <div id="infinite-pre-screen" style="display:none;">
+      <div id="infinite-pre-content">
+        <button id="infinite-pre-back-btn" aria-label="Back to level select">← Back</button>
+        <h2>♾️ Infinite Run</h2>
+        <p class="muted" style="color:#888;font-size:12px;margin-bottom:16px;">Solve as many puzzles as you can. 3 lives. Skip costs a life. Streak builds skill.</p>
+        <div id="infinite-best-card">
+          <div class="infinite-best-title">🏆 Personal Best</div>
+          <div id="infinite-best-row">
+            <span><span id="infinite-best-streak">—</span> streak</span>
+            <span><span id="infinite-best-solved">—</span> solved</span>
+            <span><span id="infinite-best-time">—</span></span>
+          </div>
+          <div id="infinite-runs-row" style="color:#666;font-size:11px;margin-top:6px;"><span id="infinite-total-runs">0</span> runs played</div>
+        </div>
+        <div class="infinite-tier-row">
+          <label for="infinite-tier">Starting tier</label>
+          <select id="infinite-tier">
+            <option value="novice">Novice (2×1)</option>
+            <option value="intermediate">Intermediate (3×1 / 2×2)</option>
+            <option value="advanced">Advanced (3×2)</option>
+            <option value="expert">Expert (4×1 / 4×2)</option>
+          </select>
+        </div>
+        <button id="infinite-start-btn" class="challenge-btn generate-btn" aria-label="Start infinite run">▶ Start Run</button>
+      </div>
+    </div>
+
+    <!-- Day 68: Infinite Run Summary -->
+    <div id="infinite-summary-screen" style="display:none;">
+      <div id="infinite-summary-content">
+        <h2 id="infinite-summary-title">♾️ Run Complete</h2>
+        <p id="infinite-summary-best" style="color:#ffd700;font-size:13px;margin-bottom:8px;display:none;"></p>
+        <div id="infinite-summary-stats">
+          <div class="infinite-summary-stat"><span class="isum-label">🔥 Streak</span><span id="infinite-summary-streak" class="isum-value">0</span></div>
+          <div class="infinite-summary-stat"><span class="isum-label">🧮 Solved</span><span id="infinite-summary-solved" class="isum-value">0</span></div>
+          <div class="infinite-summary-stat"><span class="isum-label">⏱ Time</span><span id="infinite-summary-time" class="isum-value">0:00</span></div>
+          <div class="infinite-summary-stat"><span class="isum-label">🎯 Final tier</span><span id="infinite-summary-tier" class="isum-value">Novice</span></div>
+        </div>
+        <div id="infinite-summary-actions">
+          <button id="infinite-again-btn" class="challenge-btn generate-btn">▶ Run Again</button>
+          <button id="infinite-share-btn" class="challenge-btn">🔗 Share</button>
+          <button id="infinite-done-btn" class="challenge-btn">✓ Done</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Gameplay Screen -->
     <div id="gameplay-screen" style="display:none;">
       <!-- Toolbox Sidebar -->
@@ -358,6 +406,16 @@
       <div id="canvas-container">
         <canvas id="game-canvas" aria-label="Circuit board - place gates and draw wires" role="application"></canvas>
         <canvas id="celebration-canvas"></canvas>
+        <!-- Day 68: Infinite Mode HUD -->
+        <div id="infinite-hud" style="display:none;" aria-live="polite">
+          <span id="ihud-lives" title="Lives remaining">❤️❤️❤️</span>
+          <span id="ihud-streak" title="Current streak">🔥 0</span>
+          <span id="ihud-total" title="Solved this run">🧮 0</span>
+          <span id="ihud-time" title="Run time">⏱ 0:00</span>
+          <span id="ihud-tier" title="Skill tier">Novice</span>
+          <button id="ihud-skip-btn" title="Skip this puzzle (-1 life)" aria-label="Skip puzzle">⏭ Skip</button>
+          <button id="ihud-end-btn" title="End run" aria-label="End run">×</button>
+        </div>
         <button id="zoom-reset-btn" style="display:none;" title="Reset zoom (double-tap)">↺ 100%</button>
         <div id="onboarding-tooltip" style="display:none;">
           <span id="tooltip-text">Click a pin to start drawing a wire</span>
@@ -643,15 +701,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1778083200"></script>
-  <script src="js/wires.js?v=1778083200"></script>
-  <script src="js/simulation.js?v=1778083200"></script>
-  <script src="js/levels.js?v=1778083200"></script>
-  <script src="js/audio.js?v=1778083200"></script>
-  <script src="js/achievements.js?v=1778083200"></script>
-  <script src="js/canvas.js?v=1778083200"></script>
-  <script src="js/ui.js?v=1778083200"></script>
-  <script src="js/tutorial.js?v=1778083200"></script>
-  <script src="js/main.js?v=1778083200"></script>
+  <script src="js/gates.js?v=1778688000"></script>
+  <script src="js/wires.js?v=1778688000"></script>
+  <script src="js/simulation.js?v=1778688000"></script>
+  <script src="js/levels.js?v=1778688000"></script>
+  <script src="js/audio.js?v=1778688000"></script>
+  <script src="js/achievements.js?v=1778688000"></script>
+  <script src="js/canvas.js?v=1778688000"></script>
+  <script src="js/ui.js?v=1778688000"></script>
+  <script src="js/tutorial.js?v=1778688000"></script>
+  <script src="js/main.js?v=1778688000"></script>
 </body>
 </html>

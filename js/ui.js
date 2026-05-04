@@ -557,6 +557,7 @@ class UI {
     // Full reveal at tier 2
     setVis('weekly-puzzle-btn', tier2);
     setVis('adaptive-challenge-btn', tier2);
+    setVis('infinite-mode-btn', tier2); // Day 68
     setVis('random-challenge-btn', tier2);
     setVis('blitz-mode-btn', tier2);
     setVis('speedrun-btn', tier2);
@@ -586,7 +587,7 @@ class UI {
   }
 
   showScreen(screen) {
-    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen', 'daily-config-screen'];
+    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen', 'daily-config-screen', 'infinite-pre-screen', 'infinite-summary-screen'];
     // T6: Play transition whoosh on screen change
     if (this.gameState.audio) this.gameState.audio.playTransitionWhoosh();
 
@@ -628,6 +629,11 @@ class UI {
         this.gameState.stopBlitzMode();
       } else if (this.gameState.speedrunMode) {
         this.gameState.stopSpeedrunMode();
+      } else if (this.gameState.infiniteRun && this.gameState.infiniteRun.active) {
+        // Day 68: Confirm before ending Infinite Run
+        this.showConfirmModal('End your Infinite Run? Your progress will be saved.', () => {
+          this.gameState.infiniteRun.endRun(true);
+        });
       } else if (this.gameState.isChallengeMode) {
         this.gameState.showChallengeConfig();
       } else {
@@ -1784,6 +1790,44 @@ class UI {
       });
     }
 
+    // Day 68: Infinite Mode button
+    const infiniteBtn = document.getElementById('infinite-mode-btn');
+    if (infiniteBtn) {
+      infiniteBtn.addEventListener('click', () => {
+        this.gameState._saveLevelSelectScroll();
+        this.gameState.showInfiniteConfig();
+      });
+    }
+
+    // Day 68: Infinite pre-screen wiring
+    const infBack = document.getElementById('infinite-pre-back-btn');
+    if (infBack) infBack.addEventListener('click', () => this.gameState.showLevelSelect());
+    const infStart = document.getElementById('infinite-start-btn');
+    if (infStart) infStart.addEventListener('click', () => {
+      const tier = (document.getElementById('infinite-tier') || {}).value || 'novice';
+      this.gameState.startInfiniteRun(tier);
+    });
+    // Infinite HUD skip + end
+    const ihudSkip = document.getElementById('ihud-skip-btn');
+    if (ihudSkip) ihudSkip.addEventListener('click', () => {
+      const ir = this.gameState.infiniteRun;
+      if (!ir || !ir.active) return;
+      this.showConfirmModal(`Skip this puzzle? (— 1 ❤️, ${ir.lives - 1} left, streak resets)`, () => ir.onSkip());
+    });
+    const ihudEnd = document.getElementById('ihud-end-btn');
+    if (ihudEnd) ihudEnd.addEventListener('click', () => {
+      const ir = this.gameState.infiniteRun;
+      if (!ir || !ir.active) return;
+      this.showConfirmModal('End your Infinite Run?', () => ir.endRun(true));
+    });
+    // Infinite summary buttons
+    const infAgain = document.getElementById('infinite-again-btn');
+    if (infAgain) infAgain.addEventListener('click', () => this.gameState.showInfiniteConfig());
+    const infDone = document.getElementById('infinite-done-btn');
+    if (infDone) infDone.addEventListener('click', () => this.gameState.showLevelSelect());
+    const infShare = document.getElementById('infinite-share-btn');
+    if (infShare) infShare.addEventListener('click', () => this._shareInfiniteRun());
+
     // Challenge config back button
     document.getElementById('challenge-back-btn').addEventListener('click', () => {
       this.gameState.showLevelSelect();
@@ -2198,6 +2242,68 @@ class UI {
     gs.skillTracker.calculate();
     const skill = gs.skillTracker.getSkillLevel();
     btn.innerHTML = '🎯 Adaptive <span style="font-size:10px;color:' + skill.color + ';">' + skill.label + '</span>';
+  }
+
+  // Day 68: Infinite Run pre-screen render
+  renderInfinitePreScreen() {
+    const ir = this.gameState.infiniteRun;
+    if (!ir) return;
+    const best = ir.best || { bestStreak: 0, bestSolved: 0, bestTimeSec: 0, totalRuns: 0 };
+    const fmtTime = (sec) => {
+      if (!sec || sec <= 0) return '—';
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    };
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('infinite-best-streak', best.bestStreak > 0 ? best.bestStreak : '—');
+    set('infinite-best-solved', best.bestSolved > 0 ? best.bestSolved : '—');
+    set('infinite-best-time', fmtTime(best.bestTimeSec));
+    set('infinite-total-runs', best.totalRuns || 0);
+    const sel = document.getElementById('infinite-tier');
+    if (sel) sel.value = ir.defaultStartingTier();
+  }
+
+  // Day 68: Show Infinite Run summary screen
+  showInfiniteSummary(payload) {
+    const fmtTime = (sec) => {
+      if (!sec || sec <= 0) return '0:00';
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    };
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('infinite-summary-streak', payload.streak || 0);
+    set('infinite-summary-solved', payload.solved || 0);
+    set('infinite-summary-time', fmtTime(payload.timeSec || 0));
+    const tierLabel = ({ novice: 'Novice', intermediate: 'Intermediate', advanced: 'Advanced', expert: 'Expert' })[payload.tier] || 'Novice';
+    set('infinite-summary-tier', tierLabel);
+    const titleEl = document.getElementById('infinite-summary-title');
+    if (titleEl) titleEl.textContent = payload.byUser ? '♾️ Run Ended' : '♾️ Run Complete';
+    const bestEl = document.getElementById('infinite-summary-best');
+    if (bestEl) {
+      if (payload.isNewBest) {
+        bestEl.textContent = '🎉 New personal best!';
+        bestEl.style.display = '';
+      } else {
+        bestEl.style.display = 'none';
+      }
+    }
+    this._lastInfiniteSummary = payload;
+    this.showScreen('infinite-summary');
+  }
+
+  _shareInfiniteRun() {
+    const p = this._lastInfiniteSummary;
+    if (!p) return;
+    const fmtTime = (sec) => {
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    };
+    const text = `♾️ Signal Circuit Infinite Run\n🔥 Streak: ${p.streak}\n🧮 Solved: ${p.solved}\n⏱ ${fmtTime(p.timeSec || 0)}\nhttps://mikedyan.github.io/signal-circuit/`;
+    if (navigator.share) {
+      navigator.share({ title: 'Signal Circuit Infinite Run', text }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => this.updateStatusBar('Run summary copied!')).catch(() => {});
+    }
   }
 
   // ── Achievements ──
