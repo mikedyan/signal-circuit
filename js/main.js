@@ -1899,6 +1899,8 @@ class GameState {
     const stars = this.calculateStars(gateCount, level);
     const elapsed = this.stopTimer();
     const existing = this.progress.levels[levelId];
+    // Day 69: capture first-time-completion flag BEFORE we mutate progress
+    const isFirstCompletion = !existing || !existing.completed;
     const pureLogic = this.hintsUsed === 0; // T8: Pure Logic tracking
 
     if (!existing || stars > existing.stars) {
@@ -1955,6 +1957,12 @@ class GameState {
     // Check for milestones
     if (this.ui) {
       this.ui.checkMilestones(stars, levelId);
+    }
+
+    // Day 69: Mobile install onramp — first-time L1/L2/L3 triggers welcome toast,
+    // and L3 surfaces the branded install modal at peak intent.
+    if (isFirstCompletion && window._notifManager && typeof window._notifManager.onLevelCompleted === 'function') {
+      try { window._notifManager.onLevelCompleted(levelId); } catch (e) {}
     }
 
     return stars;
@@ -5409,6 +5417,12 @@ const NOTIF_PREFS_KEY = 'signal-circuit-notif-prefs';
 const SESSION_COUNT_KEY = 'signal-circuit-session-count';
 const INSTALL_DISMISS_KEY = 'signal-circuit-install-dismiss';
 const WEEKLY_NOTIF_KEY = 'signal-circuit-weekly-notif';
+// Day 69: Mobile install onramp
+const INSTALL_LATER_KEY = 'signal-circuit-install-later'; // 14d snooze epoch
+const INSTALL_NEVER_KEY = 'signal-circuit-install-never'; // 90d snooze epoch
+const WELCOME_TOAST_KEY = 'signal-circuit-welcome-toasts'; // {l1:bool,l2:bool,l3:bool}
+const INSTALL_LATER_MS = 14 * 24 * 60 * 60 * 1000;
+const INSTALL_NEVER_MS = 90 * 24 * 60 * 60 * 1000;
 
 class NotificationManager {
   constructor() {
@@ -5567,41 +5581,187 @@ class NotificationManager {
   }
 
   setupInstallPrompt() {
+    // Day 69: Capture event for later use by maybeShowInstallModal()
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this._deferredInstallPrompt = e;
-      if (this._sessionCount >= 3) {
-        this._maybeShowInstallBanner();
-      }
     });
+    window.addEventListener('appinstalled', () => {
+      this._deferredInstallPrompt = null;
+    });
+    // Day 69: Settings → Install App entry
+    const settingsBtn = document.getElementById('install-app-btn');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        // Close settings modal first if open
+        const settingsModal = document.getElementById('settings-modal');
+        if (settingsModal) settingsModal.style.display = 'none';
+        this.maybeShowInstallModal({ source: 'settings', force: true });
+      });
+    }
+    // Day 69: Wire branded modal buttons (idempotent — safe to call once)
+    this._wireInstallModal();
   }
 
-  _maybeShowInstallBanner() {
-    if (!this._deferredInstallPrompt) return;
+  // Day 69: Detect standalone (PWA installed) — never show prompt then
+  _isStandalone() {
     try {
-      const dismissTime = parseInt(SafeStorage.getItem(INSTALL_DISMISS_KEY) || '0');
-      if (dismissTime > 0 && (Date.now() - dismissTime) < 7 * 24 * 60 * 60 * 1000) return;
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+      if (navigator.standalone === true) return true; // iOS Safari
     } catch (e) {}
-    const prompt = document.getElementById('install-prompt');
-    if (prompt) prompt.style.display = 'flex';
-    const installBtn = document.getElementById('install-btn');
-    const dismissBtn = document.getElementById('install-dismiss');
-    if (installBtn) {
-      installBtn.onclick = async () => {
+    return false;
+  }
+
+  // Day 69: Detect iOS (Safari without beforeinstallprompt)
+  _isIOS() {
+    try {
+      const ua = navigator.userAgent || '';
+      const isiOS = /iPhone|iPad|iPod/i.test(ua) && !/Android/i.test(ua);
+      // iPad on iOS 13+ reports as Mac — also treat touch-enabled Mac as iOS-like
+      const isiPadOS = /Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1;
+      return isiOS || isiPadOS;
+    } catch (e) { return false; }
+  }
+
+  // Day 69: Snooze status — returns ms until snooze expires (0 if not snoozed)
+  _installSnoozeRemainingMs() {
+    let remaining = 0;
+    try {
+      const later = parseInt(SafeStorage.getItem(INSTALL_LATER_KEY) || '0');
+      if (later > 0) {
+        const r = (later + INSTALL_LATER_MS) - Date.now();
+        if (r > remaining) remaining = r;
+      }
+      const never = parseInt(SafeStorage.getItem(INSTALL_NEVER_KEY) || '0');
+      if (never > 0) {
+        const r = (never + INSTALL_NEVER_MS) - Date.now();
+        if (r > remaining) remaining = r;
+      }
+      // Honor legacy Day 52 dismiss key for 7 days
+      const legacy = parseInt(SafeStorage.getItem(INSTALL_DISMISS_KEY) || '0');
+      if (legacy > 0) {
+        const r = (legacy + 7 * 24 * 60 * 60 * 1000) - Date.now();
+        if (r > remaining) remaining = r;
+      }
+    } catch (e) {}
+    return remaining;
+  }
+
+  // Day 69: Reusable welcome toast
+  showWelcomeToast(text, durationMs) {
+    const dur = durationMs || 4500;
+    let toast = document.getElementById('welcome-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'welcome-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = text;
+    toast.style.display = 'block';
+    toast.style.animation = 'none';
+    void toast.offsetWidth;
+    toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease ' + ((dur - 400) / 1000) + 's forwards';
+    clearTimeout(this._welcomeToastTimer);
+    this._welcomeToastTimer = setTimeout(() => { toast.style.display = 'none'; }, dur + 100);
+  }
+
+  // Day 69: Welcome toast arc + install pitch on level-completion
+  onLevelCompleted(levelId) {
+    if (levelId !== 1 && levelId !== 2 && levelId !== 3) return;
+    let arc = {};
+    try { arc = JSON.parse(SafeStorage.getItem(WELCOME_TOAST_KEY) || '{}'); } catch (e) {}
+    const key = 'l' + levelId;
+    if (arc[key]) return; // already shown for this level
+    arc[key] = true;
+    SafeStorage.setItem(WELCOME_TOAST_KEY, JSON.stringify(arc));
+    if (levelId === 1) {
+      this.showWelcomeToast('🎉 First circuit lit!', 3800);
+    } else if (levelId === 2) {
+      this.showWelcomeToast('⚡ Two down — flowing!', 3800);
+    } else if (levelId === 3) {
+      this.showWelcomeToast('🚀 You\'re flowing — install for offline + notifications', 5200);
+      // Surface install modal a moment after the celebratory toast lands
+      setTimeout(() => this.maybeShowInstallModal({ source: 'L3-completion' }), 1800);
+    }
+  }
+
+  // Day 69: Branded install modal — central entry point
+  maybeShowInstallModal(opts) {
+    const options = opts || {};
+    if (this._isStandalone() && !options.force) return;
+    if (!options.force && this._installSnoozeRemainingMs() > 0) return;
+
+    if (this._deferredInstallPrompt) {
+      this._showInstallModal();
+      return;
+    }
+    if (this._isIOS()) {
+      // iOS Safari has no beforeinstallprompt — show manual instructions
+      this._showIOSInstallModal();
+      return;
+    }
+    if (options.force) {
+      // Forced from settings on a desktop without a deferred prompt — show iOS-style
+      // instructions modal as the closest fallback so the button isn't a dead end.
+      this._showIOSInstallModal();
+    }
+  }
+
+  _showInstallModal() {
+    const modal = document.getElementById('install-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  _showIOSInstallModal() {
+    const modal = document.getElementById('ios-install-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  _wireInstallModal() {
+    if (this._installModalWired) return;
+    this._installModalWired = true;
+    const modal = document.getElementById('install-modal');
+    const yes = document.getElementById('install-modal-yes');
+    const later = document.getElementById('install-modal-later');
+    const never = document.getElementById('install-modal-never');
+    const close = () => { if (modal) modal.style.display = 'none'; };
+    if (yes) {
+      yes.addEventListener('click', async () => {
         if (this._deferredInstallPrompt) {
-          this._deferredInstallPrompt.prompt();
-          await this._deferredInstallPrompt.userChoice;
+          try {
+            this._deferredInstallPrompt.prompt();
+            const { outcome } = await this._deferredInstallPrompt.userChoice;
+            if (outcome === 'dismissed') {
+              SafeStorage.setItem(INSTALL_LATER_KEY, String(Date.now()));
+            }
+          } catch (e) {}
           this._deferredInstallPrompt = null;
         }
-        if (prompt) prompt.style.display = 'none';
-      };
+        close();
+      });
     }
-    if (dismissBtn) {
-      dismissBtn.onclick = () => {
-        SafeStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
-        if (prompt) prompt.style.display = 'none';
-      };
+    if (later) {
+      later.addEventListener('click', () => {
+        SafeStorage.setItem(INSTALL_LATER_KEY, String(Date.now()));
+        close();
+      });
     }
+    if (never) {
+      never.addEventListener('click', () => {
+        SafeStorage.setItem(INSTALL_NEVER_KEY, String(Date.now()));
+        close();
+      });
+    }
+    // iOS modal
+    const iosModal = document.getElementById('ios-install-modal');
+    const iosClose = document.getElementById('ios-install-close');
+    const iosLater = document.getElementById('ios-install-later');
+    const closeIOS = () => { if (iosModal) iosModal.style.display = 'none'; };
+    if (iosClose) iosClose.addEventListener('click', closeIOS);
+    if (iosLater) iosLater.addEventListener('click', () => {
+      SafeStorage.setItem(INSTALL_LATER_KEY, String(Date.now()));
+      closeIOS();
+    });
   }
 
   setupOfflineIndicator() {

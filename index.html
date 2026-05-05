@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1778688000">
+  <link rel="stylesheet" href="css/style.css?v=1778774400">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -22,11 +22,44 @@
   </noscript>
   <!-- Day 52: Offline indicator -->
   <div id="offline-badge" style="display:none;">📴 Offline</div>
-  <!-- Day 52: Install App prompt -->
+  <!-- Day 52: Install App prompt (legacy compact banner — kept for fallback) -->
   <div id="install-prompt" style="display:none;">
     <span>⚡ Install Signal Circuit for offline play!</span>
     <button id="install-btn" class="settings-btn" style="background:#0f0;color:#000;font-weight:bold;">Install</button>
     <button id="install-dismiss" class="settings-btn" style="color:#888;">Not now</button>
+  </div>
+  <!-- Day 69: Branded install modal (replaces legacy banner as the primary surface) -->
+  <div id="install-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="install-modal-title">
+    <div id="install-modal-content">
+      <h3 id="install-modal-title">📲 Install Signal Circuit</h3>
+      <p class="install-modal-sub">You're flowing — keep the lights on.</p>
+      <ul class="install-benefits">
+        <li><span class="ib-icon">📴</span><span><strong>Offline play</strong><br>No internet? No problem. Levels work anywhere.</span></li>
+        <li><span class="ib-icon">🔔</span><span><strong>Daily reminders</strong><br>Never miss the daily challenge or break a streak.</span></li>
+        <li><span class="ib-icon">⚡</span><span><strong>1-tap launch</strong><br>Lives on your home screen like a real app.</span></li>
+      </ul>
+      <div class="install-modal-actions">
+        <button id="install-modal-yes" class="settings-btn install-primary">Install</button>
+        <button id="install-modal-later" class="settings-btn install-secondary">Maybe Later</button>
+        <button id="install-modal-never" class="settings-btn install-tertiary">No Thanks</button>
+      </div>
+    </div>
+  </div>
+  <!-- Day 69: iOS-specific Add-to-Home-Screen instructions modal -->
+  <div id="ios-install-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ios-install-title">
+    <div id="ios-install-content">
+      <h3 id="ios-install-title">📲 Add to Home Screen</h3>
+      <p class="install-modal-sub">iOS doesn't show an install prompt — add it manually:</p>
+      <ol class="ios-steps">
+        <li>Tap the <strong>Share</strong> button <span class="ios-step-glyph">⬆️</span> at the bottom of Safari.</li>
+        <li>Scroll and tap <strong>Add to Home Screen</strong> <span class="ios-step-glyph">➕</span>.</li>
+        <li>Tap <strong>Add</strong> in the top-right corner.</li>
+      </ol>
+      <div class="install-modal-actions">
+        <button id="ios-install-close" class="settings-btn install-primary">Got it</button>
+        <button id="ios-install-later" class="settings-btn install-secondary">Maybe Later</button>
+      </div>
+    </div>
   </div>
   <!-- ARIA live region for screen reader announcements -->
   <div id="sr-status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
@@ -151,6 +184,7 @@
           <div id="sync-row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
             <button id="export-progress-btn" class="settings-btn" aria-label="Export progress">📤 Export Progress</button>
             <button id="import-progress-btn" class="settings-btn" aria-label="Import progress">📥 Import Progress</button>
+            <button id="install-app-btn" class="settings-btn" aria-label="Install Signal Circuit as an app">📲 Install App</button>
             <button id="reset-progress-btn" class="settings-btn" aria-label="Reset all progress">⚠ Reset Progress</button>
           </div>
         </div>
@@ -701,15 +735,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1778688000"></script>
-  <script src="js/wires.js?v=1778688000"></script>
-  <script src="js/simulation.js?v=1778688000"></script>
-  <script src="js/levels.js?v=1778688000"></script>
-  <script src="js/audio.js?v=1778688000"></script>
-  <script src="js/achievements.js?v=1778688000"></script>
-  <script src="js/canvas.js?v=1778688000"></script>
-  <script src="js/ui.js?v=1778688000"></script>
-  <script src="js/tutorial.js?v=1778688000"></script>
-  <script src="js/main.js?v=1778688000"></script>
+  <script src="js/gates.js?v=1778774400"></script>
+  <script src="js/wires.js?v=1778774400"></script>
+  <script src="js/simulation.js?v=1778774400"></script>
+  <script src="js/levels.js?v=1778774400"></script>
+  <script src="js/audio.js?v=1778774400"></script>
+  <script src="js/achievements.js?v=1778774400"></script>
+  <script src="js/canvas.js?v=1778774400"></script>
+  <script src="js/ui.js?v=1778774400"></script>
+  <script src="js/tutorial.js?v=1778774400"></script>
+  <script src="js/main.js?v=1778774400"></script>
 </body>
 </html>

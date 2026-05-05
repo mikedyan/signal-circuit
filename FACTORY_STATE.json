@@ -2,20 +2,20 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 68,
-  "nextDay": 69,
+  "lastCompletedDay": 69,
+  "nextDay": 70,
   "totalItemsCompleted": 425,
   "totalItems": 425,
-  "status": "Cycle 2 Build Week Day 1 — Infinite Mode shipped: InfiniteRunManager with 3 lives + streak + tier-bumping (Novice→Intermediate@5→Advanced@10→Expert@15), pre-screen with personal best display, in-canvas HUD (❤️x3 🔥 🧮 ⏱ tier + skip/end), run-summary screen with new-best banner + share, 2 new gold achievements (infinite_marathon 50-streak, pure_logic_run 10 hint-free). Cache bust ?v=1778688000, sw v46. CDP verification: gating works (hidden cold, visible at 12 levels), full run loop (start → 5 solves → tier bump → skip → endRun → summary → best persisted) succeeds, 0 console errors. Smoke: normal Level 1 play unaffected.",
-  "lastRun": "2026-05-04T08:08:00-07:00",
-  "lastRunNote": "Cycle 2 Build Week Day 1 complete. Wrote roadmaps/cycle-2-build.md (5-day plan: Infinite Mode → Mobile Install Moment → Discovery Lab Blueprint → Mythic Achievements → Weekly Tournament).",
+  "status": "Cycle 2 Build Week Day 2 — Mobile Install Moment + Welcome Onramp shipped: install trigger moved from session-count to 3-levels-completed; welcome toast arc on L1/L2/L3 first solves ('🎉 First circuit lit!' / '⚡ Two down — flowing!' / '🚀 You're flowing — install for offline + notifications'); branded install modal with offline/daily/1-tap benefits and 3-button choice (Install / Maybe Later 14d / No Thanks 90d); iOS Safari fallback modal with Add-to-Home-Screen steps; standalone-mode suppression via display-mode + navigator.standalone; Settings → 📲 Install App entry that force-shows; onboarding Step 1/3, 2/3, 3/3 chips on L1–L3 cards while completed-count<3; streak chip suppressed on truly fresh profiles (no completed levels). Cache bust ?v=1778774400, sw v47. CDP verification: cold-start (chips visible, no streak, no modal); L1→L2→L3 toast arc fires; install modal opens 1.8s after L3; Maybe Later → 14d snooze respected; force-from-settings reopens; No Thanks → 90d snooze; standalone hides modal but force still works; iOS UA → iOS modal opens. 0 console errors across all paths.",
+  "lastRun": "2026-05-05T08:30:00-07:00",
+  "lastRunNote": "Cycle 2 Build Week Day 2 complete. Mobile install onramp + welcome arc shipped per cycle-2-build.md item 2/5.",
   "cycle2BuildRoadmap": "roadmaps/cycle-2-build.md",
   "nextCycle": {
     "cycleNumber": 2,
     "weekType": "build",
-    "weekDay": 2,
-    "nextDay": 69,
-    "focus": "Mobile Install Moment + Welcome Onramp"
+    "weekDay": 3,
+    "nextDay": 70,
+    "focus": "Discovery Lab Redesign: Blueprint Mode"
   },
   "expertReview": "reviews/prune-cycle-1-review.md",
   "reviewScore": 8.4,
@@ -591,6 +591,24 @@
       "qa": "prune-validation",
       "score": 8.4
     },
+    "69": {
+      "items": [
+        "NotificationManager: install trigger moved from session-count to onLevelCompleted(L3); _isStandalone() + _isIOS() helpers; differentiated snooze (INSTALL_LATER_KEY 14d, INSTALL_NEVER_KEY 90d) + legacy INSTALL_DISMISS_KEY honor for 7d",
+        "Welcome toast arc on first-time L1/L2/L3 completion ('🎉 First circuit lit!' / '⚡ Two down — flowing!' / '🚀 You're flowing — install for offline + notifications')",
+        "Branded #install-modal (3 benefit bullets: offline play, daily reminders, 1-tap launch) + 3-button choice (Install / Maybe Later / No Thanks)",
+        "iOS-specific #ios-install-modal with Add-to-Home-Screen instructions for Safari (no beforeinstallprompt)",
+        "Standalone-mode suppression: matchMedia('(display-mode: standalone)') + navigator.standalone (iOS)",
+        "GameState.completeLevel: capture isFirstCompletion before mutation, dispatch to _notifManager.onLevelCompleted(levelId)",
+        "renderLevelSelect: Step 1/3, 2/3, 3/3 chips on L1–L3 cards while totalCompleted<3 (visible even on locked L2/L3)",
+        "updateStreakDisplay: hide streak chip when no levels are completed (kills inflated 🔥1 seed on fresh profiles)",
+        "Settings → 📲 Install App button that force-shows the modal (or iOS instructions as fallback)",
+        "~150 lines CSS (modal + toast + step chip + light-mode mirrors)",
+        "Cache bust ?v=1778774400, sw.js CACHE_NAME signal-circuit-v47",
+        "CDP verification (6 test groups): cold-start UI, welcome arc + L3 modal, snooze respect, force-from-settings, standalone suppression, iOS UA fallback, streak chip after first solve, gameplay smoke — all pass with 0 console errors"
+      ],
+      "status": "complete",
+      "qa": "build-cdp-verified"
+    },
     "68": {
       "items": [
         "InfiniteRunManager class (lives=3, streak, totalSolved, runStart, tier, _hintUsedThisPuzzle, _pureLogicCount)",
@@ -640,9 +658,9 @@
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
   "weekType": "build",
-  "weekDay": 1,
+  "weekDay": 2,
   "cycleNumber": 2,
-  "cycleDay": 16,
+  "cycleDay": 17,
   "weekSchedule": "build → harden → prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md",
   "hardenWeek": {

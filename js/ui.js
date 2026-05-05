@@ -353,6 +353,19 @@ class UI {
         titleSpan.textContent = level.title;
         btn.appendChild(titleSpan);
 
+        // Day 69: Onboarding step counter on L1–L3 cards while completed-count < 3.
+        // Shown even on locked L2/L3 so the player can see the journey ahead.
+        if (!isCompleted && (levelId === 1 || levelId === 2 || levelId === 3)) {
+          let totalCompleted = 0;
+          for (const v of Object.values(progress.levels || {})) if (v && v.completed) totalCompleted++;
+          if (totalCompleted < 3) {
+            const step = document.createElement('span');
+            step.className = 'onboard-step';
+            step.textContent = `Step ${levelId}/3`;
+            stars.appendChild(step);
+          }
+        }
+
         // Best time display
         if (isCompleted && levelProgress.bestTime) {
           const timeSpan = document.createElement('span');
@@ -2548,6 +2561,16 @@ class UI {
       el.style.display = 'none';
       return;
     }
+    // Day 69: hide the seed `🔥1 🧊0` chip on truly fresh profiles — a streak
+    // chip should only appear once the player has actually solved something.
+    try {
+      const levels = (this.gameState && this.gameState.progress && this.gameState.progress.levels) || {};
+      const anyCompleted = Object.values(levels).some(l => l && l.completed);
+      if (!anyCompleted) {
+        el.style.display = 'none';
+        return;
+      }
+    } catch (e) {}
     el.style.display = '';
     const freeze = streakData.freezeTokens > 0 ? ` 🧊${streakData.freezeTokens}` : '';
     el.textContent = `🔥${streakData.streak}${freeze}`;
