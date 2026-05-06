@@ -905,6 +905,30 @@ class UI {
       this.hideStarDisplay();
     });
 
+    // Day 70: Lab Bench Reset Lab button
+    const resetLabBtn = document.getElementById('lab-reset-btn');
+    if (resetLabBtn) {
+      resetLabBtn.addEventListener('click', () => {
+        if (this.gameState && typeof this.gameState.resetLab === 'function') {
+          this.gameState.resetLab();
+        }
+      });
+    }
+
+    // Day 70: Lab Bench tutorial overlay dismiss
+    const labTutOverlay = document.getElementById('lab-tutorial-overlay');
+    const labTutClose = document.getElementById('lab-tutorial-close');
+    if (labTutClose && labTutOverlay) {
+      labTutClose.addEventListener('click', () => {
+        labTutOverlay.style.display = 'none';
+      });
+    }
+    if (labTutOverlay) {
+      labTutOverlay.addEventListener('click', (e) => {
+        if (e.target === labTutOverlay) labTutOverlay.style.display = 'none';
+      });
+    }
+
     document.getElementById('next-level-btn').addEventListener('click', () => {
       const gs = this.gameState;
       if (gs.currentLevel && gs.currentLevel.id < getLevelCount()) {
@@ -1000,11 +1024,16 @@ class UI {
       if (this.gameState.isMultiPhase && level.phases) {
         titleText += ` (Phase ${this.gameState.currentPhase + 1}/${level.phases.length})`;
       }
+      // Day 70: Lab Bench prefix
+      if (level.isLabBench) {
+        titleText = `📐 Lab Bench · L${level.id}: ${level.title}`;
+      }
       document.getElementById('level-title').textContent = titleText;
       document.getElementById('level-desc').textContent = level.description;
       document.getElementById('prev-level').disabled = level.id <= 1;
       document.getElementById('next-level').disabled = level.id >= getLevelCount();
-      document.getElementById('run-btn').textContent = '▶ RUN';
+      // Day 70: Submit Blueprint label for Lab Bench levels
+      document.getElementById('run-btn').textContent = level.isLabBench ? '📐 Submit Blueprint' : '▶ RUN';
     }
 
     // #91: Cross-level "Used In" forward references
@@ -2721,12 +2750,66 @@ class UI {
   }
 
   // ── Gate Count Indicator (real-time during gameplay) ──
+  // Day 70: Lab Bench / Blueprint Mode HUD render.
+  updateLabHud() {
+    const hud = document.getElementById('lab-hud');
+    if (!hud) return;
+    const gs = this.gameState;
+    const level = gs.currentLevel;
+    const isLab = !!(level && level.isLabBench && !gs.isChallengeMode && !gs.isSandboxMode);
+    if (!isLab) {
+      hud.style.display = 'none';
+      // Restore Quick Test visibility for non-lab levels
+      const qt = document.getElementById('quick-test-btn');
+      if (qt) qt.style.display = '';
+      const rb = document.getElementById('run-btn');
+      if (rb) rb.disabled = false;
+      return;
+    }
+    hud.style.display = 'flex';
+    if (!gs._lab) gs._initLabState();
+    const count = gs.gates.filter(g => !g._locked).length;
+    const optimal = level.optimalGates || 1;
+    const triesEl = document.getElementById('lab-tries');
+    const budgetEl = document.getElementById('lab-budget');
+    const resetBtn = document.getElementById('lab-reset-btn');
+    const labelEl = document.getElementById('lab-label');
+    if (labelEl) labelEl.textContent = gs._lab.cleared ? '✓ Blueprint filed' : '📐 Blueprint draft';
+    if (triesEl) {
+      triesEl.textContent = `${gs._lab.attempts}/${gs._lab.maxAttempts} submissions`;
+      triesEl.classList.toggle('exhausted', gs._lab.exhausted);
+    }
+    if (budgetEl) budgetEl.textContent = `≈ ${count} gate${count===1?'':'s'} · target ${optimal}`;
+    // Lock RUN button when exhausted, surface Reset Lab.
+    const rb = document.getElementById('run-btn');
+    if (rb) rb.disabled = !!(gs._lab.exhausted && !gs._lab.cleared);
+    if (resetBtn) resetBtn.style.display = (gs._lab.exhausted && !gs._lab.cleared) ? 'inline-flex' : 'none';
+    // Hide Quick Test in lab mode — lab is single-shot Submit only.
+    const qt = document.getElementById('quick-test-btn');
+    if (qt) qt.style.display = 'none';
+  }
+
+  // Day 70: First-entry Lab Bench tutorial.
+  maybeShowLabTutorial() {
+    const gs = this.gameState;
+    if (!gs || !gs.currentLevel || !gs.currentLevel.isLabBench) return;
+    let seen = false;
+    try { seen = localStorage.getItem('signal-circuit-lab-tutorial-seen') === '1'; } catch (e) {}
+    if (seen) return;
+    const overlay = document.getElementById('lab-tutorial-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    try { localStorage.setItem('signal-circuit-lab-tutorial-seen', '1'); } catch (e) {}
+  }
+
   updateGateIndicator() {
     const el = document.getElementById('gate-indicator');
     if (!el) return;
 
     const gs = this.gameState;
     const level = gs.currentLevel;
+    // Day 70: Keep Lab HUD in sync whenever gate indicator updates (gate add/remove/move).
+    if (this.updateLabHud) this.updateLabHud();
     if (!level || gs.isSandboxMode) {
       el.style.display = 'none';
       return;
@@ -3319,8 +3402,13 @@ class UI {
       // T5: Chapter 6 — NAND/NOR gate rain
       colors = ['#cc6600', '#ff8844', '#dd7733', '#ffaa66', '#ffd700'];
       shapes = ['gate_rain'];
+    } else if (chapterId === 9) {
+      // Day 70: Lab Bench (Chapter 8) blueprint hologram celebration — cyan/white
+      // shimmer with blueprint emoji burst, distinct from chapter 1–6 themes.
+      colors = ['#00E5FF', '#80f4ff', '#fff', '#0099bb', '#b3f6ff', '#ffd700'];
+      shapes = ['blueprint_emoji', 'rect', 'circle'];
     } else {
-      // Bonus chapters / Discovery Lab: default confetti with chapter color
+      // Bonus chapters: default confetti with chapter color
       const chColor = ctx.chapterColor || '#ffd700';
       colors = [chColor, '#ffd700', '#fff', '#ff8800', chColor, chColor];
       shapes = defaultShapes;
@@ -3486,22 +3574,25 @@ class UI {
         });
       }
     }
-    // Default confetti (Chapters 1-2, challenges, and T2 circuit symbols)
+    // Default confetti (Chapters 1-2, challenges, T2 circuit symbols, Day 70 blueprint hologram)
     else {
+      const blueprintLabels = ['📐', '🔬', '📊', '✂️', '🖋️'];
       for (let i = 0; i < particleCount; i++) {
         let shape = shapes[Math.floor(Math.random() * shapes.length)];
         let label = null;
         if (shape === 'gate_symbol') {
           label = gateSymbols[Math.floor(Math.random() * gateSymbols.length)];
+        } else if (shape === 'blueprint_emoji') {
+          label = blueprintLabels[Math.floor(Math.random() * blueprintLabels.length)];
         }
         this.celebrationParticles.push({
           x: cx + (Math.random() - 0.5) * 300,
           y: cy + (Math.random() - 0.5) * 100,
           vx: (Math.random() - 0.5) * 14 * velocityMul,
           vy: -Math.random() * 12 - 3,
-          size: Math.random() * 7 + 3,
+          size: shape === 'blueprint_emoji' ? Math.random() * 10 + 14 : Math.random() * 7 + 3,
           color: colors[Math.floor(Math.random() * colors.length)],
-          shape: shape === 'gate_symbol' ? 'gate_symbol' : shape,
+          shape: shape,
           rotation: Math.random() * Math.PI * 2,
           rotSpeed: (Math.random() - 0.5) * 0.4,
           life: 1,
@@ -3674,6 +3765,20 @@ class UI {
           ctx2.textAlign = 'center';
           ctx2.textBaseline = 'middle';
           ctx2.fillText(p._label || '\u{1F9E0}', 0, 0);
+        } else if (p.shape === 'blueprint_emoji') {
+          // Day 70: Lab Bench blueprint hologram particles
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.14;
+          ctx2.translate(p.x, p.y);
+          ctx2.rotate(p.rotation);
+          ctx2.font = p.size + 'px sans-serif';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.shadowColor = '#00E5FF';
+          ctx2.shadowBlur = 8;
+          ctx2.fillText(p._label || '📐', 0, 0);
+          ctx2.shadowBlur = 0;
         } else {
           p.x += p.vx;
           p.y += p.vy;

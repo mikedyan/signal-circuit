@@ -1965,6 +1965,19 @@ class GameState {
       try { window._notifManager.onLevelCompleted(levelId); } catch (e) {}
     }
 
+    // Day 70: Lab Bench / Blueprint Mode tracking on success.
+    if (level.isLabBench && this._lab) {
+      this._lab.cleared = true;
+      const wasFirstTry = (this._lab.attempts === 1 && !this._lab.firstTryLocked);
+      if (wasFirstTry && this.achievements && typeof this.achievements.trackBlueprintFirstTry === 'function') {
+        const newFTAchs = this.achievements.trackBlueprintFirstTry(levelId);
+        if (newFTAchs && newFTAchs.length && this.ui && this.ui.showAchievementToasts) {
+          this.ui.showAchievementToasts(newFTAchs);
+        }
+      }
+      if (this.ui && this.ui.updateLabHud) this.ui.updateLabHud();
+    }
+
     return stars;
   }
 
@@ -2737,7 +2750,55 @@ class GameState {
     // T7: Restore auto-saved circuit state
     this._restoreAutoSave(id);
 
+    // Day 70: Initialize Lab Bench / Blueprint mode state for this level.
+    this._initLabState();
+    this.ui.updateLabHud();
+    this.ui.maybeShowLabTutorial();
+
     this.markDirty();
+  }
+
+  // Day 70: Lab Bench / Blueprint Mode helpers
+  _isLabBench() {
+    return !!(this.currentLevel && this.currentLevel.isLabBench && !this.isChallengeMode && !this.isSandboxMode);
+  }
+
+  _initLabState() {
+    this._lab = {
+      attempts: 0,
+      maxAttempts: 3,
+      exhausted: false,
+      firstTryLocked: false, // becomes true after any failed submit OR a Reset Lab
+      cleared: false,
+    };
+  }
+
+  // Returns true if the run should proceed; false if exhausted/blocked.
+  _consumeLabAttempt() {
+    if (!this._isLabBench()) return true;
+    if (!this._lab) this._initLabState();
+    if (this._lab.exhausted || this._lab.cleared) return false;
+    this._lab.attempts++;
+    if (this.achievements && typeof this.achievements.trackBlueprintSubmit === 'function') {
+      this.achievements.trackBlueprintSubmit();
+    }
+    if (this._lab.attempts >= this._lab.maxAttempts) {
+      this._lab.exhausted = true;
+    }
+    this.ui.updateLabHud();
+    return true;
+  }
+
+  resetLab() {
+    if (!this._isLabBench()) return;
+    if (!this._lab) this._initLabState();
+    this._lab.attempts = 0;
+    this._lab.exhausted = false;
+    this._lab.firstTryLocked = true; // resetting forfeits the first-try achievement chase
+    this.ui.updateLabHud();
+    this.ui.updateResultDisplay('idle', '🔬 Lab reset — 3 fresh tries. Take another look at the truth table.');
+    this.ui.updateStatusBar('Lab Bench: 3 fresh submissions. First-try lock retained for this attempt cycle.');
+    this.audio.playClick();
   }
 
   loadChallengeLevel(level) {
@@ -2932,6 +2993,17 @@ class GameState {
     // Day 38: Tutorial RUN notification
     if (this.tutorial && this.tutorial.isActive()) this.tutorial.onRunPressed();
     if (this.isAnimating) return;
+
+    // Day 70: Lab Bench gate — consume an attempt before any animation cost.
+    if (this._isLabBench()) {
+      if (!this._consumeLabAttempt()) {
+        this.audio.playClick();
+        this.ui.updateResultDisplay('idle', '🔬 Lab tries exhausted — click 🔬 Reset Lab to restore.');
+        this.ui.updateStatusBar('Lab Bench: 3/3 submissions used. Reset to retry.');
+        return;
+      }
+    }
+
     this.isAnimating = true;
 
     // Day 54: Track attempt count per level
@@ -3193,6 +3265,17 @@ class GameState {
   runQuickTest() {
     if (this._replayViewerActive) return; // Day 51: Block during replay
     if (this.isAnimating) return;
+
+    // Day 70: Lab Bench: Quick Test is hidden in lab mode, but if it's invoked via
+    // a keyboard shortcut, route it through the same submit-gate as RUN.
+    if (this._isLabBench()) {
+      if (!this._consumeLabAttempt()) {
+        this.audio.playClick();
+        this.ui.updateResultDisplay('idle', '🔬 Lab tries exhausted — click 🔬 Reset Lab to restore.');
+        this.ui.updateStatusBar('Lab Bench: 3/3 submissions used. Reset to retry.');
+        return;
+      }
+    }
 
     this.audio.playButtonClick();
     this.ui.hideStarDisplay();

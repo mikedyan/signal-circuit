@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1778774400">
+  <link rel="stylesheet" href="css/style.css?v=1779120000">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -501,6 +501,13 @@
         </div>
 
         <div id="controls">
+          <!-- Day 70: Lab Bench / Blueprint Mode HUD (hidden unless on a Lab Bench level) -->
+          <div id="lab-hud" style="display:none;" aria-label="Lab Bench status">
+            <span id="lab-label">📐 Blueprint draft</span>
+            <span id="lab-budget" class="lab-chip">≈ 0 gates · target —</span>
+            <span id="lab-tries" class="lab-chip">0/3 submissions</span>
+            <button id="lab-reset-btn" style="display:none;" aria-label="Reset Lab — grants 3 fresh submissions">🔬 Reset Lab</button>
+          </div>
           <button id="run-btn" aria-label="Run simulation">▶ RUN</button>
           <div id="secondary-controls">
             <button id="quick-test-btn" title="Shift+Enter: Instant test without animation" aria-label="Quick test without animation">⚡ Quick Test</button>
@@ -570,6 +577,22 @@
         </div>
 
       </div>
+    </div>
+  </div>
+
+  <!-- Day 70: Lab Bench first-entry tutorial overlay -->
+  <div id="lab-tutorial-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="lab-tutorial-title">
+    <div id="lab-tutorial-content">
+      <div id="lab-tutorial-title">📐 Welcome to Lab Bench</div>
+      <p class="lab-tutorial-tagline">In Lab Bench, <strong>you design first, test once</strong>.</p>
+      <ul class="lab-tutorial-list">
+        <li>✨ Full toolbox — every gate available, no restrictions.</li>
+        <li>📐 Submit your blueprint when you're ready.</li>
+        <li>⚠️ You only get <strong>3 submissions</strong> per attempt.</li>
+        <li>🔬 Out of tries? Reset Lab restores 3 fresh submissions.</li>
+        <li>🏆 First-try solves earn the 📐 Drafted Right achievement.</li>
+      </ul>
+      <button id="lab-tutorial-close" type="button" aria-label="Got it">Got it — design freely</button>
     </div>
   </div>
 
@@ -735,15 +758,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1778774400"></script>
-  <script src="js/wires.js?v=1778774400"></script>
-  <script src="js/simulation.js?v=1778774400"></script>
-  <script src="js/levels.js?v=1778774400"></script>
-  <script src="js/audio.js?v=1778774400"></script>
-  <script src="js/achievements.js?v=1778774400"></script>
-  <script src="js/canvas.js?v=1778774400"></script>
-  <script src="js/ui.js?v=1778774400"></script>
-  <script src="js/tutorial.js?v=1778774400"></script>
-  <script src="js/main.js?v=1778774400"></script>
+  <script src="js/gates.js?v=1779120000"></script>
+  <script src="js/wires.js?v=1779120000"></script>
+  <script src="js/simulation.js?v=1779120000"></script>
+  <script src="js/levels.js?v=1779120000"></script>
+  <script src="js/audio.js?v=1779120000"></script>
+  <script src="js/achievements.js?v=1779120000"></script>
+  <script src="js/canvas.js?v=1779120000"></script>
+  <script src="js/ui.js?v=1779120000"></script>
+  <script src="js/tutorial.js?v=1779120000"></script>
+  <script src="js/main.js?v=1779120000"></script>
 </body>
 </html>

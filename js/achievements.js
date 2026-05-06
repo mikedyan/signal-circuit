@@ -44,6 +44,9 @@ const ACHIEVEMENTS = [
   // Day 68: Infinite Mode
   { id: 'infinite_marathon', name: 'Infinite Marathon', desc: 'Reach a 50-streak in a single Infinite run', icon: '🌌', tier: 'gold' },
   { id: 'pure_logic_run', name: 'Pure Logic Run', desc: 'Solve 10 puzzles in one Infinite run without using a hint', icon: '💡', tier: 'gold' },
+  // Day 70: Lab Bench / Blueprint Mode
+  { id: 'drafted_right', name: 'Drafted Right', desc: 'First-try solve on 3 different Lab Bench blueprints', icon: '📐', tier: 'gold' },
+  { id: 'lab_method', name: 'The Method', desc: 'Clear all 5 Lab Bench levels (or any 10 lab clears total)', icon: '🔬', tier: 'gold' },
 ];
 
 const TIER_COLORS = {
@@ -63,6 +66,12 @@ class AchievementManager {
       lastDailyChallengeDate: null,
       optimalSolves: 0,
       modesPlayed: [],
+      // Day 70: Lab Bench / Blueprint Mode
+      blueprintsSubmitted: 0,
+      blueprintsFirstTrySolved: 0,
+      blueprintLevelsCleared: 0,
+      blueprintsFirstTryLevels: [],
+      blueprintLevelsClearedSet: [],
     };
     this.load();
   }
@@ -79,10 +88,19 @@ class AchievementManager {
             dailyChallengesTotal: 0, dailyChallengeStreak: 0,
             lastDailyChallengeDate: null, optimalSolves: 0,
             modesPlayed: [],
+            // Day 70: Lab Bench / Blueprint Mode
+            blueprintsSubmitted: 0,
+            blueprintsFirstTrySolved: 0,
+            blueprintLevelsCleared: 0,
+            blueprintsFirstTryLevels: [],
+            blueprintLevelsClearedSet: [],
           };
           this.stats = { ...defaults, ...(data.stats || {}) };
           // Ensure modesPlayed is always an array
           if (!Array.isArray(this.stats.modesPlayed)) this.stats.modesPlayed = [];
+          // Day 70: Ensure lab arrays are always arrays
+          if (!Array.isArray(this.stats.blueprintsFirstTryLevels)) this.stats.blueprintsFirstTryLevels = [];
+          if (!Array.isArray(this.stats.blueprintLevelsClearedSet)) this.stats.blueprintLevelsClearedSet = [];
         } else {
           // Legacy format: flat object
           this.unlocked = data;
@@ -242,8 +260,49 @@ class AchievementManager {
       if (this.unlock('collector')) newlyUnlocked.push('collector');
     }
 
+    // Day 70: Lab Bench / Blueprint Mode achievements
+    if (level && level.isLabBench) {
+      const lvlIdStr = String(levelId);
+      if (!Array.isArray(this.stats.blueprintLevelsClearedSet)) this.stats.blueprintLevelsClearedSet = [];
+      if (!this.stats.blueprintLevelsClearedSet.includes(lvlIdStr)) {
+        this.stats.blueprintLevelsClearedSet.push(lvlIdStr);
+        this.stats.blueprintLevelsCleared = this.stats.blueprintLevelsClearedSet.length;
+      }
+      // Lab Method: 5 distinct levels cleared (the lab has only 5 levels) OR 10 total clears tracked separately
+      if (this.stats.blueprintLevelsCleared >= 5) {
+        if (this.unlock('lab_method')) newlyUnlocked.push('lab_method');
+      }
+      // Drafted Right: 3 first-try blueprint levels
+      const ftLvls = Array.isArray(this.stats.blueprintsFirstTryLevels) ? this.stats.blueprintsFirstTryLevels : [];
+      if (ftLvls.length >= 3) {
+        if (this.unlock('drafted_right')) newlyUnlocked.push('drafted_right');
+      }
+    }
+
     this.save();
     return newlyUnlocked;
+  }
+
+  // Day 70: Track a Blueprint submission (success or fail) — increments submit counter only.
+  trackBlueprintSubmit() {
+    this.stats.blueprintsSubmitted = (this.stats.blueprintsSubmitted || 0) + 1;
+    this.save();
+  }
+
+  // Day 70: Track a Blueprint first-try success. Returns array of newly unlocked ids.
+  trackBlueprintFirstTry(levelId) {
+    const newly = [];
+    if (!Array.isArray(this.stats.blueprintsFirstTryLevels)) this.stats.blueprintsFirstTryLevels = [];
+    const lid = String(levelId);
+    if (!this.stats.blueprintsFirstTryLevels.includes(lid)) {
+      this.stats.blueprintsFirstTryLevels.push(lid);
+      this.stats.blueprintsFirstTrySolved = this.stats.blueprintsFirstTryLevels.length;
+      if (this.stats.blueprintsFirstTrySolved >= 3) {
+        if (this.unlock('drafted_right')) newly.push('drafted_right');
+      }
+      this.save();
+    }
+    return newly;
   }
 
   // Track challenge completions (random challenges)

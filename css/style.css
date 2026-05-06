@@ -6666,3 +6666,187 @@ body.light-mode .onboard-step {
   border-color: rgba(0, 138, 0, 0.4);
   color: #0a8a0a;
 }
+
+/* ──────────────────────────────────────────────────────────── */
+/* Day 70 — Lab Bench / Blueprint Mode (Discovery Lab redesign) */
+/* ──────────────────────────────────────────────────────────── */
+
+/* Lab HUD strip — sits above the RUN button on Lab Bench levels */
+#lab-hud {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 10px 0;
+  padding: 8px 10px;
+  background: rgba(0, 229, 255, 0.07);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 6px;
+  color: #00E5FF;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+}
+
+#lab-label {
+  font-weight: bold;
+  margin-right: 4px;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+}
+
+#lab-hud .lab-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  border-radius: 10px;
+  color: #b3f6ff;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+#lab-tries.exhausted {
+  background: rgba(255, 80, 80, 0.18);
+  border-color: rgba(255, 80, 80, 0.6);
+  color: #ffb3b3;
+}
+
+#lab-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  margin-left: auto;
+  background: rgba(255, 215, 0, 0.18);
+  border: 1px solid rgba(255, 215, 0, 0.55);
+  color: #ffd700;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+#lab-reset-btn:hover {
+  background: rgba(255, 215, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+#lab-reset-btn:active { transform: translateY(0); }
+
+/* Lab Bench tutorial overlay (first-entry only) */
+#lab-tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  backdrop-filter: blur(3px);
+}
+
+#lab-tutorial-content {
+  max-width: 460px;
+  width: calc(100vw - 40px);
+  padding: 24px 26px;
+  background: #0e1a1f;
+  border: 2px solid #00E5FF;
+  border-radius: 10px;
+  color: #d6f8ff;
+  box-shadow: 0 12px 40px rgba(0, 229, 255, 0.25);
+  font-family: 'Courier New', monospace;
+}
+
+#lab-tutorial-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #00E5FF;
+  margin-bottom: 8px;
+  letter-spacing: 0.4px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+}
+
+.lab-tutorial-tagline {
+  font-size: 14px;
+  color: #b3f6ff;
+  margin: 0 0 14px 0;
+  line-height: 1.4;
+}
+
+.lab-tutorial-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+}
+
+.lab-tutorial-list li {
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  background: rgba(0, 229, 255, 0.06);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #d6f8ff;
+}
+
+#lab-tutorial-close {
+  width: 100%;
+  padding: 10px 14px;
+  background: #00E5FF;
+  color: #0e1a1f;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+#lab-tutorial-close:hover { background: #80f4ff; transform: translateY(-1px); }
+#lab-tutorial-close:active { transform: translateY(0); }
+
+/* Light mode mirrors */
+body.light-mode #lab-hud {
+  background: rgba(0, 138, 168, 0.06);
+  border-color: rgba(0, 138, 168, 0.45);
+  color: #008aa8;
+}
+body.light-mode #lab-label { text-shadow: none; color: #006a83; }
+body.light-mode #lab-hud .lab-chip {
+  background: rgba(0, 138, 168, 0.1);
+  border-color: rgba(0, 138, 168, 0.4);
+  color: #006a83;
+}
+body.light-mode #lab-tries.exhausted {
+  background: rgba(200, 30, 30, 0.1);
+  border-color: rgba(200, 30, 30, 0.5);
+  color: #b03020;
+}
+body.light-mode #lab-reset-btn {
+  background: rgba(180, 130, 0, 0.1);
+  border-color: rgba(180, 130, 0, 0.5);
+  color: #8a6500;
+}
+body.light-mode #lab-tutorial-content {
+  background: #fff;
+  border-color: #00aacc;
+  color: #1a2a30;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
+}
+body.light-mode #lab-tutorial-title { color: #008aa8; text-shadow: none; }
+body.light-mode .lab-tutorial-tagline { color: #2a3a40; }
+body.light-mode .lab-tutorial-list li {
+  background: rgba(0, 138, 168, 0.05);
+  border-color: rgba(0, 138, 168, 0.3);
+  color: #1a2a30;
+}
+body.light-mode #lab-tutorial-close {
+  background: #008aa8;
+  color: #fff;
+}
+body.light-mode #lab-tutorial-close:hover { background: #00aacc; }

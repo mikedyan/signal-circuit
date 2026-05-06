@@ -2,20 +2,20 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 69,
-  "nextDay": 70,
+  "lastCompletedDay": 70,
+  "nextDay": 71,
   "totalItemsCompleted": 425,
   "totalItems": 425,
-  "status": "Cycle 2 Build Week Day 2 — Mobile Install Moment + Welcome Onramp shipped: install trigger moved from session-count to 3-levels-completed; welcome toast arc on L1/L2/L3 first solves ('🎉 First circuit lit!' / '⚡ Two down — flowing!' / '🚀 You're flowing — install for offline + notifications'); branded install modal with offline/daily/1-tap benefits and 3-button choice (Install / Maybe Later 14d / No Thanks 90d); iOS Safari fallback modal with Add-to-Home-Screen steps; standalone-mode suppression via display-mode + navigator.standalone; Settings → 📲 Install App entry that force-shows; onboarding Step 1/3, 2/3, 3/3 chips on L1–L3 cards while completed-count<3; streak chip suppressed on truly fresh profiles (no completed levels). Cache bust ?v=1778774400, sw v47. CDP verification: cold-start (chips visible, no streak, no modal); L1→L2→L3 toast arc fires; install modal opens 1.8s after L3; Maybe Later → 14d snooze respected; force-from-settings reopens; No Thanks → 90d snooze; standalone hides modal but force still works; iOS UA → iOS modal opens. 0 console errors across all paths.",
-  "lastRun": "2026-05-05T08:30:00-07:00",
-  "lastRunNote": "Cycle 2 Build Week Day 2 complete. Mobile install onramp + welcome arc shipped per cycle-2-build.md item 2/5.",
+  "status": "Cycle 2 Build Week Day 3 — Discovery Lab Redesign: Blueprint Mode shipped. Chapter 8 rebranded 'Discovery Lab' → 'Lab Bench' with new narrative ('Design first. Submit once.'). Levels 36–40 now `isLabBench:true` (layered alongside `isDiscovery:true`). RUN button replaced by '📐 Submit Blueprint'; Quick Test hidden in lab mode. New #lab-hud strip shows draft state, gate budget chip ('≈ N gates · target M'), and tries counter (X/3 submissions). After 3 failed submits the run-btn locks and a '🔬 Reset Lab' button surfaces — click restores 3 fresh tries but locks the first-try achievement chase. State machine on `gameState._lab = {attempts, maxAttempts:3, exhausted, firstTryLocked, cleared}`; intercept consumes one attempt at the top of BOTH `runSimulation` and `runQuickTest` before isAnimating flips. First-entry tutorial overlay (gated by `signal-circuit-lab-tutorial-seen` localStorage flag) explains 'design first, test once'. New chapter-9 celebration branch in `_getCelebrationConfig`: cyan/white blueprint hologram particles with 📐🔬📊✂️🖋️ emoji burst (distinct shadow-blurred render). Two new gold achievements: `drafted_right` (3 first-try solves across distinct lab levels) + `lab_method` (5 lab levels cleared). Stats: `blueprintsSubmitted`, `blueprintsFirstTrySolved`, `blueprintLevelsCleared` + Set-mirror arrays for distinct-level tracking. Cache bust ?v=1779120000, sw v48. CDP verification (10 checks): cold-start lab UI (HUD visible, run-btn relabeled, QT hidden, tutorial fires); 3 fails → exhausted state + run-btn disabled + Reset visible; Reset zeros attempts and locks firstTry; first-try L36/L37/L38 → drafted_right unlocks; 5 lab clears → lab_method unlocks; Level 1 smoke (HUD hidden, RUN restored, QT visible); revisit suppresses tutorial; light-mode lab HUD palette applies. 0 console errors across all paths.",
+  "lastRun": "2026-05-06T08:15:00-07:00",
+  "lastRunNote": "Cycle 2 Build Week Day 3 complete. Discovery Lab → Lab Bench redesign shipped per cycle-2-build.md item 3/5.",
   "cycle2BuildRoadmap": "roadmaps/cycle-2-build.md",
   "nextCycle": {
     "cycleNumber": 2,
     "weekType": "build",
-    "weekDay": 3,
-    "nextDay": 70,
-    "focus": "Discovery Lab Redesign: Blueprint Mode"
+    "weekDay": 4,
+    "nextDay": 71,
+    "focus": "Rare/Epic Achievement Tier (Mythic + Diamond)"
   },
   "expertReview": "reviews/prune-cycle-1-review.md",
   "reviewScore": 8.4,
@@ -609,6 +609,25 @@
       "status": "complete",
       "qa": "build-cdp-verified"
     },
+    "70": {
+      "items": [
+        "Chapter 8 rebrand: 'Discovery Lab' → 'Lab Bench' with new narrative copy ('Design first. Submit once.') and storyIntro/Complete updated",
+        "isLabBench:true flag added to levels 36–40 (layered alongside isDiscovery:true — old code paths preserved)",
+        "RUN button label → '📐 Submit Blueprint' on lab levels; Quick Test hidden in lab mode",
+        "New #lab-hud strip: draft state label, '≈ N gates · target M' budget chip, X/3 submissions counter, '🔬 Reset Lab' button",
+        "GameState._lab state machine (attempts, maxAttempts:3, exhausted, firstTryLocked, cleared) with _consumeLabAttempt() + resetLab() helpers",
+        "runSimulation + runQuickTest intercept: lab consumes one attempt before isAnimating flips; exhausted state blocks run with 'Lab tries exhausted' message",
+        "First-entry tutorial overlay (#lab-tutorial-overlay) gated by signal-circuit-lab-tutorial-seen localStorage flag",
+        "Chapter-9 blueprint hologram celebration: cyan/white particles with 📐🔬📊✂️🖋️ emoji burst (shadow-blurred render branch)",
+        "Two new gold achievements: drafted_right (3 first-try solves across distinct levels) + lab_method (5 lab levels cleared)",
+        "Stats: blueprintsSubmitted, blueprintsFirstTrySolved, blueprintLevelsCleared + Set-mirror arrays for distinct-level tracking",
+        "~115 lines CSS (lab-hud, lab-chip, lab-reset-btn, lab-tutorial-overlay + light-mode mirrors)",
+        "Cache bust ?v=1779120000, sw.js CACHE_NAME signal-circuit-v48",
+        "CDP verification (12 checks): cold-start lab UI, tutorial fire/dismiss, 3 fails→exhausted, Reset zeros + locks firstTry, first-try L36/L37/L38→drafted_right unlock, 5 clears→lab_method unlock, L1 smoke, revisit suppresses tutorial, light-mode palette, animated runSimulation path consumes attempts — 0 console errors"
+      ],
+      "status": "complete",
+      "qa": "build-cdp-verified"
+    },
     "68": {
       "items": [
         "InfiniteRunManager class (lives=3, streak, totalSolved, runStart, tier, _hintUsedThisPuzzle, _pureLogicCount)",
@@ -658,9 +677,9 @@
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
   "weekType": "build",
-  "weekDay": 2,
+  "weekDay": 3,
   "cycleNumber": 2,
-  "cycleDay": 17,
+  "cycleDay": 18,
   "weekSchedule": "build → harden → prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md",
   "hardenWeek": {

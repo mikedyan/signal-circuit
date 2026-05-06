@@ -115,10 +115,10 @@ const CHAPTERS = [
     },
   },
   {
-    id: 9, title: 'Chapter 8: Discovery Lab', levels: [36, 37, 38, 39, 40],
-    narrative: 'Open Design',
-    storyIntro: 'The lab doors open. No rules, no constraints — just truth tables and a full toolbox. Design your way.',
-    storyComplete: '🧪 Discovery complete! You\'ve proven that engineering is as much art as science.',
+    id: 9, title: 'Chapter 8: Lab Bench', levels: [36, 37, 38, 39, 40],
+    narrative: 'Design first. Submit once.',
+    storyIntro: 'The lab doors open. No rules, no constraints — just a notebook, a full toolbox, and three submissions. Draft your blueprint, then test it.',
+    storyComplete: '📐 Blueprints filed! You\'ve proven that engineering is as much foresight as it is logic.',
     gatesMastered: ['Creative Design', 'Multi-Phase', 'Constraint Solving'],
     color: '#00E5FF',
     isBonus: true,
@@ -1319,6 +1319,7 @@ const LEVELS = [
       { inputs: [1, 1, 1], outputs: [1] },
     ],
     isDiscovery: true,
+    isLabBench: true,
   },
   {
     id: 37,
@@ -1348,6 +1349,7 @@ const LEVELS = [
       { inputs: [1, 1], outputs: [1, 0] },
     ],
     isDiscovery: true,
+    isLabBench: true,
   },
   {
     id: 38,
@@ -1376,6 +1378,7 @@ const LEVELS = [
       { inputs: [1, 1], outputs: [0] },
     ],
     isDiscovery: true,
+    isLabBench: true,
     preplacedGates: [
       { type: 'AND', x: 250, y: 170 },
     ],
@@ -1434,6 +1437,7 @@ const LEVELS = [
       },
     ],
     isDiscovery: true,
+    isLabBench: true,
   },
   {
     id: 40,
@@ -1492,6 +1496,7 @@ const LEVELS = [
       },
     ],
     isDiscovery: true,
+    isLabBench: true,
   },
 ];
 
