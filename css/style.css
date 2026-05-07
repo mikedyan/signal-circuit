@@ -1550,6 +1550,190 @@ body.light-mode #focus-failed-btn {
   opacity: 0.5;
 }
 
+/* Day 71: Diamond + Mythic tier styling */
+.achievement-row.tier-diamond {
+  border: 1px solid rgba(185, 242, 255, 0.45);
+  box-shadow: 0 0 12px rgba(185, 242, 255, 0.18);
+  background: linear-gradient(135deg, rgba(185, 242, 255, 0.08), rgba(120, 200, 255, 0.04));
+}
+.achievement-row.tier-diamond.unlocked {
+  background: linear-gradient(135deg, rgba(185, 242, 255, 0.16), rgba(120, 200, 255, 0.08));
+  border-color: rgba(185, 242, 255, 0.7);
+  box-shadow: 0 0 18px rgba(185, 242, 255, 0.35);
+}
+.achievement-row.tier-mythic {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#13131f, #13131f) padding-box,
+    linear-gradient(120deg, #ff6bff, #6b9dff, #6bffd9, #ffe26b, #ff6bff) border-box;
+  background-size: 100% 100%, 200% 100%;
+  animation: mythicShimmer 5s linear infinite;
+}
+.achievement-row.tier-mythic.unlocked {
+  box-shadow: 0 0 22px rgba(255, 107, 255, 0.35);
+}
+@keyframes mythicShimmer {
+  0%   { background-position: 0% 0%, 0% 0%; }
+  100% { background-position: 0% 0%, 200% 0%; }
+}
+.achievement-tier-header.tier-mythic {
+  text-shadow: 0 0 8px rgba(255, 107, 255, 0.5);
+}
+.achievement-tier-header.tier-diamond {
+  text-shadow: 0 0 8px rgba(185, 242, 255, 0.4);
+}
+
+/* Day 71: Locked-achievement progress bar */
+.achievement-progress {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+.achievement-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+.achievement-progress-label {
+  position: absolute;
+  right: 4px;
+  top: -14px;
+  font-size: 9px;
+  color: #aaa;
+  letter-spacing: 0.5px;
+}
+
+/* Day 71: Logic Profile tier-counts row */
+.profile-tier-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  justify-content: center;
+}
+.ptc-chip {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ddd;
+  font-family: 'Courier New', monospace;
+}
+.ptc-chip.ptc-bronze { color: #cd7f32; border-color: rgba(205, 127, 50, 0.3); }
+.ptc-chip.ptc-silver { color: #c0c0c0; border-color: rgba(192, 192, 192, 0.3); }
+.ptc-chip.ptc-gold   { color: #ffd700; border-color: rgba(255, 215, 0, 0.3); }
+.ptc-chip.ptc-diamond { color: #b9f2ff; border-color: rgba(185, 242, 255, 0.4); }
+.ptc-chip.ptc-mythic { color: #ff6bff; border-color: rgba(255, 107, 255, 0.45); text-shadow: 0 0 6px rgba(255, 107, 255, 0.4); }
+body.light-mode .ptc-chip { background: rgba(0, 0, 0, 0.04); border-color: rgba(0, 0, 0, 0.08); color: #333; }
+
+/* Day 71: Mythic achievement toast tinting */
+#achievement-toast.tier-mythic {
+  background: linear-gradient(135deg, #2a0a2a, #1a0a3a);
+  border-color: #ff6bff;
+  color: #ffd6ff;
+  box-shadow: 0 4px 24px rgba(255, 107, 255, 0.35);
+}
+#achievement-toast.tier-diamond {
+  background: linear-gradient(135deg, #0a1a2a, #0a2a3a);
+  border-color: #b9f2ff;
+  color: #d6f4ff;
+  box-shadow: 0 4px 24px rgba(185, 242, 255, 0.3);
+}
+
+/* Day 71: Mythic fullscreen celebration overlay */
+#mythic-celebration {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  background: radial-gradient(ellipse at center, rgba(40, 0, 60, 0.92), rgba(8, 0, 20, 0.97));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.36s ease;
+}
+#mythic-celebration.mc-in { opacity: 1; }
+#mythic-celebration.mc-out { opacity: 0; }
+#mythic-celebration-inner {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  padding: 40px;
+  max-width: 90vw;
+}
+#mythic-celebration-tier {
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: #ff6bff;
+  margin-bottom: 24px;
+  text-shadow: 0 0 14px rgba(255, 107, 255, 0.6);
+  animation: mcFadeIn 0.6s ease 0.2s both;
+}
+#mythic-celebration-icon {
+  font-size: 96px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 20px rgba(255, 107, 255, 0.6));
+  animation: mcIconPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+#mythic-celebration-name {
+  font-size: 38px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  margin-bottom: 14px;
+  background: linear-gradient(120deg, #ff6bff, #6b9dff, #6bffd9, #ffe26b, #ff6bff);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: mythicShimmer 4s linear infinite;
+}
+#mythic-celebration-name .mc-letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: mcEngrave 0.4s ease forwards;
+}
+#mythic-celebration-desc {
+  font-size: 14px;
+  color: #ccc;
+  max-width: 600px;
+  margin: 0 auto 28px;
+  line-height: 1.5;
+  animation: mcFadeIn 0.6s ease 1.2s both;
+}
+#mythic-celebration-hint {
+  font-size: 11px;
+  color: #888;
+  letter-spacing: 2px;
+  animation: mcFadeIn 0.6s ease 2s both;
+}
+@keyframes mcFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes mcIconPop {
+  0%   { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+@keyframes mcEngrave {
+  0%   { opacity: 0; transform: translateY(10px); filter: blur(3px); }
+  100% { opacity: 1; transform: translateY(0);   filter: blur(0);   }
+}
+body.light-mode #mythic-celebration {
+  background: radial-gradient(ellipse at center, rgba(255, 240, 255, 0.95), rgba(220, 220, 245, 0.97));
+}
+body.light-mode #mythic-celebration-tier { color: #b026b0; text-shadow: 0 0 10px rgba(176, 38, 176, 0.4); }
+body.light-mode #mythic-celebration-desc { color: #444; }
+body.light-mode #mythic-celebration-hint { color: #888; }
+
 .achievement-icon {
   font-size: 24px;
   min-width: 36px;

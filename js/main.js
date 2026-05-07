@@ -95,6 +95,9 @@ const COSMETIC_WIRE_COLORS = [
     palette: ['#ff4444','#ff8800','#ffcc00','#44dd44','#00cccc','#4488ff','#8844ff','#cc44cc','#ff4488','#88ff44'] },
   { id: 'gold', name: 'Gold Circuit', desc: 'Prestigious gold wires', condition: { type: 'perfectCampaign' },
     palette: ['#ffd700','#ffcc33','#daa520','#f0c040','#e6b422','#ccaa00','#ffdd55','#c8a020','#e8c840','#ddb840'] },
+  // Day 71: Mythic palette — unlocked once any mythic achievement is earned.
+  { id: 'mythic', name: 'Mythic', desc: 'Iridescent prismatic wires — only after your first mythic unlock', condition: { type: 'anyMythic' },
+    palette: ['#ff6bff','#9d6bff','#6b9dff','#6bffd9','#a8ff6b','#ffe26b','#ff8c6b','#ff6bb6','#cc6bff','#6bf2ff'] },
 ];
 
 const COSMETIC_GATE_SKINS = [
@@ -238,6 +241,15 @@ class CosmeticManager {
           });
         });
       }
+      case 'anyMythic': {
+        // Day 71: Unlocked once any mythic achievement is earned.
+        if (!gs || !gs.achievements || !gs.achievements.unlocked) return false;
+        if (typeof ACHIEVEMENTS === 'undefined') return false;
+        for (const a of ACHIEVEMENTS) {
+          if (a.tier === 'mythic' && gs.achievements.unlocked[a.id]) return true;
+        }
+        return false;
+      }
       default:
         return false;
     }
@@ -299,6 +311,7 @@ class CosmeticManager {
       case 'perfectCampaign': return 'Perfect all campaign levels';
       case 'halfPerfect': return '3-star 50% of campaign levels';
       case 'allChapters': return 'Complete all chapters';
+      case 'anyMythic': return 'Earn any Mythic achievement';
       default: return '???';
     }
   }
@@ -888,6 +901,10 @@ class InfiniteRunManager {
     }
     if (this.streak >= 50 && this.game.achievements.unlock('infinite_marathon')) {
       this.game.ui.showAchievementToasts(['infinite_marathon']);
+    }
+    // Day 71: Lightning mythic — 100-streak in a single run.
+    if (this.streak >= 100 && this.game.achievements.unlock('mythic_lightning')) {
+      this.game.ui.showAchievementToasts(['mythic_lightning']);
     }
     this._bumpTierFromStreak();
     this._updateHud();
@@ -1733,6 +1750,13 @@ class GameState {
     const stats = this.loadLifetimeStats();
     stats.totalGatesPlaced = (stats.totalGatesPlaced || 0) + 1;
     this.saveLifetimeStats(stats);
+    // Day 71: Master Builder — 1000 lifetime gates.
+    if (this.achievements && typeof this.achievements.checkMasterBuilder === 'function') {
+      const newAchs = this.achievements.checkMasterBuilder(stats.totalGatesPlaced);
+      if (newAchs && newAchs.length && this.ui) {
+        this.ui.showAchievementToasts(newAchs);
+      }
+    }
   }
 
   trackPlaytimeStart() {
@@ -3105,6 +3129,11 @@ class GameState {
               // Track challenge achievements + earn hint token
               const chAchs = this.achievements.trackChallengeComplete();
               this.ui.showAchievementToasts(chAchs);
+              // Day 71: rare-tier check (Community Champion etc.) for community challenge solves.
+              if (this.currentLevel && this.currentLevel.isCommunityLevel) {
+                const rareAchs = this.achievements.checkRareAchievements(this);
+                if (rareAchs.length) this.ui.showAchievementToasts(rareAchs);
+              }
               this.earnHintToken('challenge complete');
               // Day 50: Track adaptive challenge result
               if (this.currentLevel && this.currentLevel.isAdaptive) {
@@ -3328,6 +3357,18 @@ class GameState {
         this.ui.updateStatusBar(`Challenge complete with ${gateCount} gates!`);
         this.ui.showChallengeResult(gateCount, this.currentLevel);
         this.ui.startCelebration(2, { mode: 'challenge' });
+        // Day 71: rare-tier check (Community Champion etc.) for community Quick-Test solves.
+        if (this.currentLevel && this.currentLevel.isCommunityLevel) {
+          try {
+            const cc = JSON.parse(localStorage.getItem('communityCompleted') || '[]');
+            if (!cc.includes(this.currentLevel.id)) {
+              cc.push(this.currentLevel.id);
+              localStorage.setItem('communityCompleted', JSON.stringify(cc));
+            }
+          } catch(e) {}
+          const rareAchs = this.achievements.checkRareAchievements(this);
+          if (rareAchs.length) this.ui.showAchievementToasts(rareAchs);
+        }
         this.earnHintToken('challenge complete');
         // Day 50: Track adaptive challenge result
         if (this.currentLevel && this.currentLevel.isAdaptive) {

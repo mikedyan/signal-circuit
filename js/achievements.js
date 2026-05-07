@@ -47,12 +47,36 @@ const ACHIEVEMENTS = [
   // Day 70: Lab Bench / Blueprint Mode
   { id: 'drafted_right', name: 'Drafted Right', desc: 'First-try solve on 3 different Lab Bench blueprints', icon: '📐', tier: 'gold' },
   { id: 'lab_method', name: 'The Method', desc: 'Clear all 5 Lab Bench levels (or any 10 lab clears total)', icon: '🔬', tier: 'gold' },
+
+  // Day 71: Diamond — chase-tier achievements
+  { id: 'diamond_hardcore_marathon', name: 'Hardcore Marathon', desc: 'Complete 20 levels in Hardcore mode', icon: '⬛', tier: 'diamond', goal: 20 },
+  { id: 'diamond_master_builder', name: 'Master Builder', desc: 'Place 1,000 gates across all play', icon: '🏗', tier: 'diamond', goal: 1000 },
+  { id: 'diamond_community_champion', name: 'Community Champion', desc: 'Complete 10 different community levels', icon: '🌐', tier: 'diamond', goal: 10 },
+
+  // Day 71: Mythic — only earnable through extreme play
+  { id: 'mythic_galaxy_brain', name: 'Galaxy Brain', desc: '3-star every campaign level AND complete every mastery challenge', icon: '🌌', tier: 'mythic' },
+  { id: 'mythic_eclipse_run', name: 'Eclipse Run', desc: '30-day daily-challenge streak', icon: '🌑', tier: 'mythic', goal: 30 },
+  { id: 'mythic_architect', name: 'Architect', desc: 'Build 10 sub-circuits', icon: '🏛', tier: 'mythic', goal: 10 },
+  { id: 'mythic_lightning', name: 'Lightning', desc: 'Reach a 100-streak in a single Infinite Mode run', icon: '⚡', tier: 'mythic', goal: 100 },
+  { id: 'mythic_logicians_path', name: "Logician's Path", desc: 'Pure Logic (no hints) on every campaign level', icon: '📜', tier: 'mythic' },
 ];
 
 const TIER_COLORS = {
   bronze: '#cd7f32',
   silver: '#c0c0c0',
   gold: '#ffd700',
+  diamond: '#b9f2ff',
+  mythic: '#ff6bff',
+};
+
+// Day 71: Display order (mythic-first in achievements modal)
+const TIER_ORDER = ['mythic', 'diamond', 'gold', 'silver', 'bronze'];
+const TIER_LABELS = {
+  mythic: '🌌 Mythic',
+  diamond: '💎 Diamond',
+  gold: '🥇 Gold',
+  silver: '🥈 Silver',
+  bronze: '🥉 Bronze',
 };
 
 class AchievementManager {
@@ -260,6 +284,10 @@ class AchievementManager {
       if (this.unlock('collector')) newlyUnlocked.push('collector');
     }
 
+    // Day 71: Mythic + Diamond — chase-tier checks (idempotent; unlock() no-ops on dup)
+    const rareNew = this._checkRareAchievements(gameState);
+    for (const id of rareNew) newlyUnlocked.push(id);
+
     // Day 70: Lab Bench / Blueprint Mode achievements
     if (level && level.isLabBench) {
       const lvlIdStr = String(levelId);
@@ -281,6 +309,186 @@ class AchievementManager {
 
     this.save();
     return newlyUnlocked;
+  }
+
+  // Day 71: Public alias — callable from completion paths that don't go through checkAfterCompletion (e.g. community level via challenge flow).
+  checkRareAchievements(gameState) {
+    return this._checkRareAchievements(gameState);
+  }
+
+  // Day 71: Mythic + Diamond — chase-tier evaluation. Idempotent.
+  _checkRareAchievements(gameState) {
+    const newly = [];
+    if (!gameState) return newly;
+    const progress = gameState.progress || { levels: {} };
+    const allLevels = (typeof LEVELS !== 'undefined') ? LEVELS : [];
+
+    // mythic_galaxy_brain — 3-star every campaign level + every mastery
+    if (allLevels.length > 0) {
+      const allCampaign3Star = allLevels.every(l => {
+        const p = progress.levels[l.id];
+        return p && p.stars === 3;
+      });
+      let allMasteryDone = false;
+      try {
+        const masterySaved = JSON.parse(localStorage.getItem('signal-circuit-mastery') || '{}');
+        const masteryList = (typeof MASTERY_CHALLENGES !== 'undefined') ? MASTERY_CHALLENGES : [];
+        if (masteryList.length > 0) {
+          allMasteryDone = masteryList.every(m => masterySaved[m.id] && masterySaved[m.id].completed);
+        }
+      } catch (e) {}
+      if (allCampaign3Star && allMasteryDone) {
+        if (this.unlock('mythic_galaxy_brain')) newly.push('mythic_galaxy_brain');
+      }
+    }
+
+    // mythic_logicians_path — Pure Logic on every campaign level
+    if (allLevels.length > 0) {
+      const allPureLogic = allLevels.every(l => {
+        const p = progress.levels[l.id];
+        return p && p.completed && p.pureLogic;
+      });
+      if (allPureLogic) {
+        if (this.unlock('mythic_logicians_path')) newly.push('mythic_logicians_path');
+      }
+    }
+
+    // diamond_hardcore_marathon — 20 hardcore-completed levels
+    let hardcoreCount = 0;
+    for (const data of Object.values(progress.levels || {})) {
+      if (data && data.hardcoreCompleted) hardcoreCount++;
+    }
+    this.stats.hardcoreCompletedCount = hardcoreCount;
+    if (hardcoreCount >= 20) {
+      if (this.unlock('diamond_hardcore_marathon')) newly.push('diamond_hardcore_marathon');
+    }
+
+    // diamond_community_champion — 10 distinct community levels completed
+    let communityCount = 0;
+    try {
+      const cc = JSON.parse(localStorage.getItem('communityCompleted') || '[]');
+      if (Array.isArray(cc)) communityCount = new Set(cc).size;
+    } catch (e) {}
+    this.stats.communityCompletedCount = communityCount;
+    if (communityCount >= 10) {
+      if (this.unlock('diamond_community_champion')) newly.push('diamond_community_champion');
+    }
+
+    return newly;
+  }
+
+  // Day 71: Master Builder hook — lifetime gates placed.
+  checkMasterBuilder(totalGatesPlaced) {
+    const newly = [];
+    if ((totalGatesPlaced || 0) >= 1000) {
+      if (this.unlock('diamond_master_builder')) newly.push('diamond_master_builder');
+    }
+    return newly;
+  }
+
+  // Day 71: Lightning — Infinite Mode 100-streak.
+  checkLightning(streak) {
+    const newly = [];
+    if ((streak || 0) >= 100) {
+      if (this.unlock('mythic_lightning')) newly.push('mythic_lightning');
+    }
+    return newly;
+  }
+
+  // Day 71: Eclipse Run — 30-day daily streak.
+  checkEclipseRun() {
+    const newly = [];
+    if ((this.stats.dailyChallengeStreak || 0) >= 30) {
+      if (this.unlock('mythic_eclipse_run')) newly.push('mythic_eclipse_run');
+    }
+    return newly;
+  }
+
+  // Day 71: Architect — 10 sub-circuits.
+  checkArchitect() {
+    const newly = [];
+    if ((this.stats.subCircuitsCreated || 0) >= 10) {
+      if (this.unlock('mythic_architect')) newly.push('mythic_architect');
+    }
+    return newly;
+  }
+
+  // Day 71: Tier-counts breakdown for Logic Profile.
+  getTierCounts() {
+    const counts = { bronze: 0, silver: 0, gold: 0, diamond: 0, mythic: 0 };
+    for (const a of ACHIEVEMENTS) {
+      if (this.unlocked[a.id] && counts[a.tier] !== undefined) counts[a.tier]++;
+    }
+    return counts;
+  }
+
+  // Day 71: Progress lookup for locked achievements (mythic/diamond chase).
+  // Returns { current, goal } or null if no progress meter applies.
+  getProgress(id, gameState) {
+    if (!gameState) return null;
+    const progress = gameState.progress || { levels: {} };
+    const allLevels = (typeof LEVELS !== 'undefined') ? LEVELS : [];
+    switch (id) {
+      case 'diamond_hardcore_marathon': {
+        let n = 0;
+        for (const d of Object.values(progress.levels || {})) if (d && d.hardcoreCompleted) n++;
+        return { current: n, goal: 20 };
+      }
+      case 'diamond_master_builder': {
+        let total = 0;
+        try {
+          const saved = JSON.parse(localStorage.getItem('signal-circuit-stats') || '{}');
+          total = saved.totalGatesPlaced || 0;
+        } catch (e) {}
+        return { current: total, goal: 1000 };
+      }
+      case 'diamond_community_champion': {
+        let n = 0;
+        try {
+          const cc = JSON.parse(localStorage.getItem('communityCompleted') || '[]');
+          if (Array.isArray(cc)) n = new Set(cc).size;
+        } catch (e) {}
+        return { current: n, goal: 10 };
+      }
+      case 'mythic_eclipse_run':
+        return { current: this.stats.dailyChallengeStreak || 0, goal: 30 };
+      case 'mythic_architect':
+        return { current: this.stats.subCircuitsCreated || 0, goal: 10 };
+      case 'mythic_lightning': {
+        let best = 0;
+        try {
+          const saved = JSON.parse(localStorage.getItem('signal_circuit_infinite_v1') || '{}');
+          best = saved.bestStreak || 0;
+        } catch (e) {}
+        return { current: best, goal: 100 };
+      }
+      case 'mythic_galaxy_brain': {
+        const stars3 = allLevels.filter(l => {
+          const p = progress.levels[l.id]; return p && p.stars === 3;
+        }).length;
+        let masteryDone = 0;
+        try {
+          const m = JSON.parse(localStorage.getItem('signal-circuit-mastery') || '{}');
+          for (const k of Object.keys(m)) if (m[k] && m[k].completed) masteryDone++;
+        } catch (e) {}
+        const total = allLevels.length + ((typeof MASTERY_CHALLENGES !== 'undefined') ? MASTERY_CHALLENGES.length : 5);
+        return { current: stars3 + masteryDone, goal: total };
+      }
+      case 'mythic_logicians_path': {
+        const n = allLevels.filter(l => {
+          const p = progress.levels[l.id]; return p && p.completed && p.pureLogic;
+        }).length;
+        return { current: n, goal: allLevels.length };
+      }
+      default:
+        return null;
+    }
+  }
+
+  // Day 71: Mark id as mythic for caller convenience.
+  isMythic(id) {
+    const a = ACHIEVEMENTS.find(x => x.id === id);
+    return !!(a && a.tier === 'mythic');
   }
 
   // Day 70: Track a Blueprint submission (success or fail) — increments submit counter only.
@@ -317,6 +525,7 @@ class AchievementManager {
   }
 
   // Day 41: Track daily challenge completions (separate from random challenges)
+  // Day 71: Eclipse Run hooks in here.
   trackDailyChallengeComplete() {
     const today = new Date().toISOString().slice(0, 10);
     const newlyUnlocked = [];
@@ -346,6 +555,11 @@ class AchievementManager {
 
     if (this.stats.dailyChallengeStreak >= 7) {
       if (this.unlock('week_warrior')) newlyUnlocked.push('week_warrior');
+    }
+
+    // Day 71: Eclipse Run — 30-day daily streak
+    if (this.stats.dailyChallengeStreak >= 30) {
+      if (this.unlock('mythic_eclipse_run')) newlyUnlocked.push('mythic_eclipse_run');
     }
 
     this.save();
@@ -419,19 +633,22 @@ class AchievementManager {
 
 
   // Day 53: Check sub-circuit creation achievement
+  // Day 71: also fires Architect mythic at 10 sub-circuits.
   checkAll(gameState) {
     const newlyUnlocked = [];
     const count = this.stats.subCircuitsCreated || 0;
     if (count >= 5 && this.unlock('circuit_architect')) {
       newlyUnlocked.push('circuit_architect');
     }
+    if (count >= 10 && this.unlock('mythic_architect')) {
+      newlyUnlocked.push('mythic_architect');
+    }
     if (newlyUnlocked.length > 0) {
       this.save();
-      if (gameState && gameState.ui) {
-        for (const id of newlyUnlocked) {
-          const ach = ACHIEVEMENTS.find(a => a.id === id);
-          if (ach) gameState.ui.showAchievementToast(ach);
-        }
+      // Day 71: route through showAchievementToasts (plural; takes id array) — fixes latent
+      // Day 53 bug where this called the non-existent showAchievementToast(ach) singular.
+      if (gameState && gameState.ui && typeof gameState.ui.showAchievementToasts === 'function') {
+        gameState.ui.showAchievementToasts(newlyUnlocked);
       }
     }
     return newlyUnlocked;

@@ -2,20 +2,21 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 70,
-  "nextDay": 71,
+  "lastCompletedDay": 71,
+  "nextDay": 72,
   "totalItemsCompleted": 425,
   "totalItems": 425,
-  "status": "Cycle 2 Build Week Day 3 — Discovery Lab Redesign: Blueprint Mode shipped. Chapter 8 rebranded 'Discovery Lab' → 'Lab Bench' with new narrative ('Design first. Submit once.'). Levels 36–40 now `isLabBench:true` (layered alongside `isDiscovery:true`). RUN button replaced by '📐 Submit Blueprint'; Quick Test hidden in lab mode. New #lab-hud strip shows draft state, gate budget chip ('≈ N gates · target M'), and tries counter (X/3 submissions). After 3 failed submits the run-btn locks and a '🔬 Reset Lab' button surfaces — click restores 3 fresh tries but locks the first-try achievement chase. State machine on `gameState._lab = {attempts, maxAttempts:3, exhausted, firstTryLocked, cleared}`; intercept consumes one attempt at the top of BOTH `runSimulation` and `runQuickTest` before isAnimating flips. First-entry tutorial overlay (gated by `signal-circuit-lab-tutorial-seen` localStorage flag) explains 'design first, test once'. New chapter-9 celebration branch in `_getCelebrationConfig`: cyan/white blueprint hologram particles with 📐🔬📊✂️🖋️ emoji burst (distinct shadow-blurred render). Two new gold achievements: `drafted_right` (3 first-try solves across distinct lab levels) + `lab_method` (5 lab levels cleared). Stats: `blueprintsSubmitted`, `blueprintsFirstTrySolved`, `blueprintLevelsCleared` + Set-mirror arrays for distinct-level tracking. Cache bust ?v=1779120000, sw v48. CDP verification (10 checks): cold-start lab UI (HUD visible, run-btn relabeled, QT hidden, tutorial fires); 3 fails → exhausted state + run-btn disabled + Reset visible; Reset zeros attempts and locks firstTry; first-try L36/L37/L38 → drafted_right unlocks; 5 lab clears → lab_method unlocks; Level 1 smoke (HUD hidden, RUN restored, QT visible); revisit suppresses tutorial; light-mode lab HUD palette applies. 0 console errors across all paths.",
-  "lastRun": "2026-05-06T08:15:00-07:00",
-  "lastRunNote": "Cycle 2 Build Week Day 3 complete. Discovery Lab → Lab Bench redesign shipped per cycle-2-build.md item 3/5.",
+  "status": "Cycle 2 Build Week Day 4 — Rare/Epic Achievement Tier (Mythic + Diamond) shipped. Added 5 mythic + 3 diamond achievements layered onto existing tier metadata: 'mythic_galaxy_brain' (3-star every campaign + every mastery), 'mythic_eclipse_run' (30-day daily streak), 'mythic_architect' (10 sub-circuits), 'mythic_lightning' (Infinite 100-streak), 'mythic_logicians_path' (pure logic on every campaign level), 'diamond_hardcore_marathon' (20 hardcore levels), 'diamond_master_builder' (1000 lifetime gates), 'diamond_community_champion' (10 distinct community levels). New TIER_ORDER (mythic→diamond→gold→silver→bronze) + TIER_LABELS exports from achievements.js. AchievementManager extensions: _checkRareAchievements(gs) + public alias checkRareAchievements, checkMasterBuilder(total), checkLightning(streak), checkEclipseRun(), checkArchitect(), getTierCounts(), getProgress(id, gs), isMythic(id). Hooks: trackGatePlaced → Master Builder; InfiniteRunManager.onSolve → Lightning at 100; trackDailyChallengeComplete → Eclipse Run; checkAll → Architect at 10 sub-circuits; checkAfterCompletion + community-completion paths → _checkRareAchievements (Galaxy Brain, Logician's Path, Hardcore Marathon, Community Champion). Bonus latent-bug fix: AchievementManager.checkAll now routes through showAchievementToasts(newlyUnlocked) instead of the non-existent showAchievementToast(ach) singular call (Day 53 latent bug surfaced once Architect mythic landed on the same path). New mythic-only Cosmetic wire palette ('mythic') gated by { type: 'anyMythic' } condition reading gs.achievements.unlocked. New iridescent celebration overlay #mythic-celebration (z 3000) with letter-by-letter engraving (per-character spans + staggered animationDelay), 3.6s auto-dismiss + click-anywhere; toast queue spacing bumped 3200→4200ms when a mythic precedes the toast. renderAchievements: tier-sorted modal (mythic-first), tier-class rows (tier-mythic w/ animated prismatic gradient border, tier-diamond w/ icy glow), inline progress bar .achievement-progress for locked diamond/mythic chase items showing current/goal. Logic Profile: new .profile-tier-counts row with 5 tier chips (🥉🥈🥇💎🌌). Cache bust ?v=1779206400, sw v49. CDP verification (39 assertions across 15 test groups + 8-step gameplay smoke): tier metadata + 8 new achievement ids; modal mythic-first ordering; ALL goal values; Master Builder via 1000-gate trackGatePlaced; Architect via checkAll seeded subCircuitsCreated=10; Eclipse Run via 29→30 streak transition; Galaxy Brain + Logician's Path via seeded 3-star + pureLogic + mastery; Mythic palette anyMythic condition; Hardcore Marathon at 20 seeded hardcoreCompleted; Community Champion at 10 distinct ids; mythic celebration overlay exists/displays/has-letters/auto-dismisses; light-mode mythic celebration palette; tier-counts chip with mythic count; cache bust v=1779206400 + sw v49; 0 console errors; Level 1 cold-start gameplay smoke (gates place, runSimulation no-throw on incomplete circuit, achievements modal opens via button click, mythic-first header). 0 console errors across all paths.",
+  "_priorStatus": "Cycle 2 Build Week Day 3 — Discovery Lab Redesign: Blueprint Mode shipped. Chapter 8 rebranded 'Discovery Lab' → 'Lab Bench' with new narrative ('Design first. Submit once.'). Levels 36–40 now `isLabBench:true` (layered alongside `isDiscovery:true`). RUN button replaced by '📐 Submit Blueprint'; Quick Test hidden in lab mode. New #lab-hud strip shows draft state, gate budget chip ('≈ N gates · target M'), and tries counter (X/3 submissions). After 3 failed submits the run-btn locks and a '🔬 Reset Lab' button surfaces — click restores 3 fresh tries but locks the first-try achievement chase. State machine on `gameState._lab = {attempts, maxAttempts:3, exhausted, firstTryLocked, cleared}`; intercept consumes one attempt at the top of BOTH `runSimulation` and `runQuickTest` before isAnimating flips. First-entry tutorial overlay (gated by `signal-circuit-lab-tutorial-seen` localStorage flag) explains 'design first, test once'. New chapter-9 celebration branch in `_getCelebrationConfig`: cyan/white blueprint hologram particles with 📐🔬📊✂️🖋️ emoji burst (distinct shadow-blurred render). Two new gold achievements: `drafted_right` (3 first-try solves across distinct lab levels) + `lab_method` (5 lab levels cleared). Stats: `blueprintsSubmitted`, `blueprintsFirstTrySolved`, `blueprintLevelsCleared` + Set-mirror arrays for distinct-level tracking. Cache bust ?v=1779120000, sw v48. CDP verification (10 checks): cold-start lab UI (HUD visible, run-btn relabeled, QT hidden, tutorial fires); 3 fails → exhausted state + run-btn disabled + Reset visible; Reset zeros attempts and locks firstTry; first-try L36/L37/L38 → drafted_right unlocks; 5 lab clears → lab_method unlocks; Level 1 smoke (HUD hidden, RUN restored, QT visible); revisit suppresses tutorial; light-mode lab HUD palette applies. 0 console errors across all paths.",
+  "lastRun": "2026-05-07T08:30:00-07:00",
+  "lastRunNote": "Cycle 2 Build Week Day 4 complete. Rare/Epic Achievement Tier (Mythic + Diamond) shipped per cycle-2-build.md item 4/5.",
   "cycle2BuildRoadmap": "roadmaps/cycle-2-build.md",
   "nextCycle": {
     "cycleNumber": 2,
     "weekType": "build",
-    "weekDay": 4,
-    "nextDay": 71,
-    "focus": "Rare/Epic Achievement Tier (Mythic + Diamond)"
+    "weekDay": 5,
+    "nextDay": 72,
+    "focus": "Weekly Tournament Mode + Cycle Polish"
   },
   "expertReview": "reviews/prune-cycle-1-review.md",
   "reviewScore": 8.4,
@@ -609,6 +610,24 @@
       "status": "complete",
       "qa": "build-cdp-verified"
     },
+    "71": {
+      "items": [
+        "5 mythic achievements added: galaxy_brain (3-star all campaign + all mastery), eclipse_run (30-day daily streak), architect (10 sub-circuits), lightning (Infinite 100-streak), logicians_path (pure logic on every campaign level)",
+        "3 diamond achievements added: hardcore_marathon (20 hardcore levels), master_builder (1000 lifetime gates), community_champion (10 distinct community levels)",
+        "TIER_ORDER + TIER_LABELS exports from achievements.js (mythic→diamond→gold→silver→bronze)",
+        "AchievementManager extensions: _checkRareAchievements + checkRareAchievements alias + checkMasterBuilder + checkLightning + checkEclipseRun + checkArchitect + getTierCounts + getProgress + isMythic",
+        "Hooks wired: trackGatePlaced → Master Builder; InfiniteRunManager.onSolve → Lightning; trackDailyChallengeComplete → Eclipse Run; checkAll → Architect; checkAfterCompletion + community paths → rare check",
+        "Latent bug fix: checkAll now routes through showAchievementToasts(newlyUnlocked) plural (Day 53 had a non-existent showAchievementToast singular call that surfaced once Architect mythic landed on the path)",
+        "Mythic Cosmetic wire palette gated by { type: 'anyMythic' } condition reading gs.achievements.unlocked",
+        "#mythic-celebration overlay (z 3000) with letter-by-letter engraving + auto-dismiss + click-anywhere; toast queue spacing bumped 3200→4200ms when mythic precedes",
+        "renderAchievements: tier-sorted modal mythic-first, tier-class rows (tier-mythic prismatic, tier-diamond icy), inline progress bar for locked chase items",
+        "Logic Profile: .profile-tier-counts row with 5 tier chips (🥉🥈🥇💎🌌)",
+        "Cache bust ?v=1779206400, sw.js CACHE_NAME signal-circuit-v49",
+        "CDP verification (39 assertions / 15 test groups + 8-step gameplay smoke): tier metadata, modal sort/progress, all 8 goals, all 8 unlock paths, mythic palette + celebration + light-mode, tier counts, cache bust, 0 console errors, Level 1 smoke unaffected"
+      ],
+      "status": "complete",
+      "qa": "build-cdp-verified"
+    },
     "70": {
       "items": [
         "Chapter 8 rebrand: 'Discovery Lab' → 'Lab Bench' with new narrative copy ('Design first. Submit once.') and storyIntro/Complete updated",
@@ -677,9 +696,9 @@
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
   "weekType": "build",
-  "weekDay": 3,
+  "weekDay": 4,
   "cycleNumber": 2,
-  "cycleDay": 18,
+  "cycleDay": 19,
   "weekSchedule": "build → harden → prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md",
   "hardenWeek": {

@@ -2376,29 +2376,45 @@ class UI {
     const all = this.gameState.achievements.getAll();
     list.innerHTML = '';
 
-    // Group by tier
-    const tiers = ['gold', 'silver', 'bronze'];
-    const tierLabels = { gold: '🥇 Gold', silver: '🥈 Silver', bronze: '🥉 Bronze' };
+    // Day 71: tier-sorted modal (mythic-first) + progress bars on locked chase items.
+    const tiers = (typeof TIER_ORDER !== 'undefined') ? TIER_ORDER : ['mythic', 'diamond', 'gold', 'silver', 'bronze'];
+    const tierLabels = (typeof TIER_LABELS !== 'undefined') ? TIER_LABELS : { mythic: '🌌 Mythic', diamond: '💎 Diamond', gold: '🥇 Gold', silver: '🥈 Silver', bronze: '🥉 Bronze' };
 
     for (const tier of tiers) {
       const tierAchs = all.filter(a => a.tier === tier);
       if (tierAchs.length === 0) continue;
 
       const header = document.createElement('div');
-      header.className = 'achievement-tier-header';
+      header.className = 'achievement-tier-header tier-' + tier;
       header.style.color = TIER_COLORS[tier] || '#888';
-      header.textContent = tierLabels[tier];
+      header.textContent = tierLabels[tier] || tier;
       list.appendChild(header);
 
       for (const ach of tierAchs) {
         const row = document.createElement('div');
-        row.className = 'achievement-row ' + (ach.unlocked ? 'unlocked' : 'locked');
+        row.className = 'achievement-row tier-' + tier + ' ' + (ach.unlocked ? 'unlocked' : 'locked');
         row.style.borderLeftColor = ach.tierColor;
+
+        // Day 71: progress bar for locked chase achievements.
+        let progressHtml = '';
+        if (!ach.unlocked && (tier === 'mythic' || tier === 'diamond')) {
+          const prog = this.gameState.achievements.getProgress(ach.id, this.gameState);
+          if (prog && prog.goal > 0) {
+            const pct = Math.min(100, Math.round((prog.current / prog.goal) * 100));
+            const cur = Math.min(prog.current, prog.goal);
+            progressHtml = '<div class="achievement-progress" aria-label="' + cur + ' of ' + prog.goal + '">' +
+              '<div class="achievement-progress-fill" style="width:' + pct + '%;background:' + (ach.tierColor || '#888') + ';"></div>' +
+              '<span class="achievement-progress-label">' + cur + ' / ' + prog.goal + '</span>' +
+              '</div>';
+          }
+        }
+
         row.innerHTML = `
           <span class="achievement-icon">${ach.unlocked ? ach.icon : '🔒'}</span>
           <div class="achievement-info">
             <div class="achievement-name">${ach.name}</div>
             <div class="achievement-desc">${ach.desc}</div>
+            ${progressHtml}
           </div>
         `;
         list.appendChild(row);
@@ -2469,11 +2485,18 @@ class UI {
     for (const id of newlyUnlocked) {
       const ach = allAchs.find(a => a.id === id);
       if (!ach) continue;
+      const isMythic = ach.tier === 'mythic';
       setTimeout(() => {
+        // Day 71: Mythic unlocks get a fullscreen takeover before the toast.
+        if (isMythic) {
+          this.showMythicCelebration(ach);
+        }
         const toast = document.getElementById('achievement-toast');
         if (!toast) return;
         this.gameState.audio.playAchievement();
         toast.innerHTML = `${ach.icon} <strong>${ach.name}</strong> unlocked!`;
+        toast.classList.remove('tier-mythic', 'tier-diamond', 'tier-gold', 'tier-silver', 'tier-bronze');
+        if (ach.tier) toast.classList.add('tier-' + ach.tier);
         toast.style.display = 'block';
         // Reset animation
         toast.style.animation = 'none';
@@ -2481,8 +2504,65 @@ class UI {
         toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 2.6s forwards';
         setTimeout(() => toast.style.display = 'none', 3100);
       }, delay);
-      delay += 3200;
+      // Mythic celebration eats ~3.6s before its toast lands; serialize accordingly.
+      delay += isMythic ? 4200 : 3200;
     }
+  }
+
+  // Day 71: Mythic unlock fullscreen celebration with engraving animation.
+  showMythicCelebration(ach) {
+    let overlay = document.getElementById('mythic-celebration');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'mythic-celebration';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.innerHTML = '<div id="mythic-celebration-inner">' +
+        '<div id="mythic-celebration-tier">— MYTHIC ACHIEVEMENT —</div>' +
+        '<div id="mythic-celebration-icon"></div>' +
+        '<div id="mythic-celebration-name"></div>' +
+        '<div id="mythic-celebration-desc"></div>' +
+        '<div id="mythic-celebration-hint">Tap to dismiss</div>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', () => this._dismissMythicCelebration());
+    }
+    const iconEl = overlay.querySelector('#mythic-celebration-icon');
+    const nameEl = overlay.querySelector('#mythic-celebration-name');
+    const descEl = overlay.querySelector('#mythic-celebration-desc');
+    if (iconEl) iconEl.textContent = ach.icon;
+    if (nameEl) {
+      // Letter-by-letter engraving via spans + staggered animation.
+      nameEl.innerHTML = '';
+      const txt = String(ach.name || '');
+      for (let i = 0; i < txt.length; i++) {
+        const ch = txt[i];
+        const span = document.createElement('span');
+        span.className = 'mc-letter';
+        span.style.animationDelay = (i * 0.08) + 's';
+        span.textContent = ch === ' ' ? '\u00a0' : ch;
+        nameEl.appendChild(span);
+      }
+    }
+    if (descEl) descEl.textContent = ach.desc || '';
+    overlay.style.display = 'flex';
+    overlay.classList.remove('mc-out');
+    void overlay.offsetWidth;
+    overlay.classList.add('mc-in');
+    if (this.gameState && this.gameState.audio && typeof this.gameState.audio.playAchievement === 'function') {
+      this.gameState.audio.playAchievement();
+    }
+    if (this._mythicTimer) clearTimeout(this._mythicTimer);
+    this._mythicTimer = setTimeout(() => this._dismissMythicCelebration(), 3600);
+  }
+
+  _dismissMythicCelebration() {
+    const overlay = document.getElementById('mythic-celebration');
+    if (!overlay) return;
+    overlay.classList.remove('mc-in');
+    overlay.classList.add('mc-out');
+    if (this._mythicTimer) { clearTimeout(this._mythicTimer); this._mythicTimer = null; }
+    setTimeout(() => { overlay.style.display = 'none'; overlay.classList.remove('mc-out'); }, 360);
   }
 
   // ── Shortcuts Overlay ──
@@ -4491,6 +4571,18 @@ class UI {
     else rank = '🌱 Beginner';
 
     html += `<div class="profile-rank"><div class="profile-rank-label">${rank}</div><div class="profile-rank-bar"><div class="profile-rank-fill" style="width:${overallPct}%"></div></div><div class="profile-rank-pct">${overallPct}% complete</div></div>`;
+
+    // Day 71: Achievement tier-count breakdown.
+    if (gs.achievements && typeof gs.achievements.getTierCounts === 'function') {
+      const tc = gs.achievements.getTierCounts();
+      html += '<div class="profile-tier-counts" aria-label="Achievement tier counts">' +
+        '<span class="ptc-chip ptc-bronze" title="Bronze">🥉 ' + (tc.bronze || 0) + '</span>' +
+        '<span class="ptc-chip ptc-silver" title="Silver">🥈 ' + (tc.silver || 0) + '</span>' +
+        '<span class="ptc-chip ptc-gold" title="Gold">🥇 ' + (tc.gold || 0) + '</span>' +
+        '<span class="ptc-chip ptc-diamond" title="Diamond">💎 ' + (tc.diamond || 0) + '</span>' +
+        '<span class="ptc-chip ptc-mythic" title="Mythic">🌌 ' + (tc.mythic || 0) + '</span>' +
+        '</div>';
+    }
 
     // Day 50: Skill Level with progress bar + sparkline
     if (gs.skillTracker) {
