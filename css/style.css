@@ -7034,3 +7034,209 @@ body.light-mode #lab-tutorial-close {
   color: #fff;
 }
 body.light-mode #lab-tutorial-close:hover { background: #00aacc; }
+
+/* ── Day 72: Weekly Tournament screen ── */
+#tournament-screen {
+  position: fixed;
+  inset: 0;
+  background: #0a0a18;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  font-family: 'Courier New', monospace;
+  overflow-y: auto;
+}
+#tournament-content {
+  background: #11112a;
+  border: 1px solid #d4af37;
+  border-radius: 10px;
+  padding: 24px 28px;
+  max-width: 520px;
+  width: calc(100% - 32px);
+  color: #ddd;
+  margin: 32px 0;
+  position: relative;
+}
+#tournament-content h2 {
+  color: #ffd700;
+  margin: 0 0 6px;
+  font-size: 24px;
+  text-align: center;
+}
+#tournament-back-btn {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  background: transparent;
+  border: 1px solid #444;
+  color: #aaa;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+}
+#tournament-back-btn:hover { color: #fff; border-color: #888; }
+#tournament-week-label { text-align: center; }
+.tournament-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 14px 0 12px;
+  border-bottom: 1px solid #2a2a40;
+}
+.tournament-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #888;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.tournament-tab:hover { color: #ffd700; }
+.tournament-tab.active {
+  color: #ffd700;
+  border-bottom-color: #ffd700;
+}
+.tournament-tab-pane { animation: tFadeIn .25s ease; }
+@keyframes tFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+#tournament-puzzle-card {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid #3a2e10;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.tcard-title { color: #ffd700; font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+.tcard-meta { color: #c8a2ff; font-size: 12px; margin-bottom: 6px; }
+.tcard-story { color: #aaa; font-size: 12px; line-height: 1.4; }
+#tournament-play-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #5d4037, #d4af37);
+  border-color: #ffd700;
+  color: #fff;
+  font-size: 15px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.tournament-section-title {
+  color: #ffd700;
+  font-size: 12px;
+  margin: 12px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tournament-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 12px;
+}
+.tournament-row:last-child { border-bottom: none; }
+.tournament-row-self {
+  background: rgba(255, 215, 0, 0.12);
+  border-radius: 4px;
+}
+.trow-rank { width: 32px; color: #888; font-weight: bold; }
+.trow-name { flex: 1; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tournament-row-self .trow-name { color: #ffd700; }
+.trow-stats { color: #888; font-size: 11px; }
+.tournament-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 4px;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 12px;
+  color: #ccc;
+}
+.tournament-stat-row:last-child { border-bottom: none; }
+.tournament-best-card {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid #3a2e10;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.tournament-mybest-empty {
+  color: #888;
+  font-size: 12px;
+  padding: 14px 8px;
+  text-align: center;
+  background: rgba(255, 215, 0, 0.04);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.tournament-archive-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 12px;
+}
+.tournament-archive-row:last-child { border-bottom: none; }
+.tarc-week { width: 80px; color: #c8a2ff; font-weight: bold; }
+.tarc-stat { flex: 1; color: #aaa; }
+.tarc-play {
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+}
+.tournament-archive-empty { color: #555; font-style: italic; }
+.tournament-badge {
+  display: inline-block;
+  background: rgba(255, 215, 0, 0.18);
+  color: #ffd700;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+}
+.tournament-badge-gold {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  border-color: #ffd700;
+}
+
+/* Tournament button on level select */
+.challenge-btn.tournament-btn {
+  background: linear-gradient(135deg, #5d4037, #d4af37);
+  color: #fff;
+  border-color: #ffd700;
+}
+.challenge-btn.tournament-btn:hover {
+  background: linear-gradient(135deg, #6d5147, #e4bf47);
+}
+
+/* Light mode mirrors */
+body.light-mode #tournament-screen { background: #f6f3e8; }
+body.light-mode #tournament-content {
+  background: #fffaeb;
+  border-color: #b8860b;
+  color: #2a2410;
+}
+body.light-mode #tournament-content h2,
+body.light-mode #tournament-week-label,
+body.light-mode .tournament-section-title,
+body.light-mode .tcard-title { color: #b8860b; }
+body.light-mode #tournament-puzzle-card,
+body.light-mode .tournament-best-card {
+  background: rgba(184, 134, 11, 0.08);
+  border-color: rgba(184, 134, 11, 0.3);
+}
+body.light-mode .tournament-tab { color: #6a5a30; }
+body.light-mode .tournament-tab.active,
+body.light-mode .tournament-tab:hover { color: #b8860b; border-bottom-color: #b8860b; }
+body.light-mode .tournament-row { border-bottom-color: #eedfc0; }
+body.light-mode .tournament-stat-row { border-bottom-color: #eedfc0; color: #2a2410; }
+body.light-mode .tournament-archive-row { border-bottom-color: #eedfc0; }
+body.light-mode .tournament-row-self { background: rgba(184, 134, 11, 0.18); }
+body.light-mode .tournament-row-self .trow-name { color: #b8860b; }
+body.light-mode .tarc-week { color: #6a5a30; }
+body.light-mode #tournament-back-btn { color: #444; border-color: #b89a40; }
+body.light-mode #tournament-back-btn:hover { color: #000; border-color: #b8860b; }

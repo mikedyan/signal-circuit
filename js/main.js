@@ -998,6 +998,282 @@ class InfiniteRunManager {
 }
 
 
+// ── Day 72: Weekly Tournament Mode ──
+// Seeded weekly puzzle (year-week) wrapper around generateWeeklyPuzzle.
+// Single-shot scoring, pseudo-leaderboard (50), 8-week archive.
+const TOURNAMENT_KEY = 'signal-circuit-tournament-v1';
+
+class WeeklyTournament {
+  constructor(game) {
+    this.game = game;
+    this.data = this._load();
+  }
+
+  _load() {
+    try {
+      const raw = localStorage.getItem(TOURNAMENT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        return {
+          byWeek: d.byWeek || {},
+          totalAttempts: d.totalAttempts || 0,
+          podiums: d.podiums || 0,
+          wins: d.wins || 0,
+        };
+      }
+    } catch (e) {}
+    return { byWeek: {}, totalAttempts: 0, podiums: 0, wins: 0 };
+  }
+
+  _save() {
+    try { localStorage.setItem(TOURNAMENT_KEY, JSON.stringify(this.data)); } catch (e) {}
+  }
+
+  // ISO-week key for a given Date — matches generateWeeklyPuzzle's week math.
+  getWeekKey(date) {
+    const d = date || new Date();
+    const oneJan = new Date(d.getFullYear(), 0, 1);
+    const weekNum = Math.ceil(((d - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
+    const ww = String(weekNum).padStart(2, '0');
+    return `${d.getFullYear()}-W${ww}`;
+  }
+
+  getCurrentWeekInfo() {
+    const now = new Date();
+    const oneJan = new Date(now.getFullYear(), 0, 1);
+    const weekNum = Math.ceil(((now - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
+    return { year: now.getFullYear(), isoWeek: weekNum, key: this.getWeekKey(now) };
+  }
+
+  // Resolve a Date for the Monday of a given (year, weekNum) — used to recover archive puzzles.
+  _dateForWeek(year, weekNum) {
+    // Inverse of generateWeeklyPuzzle's formula: pick mid-week (Wed) to land in the same ISO bucket.
+    const oneJan = new Date(year, 0, 1);
+    const offsetDays = (weekNum - 1) * 7 - oneJan.getDay() + 3;
+    const d = new Date(year, 0, 1 + Math.max(0, offsetDays));
+    return d;
+  }
+
+  // Build the puzzle object for a given week. Defaults to current week.
+  buildPuzzle(weekKey) {
+    const targetKey = weekKey || this.getCurrentWeekInfo().key;
+    let puzzle;
+    if (!weekKey || targetKey === this.getCurrentWeekInfo().key) {
+      puzzle = generateWeeklyPuzzle();
+    } else {
+      // Reproduce a past week deterministically by stubbing Date temporarily.
+      const m = /^(\d{4})-W(\d{2})$/.exec(targetKey);
+      if (!m) return generateWeeklyPuzzle();
+      const year = parseInt(m[1], 10);
+      const week = parseInt(m[2], 10);
+      const stub = this._dateForWeek(year, week);
+      const RealDate = Date;
+      const FakeDate = function (...args) {
+        if (args.length === 0) return new RealDate(stub.getTime());
+        return new RealDate(...args);
+      };
+      FakeDate.prototype = RealDate.prototype;
+      FakeDate.now = () => stub.getTime();
+      try {
+        // eslint-disable-next-line no-global-assign
+        Date = FakeDate;
+        puzzle = generateWeeklyPuzzle();
+      } finally {
+        // eslint-disable-next-line no-global-assign
+        Date = RealDate;
+      }
+    }
+    puzzle.id = `tournament-${targetKey}`;
+    puzzle.weekKey = targetKey;
+    puzzle.isWeekly = true;
+    puzzle.isTournament = true;
+    puzzle.isChallenge = false;
+    puzzle.title = `\ud83c\udfc6 Tournament \u00b7 ${targetKey}`;
+    return puzzle;
+  }
+
+  // Compute score: gates*100 + over-budget seconds. Lower wins.
+  computeScore(gates, timeSec) {
+    const overBudget = Math.max(0, timeSec - 60);
+    return gates * 100 + overBudget;
+  }
+
+  // Seeded PRNG (matches DailyLeaderboard convention).
+  _seededRand(seed) {
+    let s = seed;
+    return function rand() {
+      s = (s * 1103515245 + 12345) & 0x7fffffff;
+      return s / 0x7fffffff;
+    };
+  }
+
+  _seedFromKey(weekKey) {
+    let h = 5381;
+    for (let i = 0; i < weekKey.length; i++) h = ((h << 5) + h + weekKey.charCodeAt(i)) & 0x7fffffff;
+    return h;
+  }
+
+  // Pseudo-leaderboard: 50 deterministic scores for the given week.
+  getLeaderboard(weekKey) {
+    const key = weekKey || this.getCurrentWeekInfo().key;
+    const seed = this._seedFromKey(key) + 31337;
+    const rand = this._seededRand(seed);
+    const puzzle = this.buildPuzzle(key);
+    const optimalGates = puzzle.optimalGates || 3;
+    const usedNames = new Set();
+    const scores = [];
+    const NAMES = (typeof DAILY_LB_NAMES !== 'undefined') ? DAILY_LB_NAMES : ['Player'];
+    for (let i = 0; i < 50; i++) {
+      const r1 = rand();
+      const r2 = rand();
+      const normalish = (r1 + r2) / 2;
+      const gateOffset = Math.round(normalish * 5);
+      const gates = Math.max(optimalGates, optimalGates + gateOffset);
+      const baseTime = 25 + Math.floor(rand() * 90);
+      const gateTimePenalty = (gates - optimalGates) * Math.floor(8 + rand() * 12);
+      const time = baseTime + gateTimePenalty;
+      let nameIdx = Math.floor(rand() * NAMES.length);
+      let name = NAMES[nameIdx];
+      let probes = 0;
+      while (usedNames.has(name) && probes < NAMES.length) {
+        nameIdx = (nameIdx + 1) % NAMES.length;
+        name = NAMES[nameIdx];
+        probes++;
+      }
+      if (usedNames.has(name)) name = name + '_' + i;
+      usedNames.add(name);
+      scores.push({ name, gates, time, score: this.computeScore(gates, time), isPlayer: false });
+    }
+    scores.sort((a, b) => a.score - b.score);
+    return scores;
+  }
+
+  // Combined board (player merged) for display.
+  getCombinedBoard(weekKey) {
+    const key = weekKey || this.getCurrentWeekInfo().key;
+    const board = this.getLeaderboard(key).slice();
+    const best = this.data.byWeek[key];
+    if (best) {
+      board.push({ name: best.name || 'You', gates: best.gates, time: best.time, score: best.score, isPlayer: true });
+      board.sort((a, b) => a.score - b.score);
+    }
+    return board;
+  }
+
+  getRank(weekKey, score) {
+    const board = this.getLeaderboard(weekKey || this.getCurrentWeekInfo().key);
+    let rank = 1;
+    for (const s of board) if (s.score < score) rank++;
+    return rank;
+  }
+
+  getPercentile(weekKey, score) {
+    const board = this.getLeaderboard(weekKey || this.getCurrentWeekInfo().key);
+    const total = board.length + 1;
+    let beat = 0;
+    for (const s of board) if (s.score > score) beat++;
+    return Math.round((beat / total) * 100);
+  }
+
+  getBest(weekKey) {
+    const key = weekKey || this.getCurrentWeekInfo().key;
+    return this.data.byWeek[key] || null;
+  }
+
+  // Last N completed weeks (oldest-first for display).
+  getRecentWeeks(n) {
+    const out = [];
+    const cur = this.getCurrentWeekInfo();
+    for (let i = 0; i < n; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i * 7);
+      const key = this.getWeekKey(d);
+      out.push({ key, isCurrent: i === 0, best: this.data.byWeek[key] || null });
+    }
+    return out;
+  }
+
+  // Submit player's score for the current week. Best of week locks at midnight Sunday PT.
+  // Returns { rank, percentile, isNewBest, score, podium, crowned, achievements }.
+  submitScore(gateCount, timeSec, displayName) {
+    const cur = this.getCurrentWeekInfo();
+    const key = cur.key;
+    const score = this.computeScore(gateCount, timeSec);
+    const existing = this.data.byWeek[key];
+    const isNewBest = !existing || score < existing.score;
+    if (isNewBest) {
+      this.data.byWeek[key] = {
+        gates: gateCount,
+        time: timeSec,
+        score: score,
+        name: displayName || 'You',
+        attempted: true,
+        ts: Date.now(),
+      };
+    } else if (existing) {
+      existing.attempted = true;
+    }
+    this.data.totalAttempts = (this.data.totalAttempts || 0) + 1;
+    const result = this.data.byWeek[key];
+    const rank = this.getRank(key, result.score);
+    const percentile = this.getPercentile(key, result.score);
+    result.rank = rank;
+    result.percentile = percentile;
+    const podium = rank <= 3;
+    const crowned = rank === 1;
+    const achievements = [];
+    if (podium) {
+      this.data.podiums = (this.data.podiums || 0) + (existing && existing.podium ? 0 : 1);
+      result.podium = true;
+      if (this.game && this.game.achievements && this.game.achievements.unlock('tournament_podium')) {
+        achievements.push('tournament_podium');
+      }
+    }
+    if (crowned) {
+      this.data.wins = (this.data.wins || 0) + (existing && existing.crowned ? 0 : 1);
+      result.crowned = true;
+      if (this.game && this.game.achievements && this.game.achievements.unlock('tournament_crowned')) {
+        achievements.push('tournament_crowned');
+      }
+    }
+    this._save();
+    return { rank, percentile, isNewBest, score, podium, crowned, achievements,
+             gates: gateCount, time: timeSec, weekKey: key };
+  }
+
+  // Launch the current week's tournament puzzle into gameplay.
+  startCurrentWeek() {
+    const level = this.buildPuzzle();
+    const gs = this.game;
+    gs.isChallengeMode = false;
+    gs.isSandboxMode = false;
+    gs.currentScreen = 'gameplay';
+    gs.ui.showScreen('gameplay');
+    gs.audio.startAmbient();
+    gs.renderer.resize();
+    gs.renderer.resetView();
+    gs.loadChallengeLevel(level);
+    setTimeout(() => gs.renderer.resize(), 60);
+  }
+
+  // Replay a past week (for archive). No score recorded.
+  startArchiveWeek(weekKey) {
+    const level = this.buildPuzzle(weekKey);
+    level.isTournamentArchive = true; // Suppresses score submission
+    const gs = this.game;
+    gs.isChallengeMode = false;
+    gs.isSandboxMode = false;
+    gs.currentScreen = 'gameplay';
+    gs.ui.showScreen('gameplay');
+    gs.audio.startAmbient();
+    gs.renderer.resize();
+    gs.renderer.resetView();
+    gs.loadChallengeLevel(level);
+    setTimeout(() => gs.renderer.resize(), 60);
+  }
+}
+
+
 class GameState {
   constructor() {
     this.gates = [];
@@ -1108,6 +1384,8 @@ class GameState {
     this._hardcoreFailCount = 0;
     // Day 68: Infinite Run
     this.infiniteRun = new InfiniteRunManager(this);
+    // Day 72: Weekly Tournament
+    this.weeklyTournament = new WeeklyTournament(this);
   }
 
   // Day 68: Infinite Mode entry points
@@ -3103,6 +3381,31 @@ class GameState {
               this.infiniteRun.onSolve();
               return;
             }
+            if (this.currentLevel && this.currentLevel.isTournament) {
+              // Day 72: Weekly Tournament — single-shot scoring + leaderboard
+              const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 60;
+              this.audio.playSuccess(2);
+              this.haptic([30, 50, 30, 50, 50]);
+              this.ui.startCelebration(2, { mode: 'challenge' });
+              if (this.currentLevel.isTournamentArchive) {
+                this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates · Archive replay (no score)`);
+                this.ui.updateStatusBar(`Archive week ${this.currentLevel.weekKey} — replayed in ${elapsed}s`);
+              } else {
+                const submission = this.weeklyTournament.submitScore(
+                  gateCount, elapsed,
+                  (this.dailyLeaderboard && this.dailyLeaderboard.getDisplayName) ? this.dailyLeaderboard.getDisplayName() : 'You'
+                );
+                this.ui.updateResultDisplay('pass',
+                  `✓ SOLVED! ${gateCount} gates · ${elapsed}s · score ${submission.score}`);
+                this.ui.updateStatusBar(
+                  `🏆 Tournament rank #${submission.rank} (top ${100 - submission.percentile}%) — ${submission.isNewBest ? 'new personal best!' : 'best stands'}`);
+                if (submission.achievements && submission.achievements.length) {
+                  this.ui.showAchievementToasts(submission.achievements);
+                }
+                if (this.ui.showTournamentResult) this.ui.showTournamentResult(submission, this.currentLevel.weekKey);
+              }
+              return;
+            }
             if (this.isChallengeMode && this.currentLevel.isChallenge) {
               // Challenge mode completion
               this.addLeaderboardEntry(
@@ -3347,6 +3650,31 @@ class GameState {
         this.ui.updateStatusBar(`Infinite · Streak ${this.infiniteRun.streak + 1} · ${gateCount} gates`);
         this.ui.startCelebration(1, { mode: 'challenge' });
         this.infiniteRun.onSolve();
+        return;
+      }
+      if (this.currentLevel && this.currentLevel.isTournament) {
+        // Day 72: Weekly Tournament — Quick Test routes through same scoring path
+        const elapsed = this.timerStart ? Math.floor((Date.now() - this.timerStart) / 1000) : 60;
+        this.audio.playSuccess(2);
+        this.haptic([30, 50, 30, 50, 50]);
+        this.ui.startCelebration(2, { mode: 'challenge' });
+        if (this.currentLevel.isTournamentArchive) {
+          this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates · Archive replay (no score)`);
+          this.ui.updateStatusBar(`Archive week ${this.currentLevel.weekKey} — replayed in ${elapsed}s`);
+        } else {
+          const submission = this.weeklyTournament.submitScore(
+            gateCount, elapsed,
+            (this.dailyLeaderboard && this.dailyLeaderboard.getDisplayName) ? this.dailyLeaderboard.getDisplayName() : 'You'
+          );
+          this.ui.updateResultDisplay('pass',
+            `✓ SOLVED! ${gateCount} gates · ${elapsed}s · score ${submission.score}`);
+          this.ui.updateStatusBar(
+            `🏆 Tournament rank #${submission.rank} (top ${100 - submission.percentile}%) — ${submission.isNewBest ? 'new personal best!' : 'best stands'}`);
+          if (submission.achievements && submission.achievements.length) {
+            this.ui.showAchievementToasts(submission.achievements);
+          }
+          if (this.ui.showTournamentResult) this.ui.showTournamentResult(submission, this.currentLevel.weekKey);
+        }
         return;
       }
       if (this.isChallengeMode && this.currentLevel.isChallenge) {

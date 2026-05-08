@@ -47,6 +47,9 @@ const ACHIEVEMENTS = [
   // Day 70: Lab Bench / Blueprint Mode
   { id: 'drafted_right', name: 'Drafted Right', desc: 'First-try solve on 3 different Lab Bench blueprints', icon: '📐', tier: 'gold' },
   { id: 'lab_method', name: 'The Method', desc: 'Clear all 5 Lab Bench levels (or any 10 lab clears total)', icon: '🔬', tier: 'gold' },
+  // Day 72: Weekly Tournament Mode
+  { id: 'tournament_podium', name: 'Podium', desc: 'Finish in the top 3 of a weekly tournament', icon: '🏅', tier: 'gold' },
+  { id: 'tournament_crowned', name: 'Crowned', desc: 'Finish 1st in a weekly tournament', icon: '🏆', tier: 'gold' },
 
   // Day 71: Diamond — chase-tier achievements
   { id: 'diamond_hardcore_marathon', name: 'Hardcore Marathon', desc: 'Complete 20 levels in Hardcore mode', icon: '⬛', tier: 'diamond', goal: 20 },

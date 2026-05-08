@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1779206400">
+  <link rel="stylesheet" href="css/style.css?v=1779292800">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -99,6 +99,7 @@
           <div class="chapter-title">Challenge Mode</div>
           <div id="challenge-buttons">
             <button id="weekly-puzzle-btn" class="challenge-btn weekly-btn" aria-label="Puzzle of the Week">🏗️ Puzzle of the Week</button>
+            <button id="tournament-btn" class="challenge-btn tournament-btn" aria-label="Weekly Tournament" style="display:none;">🏆 Tournament</button>
             <button id="daily-challenge-btn" class="challenge-btn daily-btn" aria-label="Daily Challenge">📅 Daily Challenge</button>
             <button id="adaptive-challenge-btn" class="challenge-btn" aria-label="Adaptive Challenge">🎯 Adaptive</button>
             <button id="infinite-mode-btn" class="challenge-btn infinite-btn" aria-label="Infinite Run">♾️ Infinite</button>
@@ -372,6 +373,38 @@
         <div id="creator-actions">
           <button id="creator-play-btn" class="challenge-btn generate-btn" aria-label="Play custom level">▶ Play Level</button>
           <button id="creator-share-btn" class="challenge-btn" aria-label="Copy share link">🔗 Share Link</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 72: Weekly Tournament screen -->
+    <div id="tournament-screen" style="display:none;">
+      <div id="tournament-content">
+        <button id="tournament-back-btn" aria-label="Back to level select">← Back</button>
+        <h2>🏆 Weekly Tournament</h2>
+        <div id="tournament-week-label" class="muted" style="color:#888;font-size:12px;margin-bottom:6px;">—</div>
+        <p class="muted" style="color:#888;font-size:12px;margin-bottom:14px;">Single-shot run. Score = gates × 100 + over-budget seconds. Lower wins. Best of week locks Sunday midnight PT.</p>
+        <div class="tournament-tabs">
+          <button class="tournament-tab active" data-tab="this-week">This Week</button>
+          <button class="tournament-tab" data-tab="my-best">My Best</button>
+          <button class="tournament-tab" data-tab="archive">Archive</button>
+        </div>
+        <div id="tournament-tab-this-week" class="tournament-tab-pane">
+          <div id="tournament-puzzle-card">
+            <div class="tcard-title" id="tournament-puzzle-title">—</div>
+            <div class="tcard-meta" id="tournament-puzzle-meta">—</div>
+            <div class="tcard-story" id="tournament-puzzle-story"></div>
+          </div>
+          <button id="tournament-play-btn" class="challenge-btn generate-btn" aria-label="Play this week's tournament">▶ Play This Week</button>
+          <div class="tournament-section-title">🏁 Leaderboard (top 10)</div>
+          <div id="tournament-leaderboard"></div>
+        </div>
+        <div id="tournament-tab-my-best" class="tournament-tab-pane" style="display:none;">
+          <div id="tournament-mybest"></div>
+        </div>
+        <div id="tournament-tab-archive" class="tournament-tab-pane" style="display:none;">
+          <div class="tournament-section-title">Last 8 weeks</div>
+          <div id="tournament-archive-list"></div>
         </div>
       </div>
     </div>
@@ -758,15 +791,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1779206400"></script>
-  <script src="js/wires.js?v=1779206400"></script>
-  <script src="js/simulation.js?v=1779206400"></script>
-  <script src="js/levels.js?v=1779206400"></script>
-  <script src="js/audio.js?v=1779206400"></script>
-  <script src="js/achievements.js?v=1779206400"></script>
-  <script src="js/canvas.js?v=1779206400"></script>
-  <script src="js/ui.js?v=1779206400"></script>
-  <script src="js/tutorial.js?v=1779206400"></script>
-  <script src="js/main.js?v=1779206400"></script>
+  <script src="js/gates.js?v=1779292800"></script>
+  <script src="js/wires.js?v=1779292800"></script>
+  <script src="js/simulation.js?v=1779292800"></script>
+  <script src="js/levels.js?v=1779292800"></script>
+  <script src="js/audio.js?v=1779292800"></script>
+  <script src="js/achievements.js?v=1779292800"></script>
+  <script src="js/canvas.js?v=1779292800"></script>
+  <script src="js/ui.js?v=1779292800"></script>
+  <script src="js/tutorial.js?v=1779292800"></script>
+  <script src="js/main.js?v=1779292800"></script>
 </body>
 </html>

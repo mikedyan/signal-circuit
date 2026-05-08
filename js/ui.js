@@ -555,9 +555,10 @@ class UI {
     for (const k in progress.levels) {
       if (progress.levels[k] && progress.levels[k].completed) completed++;
     }
-    // Tier 1 reveal threshold (end of Ch1 ≈ 6 levels) and Tier 2 (end of Ch2 ≈ 12 levels)
+    // Tier 1 reveal threshold (end of Ch1 ≈ 6 levels), Tier 2 (end of Ch2 ≈ 12), Tier 3 (Ch3 boss ≈ 18)
     const tier1 = completed >= 6;
     const tier2 = completed >= 12;
+    const tier3 = completed >= 18;
     const setVis = (id, visible, displayMode = '') => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -567,8 +568,9 @@ class UI {
     setVis('daily-challenge-btn', tier1);
     setVis('encyclopedia-btn', tier1);
     setVis('stats-btn', tier1);
-    // Full reveal at tier 2
-    setVis('weekly-puzzle-btn', tier2);
+    // Full reveal at tier 2 — weekly button hides at tier 3 (Tournament subsumes it)
+    setVis('weekly-puzzle-btn', tier2 && !tier3);
+    setVis('tournament-btn', tier3);
     setVis('adaptive-challenge-btn', tier2);
     setVis('infinite-mode-btn', tier2); // Day 68
     setVis('random-challenge-btn', tier2);
@@ -600,7 +602,7 @@ class UI {
   }
 
   showScreen(screen) {
-    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen', 'daily-config-screen', 'infinite-pre-screen', 'infinite-summary-screen'];
+    const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen', 'daily-config-screen', 'infinite-pre-screen', 'infinite-summary-screen', 'tournament-screen'];
     // T6: Play transition whoosh on screen change
     if (this.gameState.audio) this.gameState.audio.playTransitionWhoosh();
 
@@ -1841,6 +1843,32 @@ class UI {
       });
     }
 
+    // Day 72: Tournament button + tournament-screen wiring
+    const tournamentBtn = document.getElementById('tournament-btn');
+    if (tournamentBtn) {
+      tournamentBtn.addEventListener('click', () => {
+        this.gameState._saveLevelSelectScroll();
+        this.showTournamentScreen();
+      });
+    }
+    const tBack = document.getElementById('tournament-back-btn');
+    if (tBack) tBack.addEventListener('click', () => this.gameState.showLevelSelect());
+    const tPlay = document.getElementById('tournament-play-btn');
+    if (tPlay) tPlay.addEventListener('click', () => {
+      if (this.gameState.weeklyTournament) this.gameState.weeklyTournament.startCurrentWeek();
+    });
+    document.querySelectorAll('.tournament-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const which = tab.getAttribute('data-tab');
+        document.querySelectorAll('.tournament-tab').forEach((t) => t.classList.toggle('active', t === tab));
+        document.querySelectorAll('.tournament-tab-pane').forEach((p) => {
+          p.style.display = (p.id === 'tournament-tab-' + which) ? '' : 'none';
+        });
+        if (which === 'my-best') this._renderTournamentMyBest();
+        if (which === 'archive') this._renderTournamentArchive();
+      });
+    });
+
     // Day 68: Infinite pre-screen wiring
     const infBack = document.getElementById('infinite-pre-back-btn');
     if (infBack) infBack.addEventListener('click', () => this.gameState.showLevelSelect());
@@ -2331,6 +2359,108 @@ class UI {
     }
     this._lastInfiniteSummary = payload;
     this.showScreen('infinite-summary');
+  }
+
+  // ── Day 72: Weekly Tournament screen ──
+  showTournamentScreen() {
+    const wt = this.gameState.weeklyTournament;
+    if (!wt) return;
+    const info = wt.getCurrentWeekInfo();
+    const puzzle = wt.buildPuzzle();
+    const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    setText('tournament-week-label', `Week ${info.key} · 🌐 same puzzle for everyone`);
+    setText('tournament-puzzle-title', puzzle.title.replace(/^🏆 Tournament · /, ''));
+    setText('tournament-puzzle-meta', `${puzzle.inputs.length} inputs · ${puzzle.outputs.length} output${puzzle.outputs.length > 1 ? 's' : ''} · par ${puzzle.optimalGates} gates`);
+    setText('tournament-puzzle-story', puzzle.description || '');
+    // Reset tabs to This Week
+    document.querySelectorAll('.tournament-tab').forEach((t) => t.classList.toggle('active', t.getAttribute('data-tab') === 'this-week'));
+    document.querySelectorAll('.tournament-tab-pane').forEach((p) => { p.style.display = (p.id === 'tournament-tab-this-week') ? '' : 'none'; });
+    this._renderTournamentLeaderboard();
+    this.showScreen('tournament');
+  }
+
+  _renderTournamentLeaderboard() {
+    const wt = this.gameState.weeklyTournament;
+    if (!wt) return;
+    const list = document.getElementById('tournament-leaderboard');
+    if (!list) return;
+    const board = wt.getCombinedBoard().slice(0, 10);
+    const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    list.innerHTML = board.map((entry, i) => {
+      const rank = i + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+      const cls = entry.isPlayer ? 'tournament-row tournament-row-self' : 'tournament-row';
+      return `<div class="${cls}"><span class="trow-rank">${medal}</span><span class="trow-name">${entry.isPlayer ? '⭐ ' + entry.name : entry.name}</span><span class="trow-stats">${entry.gates} gates · ${fmtTime(entry.time)} · score ${entry.score}</span></div>`;
+    }).join('');
+  }
+
+  _renderTournamentMyBest() {
+    const wt = this.gameState.weeklyTournament;
+    if (!wt) return;
+    const target = document.getElementById('tournament-mybest');
+    if (!target) return;
+    const cur = wt.getCurrentWeekInfo();
+    const best = wt.getBest(cur.key);
+    const lifetime = wt.data || {};
+    const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    if (!best) {
+      target.innerHTML = `<div class="tournament-mybest-empty">You haven’t played this week’s tournament yet. Click “This Week” to play.</div>
+        <div class="tournament-section-title">Lifetime</div>
+        <div class="tournament-stat-row"><span>Total attempts</span><span>${lifetime.totalAttempts || 0}</span></div>
+        <div class="tournament-stat-row"><span>Podium finishes</span><span>${lifetime.podiums || 0}</span></div>
+        <div class="tournament-stat-row"><span>Crowned weeks</span><span>${lifetime.wins || 0}</span></div>`;
+      return;
+    }
+    target.innerHTML = `
+      <div class="tournament-best-card">
+        <div class="tcard-title">Week ${cur.key}</div>
+        <div class="tournament-stat-row"><span>Score</span><span>${best.score}</span></div>
+        <div class="tournament-stat-row"><span>Gates</span><span>${best.gates}</span></div>
+        <div class="tournament-stat-row"><span>Time</span><span>${fmtTime(best.time)}</span></div>
+        <div class="tournament-stat-row"><span>Rank</span><span>#${best.rank || '?'}</span></div>
+        <div class="tournament-stat-row"><span>Percentile</span><span>top ${100 - (best.percentile || 0)}%</span></div>
+        ${best.crowned ? '<div class="tournament-badge tournament-badge-gold">🏆 Crowned</div>' : best.podium ? '<div class="tournament-badge">🏅 Podium</div>' : ''}
+      </div>
+      <div class="tournament-section-title">Lifetime</div>
+      <div class="tournament-stat-row"><span>Total attempts</span><span>${lifetime.totalAttempts || 0}</span></div>
+      <div class="tournament-stat-row"><span>Podium finishes</span><span>${lifetime.podiums || 0}</span></div>
+      <div class="tournament-stat-row"><span>Crowned weeks</span><span>${lifetime.wins || 0}</span></div>`;
+  }
+
+  _renderTournamentArchive() {
+    const wt = this.gameState.weeklyTournament;
+    if (!wt) return;
+    const list = document.getElementById('tournament-archive-list');
+    if (!list) return;
+    const weeks = wt.getRecentWeeks(8);
+    const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    list.innerHTML = weeks.map((w) => {
+      const status = w.isCurrent ? '<span class="tournament-badge">Live</span>'
+                    : w.best ? `${w.best.gates} gates · ${fmtTime(w.best.time)} · #${w.best.rank || '?'}`
+                    : '<span class="tournament-archive-empty">Not played</span>';
+      const playLabel = w.isCurrent ? 'Play' : 'Replay';
+      return `<div class="tournament-archive-row">
+        <span class="tarc-week">${w.key}</span>
+        <span class="tarc-stat">${status}</span>
+        <button class="settings-btn tarc-play" data-week-key="${w.key}" data-current="${w.isCurrent ? '1' : '0'}">${playLabel}</button>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.tarc-play').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-week-key');
+        const isCurrent = btn.getAttribute('data-current') === '1';
+        if (isCurrent) wt.startCurrentWeek();
+        else wt.startArchiveWeek(key);
+      });
+    });
+  }
+
+  showTournamentResult(submission, weekKey) {
+    // Lightweight badge in result area; full leaderboard already on tournament screen.
+    const msg = submission.crowned ? '🏆 CROWNED — #1 this week!'
+              : submission.podium ? `🏅 Podium — #${submission.rank}`
+              : `🏆 Tournament rank #${submission.rank} (top ${100 - submission.percentile}%)`;
+    if (this.updateStatusBar) this.updateStatusBar(msg);
   }
 
   _shareInfiniteRun() {
