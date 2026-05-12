@@ -1,10 +1,19 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 73 — Harden Week 2, Day 1 (2026-05-11) — Full Interaction Audit (Cycle 2)*
+*Updated: Day 74 — Harden Week 2, Day 2 (2026-05-12) — Level Playthrough (Cycle 2)*
 
 ## Open Bugs
 
-*(none — Day 73 audit found 0 new bugs)*
+*(none — Day 74 found and fixed 1 P2 bug; verified live)*
+
+## Fixed (Today)
+
+### Day 74 — P2: Speedrun HUD Persists on Level Select ✅
+- **Found:** Day 74 (Cycle 2 Harden Day 2). After entering Speedrun Mode and returning to the level select (e.g., via the Back button bypassing `stopSpeedrunMode()`), `#speedrun-hud` remained `display:flex` and `speedrunMode` stayed `true`.
+- **Root cause:** Day 61 comment in `showLevelSelect()` claimed "Defensive Blitz/Speedrun HUD cleanup" but only the Blitz branch was wired. Speedrun was missed.
+- **Fix:** Sibling defensive cleanup block added to `showLevelSelect()` (`js/main.js`) right below the Blitz cleanup. Clears `speedrunTimer` + `speedrunStart`, sets `speedrunMode=false`, hides `#speedrun-hud`.
+- **Verified live:** Patched `showLevelSelect` injected into the running build cleared all three (mode flag, timer, HUD) on transition. Symmetric to the Day 61 Blitz fix.
+- **Cache bust:** `index.html` `?v=1779379200`, `sw.js` `CACHE_NAME = 'signal-circuit-v51'`.
 
 ## Cosmetic / Minor Observations (Not Bugs)
 - AudioContext warnings on page load (expected — resumes after first user gesture)

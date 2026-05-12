@@ -2323,6 +2323,15 @@ class GameState {
       const _bh = document.getElementById('blitz-hud');
       if (_bh) _bh.style.display = 'none';
     }
+    // Day 74 (Harden Day 2 — Cycle 2): Defensive Speedrun HUD cleanup — fixes P2 speedrun-hud persistence
+    // The Day 61 comment claimed Speedrun coverage but only Blitz was wired. Sibling fix lands here.
+    if (this.speedrunMode || this.speedrunTimer) {
+      if (this.speedrunTimer) { clearInterval(this.speedrunTimer); this.speedrunTimer = null; }
+      this.speedrunMode = false;
+      this.speedrunStart = null;
+      const _sh = document.getElementById('speedrun-hud');
+      if (_sh) _sh.style.display = 'none';
+    }
     this.stopTimer();
     this.trackPlaytimeEnd();
     // Day 54: Log session entry
