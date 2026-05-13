@@ -1,12 +1,47 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 74 — Harden Week 2, Day 2 (2026-05-12) — Level Playthrough (Cycle 2)*
+*Updated: Day 75 — Harden Week 2, Day 3 (2026-05-13) — Edge Cases & Stress (Cycle 2)*
 
 ## Open Bugs
 
-*(none — Day 74 found and fixed 1 P2 bug; verified live)*
+*(none — 25-case edge/stress sweep on Day 75 found 0 new bugs)*
 
-## Fixed (Today)
+## Day 75 Edge & Stress Sweep — Cycle 2, Harden Day 3
+
+**Build under test:** `?v=1779379200`, `sw.js CACHE_NAME = 'signal-circuit-v51'` (Day 74 Speedrun cleanup fix)
+**Result:** 25/25 tests pass · 0 new bugs · 0 console errors
+
+| # | Test | Result | Detail |
+|---|------|--------|--------|
+| T1 | Rapid gate placement during simulation | ✅ | 14 gates inserted mid-anim, no throws |
+| T2 | Wire drawing while signal animation is playing | ✅ | wireManager.startWire mid-anim no-throw |
+| T3 | 10 rapid `resize` events while on gameplay | ✅ | canvas 820×834 stable across all 10 |
+| T4 | Tab-reachable focusable count on gameplay | ✅ | 15 focusables (back, shortcuts, encyclopedia, kb-wiring, panel-toggle, next-level…) |
+| T5 | colorblind + light/dark mode class toggle | ✅ | both classes apply and revert |
+| T6 | 25 gates + 20 wires perf | ✅ | 10× render = 13.9ms, **1.39ms avg frame** |
+| T7 | localStorage capacity | ✅ | 50 × 50KB writes succeeded, no QuotaExceeded |
+| T8 | Mode-switch storm (level-select ↔ daily/challenge/sandbox/tournament/infinite) | ✅ | always returns to `level-select` clean |
+| T9 | Blitz + Speedrun HUD cleanup on Back (Day 61 + Day 74 regression) | ✅ | both `display:none`, mode flags `false`, timers cleared |
+| T10 | RUN spam (10 rapid `runSimulation()` calls) | ✅ | 0 errors, animation completes |
+| T11 | Quick Test spam (10 rapid `runQuickTest()` calls) | ✅ | 0 errors |
+| T12 | Hint button spam | ✅ | hint count stays `≤ 3`, token system holds |
+| T13 | Lab Bench entry (Level 36, Chapter 8 redesign) | ✅ | `isLabBench=true`, `#lab-hud` flex, RUN labeled '📐 Submit Blueprint', `_lab={attempts:0,max:3}` |
+| T14 | Tournament screen open + close | ✅ | 3 tabs, 10 leaderboard rows, close resets `display:none` |
+| T15 | Mythic celebration overlay (lazy-created) | ✅ | `ui.showMythicCelebration()` creates `#mythic-celebration` on demand, displays `flex` |
+| T16 | Settings modal + 📲 Install App button | ✅ | `open-settings-btn` opens modal, install button present, close clean |
+| T17 | Service worker controller activated | ✅ | `scriptURL=/sw.js`, `state=activated` |
+| T18 | window blur/focus + visibilitychange cycle | ✅ | no throws |
+| T19 | UI thrash — 15× `showLevelSelect()/startLevel(1)/showLevelSelect()` | ✅ | final screen `level-select`, gates clean |
+| T20 | Undo/redo stress — 15 undos + 15 redos | ✅ | no throws, manager stable |
+| T21 | Achievements modal sort (mythic-first) | ✅ | 54 rows; top 5 all `tier-mythic` |
+| T22 | Build identity (cache-bust + SW version match) | ✅ | 11 `?v=` refs all `1779379200`, `CACHE_NAME=signal-circuit-v51` |
+| T23 | localStorage clear (cold-start sim) | ✅ | 13 `signal*` keys removed, no residue |
+| T24 | SW cache asset count | ✅ | `signal-circuit-v51` precache = 27 assets |
+| T25 | Light-mode + colorblind paint stability on gameplay | ✅ | body bg = `rgb(245,243,235)`, canvas transparent |
+
+**Console errors across all 25 tests:** 0 (only standard AudioContext autoplay warnings).
+
+## Fixed (Recent)
 
 ### Day 74 — P2: Speedrun HUD Persists on Level Select ✅
 - **Found:** Day 74 (Cycle 2 Harden Day 2). After entering Speedrun Mode and returning to the level select (e.g., via the Back button bypassing `stopSpeedrunMode()`), `#speedrun-hud` remained `display:flex` and `speedrunMode` stayed `true`.
