@@ -1974,6 +1974,60 @@ class GameState {
     this._levelSelectScrollY = 0; // #95: Reset scroll on progress reset
   }
 
+  // ── Day 76: Dev/Harden seeder ──
+  // Synthetically marks levels 1..count as completed so Harden harnesses (and
+  // local debugging) can reach tier-gated UI (Tournament, Random Challenge,
+  // Adaptive, Infinite, Customize, Mastery Tree, …) without manually solving
+  // 18 levels. Non-destructive on real play: levels already completed at >=
+  // requested stars are left untouched; only synthetic entries are written.
+  // Returns a summary object so test harnesses can assert.
+  //
+  // Usage from console / CDP:
+  //   window.game.seedProgress(18);           // tier3 (Tournament unlocked)
+  //   window.game.seedProgress(40, {stars:3, pureLogic:true});
+  //   window.game.seedProgress(0, {clear:true}); // wipe back to cold-start
+  seedProgress(count = 18, opts = {}) {
+    const stars = Math.max(1, Math.min(3, opts.stars ?? 3));
+    const pureLogic = !!opts.pureLogic;
+    const hardcore = !!opts.hardcore;
+    if (opts.clear) {
+      this.resetProgress();
+    }
+    const max = Math.min(count, getLevelCount());
+    let seeded = 0;
+    const now = Date.now();
+    for (let id = 1; id <= max; id++) {
+      const level = getLevel(id);
+      if (!level) continue;
+      const existing = this.progress.levels[id];
+      if (existing && existing.completed && (existing.stars || 0) >= stars) {
+        continue; // already at or above requested mastery
+      }
+      const bestGates = level.optimalGates || 1;
+      this.progress.levels[id] = {
+        completed: true,
+        stars,
+        bestGateCount: existing?.bestGateCount ?? bestGates,
+        bestTime: existing?.bestTime ?? 30,
+        pureLogic: pureLogic || !!existing?.pureLogic,
+        hardcoreCompleted: hardcore || !!existing?.hardcoreCompleted,
+        lastPlayed: now,
+        completedAt: existing?.completedAt || now,
+        attempts: existing?.attempts || 1,
+        _seeded: true, // marker — never written by real completion
+      };
+      seeded++;
+    }
+    this.saveProgress();
+    // Re-render level select + re-evaluate tier gating if UI is mounted.
+    if (this.ui && typeof this.ui.renderLevelSelect === 'function') {
+      try { this.ui.renderLevelSelect(); } catch (e) {}
+      try { this.ui.applyProgressGating?.(); } catch (e) {}
+      try { this.ui.updateProgressBar?.(); } catch (e) {}
+    }
+    return { seeded, requested: count, max, stars, pureLogic, hardcore };
+  }
+
   // ── Leaderboard Persistence ──
   loadLeaderboard() {
     try {
@@ -3303,6 +3357,13 @@ class GameState {
   async runSimulation() {
     // Day 38: Tutorial RUN notification
     if (this.tutorial && this.tutorial.isActive()) this.tutorial.onRunPressed();
+    // Day 76 — Re-entry contract: while a simulation animation is in flight
+    // (`isAnimating === true`), additional `runSimulation()` invocations are
+    // no-ops (early return). After completion the flag is cleared in the
+    // `finally` block, so subsequent clicks always start a *fresh* sim — there
+    // is no debounce beyond "one in flight at a time". RUN-spam is therefore
+    // idempotent at the simulation layer; any future feature that depends on
+    // rate-limiting (e.g. submission throttling) must add its own guard.
     if (this.isAnimating) return;
 
     // Day 70: Lab Bench gate — consume an attempt before any animation cost.

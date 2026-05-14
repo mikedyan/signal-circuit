@@ -1,10 +1,23 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 75 — Harden Week 2, Day 3 (2026-05-13) — Edge Cases & Stress (Cycle 2)*
+*Updated: Day 76 — Harden Week 2, Day 4 (2026-05-14) — Fix Everything (Cycle 2)*
 
 ## Open Bugs
 
-*(none — 25-case edge/stress sweep on Day 75 found 0 new bugs)*
+*(none — Day 76 entered with an empty Open Bugs queue; week wraps one day early)*
+
+## Day 76 — Harden Week 2, Day 4 (Fix Everything) summary
+
+**Build under test:** `?v=1779465600`, `sw.js CACHE_NAME = 'signal-circuit-v52'`
+**Result:** 0 open bugs at start of day, 0 open bugs at end. Day pivoted to closing the two verification-only learnings flagged on Day 75:
+
+1. **`GameState.seedProgress(count, opts)`** — new dev/Harden helper on `js/main.js`. Synthetically marks levels 1..count as completed (with `_seeded:true` markers and configurable `stars` / `pureLogic` / `hardcore`) so future Harden harnesses can reach tier-gated UI (Tournament, Random Challenge, Adaptive, Infinite, Customize, Mastery Tree, …) without 18 manual completions. Non-destructive on real play. Returns a summary object for assertions.
+2. **`runSimulation()` re-entry contract** — 7-line doc comment added directly above the existing `isAnimating` guard codifying the property Day 75 verified empirically: while a sim is in flight, additional invocations are no-ops; after completion the flag clears so subsequent clicks always start a fresh sim; no debounce beyond "one in flight at a time".
+
+Live verification (12 assertions): build identity unified, seedProgress(18) reveals 13 tier3 buttons, cold start hides them all, non-destructive at lower stars, clear option wipes cleanly, Level 1 core loop unaffected, RUN-spam guard holds, 0 console errors.
+
+Written up in `reviews/harden-cycle-2-week-summary.md`. Cycle 2 Harden Week closes one day early.
+
 
 ## Day 75 Edge & Stress Sweep — Cycle 2, Harden Day 3
 
