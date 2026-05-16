@@ -1790,11 +1790,21 @@ class GameState {
       }
     } catch (e) { return; }
 
-    // Day 56: Show first-launch difficulty selector for brand new players (kept).
+    // Day 78 Cut #5 (PRUNE Tier 1): Silent-default the difficulty modal.
+    // Cold-start ceremony is a tax — Standard works for ~all first-time
+    // players. Set Standard silently, persist the suggestion flag so we
+    // never re-prompt, and surface a one-time toast pointing at Settings
+    // for power users who want Relaxed/Hardcore. Settings → Difficulty
+    // Mode still opens the full chooser (unchanged).
     if (!SafeStorage.getItem(DIFFICULTY_KEY)) {
+      try { this.setDifficultyMode('standard'); } catch (e) {}
       setTimeout(() => {
-        if (this.ui) this.ui.showFirstLaunchDifficultyModal();
-      }, 3000);
+        try {
+          if (window._notifManager && typeof window._notifManager.showWelcomeToast === 'function') {
+            window._notifManager.showWelcomeToast('🔧 Mode set to Standard. Change anytime in Settings.', 4500);
+          }
+        } catch (e) {}
+      }, 1200);
     }
 
     if (!placementOptIn) {
