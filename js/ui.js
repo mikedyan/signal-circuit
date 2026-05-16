@@ -3205,7 +3205,15 @@ class UI {
       return;
     }
 
+    // Day 78 Cut #4 (PRUNE Tier 1): Drop the hint-policy footer on early
+    // levels. It addresses meta-rules (stars + Pure Logic badge) that aren't
+    // yet relevant to a fresh L1 player. Surface starts at L4 where hint
+    // tokens first become a real consideration.
     if (gs.hintsUsed === 0) {
+      if (!level || level.id < 4) {
+        infoEl.style.display = 'none';
+        return;
+      }
       infoEl.textContent = '💡 Hints won\'t reduce stars · 🧠 No hints = Pure Logic badge';
       infoEl.style.display = 'block';
       infoEl.style.color = '#888';
