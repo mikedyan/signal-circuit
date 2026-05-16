@@ -1,10 +1,26 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 76 — Harden Week 2, Day 4 (2026-05-14) — Fix Everything (Cycle 2)*
+*Updated: Day 78 — Prune Week 2, Day 2 (2026-05-16) — Design Simplification (Cycle 2)*
 
 ## Open Bugs
 
-*(none — Day 76 entered with an empty Open Bugs queue; week wraps one day early)*
+*(none — Day 78 was a Prune Week simplification day; the 5 Tier 1 cuts shipped
+without surfacing any new bugs. All verification ran with 0 console errors.)*
+
+## Day 78 — Prune Week 2, Day 2 (Design Simplification) summary
+
+**Build under test:** `?v=1779552000`, `sw.js CACHE_NAME = 'signal-circuit-v53'`
+**Result:** 0 new bugs, 5 Tier 1 cuts shipped from `PRUNE_REPORT.md`.
+
+- **Cut #1 — Per-card overflow menu**: `👁 Solution` + `🏆 Gate Limit` collapsed into a single `⋯` corner button per completed card with a popover.
+- **Cut #2 — Smooth Tier-2 reveal**: `applyProgressGating()` now uses 5 thresholds (g6/g9/g12/g15/g18) instead of two.
+- **Cut #3 — Retire Puzzle of the Week**: Tournament fully subsumes it; `weekly-puzzle-btn` hidden at every tier.
+- **Cut #4 — Drop L1 hint footer**: meta-rule footer hidden on levels 1–3 (no hints used yet); resurfaces from L4.
+- **Cut #5 — Silent-default difficulty modal**: brand-new players auto-set to Standard + one-time toast; Settings → Difficulty Mode unchanged.
+
+Net wins: end-game level-select drops 40 × 2 sub-buttons → 40 × 1 overflow button (−50% per-card visual weight), Tier-2 cliff replaced by a 3 → 5 → 8 → 11 → 16 staircase, two cold-start ceremonies removed (difficulty modal + L1 hint footer).
+
+Live CDP verification (5 cut suites, multi-seed gating sweep, modal/toast lifecycle): 0 console errors.
 
 ## Day 76 — Harden Week 2, Day 4 (Fix Everything) summary
 
