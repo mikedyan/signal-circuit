@@ -630,56 +630,73 @@ class UI {
   }
 
   // Day 64 (Prune): Hide secondary modes/info on cold start. Reveal in tiers.
+  // Day 78 Cut #2 (PRUNE Tier 1): Smooth Tier-2 reveal across L6/9/12/15/18
+  // instead of dropping 13 buttons at once on L12. Earlier tiers stay sparse;
+  // later ones earn their slot as the player demonstrates engagement.
+  //   L6  (g6):  Daily + Encyclopedia + Stats               (already — Tier 1)
+  //   L9  (g9):  + Random Challenge + Sandbox               (procedural / freeform pair)
+  //   L12 (g12): + Adaptive + Achievements + Customize     (mid-tier progression)
+  //   L15 (g15): + Mastery Tree + Logic Profile + Collection (mid-tier collectibles)
+  //   L18 (g18): + Tournament + Infinite + Blitz + Speedrun + Creator (Tier 3)
   applyProgressGating() {
     const progress = this.gameState.progress || { levels: {} };
     let completed = 0;
     for (const k in progress.levels) {
       if (progress.levels[k] && progress.levels[k].completed) completed++;
     }
-    // Tier 1 reveal threshold (end of Ch1 ≈ 6 levels), Tier 2 (end of Ch2 ≈ 12), Tier 3 (Ch3 boss ≈ 18)
-    const tier1 = completed >= 6;
-    const tier2 = completed >= 12;
-    const tier3 = completed >= 18;
+    const g6 = completed >= 6;
+    const g9 = completed >= 9;
+    const g12 = completed >= 12;
+    const g15 = completed >= 15;
+    const g18 = completed >= 18;
+    // Back-compat aliases for downstream code that still reads these flags.
+    const tier1 = g6;
+    const tier2 = g12;
+    const tier3 = g18;
     const setVis = (id, visible, displayMode = '') => {
       const el = document.getElementById(id);
       if (!el) return;
       el.style.display = visible ? displayMode : 'none';
     };
-    // Always-on: weekly + daily are most-engaged; daily is the headline
-    setVis('daily-challenge-btn', tier1);
-    setVis('encyclopedia-btn', tier1);
-    setVis('stats-btn', tier1);
-    // Full reveal at tier 2 — weekly button hides at tier 3 (Tournament subsumes it)
+    // L6 — Tier 1 reveal
+    setVis('daily-challenge-btn', g6);
+    setVis('encyclopedia-btn', g6);
+    setVis('stats-btn', g6);
+    // L9 — procedural / freeform pair
+    setVis('random-challenge-btn', g9);
+    setVis('sandbox-btn', g9);
+    // L12 — mid-progression skill+meta
+    setVis('adaptive-challenge-btn', g12);
+    setVis('achievements-btn', g12);
+    setVis('customize-btn', g12);
+    // L15 — collectibles + identity
+    setVis('mastery-tree-btn', g15);
+    setVis('profile-btn', g15);
+    setVis('collection-btn', g15);
+    // L18 — Tier 3 endgame surface
+    setVis('tournament-btn', g18);
+    setVis('infinite-mode-btn', g18); // Day 68
+    setVis('blitz-mode-btn', g18);
+    setVis('speedrun-btn', g18);
+    setVis('create-level-btn', g18);
+    // PotW — retained gating contract (tier2-only, hidden at tier3).
+    // Day 78 Cut #3 retires this entirely in a follow-up commit.
     setVis('weekly-puzzle-btn', tier2 && !tier3);
-    setVis('tournament-btn', tier3);
-    setVis('adaptive-challenge-btn', tier2);
-    setVis('infinite-mode-btn', tier2); // Day 68
-    setVis('random-challenge-btn', tier2);
-    setVis('blitz-mode-btn', tier2);
-    setVis('speedrun-btn', tier2);
-    setVis('sandbox-btn', tier2);
-    setVis('achievements-btn', tier2);
-    setVis('customize-btn', tier2);
-    setVis('mastery-tree-btn', tier2);
-    setVis('collection-btn', tier2);
-    setVis('profile-btn', tier2);
-    setVis('create-level-btn', tier2);
-    // Community section + redundant submit duplicate
+    // Community section — unchanged behaviour (reveals at Tier 2).
     setVis('community-section', tier2);
-    setVis('community-submit-btn', false); // Cut #2: merged into Creator
-    // Hide entire challenge-section header if no buttons inside are visible
+    setVis('community-submit-btn', false); // merged into Creator
+    // Hide entire challenge-section header if no challenge buttons are visible
     const challengeSection = document.getElementById('challenge-section');
     if (challengeSection) {
-      const anyChallengeVisible = tier1 || tier2;
-      challengeSection.style.display = anyChallengeVisible ? '' : 'none';
+      challengeSection.style.display = g6 ? '' : 'none';
     }
     // Hide info button rows whose buttons are all gated off
     const infoRow = document.getElementById('info-buttons-row');
-    if (infoRow) infoRow.style.display = tier1 ? '' : 'none';
+    if (infoRow) infoRow.style.display = g6 ? '' : 'none';
     const cosmeticsRow = document.getElementById('info-buttons-row-cosmetics');
-    if (cosmeticsRow) cosmeticsRow.style.display = tier2 ? '' : 'none';
+    if (cosmeticsRow) cosmeticsRow.style.display = g12 ? '' : 'none';
     const infoRow2 = document.getElementById('info-buttons-row-2');
-    if (infoRow2) infoRow2.style.display = tier2 ? '' : 'none';
+    if (infoRow2) infoRow2.style.display = g12 ? '' : 'none';
   }
 
   showScreen(screen) {
