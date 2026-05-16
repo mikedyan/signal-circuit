@@ -679,9 +679,12 @@ class UI {
     setVis('blitz-mode-btn', g18);
     setVis('speedrun-btn', g18);
     setVis('create-level-btn', g18);
-    // PotW — retained gating contract (tier2-only, hidden at tier3).
-    // Day 78 Cut #3 retires this entirely in a follow-up commit.
-    setVis('weekly-puzzle-btn', tier2 && !tier3);
+    // Day 78 Cut #3 (PRUNE Tier 1): Puzzle of the Week retired — the Day 72
+    // Tournament screen fully subsumes it (weekly seeded puzzle + leaderboard
+    // + 8-week archive). Keep `generateWeeklyPuzzle()` intact since Tournament
+    // still uses it; existing player-best PotW data in localStorage is left
+    // alone (no migration).
+    setVis('weekly-puzzle-btn', false);
     // Community section — unchanged behaviour (reveals at Tier 2).
     setVis('community-section', tier2);
     setVis('community-submit-btn', false); // merged into Creator
