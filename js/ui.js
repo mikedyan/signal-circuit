@@ -441,38 +441,26 @@ class UI {
             });
           }
 
-          // View Solution button
-          const viewSolBtn = document.createElement('button');
-          viewSolBtn.className = 'view-solution-btn';
-          viewSolBtn.textContent = '👁 Solution';
-          viewSolBtn.title = 'View your solution with ghost overlay';
-          viewSolBtn.addEventListener('click', (e) => {
+          // Day 78 Cut #1 (PRUNE Tier 1): Collapse `👁 Solution` + `🏆 Gate Limit`
+          // sub-buttons into a single `⋯` overflow trigger that opens a popover.
+          // At 40 stars this drops level-select from ~80 sub-buttons to ~40 ⋯ buttons.
+          const overflowBtn = document.createElement('button');
+          overflowBtn.className = 'level-overflow-btn';
+          overflowBtn.setAttribute('aria-label', 'More actions for ' + level.title);
+          overflowBtn.setAttribute('aria-haspopup', 'menu');
+          overflowBtn.setAttribute('aria-expanded', 'false');
+          overflowBtn.title = 'More…';
+          overflowBtn.textContent = '⋯';
+          overflowBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.gameState.startLevel(levelId);
-            // Enable ghost overlay after level loads
-            setTimeout(() => {
-              if (this.gameState.ghostOverlay) {
-                this.gameState.showGhost = true;
-                this.gameState.markDirty();
-              }
-            }, 200);
+            // Toggle: clicking the same anchor closes; otherwise re-open against new anchor.
+            if (this._levelOverflowAnchor === overflowBtn && this._levelOverflowPopover) {
+              this._hideLevelOverflowMenu();
+            } else {
+              this._showLevelOverflowMenu(overflowBtn, levelId, level, levelProgress);
+            }
           });
-          btn.appendChild(viewSolBtn);
-
-          // Day 45: Gate Limit Challenge sub-row for 3-starred levels
-          if (levelProgress && levelProgress.stars === 3) {
-            const glBtn = document.createElement('button');
-            glBtn.className = 'gate-limit-btn' + (levelProgress.gateLimitCompleted ? ' gl-completed' : '');
-            glBtn.innerHTML = levelProgress.gateLimitCompleted
-              ? '<span class="gl-diamond">⬦</span> Gate Limit ✓'
-              : '<span class="gl-trophy">🏆</span> Gate Limit';
-            glBtn.title = `Solve with exactly ${level.optimalGates} gate${level.optimalGates === 1 ? '' : 's'}`;
-            glBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              this.gameState.startGateLimitLevel(levelId);
-            });
-            btn.appendChild(glBtn);
-          }
+          btn.appendChild(overflowBtn);
         }
 
         if (isUnlocked) {
@@ -521,6 +509,99 @@ class UI {
     this.renderCommunitySection(); // Day 49
     this.renderMasterySection(); // Day 55
     this.applyProgressGating(); // Day 64: gate secondary modes by completion
+  }
+
+  // Day 78 Cut #1 (PRUNE Tier 1): Per-card overflow menu
+  // Opens a small popover next to the `⋯` button with View Solution and (if
+  // 3-starred) Gate Limit. Closes on outside click or Escape.
+  _showLevelOverflowMenu(anchorBtn, levelId, level, levelProgress) {
+    // Close any existing popover
+    this._hideLevelOverflowMenu();
+
+    const pop = document.createElement('div');
+    pop.className = 'level-overflow-popover';
+    pop.setAttribute('role', 'menu');
+    pop.dataset.levelId = String(levelId);
+
+    // View Solution
+    const viewSolBtn = document.createElement('button');
+    viewSolBtn.className = 'view-solution-btn';
+    viewSolBtn.setAttribute('role', 'menuitem');
+    viewSolBtn.textContent = '👁 Solution';
+    viewSolBtn.title = 'View your solution with ghost overlay';
+    viewSolBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._hideLevelOverflowMenu();
+      this.gameState.startLevel(levelId);
+      setTimeout(() => {
+        if (this.gameState.ghostOverlay) {
+          this.gameState.showGhost = true;
+          this.gameState.markDirty();
+        }
+      }, 200);
+    });
+    pop.appendChild(viewSolBtn);
+
+    // Gate Limit — only when 3-starred
+    if (levelProgress && levelProgress.stars === 3) {
+      const glBtn = document.createElement('button');
+      glBtn.className = 'gate-limit-btn' + (levelProgress.gateLimitCompleted ? ' gl-completed' : '');
+      glBtn.setAttribute('role', 'menuitem');
+      glBtn.innerHTML = levelProgress.gateLimitCompleted
+        ? '<span class="gl-diamond">⬦</span> Gate Limit ✓'
+        : '<span class="gl-trophy">🏆</span> Gate Limit';
+      glBtn.title = `Solve with exactly ${level.optimalGates} gate${level.optimalGates === 1 ? '' : 's'}`;
+      glBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._hideLevelOverflowMenu();
+        this.gameState.startGateLimitLevel(levelId);
+      });
+      pop.appendChild(glBtn);
+    }
+
+    // Anchor the popover to the button. Position relative to the level card so
+    // it scrolls with the grid.
+    const card = anchorBtn.closest('.level-btn') || anchorBtn.parentElement;
+    if (card) {
+      if (getComputedStyle(card).position === 'static') card.style.position = 'relative';
+      card.appendChild(pop);
+    } else {
+      document.body.appendChild(pop);
+    }
+    anchorBtn.setAttribute('aria-expanded', 'true');
+    this._levelOverflowPopover = pop;
+    this._levelOverflowAnchor = anchorBtn;
+
+    // Dismiss on outside click / Escape (next tick so the opening click doesn't fire it).
+    setTimeout(() => {
+      const onDocClick = (ev) => {
+        if (!pop.contains(ev.target) && ev.target !== anchorBtn) this._hideLevelOverflowMenu();
+      };
+      const onKey = (ev) => { if (ev.key === 'Escape') this._hideLevelOverflowMenu(); };
+      this._levelOverflowDocClick = onDocClick;
+      this._levelOverflowKey = onKey;
+      document.addEventListener('click', onDocClick);
+      document.addEventListener('keydown', onKey);
+    }, 0);
+  }
+
+  _hideLevelOverflowMenu() {
+    if (this._levelOverflowAnchor) {
+      try { this._levelOverflowAnchor.setAttribute('aria-expanded', 'false'); } catch (e) {}
+      this._levelOverflowAnchor = null;
+    }
+    if (this._levelOverflowPopover && this._levelOverflowPopover.parentNode) {
+      this._levelOverflowPopover.parentNode.removeChild(this._levelOverflowPopover);
+    }
+    this._levelOverflowPopover = null;
+    if (this._levelOverflowDocClick) {
+      document.removeEventListener('click', this._levelOverflowDocClick);
+      this._levelOverflowDocClick = null;
+    }
+    if (this._levelOverflowKey) {
+      document.removeEventListener('keydown', this._levelOverflowKey);
+      this._levelOverflowKey = null;
+    }
   }
 
   // Day 64 (Prune): Consolidated Settings Modal
