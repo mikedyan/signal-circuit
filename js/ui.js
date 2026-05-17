@@ -679,12 +679,8 @@ class UI {
     setVis('blitz-mode-btn', g18);
     setVis('speedrun-btn', g18);
     setVis('create-level-btn', g18);
-    // Day 78 Cut #3 (PRUNE Tier 1): Puzzle of the Week retired — the Day 72
-    // Tournament screen fully subsumes it (weekly seeded puzzle + leaderboard
-    // + 8-week archive). Keep `generateWeeklyPuzzle()` intact since Tournament
-    // still uses it; existing player-best PotW data in localStorage is left
-    // alone (no migration).
-    setVis('weekly-puzzle-btn', false);
+    // Day 79 Code Cleanup: weekly-puzzle-btn fully removed from DOM
+    // (Tournament subsumes Puzzle of the Week — Day 72/78).
     // Community section — unchanged behaviour (reveals at Tier 2).
     setVis('community-section', tier2);
     setVis('community-submit-btn', false); // merged into Creator
@@ -5460,26 +5456,9 @@ class UI {
     }).catch(() => {});
   }
 
-  // ── Day 32 T7: Setup Weekly Puzzle + T8 Blitz + T9 Speedrun + T10 Review ──
+  // ── Day 32 T8: Blitz + T9 Speedrun + T10 Review ──
+  // (Day 79: removed legacy Weekly Puzzle wiring — Tournament subsumes it.)
   setupCompetitiveModes() {
-    // Weekly puzzle
-    const weeklyBtn = document.getElementById('weekly-puzzle-btn');
-    if (weeklyBtn) {
-      weeklyBtn.addEventListener('click', () => {
-        const gs = this.gameState;
-        const level = generateWeeklyPuzzle();
-        gs.isChallengeMode = false;
-        gs.isSandboxMode = false;
-        gs.currentScreen = 'gameplay';
-        this.showScreen('gameplay');
-        gs.audio.startAmbient();
-        gs.renderer.resize();
-        gs.renderer.resetView();
-        gs.loadChallengeLevel(level);
-        setTimeout(() => gs.renderer.resize(), 100);
-      });
-    }
-
     // Blitz mode
     const blitzBtn = document.getElementById('blitz-mode-btn');
     if (blitzBtn) {
@@ -6319,34 +6298,8 @@ class UI {
     if (cancelBtn) cancelBtn.addEventListener('click', function() { modal.style.display = 'none'; });
   }
 
-  showFirstLaunchDifficultyModal() {
-    var gs = this.gameState;
-    var modal = document.getElementById('confirm-modal');
-    var content = document.getElementById('confirm-modal-content');
-    if (!modal || !content) return;
-
-    content.innerHTML = '<div style="text-align:center;margin-bottom:16px;"><div style="font-size:32px;margin-bottom:8px;">\u26a1</div><h3 style="color:#0f0;margin-bottom:8px;">Choose Your Difficulty</h3><p style="color:#888;font-size:11px;">You can change this anytime in Settings.</p></div>' +
-      '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">' +
-      '<button id="first-diff-relaxed" style="text-align:left;padding:14px;background:rgba(33,150,243,0.1);border:1px solid #2196f3;border-radius:8px;cursor:pointer;color:#ccc;font-family:inherit;font-size:12px;"><div style="font-size:15px;color:#64b5f6;font-weight:bold;">\ud83d\udcd8 Relaxed</div><div style="color:#888;font-size:11px;margin-top:4px;">Best for learning. Free hints, no pressure.</div></button>' +
-      '<button id="first-diff-standard" style="text-align:left;padding:14px;background:rgba(0,255,0,0.06);border:1px solid #0f0;border-radius:8px;cursor:pointer;color:#ccc;font-family:inherit;font-size:12px;"><div style="font-size:15px;color:#0f0;font-weight:bold;">\ud83d\udd27 Standard (Recommended)</div><div style="color:#888;font-size:11px;margin-top:4px;">Balanced experience. Earn hint tokens through play.</div></button>' +
-      '<button id="first-diff-hardcore" style="text-align:left;padding:14px;background:rgba(255,68,68,0.08);border:1px solid #ff4444;border-radius:8px;cursor:pointer;color:#ccc;font-family:inherit;font-size:12px;"><div style="font-size:15px;color:#ff4444;font-weight:bold;">\u26a1 Hardcore</div><div style="color:#888;font-size:11px;margin-top:4px;">No hints. Tighter scoring. For experienced puzzlers.</div></button></div>';
-
-    modal.style.display = 'flex';
-
-    var pickMode = function(mode) {
-      gs.setDifficultyMode(mode);
-      modal.style.display = 'none';
-      gs.audio.playButtonClick();
-      var settingsBtn = document.getElementById('difficulty-mode-btn');
-      if (settingsBtn) {
-        var labels = { relaxed: '\ud83d\udcd8 Mode: Relaxed', hardcore: '\u26a1 Mode: Hardcore', standard: '\ud83d\udd27 Mode: Standard' };
-        settingsBtn.textContent = labels[mode] || labels.standard;
-        settingsBtn.className = 'settings-btn' + (mode === 'hardcore' ? ' hardcore-active' : mode === 'relaxed' ? ' relaxed-active' : '');
-      }
-    };
-
-    document.getElementById('first-diff-relaxed').addEventListener('click', function() { pickMode('relaxed'); });
-    document.getElementById('first-diff-standard').addEventListener('click', function() { pickMode('standard'); });
-    document.getElementById('first-diff-hardcore').addEventListener('click', function() { pickMode('hardcore'); });
-  }
+  // Day 79 Code Cleanup: removed showFirstLaunchDifficultyModal()
+  // The Day 78 silent-default Standard mode + welcome toast retired the
+  // first-launch ceremony; the chooser is reachable only from
+  // Settings → Difficulty Mode (showDifficultySelector above).
 }

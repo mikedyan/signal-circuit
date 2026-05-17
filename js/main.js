@@ -961,10 +961,7 @@ class InfiniteRunManager {
     if (this._timerInterval) { clearInterval(this._timerInterval); this._timerInterval = null; }
   }
 
-  _showHud() {
-    const hud = document.getElementById('infinite-hud');
-    if (hud) hud.style.display = 'flex';
-  }
+  // Day 79 Code Cleanup: removed _showHud() (never called — _updateHud handles display).
 
   _hideHud() {
     const hud = document.getElementById('infinite-hud');
@@ -5948,7 +5945,7 @@ window.addEventListener('DOMContentLoaded', () => {
 const NOTIF_PREFS_KEY = 'signal-circuit-notif-prefs';
 const SESSION_COUNT_KEY = 'signal-circuit-session-count';
 const INSTALL_DISMISS_KEY = 'signal-circuit-install-dismiss';
-const WEEKLY_NOTIF_KEY = 'signal-circuit-weekly-notif';
+// Day 79 Code Cleanup: removed WEEKLY_NOTIF_KEY (Puzzle of the Week retired Day 78).
 // Day 69: Mobile install onramp
 const INSTALL_LATER_KEY = 'signal-circuit-install-later'; // 14d snooze epoch
 const INSTALL_NEVER_KEY = 'signal-circuit-install-never'; // 90d snooze epoch
@@ -6062,23 +6059,8 @@ class NotificationManager {
     return target - now;
   }
 
-  checkWeeklyNotification() {
-    if (!this._prefs.weekly) return false;
-    const now = new Date();
-    const weekKey = now.getFullYear() + '-W' + this._getWeekNumber(now);
-    const lastShown = SafeStorage.getItem(WEEKLY_NOTIF_KEY);
-    if (lastShown === weekKey) return false;
-    SafeStorage.setItem(WEEKLY_NOTIF_KEY, weekKey);
-    return true;
-  }
-
-  _getWeekNumber(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  }
+  // Day 79 Code Cleanup: removed checkWeeklyNotification() + _getWeekNumber()
+  // (Puzzle of the Week was retired Day 78; Tournament uses its own week math).
 
   checkStreakAtRisk(game) {
     if (!this._prefs.streak) return false;
@@ -6306,9 +6288,9 @@ class NotificationManager {
   }
 
   setupSettingsUI() {
+    // Day 79 Code Cleanup: removed 'weekly' notif (Puzzle of the Week retired Day 78).
     const types = [
       { id: 'notif-daily-btn', key: 'daily', emoji: '🔔', label: 'Daily' },
-      { id: 'notif-weekly-btn', key: 'weekly', emoji: '📅', label: 'Weekly' },
       { id: 'notif-streak-btn', key: 'streak', emoji: '🔥', label: 'Streak' },
     ];
     for (const t of types) {
@@ -6340,29 +6322,13 @@ class NotificationManager {
       this.scheduleDailyReminder(game);
       this.scheduleStreakNotification(game);
     }
-    if (this.checkWeeklyNotification()) {
-      setTimeout(() => this._showWeeklyToast(), 3500);
-    }
     if (this.checkStreakAtRisk(game)) {
       const streakData = game.getStreakData();
       setTimeout(() => this._showStreakRiskToast(streakData.streak), 2500);
     }
   }
 
-  _showWeeklyToast() {
-    let toast = document.getElementById('weekly-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'weekly-toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = '🏗️ New Puzzle of the Week is here!';
-    toast.style.display = 'block';
-    toast.style.animation = 'none';
-    void toast.offsetWidth;
-    toast.style.animation = 'toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 5.6s forwards';
-    setTimeout(() => { toast.style.display = 'none'; }, 6100);
-  }
+  // Day 79 Code Cleanup: removed _showWeeklyToast() (Puzzle of the Week retired Day 78).
 
   _showStreakRiskToast(streak) {
     let toast = document.getElementById('streak-risk-toast');

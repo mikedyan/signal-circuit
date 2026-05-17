@@ -47,9 +47,7 @@ class InteractiveTutorial {
     return this.active;
   }
 
-  getCurrentStep() {
-    return this.step;
-  }
+  // Day 79 Code Cleanup: removed getCurrentStep() — never called.
 
   // Get the world-space position to highlight for the current step
   getHighlightTarget() {

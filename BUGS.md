@@ -1,11 +1,29 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 78 — Prune Week 2, Day 2 (2026-05-16) — Design Simplification (Cycle 2)*
+*Updated: Day 79 — Prune Week 2, Day 3 (2026-05-17) — Code Cleanup (Cycle 2)*
 
 ## Open Bugs
 
-*(none — Day 78 was a Prune Week simplification day; the 5 Tier 1 cuts shipped
-without surfacing any new bugs. All verification ran with 0 console errors.)*
+*(none — Day 79 was a Prune Week net-negative LOC pass; 8 orphan JS
+identifiers + 5 orphan CSS blocks removed without surfacing any new bugs.
+All verification ran with 0 console errors.)*
+
+## Day 79 — Prune Week 2, Day 3 (Code Cleanup) summary
+
+**Build under test:** `?v=1779638400`, `sw.js CACHE_NAME = 'signal-circuit-v54'`
+**Result:** 0 new bugs, **−180 LOC** (target was ≥−100).
+
+Removed (all callsites verified dead before deletion):
+
+- **`ui.showFirstLaunchDifficultyModal`** — only caller was Day 78 Cut #5; silent-default replaced it.
+- **`#weekly-puzzle-btn`** DOM node + `setupCompetitiveModes` click handler + `setVis` gating call + `.weekly-btn` CSS — Tournament subsumed it Day 72.
+- **Weekly notification path** — `WEEKLY_NOTIF_KEY` const, `checkWeeklyNotification()`, `_getWeekNumber()`, `_showWeeklyToast()`, `#weekly-toast` CSS, `notif-weekly-btn` button + Settings entry.
+- **`AchievementManager.{checkLightning, checkEclipseRun, checkArchitect, isMythic}`** — Day 71 added these wrappers but every mythic unlock fires inline at the real trigger site.
+- **`InfiniteRunManager._showHud`** — never called; `_updateHud` handles display.
+- **`InteractiveTutorial.getCurrentStep`** — never called.
+- **Orphan CSS**: `#mute-btn` (3 rules — element never existed), `#gate-count-display` (2 rules — never rendered), dead light-mode selectors `.modal-content` / `#confirm-modal-box` / `#creator-content` / `#mastery-content` (wrong IDs; real ones are `#confirm-modal-content`, `#creator-config-content`, `#mastery-tree-content`), `#hint-penalty` from compound static-info selector.
+
+**Verification:** 12 CDP checks + 3-test regression sweep, all pass, 0 console errors. End-game overflow count (40 ⋯) and Tier-2 staircase deltas (0/3/5/8/11/16) confirmed no Day 78 regression. Tournament + Settings→Difficulty chooser both still work after the trim.
 
 ## Day 78 — Prune Week 2, Day 2 (Design Simplification) summary
 

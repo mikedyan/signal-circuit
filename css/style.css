@@ -913,27 +913,7 @@ body.light-mode #focus-failed-btn {
   transition: color 1s ease;
 }
 
-#mute-btn {
-  background: none;
-  border: 1px solid #444;
-  color: #888;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: all 0.2s;
-  line-height: 1;
-}
-
-#mute-btn:hover {
-  border-color: #0f0;
-  color: #fff;
-}
-
-#mute-btn.muted {
-  color: #555;
-  border-color: #333;
-}
+/* Day 79 Code Cleanup: removed #mute-btn rules — element never existed in DOM. */
 
 /* ── Challenge Mode Section ── */
 #challenge-section {
@@ -1196,21 +1176,7 @@ body.light-mode #focus-failed-btn {
   color: #f44;
 }
 
-/* ── Sandbox gate count ── */
-#gate-count-display {
-  font-size: 13px;
-  color: #aaa;
-  text-align: center;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid #333;
-  border-radius: 4px;
-}
-
-#gate-count-display span {
-  color: #0f0;
-  font-weight: bold;
-}
+/* Day 79 Code Cleanup: removed #gate-count-display rules — element never rendered. */
 
 /* ── Gate Count Indicator ── */
 #gate-indicator {
@@ -2087,14 +2053,14 @@ body.light-mode #mythic-celebration-hint { color: #888; }
 
 /* ── Interactive Button Affordances ── */
 #back-btn, #shortcuts-btn, #hint-btn, #skip-btn, #clear-btn, #quick-test-btn,
-#prev-level, #next-level, #next-level-btn, #share-btn, #mute-btn,
+#prev-level, #next-level, #next-level-btn, #share-btn,
 #reset-progress-btn, #how-to-play-btn, #achievements-btn,
 .challenge-btn, .level-btn:not(.locked) {
   cursor: pointer;
 }
 
 /* Static info containers — no interactivity signals */
-#gate-indicator, #result-display.idle, #star-display, #hint-display, #hint-penalty {
+#gate-indicator, #result-display.idle, #star-display, #hint-display {
   cursor: default;
 }
 
@@ -4314,25 +4280,7 @@ button:focus-visible {
   background: linear-gradient(135deg, #2a2a4e, #3a3a5e);
 }
 
-/* ── Day 32: Weekly Puzzle Button ── */
-.weekly-btn {
-  border-color: #FFD700 !important;
-  color: #FFD700 !important;
-  position: relative;
-}
-
-.weekly-btn::after {
-  content: 'NEW';
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #FF1744;
-  color: #fff;
-  font-size: 8px;
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-weight: bold;
-}
+/* Day 79 Code Cleanup: removed .weekly-btn rules — button removed from DOM. */
 
 /* ── Day 32: Review Section ── */
 #review-section {
@@ -4983,16 +4931,16 @@ body.light-mode .vol-slider {
   background: #ccc;
 }
 
-body.light-mode .modal-content,
-body.light-mode #confirm-modal-box,
+/* Day 79 Code Cleanup: removed dead selectors .modal-content / #confirm-modal-box
+   / #creator-content / #mastery-content — those ids/classes never appear in
+   the DOM (real ids are #confirm-modal-content, #creator-config-content,
+   #mastery-tree-content). */
 body.light-mode #how-to-play-content,
 body.light-mode #shortcuts-content,
 body.light-mode #encyclopedia-content,
 body.light-mode #stats-content,
 body.light-mode #milestone-content,
 body.light-mode #journey-content,
-body.light-mode #creator-content,
-body.light-mode #mastery-content,
 body.light-mode #collection-content,
 body.light-mode #profile-content,
 body.light-mode #share-card-content,
@@ -6101,26 +6049,7 @@ body.light-mode .community-featured-card {
   text-align: center;
 }
 
-/* ── Day 52: Weekly Puzzle Toast ── */
-#weekly-toast {
-  position: fixed;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(10, 20, 40, 0.95);
-  color: #00ccff;
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  padding: 8px 20px;
-  border-radius: 10px;
-  border: 1px solid #00ccff33;
-  z-index: 9998;
-  pointer-events: auto;
-  cursor: pointer;
-  animation: toastSlideIn 0.4s ease, toastSlideOut 0.4s ease 5.6s forwards;
-  max-width: 85vw;
-  text-align: center;
-}
+/* Day 79 Code Cleanup: removed #weekly-toast — Puzzle of the Week retired Day 78. */
 
 /* Day 53: Sub-Circuit Toolbox Styles */
 .toolbox-separator {

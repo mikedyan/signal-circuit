@@ -389,32 +389,10 @@ class AchievementManager {
     return newly;
   }
 
-  // Day 71: Lightning — Infinite Mode 100-streak.
-  checkLightning(streak) {
-    const newly = [];
-    if ((streak || 0) >= 100) {
-      if (this.unlock('mythic_lightning')) newly.push('mythic_lightning');
-    }
-    return newly;
-  }
-
-  // Day 71: Eclipse Run — 30-day daily streak.
-  checkEclipseRun() {
-    const newly = [];
-    if ((this.stats.dailyChallengeStreak || 0) >= 30) {
-      if (this.unlock('mythic_eclipse_run')) newly.push('mythic_eclipse_run');
-    }
-    return newly;
-  }
-
-  // Day 71: Architect — 10 sub-circuits.
-  checkArchitect() {
-    const newly = [];
-    if ((this.stats.subCircuitsCreated || 0) >= 10) {
-      if (this.unlock('mythic_architect')) newly.push('mythic_architect');
-    }
-    return newly;
-  }
+  // Day 79 Code Cleanup: removed checkLightning/checkEclipseRun/checkArchitect.
+  // These mythic unlocks fire inline at the actual trigger sites
+  // (InfiniteRunManager.onSolve, trackDailyChallengeComplete, checkAll) —
+  // the wrapper methods were never called externally.
 
   // Day 71: Tier-counts breakdown for Logic Profile.
   getTierCounts() {
@@ -488,13 +466,11 @@ class AchievementManager {
     }
   }
 
-  // Day 71: Mark id as mythic for caller convenience.
-  isMythic(id) {
-    const a = ACHIEVEMENTS.find(x => x.id === id);
-    return !!(a && a.tier === 'mythic');
-  }
+  // Day 79 Code Cleanup: removed isMythic(id) — never called externally;
+  // ui.js checks `ach.tier === 'mythic'` directly inline.
 
   // Day 70: Track a Blueprint submission (success or fail) — increments submit counter only.
+
   trackBlueprintSubmit() {
     this.stats.blueprintsSubmitted = (this.stats.blueprintsSubmitted || 0) + 1;
     this.save();
