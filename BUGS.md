@@ -1,12 +1,57 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 79 — Prune Week 2, Day 3 (2026-05-17) — Code Cleanup (Cycle 2)*
+*Updated: Day 80 — Prune Week 2, Day 4 (2026-05-18) — Polish Sprint (Cycle 2)*
 
 ## Open Bugs
 
-*(none — Day 79 was a Prune Week net-negative LOC pass; 8 orphan JS
-identifiers + 5 orphan CSS blocks removed without surfacing any new bugs.
-All verification ran with 0 console errors.)*
+*(none — Day 80 was a Polish Sprint adding ~70 LOC of smooth animations,
+focus rings, mobile constraints, and prefers-reduced-motion handling.
+All 13 verification checks pass with 0 console errors.)*
+
+## Day 80 — Prune Week 2, Day 4 (Polish Sprint) summary
+
+**Build under test:** `?v=1779724800`, `sw.js CACHE_NAME = 'signal-circuit-v55'`
+**Result:** 0 new bugs, ~+70 LOC (polish budget — net-neutral expected).
+
+**Cold-start defaults audit:** SFX 0.4 / Music 0.2 / dark-mode auto-detect /
+Standard difficulty (silent default since Day 78) / Daily+Streak notifs
+(post-Day 79) — all confirmed sane. No defaults changed. Added a code
+comment in `audio.js` annotating the SFX/Music verdict so a future Prune
+doesn't re-litigate.
+
+**Polish items shipped:**
+
+- **Overflow popover open animation** — Day 78's per-card `⋯` popover now
+  fades+lifts in via the new `overflowPopIn` keyframe (180ms). Pure CSS;
+  gated by `prefers-reduced-motion: reduce`.
+- **Tier-staircase "newly revealed" pulse** — `applyProgressGating()` now
+  diffs against `this._lastGatingState`; any IDs that flip hidden→visible
+  on a re-gate get a one-shot `.newly-revealed` class (cyan glow pulse,
+  1.2s). Cold-start (no prior state) suppresses the pulse so a fresh load
+  doesn't strobe. JS strips the class after 1300ms. Verified: cross-L6
+  pulses daily/encyclopedia/stats; class is gone after 1500ms.
+- **`:focus-visible` rings** — added a unified cyan focus ring on
+  `.level-btn`, `.level-overflow-btn`, popover menu items,
+  `#open-settings-btn`, `.tool-gate`, `#how-to-play-btn`, `#run-btn`,
+  `#back-btn`. `:focus-visible` only fires for keyboard nav, so mouse
+  users keep their existing `:hover` styling. Light-mode variant uses a
+  darker teal.
+- **Welcome toast `prefers-reduced-motion`** — under reduced-motion the
+  toast snaps in/out without the 0.4s slide animation.
+- **Mobile overflow popover constraint** — at `max-width: 480px` the
+  popover min-width drops from 132px to 116px and uses
+  `right: max(6px, env(safe-area-inset-right))` so iPhone notch frames
+  stay clear. Verified at 375 and 414 widths: popover stays inside the
+  card; no horizontal scroll on any breakpoint.
+
+**Verification:** 13 CDP assertions on localhost:8901 (build identity
+unified, polish CSS keyframes present, popover lifecycle, focus ring
+rule, gating diff state, cold-start no-pulse, g6/g9/g18 staircase
+pulses, 1500ms timer strip, mobile 375/414/768/1024 popover containment
+and no horizontal scroll, Day 78 5-cut regression intact, Day 79 dead
+identifiers still `undefined`, L1 gameplay smoke). 0 console errors.
+
+
 
 ## Day 79 — Prune Week 2, Day 3 (Code Cleanup) summary
 

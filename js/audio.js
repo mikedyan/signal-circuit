@@ -11,7 +11,11 @@ class AudioEngine {
     this._chapterPalette = 0; // Day 32 T1: current chapter audio palette index
     this._wireProxOsc = null; // Day 32 T2: wire proximity oscillator
 
-    // Day 34 T9: Separate SFX and Music volume channels
+    // Day 34 T9: Separate SFX and Music volume channels.
+    // Day 80 cold-start audit (PRUNE Cycle 2 Polish Sprint): SFX 0.4 keeps
+    // click/hover feedback audible without dominating; Music 0.2 is the
+    // ambient pad ceiling tuned post-Day 46 normalization. Both confirmed
+    // sane for new players — do not re-litigate without an A/B.
     this.sfxVolume = 0.4;
     this.musicVolume = 0.2;
 

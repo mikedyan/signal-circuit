@@ -653,10 +653,18 @@ class UI {
     const tier1 = g6;
     const tier2 = g12;
     const tier3 = g18;
+    // Day 80 Polish: diff against last gating state so we can pulse buttons
+    // that are newly revealed by the L6/L9/L12/L15/L18 staircase. Cold-start
+    // (no prior state) suppresses the pulse so a fresh load doesn't strobe.
+    const prev = this._lastGatingState;
+    const next = {};
+    const newlyRevealed = [];
     const setVis = (id, visible, displayMode = '') => {
+      next[id] = !!visible;
       const el = document.getElementById(id);
       if (!el) return;
       el.style.display = visible ? displayMode : 'none';
+      if (prev && visible && prev[id] === false) newlyRevealed.push(id);
     };
     // L6 — Tier 1 reveal
     setVis('daily-challenge-btn', g6);
@@ -696,6 +704,20 @@ class UI {
     if (cosmeticsRow) cosmeticsRow.style.display = g12 ? '' : 'none';
     const infoRow2 = document.getElementById('info-buttons-row-2');
     if (infoRow2) infoRow2.style.display = g12 ? '' : 'none';
+    // Day 80 Polish: pulse newly-revealed staircase buttons once. CSS handles
+    // the keyframe + prefers-reduced-motion fallback; JS just strips the
+    // class after the animation so subsequent gatings can re-pulse.
+    this._lastGatingState = next;
+    if (newlyRevealed.length) {
+      for (const id of newlyRevealed) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.classList.remove('newly-revealed');
+        void el.offsetWidth; // restart animation
+        el.classList.add('newly-revealed');
+        setTimeout(() => { try { el.classList.remove('newly-revealed'); } catch (e) {} }, 1300);
+      }
+    }
   }
 
   showScreen(screen) {

@@ -5640,6 +5640,16 @@ body.light-mode .undo-dot.future {
   border-radius: 6px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 12px rgba(60, 100, 200, 0.18);
   z-index: 5;
+  /* Day 80 Polish: smooth fade-up on open (180ms). */
+  animation: overflowPopIn 180ms ease-out;
+  transform-origin: top right;
+}
+@keyframes overflowPopIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .level-overflow-popover { animation: none; }
 }
 .level-overflow-popover .view-solution-btn,
 .level-overflow-popover .gate-limit-btn {
@@ -5659,6 +5669,49 @@ body.light-mode .level-overflow-popover {
   background: rgba(240, 243, 250, 0.98);
   border-color: rgba(100, 120, 160, 0.5);
   box-shadow: 0 8px 24px rgba(40, 60, 100, 0.25);
+}
+
+/* Day 80 Polish: newly-revealed tier-staircase buttons pulse once when
+   crossing the L6/L9/L12/L15/L18 thresholds (see applyProgressGating). */
+.newly-revealed {
+  animation: tierRevealPulse 1.2s ease-out;
+  position: relative;
+}
+@keyframes tierRevealPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.55); transform: translateY(2px); opacity: 0.6; }
+  30%  { transform: translateY(0); opacity: 1; }
+  60%  { box-shadow: 0 0 0 8px rgba(0, 229, 255, 0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .newly-revealed { animation: none; }
+}
+
+/* Day 80 Polish: keyboard-visible focus rings on primary interactive
+   surfaces. :focus-visible only fires for keyboard nav, so mouse
+   users keep their existing :hover-only styling. */
+.level-btn:focus-visible,
+.level-overflow-btn:focus-visible,
+.level-overflow-popover .view-solution-btn:focus-visible,
+.level-overflow-popover .gate-limit-btn:focus-visible,
+#open-settings-btn:focus-visible,
+.tool-gate:focus-visible,
+#how-to-play-btn:focus-visible,
+#run-btn:focus-visible,
+#back-btn:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.22);
+}
+body.light-mode .level-btn:focus-visible,
+body.light-mode .level-overflow-btn:focus-visible,
+body.light-mode #open-settings-btn:focus-visible,
+body.light-mode .tool-gate:focus-visible,
+body.light-mode #how-to-play-btn:focus-visible,
+body.light-mode #run-btn:focus-visible,
+body.light-mode #back-btn:focus-visible {
+  outline-color: #0a6a8a;
+  box-shadow: 0 0 0 4px rgba(10, 106, 138, 0.18);
 }
 
 /* Day 45: Gate Limit Challenge Styles */
@@ -5853,6 +5906,12 @@ body.light-mode .community-featured-card {
   }
   .community-card-title {
     font-size: 12px;
+  }
+  /* Day 80 Polish: keep the per-card overflow popover inside the card
+     at narrow widths (iPhone SE 320 / iPhone 13 mini 375). */
+  .level-overflow-popover {
+    min-width: 116px;
+    right: max(6px, env(safe-area-inset-right));
   }
 }
 
@@ -6793,6 +6852,10 @@ body.light-mode #infinite-hud { background: rgba(255, 255, 255, 0.9); border-col
   box-shadow: 0 4px 18px rgba(0, 255, 0, 0.25);
   text-align: center;
   max-width: 90vw;
+}
+/* Day 80 Polish: respect prefers-reduced-motion for the welcome toast. */
+@media (prefers-reduced-motion: reduce) {
+  #welcome-toast { animation: none !important; }
 }
 
 .onboard-step {
