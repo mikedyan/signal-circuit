@@ -1,14 +1,36 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 80 — Prune Week 2, Day 4 (2026-05-18) — Polish Sprint (Cycle 2)*
+*Updated: Day 81 — Prune Week 2, Day 5 (2026-05-19) — Expert Panel + Validation (Cycle 2 close)*
 
 ## Open Bugs
 
-*(none — Day 80 was a Polish Sprint adding ~70 LOC of smooth animations,
-focus rings, mobile constraints, and prefers-reduced-motion handling.
-All 13 verification checks pass with 0 console errors.)*
+*(none — Day 81 was the Cycle 2 validation pass. Tested L1/L6/L12/L18/L36 across chapters on localhost mirror via raw CDP. 0 console errors across 24 probes + 5 navigations. Score: 8.9/10, +0.5 from Cycle 1 close 8.4. Cycle 2 ends with an empty bug queue; Cycle 3 begins Day 82.)*
 
-## Day 80 — Prune Week 2, Day 4 (Polish Sprint) summary
+## Day 81 — Prune Week 2, Day 5 (Expert Panel + Validation) summary
+
+**Build under test:** `?v=1779724800`, `sw.js CACHE_NAME = 'signal-circuit-v55'` (Day 80 build, unchanged).
+**Result:** 0 new bugs. Full validation suite passed.
+
+**Verification matrix (24 probes + 5 navigations):**
+
+- ✅ Build identity: 11 cache-bust refs unified at `?v=1779724800`; SW controller = `signal-circuit-v55`; `game.constructor.name === 'GameState'`.
+- ✅ Cold start: `level-select-screen` visible, 2 non-level buttons (How to Play + Settings), 40 level cards, 0 overflow buttons, welcome toast fires, no difficulty modal forced, Tournament hidden, `#weekly-puzzle-btn` DOM absent, star chip hidden.
+- ✅ L1 (AND Gate Basics): tutorial fires, 4 truth-table rows, hint-footer hidden, Lab HUD hidden, `isLabBench=false`, Quick Test visible, RUN labeled "▶ RUN".
+- ✅ L6 (Signal Selector): 4 truth rows, hint footer reappears at L6+ as intended (Day 78 #4 only hides L<4).
+- ✅ L12 (Dual Output Router): 4 truth rows.
+- ✅ L18 (2-Input Decoder): 4 truth rows, gold-tier marker.
+- ✅ L36 (Lab Bench · Open Design: 3-Input Selector): `isLabBench=true`, RUN="📐 Submit Blueprint", Quick Test hidden, lab HUD visible, `_lab={attempts:0,maxAttempts:3,exhausted:false,firstTryLocked:false,cleared:false}`, lab tutorial fires, 8 truth rows.
+- ✅ Tier staircase verified: non-level buttons 2/5/7/10/18/18 at seeds 0/6/9/12/18/40; overflow buttons 0/6/9/12/18/40; Tournament appears at tier3 (seed 18); end-game = 58 buttons (Day 78 target).
+- ✅ Day 80 polish: `overflowPopIn`, `tierRevealPulse`, `.newly-revealed`, `:focus-visible`, `prefers-reduced-motion` + `#welcome-toast` rules all present.
+- ✅ Day 79 dead identifiers regression: `showFirstLaunchDifficultyModal`, `checkLightning`, `isMythic` all `undefined`; `#weekly-puzzle-btn` DOM absent.
+- ✅ Cold-start defaults: `sfxVol=0.4`, `musicVol=0.2`, `light-mode` class auto-applied.
+- ✅ Console: 0 errors across all 24 probes + 5 navigations.
+
+**Final cycle 2 score:** 8.9/10 (+0.5 from Cycle 1's 8.4). Wrote `reviews/prune-cycle-2-review.md` (15.7 KB).
+
+**Cycle 2 wrap:** 14 day-tasks (5 build + 4 harden early wrap + 5 prune). 0 open bugs entering Cycle 3. End-game button count 98 → 58 (Day 78). Tier-2 cliff smoothed to 5-step staircase. Lab Bench shipped (Day 70). Mythic+Diamond tier shipped (Day 71). Weekly Tournament shipped (Day 72). Net LOC: build dominated (+1244); prune week net-negative on its own (−91 across Day 79 cleanup and Day 80 polish).
+
+## Prior — Day 80 — Prune Week 2, Day 4 (Polish Sprint) summary
 
 **Build under test:** `?v=1779724800`, `sw.js CACHE_NAME = 'signal-circuit-v55'`
 **Result:** 0 new bugs, ~+70 LOC (polish budget — net-neutral expected).
