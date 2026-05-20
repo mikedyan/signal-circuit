@@ -4898,6 +4898,9 @@ class UI {
     const modal = document.getElementById('share-card-modal');
     const closeBtn = document.getElementById('share-card-close');
     const downloadBtn = document.getElementById('share-card-download');
+    const copyBtn = document.getElementById('share-card-copy');
+    const nativeShareBtn = document.getElementById('share-card-native');
+    const status = document.getElementById('share-card-status');
 
     if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
     if (modal) modal.addEventListener('click', (e) => {
@@ -4907,11 +4910,14 @@ class UI {
       downloadBtn.addEventListener('click', () => {
         const canvas = document.getElementById('share-card-canvas');
         const link = document.createElement('a');
-        link.download = 'signal-circuit-achievement.png';
+        link.download = 'signal-circuit-snapshot.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
+        this._setShareCardStatus(status, 'Saved image download.', 'success');
       });
     }
+    if (copyBtn) copyBtn.addEventListener('click', () => this._copyShareCardImage(copyBtn, status));
+    if (nativeShareBtn) nativeShareBtn.addEventListener('click', () => this._nativeShareCard(nativeShareBtn, status));
   }
 
   generateShareCard(level, stars, gateCount, aesthetics) {
@@ -4990,24 +4996,221 @@ class UI {
     ctx.fillText('SIGNAL CIRCUIT', 0, 0);
     ctx.restore();
 
-    // Decorative circuit elements on the right side
-    ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
-    ctx.lineWidth = 3;
-    for (let i = 0; i < 5; i++) {
-      const x = 700 + Math.random() * 400;
-      const y = 100 + Math.random() * 400;
-      ctx.beginPath();
-      ctx.arc(x, y, 8, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x + 8, y);
-      ctx.lineTo(x + 40 + Math.random() * 60, y + (Math.random() - 0.5) * 80);
-      ctx.stroke();
-    }
+    // Day 82: real solved-circuit snapshot panel instead of generic random circuitry.
+    this._drawCircuitSnapshotOnShareCard(ctx, level, { x: 560, y: 118, w: 575, h: 390 });
+
+    // Social prompt
+    ctx.font = 'bold 24px Courier New';
+    ctx.fillStyle = '#7fffd4';
+    ctx.textAlign = 'left';
+    ctx.fillText('Share your signal path →', 560, h - 62);
+    ctx.font = '18px Courier New';
+    ctx.fillStyle = '#8aa';
+    ctx.fillText('Real circuit snapshot · no spoilers until they zoom in', 560, h - 32);
+
+    this._lastShareCardMeta = {
+      title: `Signal Circuit — Level ${level.id}`,
+      text: `I solved Signal Circuit Level ${level.id}: ${level.title} with ${gateCount} gate${gateCount === 1 ? '' : 's'} and ${stars}/3 stars.`,
+      fileName: `signal-circuit-l${level.id}-snapshot.png`,
+    };
+    this._setShareCardStatus(document.getElementById('share-card-status'), 'Snapshot ready — save, copy, or share it.', 'idle');
 
     // Show modal
     const modal = document.getElementById('share-card-modal');
     if (modal) modal.style.display = 'flex';
+  }
+
+  _drawCircuitSnapshotOnShareCard(ctx, level, area) {
+    ctx.save();
+    this._roundRectPath(ctx, area.x, area.y, area.w, area.h, 22);
+    ctx.fillStyle = 'rgba(3, 10, 18, 0.92)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0, 255, 170, 0.55)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Header strip
+    const headerH = 54;
+    this._roundRectPath(ctx, area.x + 12, area.y + 12, area.w - 24, headerH, 14);
+    const hdr = ctx.createLinearGradient(area.x, area.y, area.x + area.w, area.y);
+    hdr.addColorStop(0, 'rgba(0,255,170,0.16)');
+    hdr.addColorStop(1, 'rgba(0,128,255,0.12)');
+    ctx.fillStyle = hdr;
+    ctx.fill();
+    ctx.font = 'bold 24px Courier New';
+    ctx.fillStyle = '#7fffd4';
+    ctx.textAlign = 'left';
+    ctx.fillText('Solved Circuit Snapshot', area.x + 34, area.y + 47);
+    ctx.font = '16px Courier New';
+    ctx.fillStyle = '#8aa';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${level.gateTypes ? level.gateTypes.length : 0} gate types`, area.x + area.w - 34, area.y + 47);
+
+    const preview = this.gameState.getPreview(level.id);
+    const hasPreview = preview && Array.isArray(preview.g) && Array.isArray(preview.w) && Array.isArray(preview.io) &&
+      (preview.g.length || preview.w.length || preview.io.length);
+    const inner = { x: area.x + 26, y: area.y + 82, w: area.w - 52, h: area.h - 112 };
+
+    if (hasPreview) {
+      const offscreen = document.createElement('canvas');
+      offscreen.width = 760;
+      offscreen.height = 430;
+      this._renderPreviewCanvas(offscreen, level.id);
+      ctx.shadowColor = 'rgba(0,255,170,0.35)';
+      ctx.shadowBlur = 18;
+      this._roundRectPath(ctx, inner.x, inner.y, inner.w, inner.h, 16);
+      ctx.fillStyle = '#081018';
+      ctx.fill();
+      ctx.clip();
+      ctx.drawImage(offscreen, inner.x, inner.y, inner.w, inner.h);
+      ctx.shadowBlur = 0;
+    } else {
+      this._drawShareCardFallbackCircuit(ctx, inner, (level.id || 1) * 17);
+    }
+
+    // Bottom chips
+    ctx.restore();
+    ctx.save();
+    const chips = [
+      `${preview && preview.gc != null ? preview.gc : 0} gates placed`,
+      `${preview && preview.w ? preview.w.length : 0} wires`,
+      `L${level.id}`,
+    ];
+    ctx.font = '13px Courier New';
+    let chipX = area.x + 26;
+    for (const chip of chips) {
+      const width = ctx.measureText(chip).width + 26;
+      this._roundRectPath(ctx, chipX, area.y + area.h - 42, width, 26, 13);
+      ctx.fillStyle = 'rgba(0,255,170,0.12)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,255,170,0.28)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = '13px Courier New';
+      ctx.fillStyle = '#aee';
+      ctx.textAlign = 'left';
+      ctx.fillText(chip, chipX + 13, area.y + area.h - 24);
+      chipX += width + 10;
+    }
+    ctx.restore();
+  }
+
+  _drawShareCardFallbackCircuit(ctx, area, seed) {
+    ctx.save();
+    this._roundRectPath(ctx, area.x, area.y, area.w, area.h, 16);
+    ctx.fillStyle = '#081018';
+    ctx.fill();
+    ctx.clip();
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    const nodes = [];
+    for (let i = 0; i < 8; i++) {
+      nodes.push({
+        x: area.x + 42 + rand() * (area.w - 84),
+        y: area.y + 36 + rand() * (area.h - 72),
+      });
+    }
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const a = nodes[i], b = nodes[i + 1];
+      ctx.strokeStyle = i % 2 ? 'rgba(68,136,255,0.65)' : 'rgba(0,255,170,0.65)';
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.bezierCurveTo((a.x + b.x) / 2, a.y, (a.x + b.x) / 2, b.y, b.x, b.y);
+      ctx.stroke();
+    }
+    for (const [i, n] of nodes.entries()) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, i % 3 === 0 ? 18 : 11, 0, Math.PI * 2);
+      ctx.fillStyle = i % 3 === 0 ? 'rgba(0,255,170,0.35)' : 'rgba(68,136,255,0.35)';
+      ctx.fill();
+      ctx.strokeStyle = '#7fffd4';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.font = 'bold 22px Courier New';
+    ctx.fillStyle = '#7fffd4';
+    ctx.textAlign = 'center';
+    ctx.fillText('Snapshot appears after a solved campaign circuit', area.x + area.w / 2, area.y + area.h - 24);
+    ctx.restore();
+  }
+
+  _roundRectPath(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h - rr);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    ctx.lineTo(x + rr, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.closePath();
+  }
+
+  _setShareCardStatus(status, text, tone) {
+    if (!status) return;
+    status.textContent = text || '';
+    status.className = tone ? `share-card-status ${tone}` : 'share-card-status';
+  }
+
+  _canvasToBlob(canvas) {
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  }
+
+  async _copyShareCardImage(btn, status) {
+    const canvas = document.getElementById('share-card-canvas');
+    if (!canvas) return;
+    const original = btn ? btn.textContent : '';
+    try {
+      const blob = await this._canvasToBlob(canvas);
+      if (blob && navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        if (btn) btn.textContent = '✅ Copied Image';
+        this._setShareCardStatus(status, 'Image copied to clipboard.', 'success');
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText((this._lastShareCardMeta && this._lastShareCardMeta.text) || window.location.href);
+        if (btn) btn.textContent = '✅ Copied Text';
+        this._setShareCardStatus(status, 'Image clipboard unsupported here; copied share text instead.', 'warning');
+      } else {
+        throw new Error('Clipboard unavailable');
+      }
+    } catch (err) {
+      this._setShareCardStatus(status, 'Could not copy automatically — use Save Image instead.', 'warning');
+    } finally {
+      if (btn && original) setTimeout(() => { btn.textContent = original; }, 1800);
+    }
+  }
+
+  async _nativeShareCard(btn, status) {
+    const canvas = document.getElementById('share-card-canvas');
+    const meta = this._lastShareCardMeta || { title: 'Signal Circuit', text: 'I solved a Signal Circuit puzzle.', fileName: 'signal-circuit-snapshot.png' };
+    if (!canvas) return;
+    const original = btn ? btn.textContent : '';
+    try {
+      const blob = await this._canvasToBlob(canvas);
+      const file = blob ? new File([blob], meta.fileName || 'signal-circuit-snapshot.png', { type: 'image/png' }) : null;
+      if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+        await navigator.share({ title: meta.title, text: meta.text, files: [file] });
+        this._setShareCardStatus(status, 'Shared snapshot.', 'success');
+      } else if (navigator.share) {
+        await navigator.share({ title: meta.title, text: meta.text, url: window.location.href });
+        this._setShareCardStatus(status, 'Shared link and result text.', 'success');
+      } else {
+        await this._copyShareCardImage(btn, status);
+        return;
+      }
+      if (btn) btn.textContent = '✅ Shared';
+    } catch (err) {
+      this._setShareCardStatus(status, 'Share cancelled or unavailable.', 'warning');
+    } finally {
+      if (btn && original) setTimeout(() => { btn.textContent = original; }, 1800);
+    }
   }
 
   // ── Day 32 T3: Challenge Friend Button ──

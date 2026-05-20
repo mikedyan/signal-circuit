@@ -4098,29 +4098,57 @@ button:focus-visible {
 
 #share-card-buttons {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
   justify-content: center;
   margin-top: 12px;
 }
 
 #share-card-buttons button {
-  padding: 8px 20px;
+  padding: 8px 18px;
   border-radius: 6px;
   cursor: pointer;
   font-family: 'Courier New', monospace;
 }
 
-#share-card-download {
-  background: #0f0;
-  color: #000;
+#share-card-download,
+#share-card-copy,
+#share-card-native {
+  background: linear-gradient(135deg, #0f0, #00bcd4);
+  color: #001010;
   border: none;
   font-weight: bold;
+}
+
+#share-card-copy {
+  background: linear-gradient(135deg, #7fffd4, #4488ff);
+}
+
+#share-card-native {
+  background: linear-gradient(135deg, #c050f0, #0080ff);
+  color: #fff;
 }
 
 #share-card-close {
   background: transparent;
   border: 1px solid #555;
   color: #ccc;
+}
+
+.share-card-status {
+  min-height: 18px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #888;
+  font-family: 'Courier New', monospace;
+}
+
+.share-card-status.success {
+  color: #0f0;
+}
+
+.share-card-status.warning {
+  color: #ffd166;
 }
 
 /* ── Aesthetics Display ── */

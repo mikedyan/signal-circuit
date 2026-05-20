@@ -1,10 +1,37 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 81 — Prune Week 2, Day 5 (2026-05-19) — Expert Panel + Validation (Cycle 2 close)*
+*Updated: Day 82 — Cycle 3 Build Week, Day 1 (2026-05-20) — Shareable Circuit Snapshot Cards*
 
 ## Open Bugs
 
-*(none — Day 81 was the Cycle 2 validation pass. Tested L1/L6/L12/L18/L36 across chapters on localhost mirror via raw CDP. 0 console errors across 24 probes + 5 navigations. Score: 8.9/10, +0.5 from Cycle 1 close 8.4. Cycle 2 ends with an empty bug queue; Cycle 3 begins Day 82.)*
+*(none — Day 82 shipped Shareable Circuit Snapshot Cards. Localhost CDP QA solved L1 with 1 AND gate + 3 wires, generated a 1200×630 share card with real preview geometry, verified Save / Copy / Share / Close controls, and recorded 0 JS errors.)*
+
+## Day 82 — Cycle 3 Build Week, Day 1 (Shareable Circuit Snapshot Cards) summary
+
+**Build under test:** `?v=1779811200`, `sw.js CACHE_NAME = 'signal-circuit-v56'`.
+**Result:** 0 new bugs. Feature QA passed.
+
+**What changed:**
+
+- Existing `📸 Share Card` modal now renders a real solved-circuit snapshot on the right side of the 1200×630 image.
+- Snapshot uses existing Day 43 preview data (`gameState.getPreview(level.id)`) and `_renderPreviewCanvas()`.
+- Modal now exposes `💾 Save Image`, `📋 Copy Image`, `🔗 Share`, and Close controls.
+- Clipboard image copy uses `ClipboardItem` when supported, with text fallback.
+- Native Web Share uses image files when supported, with text/link fallback.
+- Deterministic fallback circuit art appears if no saved preview exists.
+
+**Verification matrix:**
+
+- ✅ Syntax: `node -c js/ui.js`, `node -c js/main.js`.
+- ✅ Build identity: 11 cache-bust refs unified at `?v=1779811200`; SW v56.
+- ✅ Cold start: still 2 visible non-level buttons (`how-to-play-btn`, `open-settings-btn`).
+- ✅ Level 1 solved through Quick Test: result `✓ CIRCUIT CORRECT!`, star display visible.
+- ✅ Preview persisted: 1 gate, 3 wires, 3 IO nodes, `gc=1`.
+- ✅ Share-card button visible after solve; modal opens.
+- ✅ Canvas dimensions: 1200×630.
+- ✅ Snapshot panel has non-background circuit pixels (`nonDark=4750`, `tealish=977`).
+- ✅ All four modal controls visible.
+- ✅ Console: 0 JS errors / exceptions.
 
 ## Day 81 — Prune Week 2, Day 5 (Expert Panel + Validation) summary
 

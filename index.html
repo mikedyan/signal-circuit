@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1779724800">
+  <link rel="stylesheet" href="css/style.css?v=1779811200">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -673,8 +673,11 @@
       <canvas id="share-card-canvas" width="1200" height="630"></canvas>
       <div id="share-card-buttons">
         <button id="share-card-download">💾 Save Image</button>
+        <button id="share-card-copy">📋 Copy Image</button>
+        <button id="share-card-native">🔗 Share</button>
         <button id="share-card-close">Close</button>
       </div>
+      <div id="share-card-status" class="share-card-status" aria-live="polite"></div>
     </div>
   </div>
 
@@ -789,15 +792,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script src="js/gates.js?v=1779724800"></script>
-  <script src="js/wires.js?v=1779724800"></script>
-  <script src="js/simulation.js?v=1779724800"></script>
-  <script src="js/levels.js?v=1779724800"></script>
-  <script src="js/audio.js?v=1779724800"></script>
-  <script src="js/achievements.js?v=1779724800"></script>
-  <script src="js/canvas.js?v=1779724800"></script>
-  <script src="js/ui.js?v=1779724800"></script>
-  <script src="js/tutorial.js?v=1779724800"></script>
-  <script src="js/main.js?v=1779724800"></script>
+  <script src="js/gates.js?v=1779811200"></script>
+  <script src="js/wires.js?v=1779811200"></script>
+  <script src="js/simulation.js?v=1779811200"></script>
+  <script src="js/levels.js?v=1779811200"></script>
+  <script src="js/audio.js?v=1779811200"></script>
+  <script src="js/achievements.js?v=1779811200"></script>
+  <script src="js/canvas.js?v=1779811200"></script>
+  <script src="js/ui.js?v=1779811200"></script>
+  <script src="js/tutorial.js?v=1779811200"></script>
+  <script src="js/main.js?v=1779811200"></script>
 </body>
 </html>
