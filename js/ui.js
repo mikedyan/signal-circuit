@@ -2488,6 +2488,12 @@ class UI {
     const puzzle = wt.buildPuzzle();
     const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
     setText('tournament-week-label', `Week ${info.key} · 🌐 same puzzle for everyone`);
+    // Day 83: surface the tournament backend mode (local vs cloud-ready).
+    const backend = this.gameState.tournamentBackend;
+    const modeLabel = (backend && typeof backend.describe === 'function')
+      ? backend.describe()
+      : '🏠 Local leaderboard';
+    setText('tournament-mode-label', modeLabel);
     setText('tournament-puzzle-title', puzzle.title.replace(/^🏆 Tournament · /, ''));
     setText('tournament-puzzle-meta', `${puzzle.inputs.length} inputs · ${puzzle.outputs.length} output${puzzle.outputs.length > 1 ? 's' : ''} · par ${puzzle.optimalGates} gates`);
     setText('tournament-puzzle-story', puzzle.description || '');

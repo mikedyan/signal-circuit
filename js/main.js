@@ -1271,6 +1271,110 @@ class WeeklyTournament {
 }
 
 
+// =====================================================================
+// Day 83: Tournament Backend Adapter Shell
+//
+// A transport-shaped seam between gameplay completion and the
+// WeeklyTournament class. Local mode preserves the existing deterministic
+// pseudo-leaderboard. Remote mode is plumbed for a future Cloudflare
+// Worker + KV backend, but never performs a network write today: it
+// transparently falls back to the local adapter unless a Worker URL is
+// explicitly configured AND a future revision flips on live mode.
+// =====================================================================
+
+const TOURNAMENT_BACKEND_LS_KEY = 'signal-circuit-tournament-backend';
+
+class TournamentBackend {
+  // Interface contract — subclasses must override.
+  submitScore(/* gateCount, timeSec, displayName */) { throw new Error('TournamentBackend.submitScore not implemented'); }
+  getLeaderboard(/* weekKey */)   { throw new Error('TournamentBackend.getLeaderboard not implemented'); }
+  getCombinedBoard(/* weekKey */) { throw new Error('TournamentBackend.getCombinedBoard not implemented'); }
+  getMode()    { return 'unknown'; }
+  isLive()     { return false; }
+  describe()   { return 'Tournament backend (unknown)'; }
+}
+
+class LocalTournamentAdapter extends TournamentBackend {
+  constructor(weeklyTournament) {
+    super();
+    this.wt = weeklyTournament;
+  }
+  submitScore(gateCount, timeSec, displayName) {
+    return this.wt.submitScore(gateCount, timeSec, displayName);
+  }
+  getLeaderboard(weekKey)   { return this.wt.getLeaderboard(weekKey); }
+  getCombinedBoard(weekKey) { return this.wt.getCombinedBoard(weekKey); }
+  getMode()  { return 'local'; }
+  isLive()   { return false; }
+  describe() { return '\ud83c\udfe0 Local leaderboard \u00b7 same puzzle, deterministic bots'; }
+}
+
+class RemoteTournamentAdapter extends TournamentBackend {
+  // Worker-shaped skeleton. Holds config, but performs no external writes
+  // until a workerUrl is configured AND a future revision wires up the
+  // actual fetch path. Until then, every call gracefully falls back to
+  // local so gameplay never blocks or shows a broken rank.
+  constructor(weeklyTournament, config) {
+    super();
+    this.wt = weeklyTournament;
+    this.config = config || {};
+    this.local = new LocalTournamentAdapter(weeklyTournament);
+  }
+  _isConfigured() {
+    return !!(this.config && typeof this.config.workerUrl === 'string' && this.config.workerUrl.length > 0);
+  }
+  submitScore(gateCount, timeSec, displayName) {
+    // Cloud write path is intentionally not wired yet. Fall through.
+    return this.local.submitScore(gateCount, timeSec, displayName);
+  }
+  getLeaderboard(weekKey)   { return this.local.getLeaderboard(weekKey); }
+  getCombinedBoard(weekKey) { return this.local.getCombinedBoard(weekKey); }
+  getMode()  { return this._isConfigured() ? 'remote-ready' : 'remote-ready'; }
+  isLive()   { return false; }
+  describe() {
+    return this._isConfigured()
+      ? '\ud83c\udf10 Cloud-ready \u00b7 Worker URL set, awaiting go-live'
+      : '\ud83c\udf10 Cloud-ready \u00b7 local fallback active (no Worker configured)';
+  }
+}
+
+function selectTournamentBackend(weeklyTournament) {
+  // Detection order:
+  //   1. window.__SC_TOURNAMENT_BACKEND__ = { mode, workerUrl? }
+  //   2. localStorage('signal-circuit-tournament-backend') === 'remote'
+  //   3. default 'local'
+  let mode = null;
+  let workerUrl = null;
+  try {
+    if (typeof window !== 'undefined' && window.__SC_TOURNAMENT_BACKEND__) {
+      const cfg = window.__SC_TOURNAMENT_BACKEND__;
+      if (cfg && typeof cfg.mode === 'string') mode = cfg.mode;
+      if (cfg && typeof cfg.workerUrl === 'string') workerUrl = cfg.workerUrl;
+    }
+  } catch (e) {}
+  try {
+    if (!mode && typeof localStorage !== 'undefined') {
+      const lsMode = localStorage.getItem(TOURNAMENT_BACKEND_LS_KEY);
+      if (lsMode === 'remote' || lsMode === 'local') mode = lsMode;
+    }
+  } catch (e) {}
+  if (mode === 'remote') {
+    return new RemoteTournamentAdapter(weeklyTournament, { workerUrl });
+  }
+  return new LocalTournamentAdapter(weeklyTournament);
+}
+
+// Expose to global for QA harness + future tests. Safe in non-window envs.
+try {
+  if (typeof window !== 'undefined') {
+    window.TournamentBackend = TournamentBackend;
+    window.LocalTournamentAdapter = LocalTournamentAdapter;
+    window.RemoteTournamentAdapter = RemoteTournamentAdapter;
+    window.selectTournamentBackend = selectTournamentBackend;
+  }
+} catch (e) {}
+
+
 class GameState {
   constructor() {
     this.gates = [];
@@ -1383,6 +1487,8 @@ class GameState {
     this.infiniteRun = new InfiniteRunManager(this);
     // Day 72: Weekly Tournament
     this.weeklyTournament = new WeeklyTournament(this);
+    // Day 83: Tournament backend adapter (local by default).
+    this.tournamentBackend = selectTournamentBackend(this.weeklyTournament);
   }
 
   // Day 68: Infinite Mode entry points
@@ -3468,7 +3574,8 @@ class GameState {
                 this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates · Archive replay (no score)`);
                 this.ui.updateStatusBar(`Archive week ${this.currentLevel.weekKey} — replayed in ${elapsed}s`);
               } else {
-                const submission = this.weeklyTournament.submitScore(
+                // Day 83: route through tournament backend adapter (local by default).
+                const submission = (this.tournamentBackend || this.weeklyTournament).submitScore(
                   gateCount, elapsed,
                   (this.dailyLeaderboard && this.dailyLeaderboard.getDisplayName) ? this.dailyLeaderboard.getDisplayName() : 'You'
                 );
@@ -3739,7 +3846,8 @@ class GameState {
           this.ui.updateResultDisplay('pass', `✓ SOLVED! ${gateCount} gates · Archive replay (no score)`);
           this.ui.updateStatusBar(`Archive week ${this.currentLevel.weekKey} — replayed in ${elapsed}s`);
         } else {
-          const submission = this.weeklyTournament.submitScore(
+          // Day 83: route through tournament backend adapter (local by default).
+          const submission = (this.tournamentBackend || this.weeklyTournament).submitScore(
             gateCount, elapsed,
             (this.dailyLeaderboard && this.dailyLeaderboard.getDisplayName) ? this.dailyLeaderboard.getDisplayName() : 'You'
           );

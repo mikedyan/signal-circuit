@@ -1,10 +1,36 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 82 — Cycle 3 Build Week, Day 1 (2026-05-20) — Shareable Circuit Snapshot Cards*
+*Updated: Day 83 — Cycle 3 Build Week, Day 2 (2026-05-21) — Tournament Backend Adapter Shell*
 
 ## Open Bugs
 
-*(none — Day 82 shipped Shareable Circuit Snapshot Cards. Localhost CDP QA solved L1 with 1 AND gate + 3 wires, generated a 1200×630 share card with real preview geometry, verified Save / Copy / Share / Close controls, and recorded 0 JS errors.)*
+*(none — Day 83 shipped the Tournament Backend Adapter Shell. Localhost CDP QA confirmed default adapter is LocalTournamentAdapter, mode label renders correctly, submitScore returns full {rank, percentile, isNewBest, score, achievements} payload, remote mode without credentials gracefully falls back to local, achievements still fire on rank ≤3/=1, and 0 JS errors across the suite.)*
+
+## Day 83 — Cycle 3 Build Week, Day 2 (Tournament Backend Adapter Shell) summary
+
+**Build under test:** `?v=1779897600`, `sw.js CACHE_NAME = 'signal-circuit-v57'`.
+**Result:** 0 new bugs. Feature QA passed.
+
+**What changed:**
+
+- `js/main.js` gained a `TournamentBackend` interface and two concrete adapters (`LocalTournamentAdapter`, `RemoteTournamentAdapter`) plus a `selectTournamentBackend()` factory.
+- `GameState.tournamentBackend` is now instantiated immediately after `this.weeklyTournament`.
+- Both gameplay-completion `weeklyTournament.submitScore(...)` call sites now route through `this.tournamentBackend.submitScore(...)`.
+- `#tournament-mode-label` added to `#tournament-screen` and populated from `backend.describe()` in `UI.showTournamentScreen()`.
+- Cache bust unified at `?v=1779897600`; SW bumped to `signal-circuit-v57`.
+
+**Verification matrix:**
+
+- ✅ Syntax: `node -c js/main.js`, `node -c js/ui.js`.
+- ✅ Build identity: 11 cache-bust refs all `1779897600`; SW v57 active.
+- ✅ Default adapter is `LocalTournamentAdapter`, `getMode()='local'`, `isLive()=false`.
+- ✅ Tournament button reveals at tier3 (seeded 20 levels); 3 tabs + 3 panes render, leaderboard has 10 rows.
+- ✅ Local `submitScore(1, 5)` → `{rank:1, percentile:98, isNewBest:true, score:100, podium:true, crowned:true, achievements:['tournament_podium','tournament_crowned'], gates:1, time:5, weekKey:'2026-W21'}`.
+- ✅ Achievements `tournament_podium` and `tournament_crowned` unlocked after submission.
+- ✅ Toggle `window.__SC_TOURNAMENT_BACKEND__={mode:'remote'}` + re-init → `RemoteTournamentAdapter`, `getMode()='remote-ready'`, describe label switches to cloud-ready string, submitScore still returns full rank/percentile via local fallback. No fetch attempted.
+- ✅ `localStorage('signal-circuit-tournament-backend','remote')` path also produces `RemoteTournamentAdapter`.
+- ✅ Restoring defaults returns to `LocalTournamentAdapter`.
+- ✅ Console: 0 JS errors.
 
 ## Day 82 — Cycle 3 Build Week, Day 1 (Shareable Circuit Snapshot Cards) summary
 
