@@ -3279,6 +3279,42 @@ class GameState {
     this.audio.playClick();
   }
 
+  // Day 84 — Lab Bench II: per-level submission constraints. Returns
+  // { ok: bool, message?: string }. Called AFTER `_consumeLabAttempt()` has
+  // already debited the attempt, so a constraint violation still costs a try
+  // (matches the lab-bench “design first, submit once” philosophy).
+  _validateLabConstraints() {
+    if (!this._isLabBench()) return { ok: true };
+    const level = this.currentLevel;
+    if (!level) return { ok: true };
+    const placed = this.gates.filter(g => !g._locked);
+
+    // gateHardCap — strict ceiling on non-locked gate count
+    if (typeof level.gateHardCap === 'number') {
+      if (placed.length > level.gateHardCap) {
+        return {
+          ok: false,
+          message: `Submission rejected: ${placed.length} gates exceeds hard cap of ${level.gateHardCap}.`,
+        };
+      }
+    }
+
+    // mustIncludeGate — at least one gate of each required type must be present
+    if (Array.isArray(level.mustIncludeGate) && level.mustIncludeGate.length) {
+      const types = new Set(placed.map(g => g.type));
+      const missing = level.mustIncludeGate.filter(t => !types.has(t));
+      if (missing.length) {
+        const list = missing.join(' / ');
+        return {
+          ok: false,
+          message: `Submission rejected: blueprint must include ${missing.length === 1 ? 'an' : ''} ${list} gate${missing.length === 1 ? '' : 's'}.`,
+        };
+      }
+    }
+
+    return { ok: true };
+  }
+
   loadChallengeLevel(level) {
     this.currentLevel = level;
     this.gates = [];
@@ -3485,6 +3521,14 @@ class GameState {
         this.audio.playClick();
         this.ui.updateResultDisplay('idle', '🔬 Lab tries exhausted — click 🔬 Reset Lab to restore.');
         this.ui.updateStatusBar('Lab Bench: 3/3 submissions used. Reset to retry.');
+        return;
+      }
+      // Day 84: Lab Bench II constraint check (gateHardCap, mustIncludeGate).
+      const cv = this._validateLabConstraints();
+      if (!cv.ok) {
+        this.audio.playClick();
+        this.ui.updateResultDisplay('fail', `🔬 ${cv.message}`);
+        this.ui.updateStatusBar(cv.message);
         return;
       }
     }
@@ -3789,6 +3833,14 @@ class GameState {
         this.audio.playClick();
         this.ui.updateResultDisplay('idle', '🔬 Lab tries exhausted — click 🔬 Reset Lab to restore.');
         this.ui.updateStatusBar('Lab Bench: 3/3 submissions used. Reset to retry.');
+        return;
+      }
+      // Day 84: Lab Bench II constraint check (gateHardCap, mustIncludeGate).
+      const cv = this._validateLabConstraints();
+      if (!cv.ok) {
+        this.audio.playClick();
+        this.ui.updateResultDisplay('fail', `🔬 ${cv.message}`);
+        this.ui.updateStatusBar(cv.message);
         return;
       }
     }

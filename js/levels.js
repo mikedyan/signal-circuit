@@ -129,6 +129,22 @@ const CHAPTERS = [
       icon: '🧪',
     },
   },
+  // Day 84 — Lab Bench II Seed Pack (Cycle 3 BUILD Day 3)
+  {
+    id: 10, title: 'Chapter 9: Lab Bench II', levels: [41, 42, 43],
+    narrative: 'Constraints sharpen design.',
+    storyIntro: 'Three advanced briefs. Each carries one extra rule — palette, budget, or required tool. Read the constraint first, design second.',
+    storyComplete: '📐 Three rules, three blueprints. You can hold a constraint in your head and still find an elegant answer.',
+    gatesMastered: ['Universal Gates', 'Gate Budgeting', 'Required-Tool Design'],
+    color: '#80F4FF',
+    isBonus: true,
+    realWorld: {
+      title: '🛠 In the Real World',
+      fact: 'Real designs almost never have a free palette. Process libraries dictate which gates exist; cost and area dictate budgets; integration mandates dictate which tools must appear. Constraint-driven design is the daily mode of every chip engineer.',
+      device: 'Standard Cell Library',
+      icon: '🛠',
+    },
+  },
 ];
 
 const LEVELS = [
@@ -1497,6 +1513,112 @@ const LEVELS = [
     ],
     isDiscovery: true,
     isLabBench: true,
+  },
+
+  // ── Chapter 9: Lab Bench II (Day 84 — Cycle 3 BUILD Day 3) ──
+  // Each level layers a new constraint on top of the existing Lab Bench
+  // state machine (single-shot Submit Blueprint, 3 attempts, Reset Lab).
+  {
+    id: 41,
+    title: 'Pure NAND Builder',
+    description: 'Rebuild AND using only NAND gates. NAND is universal — anything else can be derived from it.',
+    postSolveInsight: '🔓 NAND-only design is how real chip libraries are built. Every other gate is just a NAND identity in disguise.',
+    hints: [
+      'NAND(A, B) gives you NOT(AND(A, B)). You need AND, so you have to invert that.',
+      'NAND(x, x) is the same as NOT(x). Use it on the first NAND\'s output.',
+      'Two NANDs in series will solve this exactly.',
+    ],
+    availableGates: ['NAND'],
+    optimalGates: 2,
+    goodGates: 4,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0] },
+      { inputs: [0, 1], outputs: [0] },
+      { inputs: [1, 0], outputs: [0] },
+      { inputs: [1, 1], outputs: [1] },
+    ],
+    isDiscovery: true,
+    isLabBench: true,
+    labConstraint: '🧱 NAND only — universal gate practice',
+  },
+  {
+    id: 42,
+    title: 'Budgeted Selector',
+    description: 'Build a 2-to-1 multiplexer (OUT = A when S=0, B when S=1) with a strict 4-gate hard cap.',
+    postSolveInsight: '🔓 Hard gate budgets force you to factor logic the way a real synthesis tool does. Every gate has to earn its place.',
+    hints: [
+      'A multiplexer is two ANDs combined by an OR. One AND gates A through, the other gates B.',
+      'You only want one of those AND paths active at a time — invert the selector for one side.',
+      'Final shape: NOT S, AND with A, AND S with B, OR the two together. Exactly four gates.',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 4,
+    goodGates: 4,
+    inputs: [
+      { label: 'S', x: 60, y: 100 },
+      { label: 'A', x: 60, y: 200 },
+      { label: 'B', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 0], outputs: [1] },
+      { inputs: [0, 1, 1], outputs: [1] },
+      { inputs: [1, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 1], outputs: [1] },
+      { inputs: [1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+    isDiscovery: true,
+    isLabBench: true,
+    gateHardCap: 4,
+    labConstraint: '🎯 Hard cap: 4 gates',
+  },
+  {
+    id: 43,
+    title: 'Parity Mandate',
+    description: 'Build a 3-input XOR (odd parity) — and you must include at least one XOR gate in the solution.',
+    postSolveInsight: '🔓 Real designs sometimes mandate specific cells — a balanced XOR for timing, a hardened NAND for radiation. Working under “must use X” is a discipline.',
+    hints: [
+      'Odd parity is true when an odd number of inputs are 1. Three-input XOR is exactly that.',
+      'XOR chains: A XOR B XOR C is just two XORs back to back.',
+      'Constraint says the blueprint MUST include an XOR gate — a NAND-only parity tree will be rejected.',
+    ],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 2,
+    goodGates: 4,
+    inputs: [
+      { label: 'A', x: 60, y: 100 },
+      { label: 'B', x: 60, y: 200 },
+      { label: 'C', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [1] },
+      { inputs: [0, 1, 0], outputs: [1] },
+      { inputs: [0, 1, 1], outputs: [0] },
+      { inputs: [1, 0, 0], outputs: [1] },
+      { inputs: [1, 0, 1], outputs: [0] },
+      { inputs: [1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+    isDiscovery: true,
+    isLabBench: true,
+    mustIncludeGate: ['XOR'],
+    labConstraint: '✳️ Must include an XOR gate',
   },
 ];
 

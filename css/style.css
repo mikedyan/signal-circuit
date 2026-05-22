@@ -6978,6 +6978,21 @@ body.light-mode .onboard-step {
   color: #ffb3b3;
 }
 
+/* Day 84: Lab Bench II constraint chip + over-cap budget styling. */
+#lab-hud .lab-chip.lab-constraint {
+  background: rgba(255, 184, 0, 0.16);
+  border-color: rgba(255, 184, 0, 0.55);
+  color: #ffd98a;
+  font-weight: 600;
+}
+
+#lab-hud .lab-chip.over-cap {
+  background: rgba(255, 80, 80, 0.20);
+  border-color: rgba(255, 80, 80, 0.65);
+  color: #ffb3b3;
+  animation: tierRevealPulse 1.2s ease-out 1;
+}
+
 #lab-reset-btn {
   display: inline-flex;
   align-items: center;
@@ -7089,6 +7104,18 @@ body.light-mode #lab-hud .lab-chip {
   border-color: rgba(0, 138, 168, 0.4);
   color: #006a83;
 }
+body.light-mode #lab-hud .lab-chip.lab-constraint {
+  background: rgba(214, 144, 0, 0.18);
+  border-color: rgba(214, 144, 0, 0.6);
+  color: #6e4400;
+}
+
+body.light-mode #lab-hud .lab-chip.over-cap {
+  background: rgba(200, 30, 30, 0.18);
+  border-color: rgba(200, 30, 30, 0.6);
+  color: #7d1010;
+}
+
 body.light-mode #lab-tries.exhausted {
   background: rgba(200, 30, 30, 0.1);
   border-color: rgba(200, 30, 30, 0.5);

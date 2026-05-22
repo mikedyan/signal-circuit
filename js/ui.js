@@ -3114,7 +3114,23 @@ class UI {
       triesEl.textContent = `${gs._lab.attempts}/${gs._lab.maxAttempts} submissions`;
       triesEl.classList.toggle('exhausted', gs._lab.exhausted);
     }
-    if (budgetEl) budgetEl.textContent = `≈ ${count} gate${count===1?'':'s'} · target ${optimal}`;
+    if (budgetEl) {
+      budgetEl.textContent = `≈ ${count} gate${count===1?'':'s'} · target ${optimal}`;
+      // Day 84: Lab Bench II — surface gateHardCap budget pressure inline.
+      const overCap = (typeof level.gateHardCap === 'number') && count > level.gateHardCap;
+      budgetEl.classList.toggle('over-cap', overCap);
+    }
+    // Day 84: Lab Bench II — constraint chip (one-line copy per level).
+    const constraintEl = document.getElementById('lab-constraint');
+    if (constraintEl) {
+      if (level.labConstraint) {
+        constraintEl.textContent = level.labConstraint;
+        constraintEl.style.display = '';
+      } else {
+        constraintEl.textContent = '';
+        constraintEl.style.display = 'none';
+      }
+    }
     // Lock RUN button when exhausted, surface Reset Lab.
     const rb = document.getElementById('run-btn');
     if (rb) rb.disabled = !!(gs._lab.exhausted && !gs._lab.cleared);

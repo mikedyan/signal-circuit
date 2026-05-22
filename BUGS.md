@@ -1,10 +1,47 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 83 — Cycle 3 Build Week, Day 2 (2026-05-21) — Tournament Backend Adapter Shell*
+*Updated: Day 84 — Cycle 3 Build Week, Day 3 (2026-05-22) — Lab Bench II Seed Pack*
 
 ## Open Bugs
 
-*(none — Day 83 shipped the Tournament Backend Adapter Shell. Localhost CDP QA confirmed default adapter is LocalTournamentAdapter, mode label renders correctly, submitScore returns full {rank, percentile, isNewBest, score, achievements} payload, remote mode without credentials gracefully falls back to local, achievements still fire on rank ≤3/=1, and 0 JS errors across the suite.)*
+*(none — Day 84 shipped the Lab Bench II Seed Pack: 3 new advanced lab levels (L41 NAND-only, L42 hard cap 4, L43 must include XOR), one new constraint chip in the Lab HUD, and constraint validation wired into both runSimulation and runQuickTest. CDP QA on localhost:8901 ran 49 assertions across static data, level loading, constraint enforcement on all three new levels, legacy lab regression (L36 chip hidden), normal-level regression (L1 lab HUD hidden), cache-bust identity, cold-start chrome unchanged at 2 non-level buttons, and 0 console errors.)*
+
+## Day 84 — Cycle 3 Build Week, Day 3 (Lab Bench II Seed Pack) summary
+
+**Build under test:** `?v=1779984000`, `sw.js CACHE_NAME = 'signal-circuit-v58'`.
+**Result:** 0 new bugs. Feature QA passed 49/49.
+
+**What changed:**
+
+- `js/levels.js`: new chapter id 10 ("Chapter 9: Lab Bench II", levels [41,42,43]); three new lab levels with one extra constraint each (palette/cap/required-gate); new optional level fields `labConstraint`, `gateHardCap`, `mustIncludeGate`.
+- `js/main.js`: new helper `_validateLabConstraints()` called after `_consumeLabAttempt()` in both `runSimulation` and `runQuickTest`; constraint violation surfaces in result + status bar and consumes the attempt.
+- `js/ui.js`: `updateLabHud()` now populates `#lab-constraint` from `level.labConstraint` (hides on legacy lab levels), and toggles `.over-cap` on `#lab-budget` when `gateHardCap` is exceeded.
+- `index.html`: new `<span id="lab-constraint">` in the lab HUD strip.
+- `css/style.css`: `.lab-constraint` amber chip style + `.over-cap` red pulse on the budget chip; light-mode mirrors.
+- Cache bust unified at `?v=1779984000`; SW bumped to `signal-circuit-v58`.
+
+**Verification matrix (CDP via headless Chromium on localhost:8901):**
+
+- ✅ Syntax: `node -c js/levels.js`, `node -c js/main.js`, `node -c js/ui.js`.
+- ✅ Build identity: 11 cache-bust refs all `1779984000`; SW v58 active.
+- ✅ `LEVELS.length === 43`, `getLevelCount() === 43`, Chapter 10 has levels [41,42,43].
+- ✅ L41 isLabBench, `availableGates=['NAND']`, toolbox shows only NAND.
+- ✅ L42 isLabBench, `gateHardCap=4`.
+- ✅ L43 isLabBench, `mustIncludeGate=['XOR']`.
+- ✅ L41 constraint chip visible with copy `🧱 NAND only — universal gate practice`.
+- ✅ L41 NAND → NAND-as-NOT chain solves all 4 truth rows.
+- ✅ L42 constraint chip visible with copy `🎯 Hard cap: 4 gates`.
+- ✅ L42 5-gate submission rejected with message `Submission rejected: 5 gates exceeds hard cap of 4.`; attempt is consumed (1/3).
+- ✅ L42 `#lab-budget` gains `.over-cap` class at 5 gates and drops it after building the valid 4-gate MUX.
+- ✅ L42 Reset Lab restores 3 tries; 4-gate MUX solves all 8 truth rows; `_validateLabConstraints()` returns ok.
+- ✅ L43 constraint chip visible with copy `✳️ Must include an XOR gate`.
+- ✅ L43 AND+OR submission rejected with message containing `XOR`; attempt is consumed (1/3).
+- ✅ L43 Reset Lab restores 3 tries; 2-XOR chain solves all 8 truth rows; `_validateLabConstraints()` returns ok.
+- ✅ L36 legacy lab level: `#lab-constraint` hidden, lab HUD still flex, RUN reads `📐 Submit Blueprint`.
+- ✅ L1 normal level: lab HUD hidden, RUN reads `▶ RUN`, constraint chip hidden.
+- ✅ Cold-start non-level button count still 2 (no top-level chrome added).
+- ✅ Console: 0 JS errors across all 49 assertions.
+
 
 ## Day 83 — Cycle 3 Build Week, Day 2 (Tournament Backend Adapter Shell) summary
 
