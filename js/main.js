@@ -1489,6 +1489,18 @@ class GameState {
     this.weeklyTournament = new WeeklyTournament(this);
     // Day 83: Tournament backend adapter (local by default).
     this.tournamentBackend = selectTournamentBackend(this.weeklyTournament);
+    // Day 85: Onboarding Experiment Flag (local-only feature flag for
+    // first-launch onboarding variants). Resolved here so URL/localStorage
+    // overrides are persisted before _checkPlacementTest() runs.
+    this.onboardingExperiment = new OnboardingExperiment(this);
+    try {
+      window.__onboardingExperiment = {
+        getVariant: () => this.onboardingExperiment.getVariant(),
+        getCounters: () => this.onboardingExperiment.getCounters(),
+        reset: () => this.onboardingExperiment.reset(),
+        applyFirstLaunch: () => this.onboardingExperiment.applyFirstLaunch(),
+      };
+    } catch (e) {}
   }
 
   // Day 68: Infinite Mode entry points
@@ -1893,22 +1905,15 @@ class GameState {
       }
     } catch (e) { return; }
 
-    // Day 78 Cut #5 (PRUNE Tier 1): Silent-default the difficulty modal.
-    // Cold-start ceremony is a tax — Standard works for ~all first-time
-    // players. Set Standard silently, persist the suggestion flag so we
-    // never re-prompt, and surface a one-time toast pointing at Settings
-    // for power users who want Relaxed/Hardcore. Settings → Difficulty
-    // Mode still opens the full chooser (unchanged).
-    if (!SafeStorage.getItem(DIFFICULTY_KEY)) {
-      try { this.setDifficultyMode('standard'); } catch (e) {}
-      setTimeout(() => {
-        try {
-          if (window._notifManager && typeof window._notifManager.showWelcomeToast === 'function') {
-            window._notifManager.showWelcomeToast('🔧 Mode set to Standard. Change anytime in Settings.', 4500);
-          }
-        } catch (e) {}
-      }, 1200);
-    }
+    // Day 85: Route first-launch onboarding through OnboardingExperiment.
+    // Default variant ('silent-standard') preserves Day 78 behavior:
+    // silent setDifficultyMode('standard') + welcome toast. Alternate
+    // variants flip via ?onboarding= or localStorage. See Day 85 spec.
+    try {
+      if (this.onboardingExperiment) {
+        this.onboardingExperiment.applyFirstLaunch();
+      }
+    } catch (e) {}
 
     if (!placementOptIn) {
       // Mark as done so we never auto-show; the campaign opens to Level 1.
@@ -6112,6 +6117,170 @@ const INSTALL_NEVER_KEY = 'signal-circuit-install-never'; // 90d snooze epoch
 const WELCOME_TOAST_KEY = 'signal-circuit-welcome-toasts'; // {l1:bool,l2:bool,l3:bool}
 const INSTALL_LATER_MS = 14 * 24 * 60 * 60 * 1000;
 const INSTALL_NEVER_MS = 90 * 24 * 60 * 60 * 1000;
+
+// ── Day 85: Onboarding Experiment Flag ──
+// Tiny, analytics-free, local feature-flag surface for first-launch
+// onboarding variants. Default is Day 78 silent-default Standard mode +
+// 4.5s informational toast. QA can flip variants via URL or localStorage.
+const ONBOARDING_EXPERIMENT_KEY = 'signal-circuit-onboarding-experiment';
+const ONBOARDING_VARIANTS = ['silent-standard', 'explicit-chooser', 'warm-toast'];
+const ONBOARDING_DEFAULT_VARIANT = 'silent-standard';
+const ONBOARDING_TOAST_COPY = {
+  'silent-standard': '\ud83d\udd27 Mode set to Standard. Change anytime in Settings.',
+  'warm-toast': '\ud83d\udc4b Welcome \u2014 Standard mode is on. You can switch in Settings any time.',
+};
+
+class OnboardingExperiment {
+  constructor(gameState) {
+    this.gameState = gameState;
+    this._state = this._load();
+    this._resolveVariant(); // may persist if URL override is present
+  }
+
+  _load() {
+    let raw = null;
+    try { raw = SafeStorage.getItem(ONBOARDING_EXPERIMENT_KEY); } catch (e) {}
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return this._normalize(parsed);
+        }
+      } catch (e) {}
+    }
+    return this._normalize({});
+  }
+
+  _normalize(s) {
+    const variant = ONBOARDING_VARIANTS.indexOf(s.variant) >= 0
+      ? s.variant
+      : ONBOARDING_DEFAULT_VARIANT;
+    const counters = Object.assign({
+      firstLaunches: 0,
+      chooserShown: 0,
+      chooserPickedRelaxed: 0,
+      chooserPickedStandard: 0,
+      chooserPickedHardcore: 0,
+      toastShown: 0,
+      toastVariant: '',
+    }, (s && typeof s.counters === 'object' && s.counters) || {});
+    return {
+      variant: variant,
+      assignedAt: typeof s.assignedAt === 'string' ? s.assignedAt : new Date().toISOString(),
+      counters: counters,
+    };
+  }
+
+  _persist() {
+    try {
+      SafeStorage.setItem(ONBOARDING_EXPERIMENT_KEY, JSON.stringify(this._state));
+    } catch (e) {}
+  }
+
+  _readUrlVariant() {
+    try {
+      const m = /[?&]onboarding=([a-z\-]+)/i.exec(window.location.search || '');
+      if (m && ONBOARDING_VARIANTS.indexOf(m[1]) >= 0) return m[1];
+    } catch (e) {}
+    return null;
+  }
+
+  _resolveVariant() {
+    // Precedence: URL query param > localStorage > default.
+    const urlVariant = this._readUrlVariant();
+    if (urlVariant) {
+      if (this._state.variant !== urlVariant) {
+        this._state.variant = urlVariant;
+        this._state.assignedAt = new Date().toISOString();
+        this._persist();
+      }
+      return this._state.variant;
+    }
+    // localStorage already loaded (or default). No-op.
+    return this._state.variant;
+  }
+
+  getVariant() { return this._state.variant; }
+
+  getCounters() { return Object.assign({}, this._state.counters); }
+
+  reset() {
+    try { SafeStorage.removeItem(DIFFICULTY_KEY); } catch (e) {}
+    try { SafeStorage.removeItem(ONBOARDING_EXPERIMENT_KEY); } catch (e) {}
+    this._state = this._normalize({});
+    this._resolveVariant();
+  }
+
+  // Run on cold start: decide variant behavior, but only if the player
+  // hasn't already locked in a difficulty mode (DIFFICULTY_KEY missing).
+  applyFirstLaunch() {
+    let alreadyDecided = false;
+    try { alreadyDecided = !!SafeStorage.getItem(DIFFICULTY_KEY); } catch (e) {}
+    if (alreadyDecided) return { fired: false, reason: 'already-decided' };
+
+    const variant = this.getVariant();
+    this._state.counters.firstLaunches = (this._state.counters.firstLaunches || 0) + 1;
+
+    if (variant === 'explicit-chooser') {
+      this._runExplicitChooser();
+    } else if (variant === 'warm-toast') {
+      this._runSilentWithToast('warm-toast');
+    } else {
+      this._runSilentWithToast('silent-standard');
+    }
+    this._persist();
+    return { fired: true, variant: variant };
+  }
+
+  _runSilentWithToast(toastVariant) {
+    try { this.gameState.setDifficultyMode('standard'); } catch (e) {}
+    this._state.counters.toastShown = (this._state.counters.toastShown || 0) + 1;
+    this._state.counters.toastVariant = toastVariant;
+    const copy = ONBOARDING_TOAST_COPY[toastVariant] || ONBOARDING_TOAST_COPY['silent-standard'];
+    setTimeout(() => {
+      try {
+        if (window._notifManager && typeof window._notifManager.showWelcomeToast === 'function') {
+          window._notifManager.showWelcomeToast(copy, 4500);
+        }
+      } catch (e) {}
+    }, 1200);
+  }
+
+  _runExplicitChooser() {
+    this._state.counters.chooserShown = (this._state.counters.chooserShown || 0) + 1;
+    const tryOpen = () => {
+      const ui = this.gameState && this.gameState.ui;
+      if (ui && typeof ui.showDifficultySelector === 'function') {
+        ui.showDifficultySelector();
+        // Instrument the visible diff-option buttons to record the pick.
+        // The existing handler calls gs.setDifficultyMode(mode) and closes
+        // the modal; addEventListener stacks, so our listener fires too.
+        setTimeout(() => {
+          const opts = document.querySelectorAll('#diff-options .diff-option-btn');
+          opts.forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const mode = btn.dataset && btn.dataset.mode;
+              if (mode === 'relaxed') {
+                this._state.counters.chooserPickedRelaxed++;
+              } else if (mode === 'hardcore') {
+                this._state.counters.chooserPickedHardcore++;
+              } else if (mode === 'standard') {
+                this._state.counters.chooserPickedStandard++;
+              }
+              this._persist();
+            }, { once: true });
+          });
+        }, 0);
+      }
+    };
+    // ui may not exist yet when applyFirstLaunch runs early — defer slightly.
+    if (this.gameState && this.gameState.ui) {
+      setTimeout(tryOpen, 600);
+    } else {
+      setTimeout(tryOpen, 1200);
+    }
+  }
+}
 
 class NotificationManager {
   constructor() {

@@ -1,10 +1,24 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 84 — Cycle 3 Build Week, Day 3 (2026-05-22) — Lab Bench II Seed Pack*
+*Updated: Day 85 — Cycle 3 Build Week, Day 4 (2026-05-23) — Onboarding Experiment Flag*
 
 ## Open Bugs
 
-*(none — Day 84 shipped the Lab Bench II Seed Pack: 3 new advanced lab levels (L41 NAND-only, L42 hard cap 4, L43 must include XOR), one new constraint chip in the Lab HUD, and constraint validation wired into both runSimulation and runQuickTest. CDP QA on localhost:8901 ran 49 assertions across static data, level loading, constraint enforcement on all three new levels, legacy lab regression (L36 chip hidden), normal-level regression (L1 lab HUD hidden), cache-bust identity, cold-start chrome unchanged at 2 non-level buttons, and 0 console errors.)*
+*(none — Day 85 shipped the Onboarding Experiment Flag: a local-only feature-flag manager (`OnboardingExperiment`) for first-launch variants. Default `silent-standard` mirrors Day 78 silent-default + welcome toast (no user-visible change). Alternate `explicit-chooser` re-opens `ui.showDifficultySelector()` on cold start; alternate `warm-toast` swaps in a warmer toast copy. Variant precedence: URL query param > localStorage > default. `window.__onboardingExperiment` exposed for QA; Settings → Developer surface gated behind `localStorage signal-circuit-debug=1`. CDP QA on localhost:8901 ran 44 assertions across all three variants, idempotency, reset(), persistence, cold-start button count, L1 regression, Day 84 Lab HUD regression, debug-surface gating, and 0 console errors.)*
+
+## Day 85 — Cycle 3 Build Week, Day 4 (Onboarding Experiment Flag) summary
+
+**Build under test:** `?v=1780070400`, `sw.js CACHE_NAME = 'signal-circuit-v59'`.
+**Result:** 0 new bugs. Feature QA passed 44/44.
+
+**What changed:**
+
+- `js/main.js`: new `OnboardingExperiment` class (~150 LOC) right above `NotificationManager`; new constants `ONBOARDING_EXPERIMENT_KEY`, `ONBOARDING_VARIANTS`, `ONBOARDING_DEFAULT_VARIANT`, `ONBOARDING_TOAST_COPY`. `GameState` constructor instantiates `this.onboardingExperiment` and exposes `window.__onboardingExperiment`. Day 78 silent-default block (`_checkPlacementTest`) now calls `this.onboardingExperiment.applyFirstLaunch()` instead of inlining.
+- `js/ui.js`: `setupSettingsModal()` toggles `#settings-developer-section` based on `localStorage signal-circuit-debug === '1'` on each open; wires `#onboarding-experiment-btn` to a new `showOnboardingExperimentPanel()` modal that lists the current variant, counters, and a reset+reload button.
+- `index.html`: new `#settings-developer-section` (display:none by default) inside the Settings modal with one `#onboarding-experiment-btn`.
+- `index.html` + `sw.js`: cache bust to `?v=1780070400` (11 refs) and `CACHE_NAME = 'signal-circuit-v59'`.
+
+## Day 84 — Cycle 3 Build Week, Day 3 (Lab Bench II Seed Pack) summary
 
 ## Day 84 — Cycle 3 Build Week, Day 3 (Lab Bench II Seed Pack) summary
 

@@ -614,6 +614,16 @@ class UI {
     if (!open || !modal) return;
     const show = () => {
       this.gameState.audio.playButtonClick();
+      // Day 85: Reveal Developer section only when debug flag is set.
+      try {
+        const dev = document.getElementById('settings-developer-section');
+        if (dev) {
+          const isDebug = (function(){
+            try { return localStorage.getItem('signal-circuit-debug') === '1'; } catch (e) { return false; }
+          })();
+          dev.style.display = isDebug ? 'block' : 'none';
+        }
+      } catch (e) {}
       modal.style.display = 'flex';
     };
     const hide = () => { modal.style.display = 'none'; };
@@ -627,6 +637,44 @@ class UI {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && modal.style.display !== 'none') hide();
     });
+    // Day 85: Onboarding Experiment debug panel
+    const onboardBtn = document.getElementById('onboarding-experiment-btn');
+    if (onboardBtn) {
+      onboardBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        this.showOnboardingExperimentPanel();
+      });
+    }
+  }
+
+  // Day 85: Debug panel showing current variant + counters + reset.
+  showOnboardingExperimentPanel() {
+    const oe = this.gameState && this.gameState.onboardingExperiment;
+    if (!oe) return;
+    const modal = document.getElementById('confirm-modal');
+    const content = document.getElementById('confirm-modal-content');
+    if (!modal || !content) return;
+    const counters = oe.getCounters();
+    const variant = oe.getVariant();
+    let rows = '';
+    Object.keys(counters).forEach((k) => {
+      const v = counters[k];
+      const disp = (v === '' ? '—' : String(v));
+      rows += '<tr><td style="padding:4px 8px;color:#888;">' + k + '</td><td style="padding:4px 8px;color:#0f0;text-align:right;">' + disp + '</td></tr>';
+    });
+    content.innerHTML = '<div style="text-align:center;margin-bottom:12px;"><h3 style="color:#0f0;margin-bottom:6px;">🧪 Onboarding Experiment</h3><p style="color:#888;font-size:11px;">Local feature flag — no analytics sent.</p></div>'
+      + '<div style="background:rgba(0,255,0,0.04);border:1px solid #222;border-radius:6px;padding:8px;margin-bottom:12px;"><div style="color:#888;font-size:11px;">Current variant</div><div style="color:#0f0;font-family:monospace;font-size:13px;">' + variant + '</div></div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:monospace;margin-bottom:12px;">' + rows + '</table>'
+      + '<div style="display:flex;gap:8px;justify-content:center;"><button id="onboarding-reset-btn" style="background:#3a1f1f;border:1px solid #800;color:#f88;padding:8px 14px;border-radius:6px;cursor:pointer;font-family:inherit;">Reset onboarding state</button><button id="onboarding-close-btn" style="background:transparent;border:1px solid #555;color:#ccc;padding:8px 14px;border-radius:6px;cursor:pointer;font-family:inherit;">Close</button></div>';
+    modal.style.display = 'flex';
+    const resetBtn = content.querySelector('#onboarding-reset-btn');
+    const closeBtn = content.querySelector('#onboarding-close-btn');
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      try { oe.reset(); } catch (e) {}
+      modal.style.display = 'none';
+      try { window.location.reload(); } catch (e) {}
+    });
+    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
   }
 
   // Day 64 (Prune): Hide secondary modes/info on cold start. Reveal in tiers.
