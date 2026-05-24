@@ -1,10 +1,45 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 85 — Cycle 3 Build Week, Day 4 (2026-05-23) — Onboarding Experiment Flag*
+*Updated: Day 86 — Cycle 3 Build Week, Day 5 (2026-05-24) — Module Split Foundation*
 
 ## Open Bugs
 
-*(none — Day 85 shipped the Onboarding Experiment Flag: a local-only feature-flag manager (`OnboardingExperiment`) for first-launch variants. Default `silent-standard` mirrors Day 78 silent-default + welcome toast (no user-visible change). Alternate `explicit-chooser` re-opens `ui.showDifficultySelector()` on cold start; alternate `warm-toast` swaps in a warmer toast copy. Variant precedence: URL query param > localStorage > default. `window.__onboardingExperiment` exposed for QA; Settings → Developer surface gated behind `localStorage signal-circuit-debug=1`. CDP QA on localhost:8901 ran 44 assertions across all three variants, idempotency, reset(), persistence, cold-start button count, L1 regression, Day 84 Lab HUD regression, debug-surface gating, and 0 console errors.)*
+*(none — Day 86 shipped the Module Split Foundation: a pure-Node module-health/coupling report (`tools/module-health.js`) that scans `js/*.js`, finds top-of-line globals via regex, cross-references their usage across files, and emits a markdown report at `specs/module-health.md`. Baseline: 10 files, 21,208 LOC, 110 top-level globals, biggest fan-out is `ui.js` at 25 cross-file symbols across 5 files. One safe coupling reduction shipped: deleted the dead-global `const WIRE_COLORS = WIRE_COLORS_DEFAULT;` in `js/wires.js`, dropping total globals 111→110 and `wires.js` globals 11→10. CDP QA on localhost:8901 ran 19 assertions across build identity, cold-start surface, Day 85 onboarding default, L1 entry+solve+celebration, Day 84 Lab Bench II L41 regression, Day 83 tournament adapter regression, Day 78 staircase end-game (18 nav + 40 overflow), and console-error tally — 19/19 passed, 0 console errors.)*
+
+## Day 86 — Cycle 3 Build Week, Day 5 (Module Split Foundation) summary
+
+**Build under test:** `?v=1780156800`, `sw.js CACHE_NAME = 'signal-circuit-v60'`.
+**Result:** 0 new bugs. Feature QA passed 19/19. 0 open bugs at start, 0 open bugs at end.
+
+**What changed:**
+
+- `tools/module-health.js` (new, ~240 LOC, pure Node, no npm deps): scans `js/*.js`, computes per-file LOC, globals defined, classes exposed, fan-in (symbols this file defines that others reference) and fan-out (symbols from other files this file references). Emits markdown at `specs/module-health.md`. Idempotent; re-runnable with `node tools/module-health.js`.
+- `specs/module-health.md` (new, auto-generated baseline, ~270 LOC).
+- `specs/day-86-module-split-foundation.md` (new, spec).
+- `js/wires.js`: removed dead-global `const WIRE_COLORS = WIRE_COLORS_DEFAULT;` at line 43 (referenced nowhere outside its own definition; surfaced by the report's fan-in=0 column). Replaced with a 3-line comment for archaeology. Net +2 LOC, −1 global.
+- `qa-reports/day-86-qa.cdp.js` (new, CDP harness).
+- `index.html`: 11 `?v=` refs bumped to `?v=1780156800`.
+- `sw.js`: `CACHE_NAME = 'signal-circuit-v60'`.
+
+**Baseline module-health story (post-reduction):**
+
+- 10 files, 21,208 LOC, 110 top-level globals, 0 cross-file symbol collisions.
+- `ui.js`: biggest fan-out (25 syms across 5 files), fan-in=1 (just `UI`).
+- `gates.js`: biggest fan-in (8 files reference its `Gate`/`IONode`/`GateTypes`/`roundRect`), fan-out=0. Natural first extraction target.
+- `main.js`: 60 globals defined (54% of total), fan-in=6, fan-out=24. Biggest single coupling-reduction lever for future days.
+
+**Verification matrix (CDP via permissive headless Chromium on localhost:8901, port 9301):**
+
+- ✅ Syntax: `node -c js/wires.js`, `node -c sw.js`.
+- ✅ Build identity: 11 cache-bust refs unified at `?v=1780156800`; zero stale `?v=1780070400` refs remain; SW `CACHE_NAME = 'signal-circuit-v60'`.
+- ✅ Cold-start non-level button count on `#level-select-screen` = 2.
+- ✅ Day 85 onboarding default: `window.__onboardingExperiment.getVariant() === 'silent-standard'`; counters JSON-serializable.
+- ✅ L1 entry: `#gameplay-screen` visible, `#run-btn` visible, 4 truth-table rows.
+- ✅ L1 solve via 1 AND gate: `simulation.runAll()` returns 4 rows all `pass === true`; subsequent `runQuickTest()` produces "Level complete!" status banner.
+- ✅ Day 84 L41: `availableGates === ['NAND']`; `labConstraint === '🧱 NAND only — universal gate practice'`; `#lab-constraint` chip visible.
+- ✅ Day 83 tournament adapter: `game.tournamentBackend.getMode() === 'local'`; `describe()` returns `'🏠 Local leaderboard · same puzzle, deterministic bots'`.
+- ✅ Day 78 staircase: after `seedProgress(40)`, 18 non-level buttons + 40 `.level-overflow-btn` buttons visible.
+- ✅ 0 `Runtime.exceptionThrown`, 0 `console.error` events across 8 phases.
 
 ## Day 85 — Cycle 3 Build Week, Day 4 (Onboarding Experiment Flag) summary
 

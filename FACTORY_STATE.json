@@ -2,26 +2,26 @@
   "project": "signal-circuit",
   "phase": "90-Day Cycle (Apr 18 - Jul 16, 2026)",
   "roadmap": "ROADMAP_PHASE3.md",
-  "lastCompletedDay": 85,
-  "nextDay": 86,
-  "totalItemsCompleted": 465,
+  "lastCompletedDay": 86,
+  "nextDay": 87,
+  "totalItemsCompleted": 466,
   "totalItems": 458,
-  "status": "Cycle 3 BUILD Week Day 4 complete \u2014 cycleDay 33, Day 85. Shipped Onboarding Experiment Flag: tiny local feature-flag surface (OnboardingExperiment class, ~150 LOC) for first-launch variants. Default variant 'silent-standard' preserves Day 78 behavior verbatim (silent setDifficultyMode('standard') + 4.5s welcome toast); 'explicit-chooser' re-opens ui.showDifficultySelector() on cold start; 'warm-toast' swaps in a warmer toast copy. Variant precedence URL > localStorage > default. Counters are local-only (firstLaunches, chooserShown, chooserPickedRelaxed/Standard/Hardcore, toastShown, toastVariant) and never sent anywhere. window.__onboardingExperiment exposes getVariant/getCounters/reset/applyFirstLaunch for QA. Settings \u2192 \ud83e\uddea Onboarding Experiment debug panel gated behind localStorage signal-circuit-debug=1 (cold-start chrome unchanged at 2 non-level buttons). Cache bust ?v=1780070400; sw v59. QA: 44 CDP assertions pass, 0 console errors. Day 86 next \u2014 Module Split Foundation.",
+  "status": "Cycle 3 BUILD Week Day 5 complete \u2014 cycleDay 34, Day 86. Shipped Module Split Foundation: a pure-Node module-health/coupling report tool (tools/module-health.js, ~240 LOC, no npm deps) that scans js/*.js, finds top-of-line declarations via regex, cross-references identifier usage across files, and emits a markdown report at specs/module-health.md. Baseline: 10 files, 21,208 LOC, 110 top-level globals (after reduction), biggest fan-out is ui.js at 25 cross-file symbols across 5 files; biggest fan-in is gates.js (referenced by 8 of 10 files, fan-out=0). Executed one safe coupling reduction: removed the dead-global 'const WIRE_COLORS = WIRE_COLORS_DEFAULT;' from js/wires.js (referenced nowhere outside its own definition, surfaced by fan-in=0 in the baseline report). Drops total globals 111\u2192110 and wires.js globals 11\u219210. Report identifies gates.js as the natural first ES-module extraction target (pure leaf), ui.js as the natural last (consumer-of-everything), and main.js as the biggest lever (60 globals = 54% of total). Cache-bust unified at ?v=1780156800 across 11 refs in index.html; SW bumped to signal-circuit-v60. CDP regression on localhost:8901 ran 19 assertions across 8 phases (build identity, cold-start surface, Day 85 onboarding default, L1 entry/solve/celebration, Day 84 Lab Bench II L41, Day 83 tournament adapter, Day 78 staircase end-game) \u2014 19/19 passed, 0 console errors. Single commit for non-user-visible foundation work, following Day 79/Day 80 cleanup-day precedent. 0 open bugs at end.",
   "_priorStatus_day78": "Cycle 2 PRUNE Week Day 2 (Design Simplification) complete \u2014 cycleDay 26, Day 78. Shipped all 5 Tier 1 cuts from PRUNE_REPORT.md (per-card overflow menu, smooth Tier-2 reveal, retire PotW, drop L1 hint footer, silent-default difficulty modal). End-game button count 98\u219258 (40 overflow + 18 nav). Cache bust ?v=1779552000, sw v53. 6 atomic commits + 1 wrap. 0 console errors across 5 cut suites.",
   "_priorStatus_day77": "Cycle 2 PRUNE Week Day 1 (Fresh Eyes Audit) complete \u2014 cycleDay 25, Day 77. Wiped localStorage on deployed build (?v=1779465600, sw v52), then progressed through tier gates via the Day 76 `GameState.seedProgress()` helper at counts 0/3/6/12/18/40. Live button headcount: cold = 2 (was 29 at Cycle 1 audit start), Tier 1 (3) = 8, Tier 1.5 (6) = 17, Tier 2 (12) = 42, Tier 3 (18) = 54, end-game (40) = 98. Wrote PRUNE_REPORT.md with clutter score 5/10, 15 proposed cuts in 3 tiers. Day 2 plan locked: ship Tier 1 cuts (per-card overflow, smooth Tier-2 reveal, retire PotW, drop L1 hint footer, silent-default difficulty).",
   "_priorStatus": "Cycle 3 BUILD Week Day 3 complete \u2014 cycleDay 32, Day 84. Shipped Lab Bench II Seed Pack: new Chapter 10 ('Chapter 9: Lab Bench II', levels [41,42,43]) layering one extra constraint per level on the existing Day 70 lab machinery. L41 'Pure NAND Builder' = AND via NAND-only palette (chip: \ud83e\uddf1 NAND only \u2014 universal gate practice; optimal 2 gates: NAND then NAND-as-NOT). L42 'Budgeted Selector' = 2-to-1 MUX with strict gateHardCap 4 (chip: \ud83c\udfaf Hard cap: 4 gates). L43 'Parity Mandate' = 3-input XOR with mustIncludeGate ['XOR'] (chip: \u2733\ufe0f Must include an XOR gate). New helper _validateLabConstraints() runs right after _consumeLabAttempt() in BOTH runSimulation and runQuickTest \u2014 violations surface a precise 'Submission rejected: \u2026' message and still consume an attempt (preserves 'design first, submit once'). UI adds a single #lab-constraint chip in the lab HUD strip plus an .over-cap red pulse on #lab-budget when gateHardCap is exceeded; legacy lab levels 36\u201340 transparently omit all new fields. Cache bust ?v=1779984000; sw v58. QA: node -c on levels/main/ui pass; CDP suite (49 assertions, 0 console errors) confirms chapter wiring, per-level constraint fields, HUD chip visibility/text, L41 NAND-only toolbox + 2-gate solve, L42 5-gate rejection + .over-cap toggle + Reset Lab + 4-gate MUX solve + validator ok, L43 no-XOR rejection + XOR-chain solve + validator ok, L36 chip hidden, L1 lab HUD hidden, cold-start non-level button count still 2. Day 85 begins Cycle 3 BUILD Week Day 4 \u2014 Onboarding Experiment Flag.",
-  "lastRun": "2026-05-23T08:06:00-07:00",
-  "lastRunNote": "Cycle 3 BUILD Week Day 4 complete \u2014 cycleDay 33, Day 85. Shipped Onboarding Experiment Flag: new OnboardingExperiment class (~150 LOC) above NotificationManager in js/main.js manages a single localStorage key 'signal-circuit-onboarding-experiment' with shape {variant, assignedAt, counters}. Three variants: silent-standard (default \u2014 mirrors Day 78 silent setDifficultyMode('standard') + 4.5s toast), explicit-chooser (opens ui.showDifficultySelector() at cold start; records the player's pick), warm-toast (silent default Standard + warmer toast copy '\ud83d\udc4b Welcome \u2014 Standard mode is on. You can switch in Settings any time.'). Variant precedence: URL ?onboarding= > localStorage > default. Counters (local-only, never sent): firstLaunches, chooserShown, chooserPickedRelaxed/Standard/Hardcore, toastShown, toastVariant. GameState constructor instantiates the manager and exposes window.__onboardingExperiment {getVariant, getCounters, reset, applyFirstLaunch}. Day 78 silent-default block in _checkPlacementTest now calls this.onboardingExperiment.applyFirstLaunch() instead of inlining \u2014 default behavior preserved verbatim. New Settings \u2192 Developer surface (#settings-developer-section) gated behind localStorage signal-circuit-debug=1, holds a '\ud83e\uddea Onboarding Experiment' button that opens a small modal listing current variant, counters table, and a 'Reset onboarding state' button (clears DIFFICULTY_KEY + experiment key + reloads). Cache bust ?v=1780070400; sw v59. QA: node -c on main/ui pass; CDP suite (44 assertions, 0 console errors) confirms build identity, default variant + cold applyFirstLaunch + counters, idempotency, reset() + cold-state restoration, warm-toast variant + toast copy, explicit-chooser modal + chooserPickedStandard, variant persistence across reload, L1 normal gameplay regression, Day 84 L41 Lab HUD + constraint chip regression, debug-surface gating, cold-start non-level button count still 2. Day 86 next \u2014 Module Split Foundation.",
+  "lastRun": "2026-05-24T08:07:00-07:00",
+  "lastRunNote": "Cycle 3 BUILD Week Day 5 complete \u2014 cycleDay 34, Day 86. Shipped Module Split Foundation: new tools/module-health.js (~240 LOC, pure Node, no npm deps) scans js/*.js with anchored ^(class|function|const|let|var)\\s+(\\w+) regex to find top-of-line globals, then cross-references identifiers across files to compute per-file LOC, globals defined, classes exposed, fan-in (symbols this file defines that others reference) and fan-out (symbols from other files this file references). Emits specs/module-health.md (~270 LOC) with summary, per-file metrics table, fan-in detail tables, fan-out detail tables, and collisions table (0 collisions). Idempotent and re-runnable with 'node tools/module-health.js'. Baseline metrics: 10 files, 21,208 LOC, 110 top-level globals (after reduction). ui.js is biggest fan-out (25 symbols across 5 files) but smallest fan-in (1, just UI class). gates.js is the natural ES-module leaf: fan-in=4 across 8 of 10 files, fan-out=0. main.js holds 60 globals (54% of total) and has fan-out=24 \u2014 biggest single lever for future coupling-reduction days. levels.js exposes 22 of 26 globals as fan-in (LEVELS/CHAPTERS data and pure helpers); could be data-extracted cheaply. Safe coupling reduction executed: removed dead-global 'const WIRE_COLORS = WIRE_COLORS_DEFAULT;' from js/wires.js:43. It was assigned at module load to WIRE_COLORS_DEFAULT and then never referenced anywhere (verified via grep across all js/*.js files showing the definition line as the only match). The reduction drops total globals from 111\u2192110 and wires.js globals from 11\u219210; wires.js fan-in symbols unchanged at 3 (WIRE_COLORS_DEFAULT, Wire, WireManager). Replaced the dead const with a 3-line archaeology comment pointing to specs/day-86-module-split-foundation.md so future me knows why the line is gone. Cache-bust unified at ?v=1780156800 across 11 refs in index.html; SW bumped to signal-circuit-v60. CDP verification on localhost:8901 via permissive headless Chromium on port 9301 + ws@8.20.0 through NODE_PATH=/Users/openclaw/src/openclaw/node_modules ran 19 assertions across 8 phases: build identity (3), cold-start surface (1), Day 85 onboarding default (2), L1 entry (2), L1 solve via 1 AND gate + celebration (2), Day 84 Lab Bench II L41 NAND-only toolbox + constraint chip (4), Day 83 tournament adapter local-by-default + describe label (2), Day 78 staircase end-game 18 nav + 40 overflow buttons (2), and a final console-error tally (1). 19/19 passed, 0 console errors, 0 new bugs. Single commit for non-user-visible foundation work, following the Day 79/Day 80 cleanup-day precedent.",
   "_priorRunNoteDay77": "Cycle 2 Prune Week Day 1 complete (cycleDay 25, Day 77) \u2014 Fresh Eyes Audit on deployed build (?v=1779465600, sw v52). Used Day 76 `seedProgress()` helper to walk tier gates at counts 0/3/6/12/18/40 without 18+ manual solves. Headcount: cold 2 buttons (Cycle 1 audit start was 29), Tier 1.5 (6 levels) 17, Tier 2 (12) 42, Tier 3 (18) 54, end-game (40) 98 \u2014 driven mostly by 80 per-card sub-buttons (`\ud83d\udc41 Solution` + `\ud83c\udfc6 Gate Limit` \u00d7 40 cards). Clutter score 5/10 (Cycle 1 closed at 8/10; target \u22645 hit weighted). Identified 3 new clutter sources (per-card overflow, Tier-2 cliff, info-modal sprawl), 5 unshipped Cycle-1 carry-overs (L1 hint copy, gameplay icons, Tournament/PotW overlap, Difficulty misfile, Install-App always-on), and 1 regression (Adaptive Novice skill-pill leaks back into label after first run). Wrote PRUNE_REPORT.md (~14KB) with 15 proposed cuts in 3 tiers. Day 2 will execute Tier 1: overflow \u22ef for per-card sub-buttons, smooth Tier-2 reveal across L6/9/12/15/18, retire Puzzle-of-the-Week (Tournament subsumes), cut L1 hint footer, silent-default difficulty modal. 0 console errors across audit.",
   "_priorRunNoteDay75": "Cycle 2 Harden Week Day 3 complete (cycleDay 23). Edge Cases & Stress on live build (?v=1779379200, sw v51). 25-case stress sweep, 25/25 pass, 0 new bugs, 0 console errors. Build identity verified: 11 `?v=1779379200` cache-bust refs unified, SW CACHE_NAME `signal-circuit-v51` precaches 27 assets. Day 61 + Day 74 HUD cleanup regression both held (Blitz and Speedrun HUDs return to `display:none` with mode flags false and timers cleared after Back). Lab Bench entry on L36 verified end-to-end (`isLabBench=true`, RUN labeled '\ud83d\udcd0 Submit Blueprint', `_lab={attempts:0,max:3,exhausted:false}`). Tournament screen opens with 3 tabs + 10 leaderboard rows and closes cleanly. Mythic celebration overlay correctly lazy-mounts via `ui.showMythicCelebration()` (DOM does not exist at cold start \u2014 verified by direct factory invocation). Achievements modal renders mythic-first (54 rows, top 5 all `tier-mythic`). Performance with 25 gates + 20 wires: **1.39ms avg frame** (13.9ms for 10\u00d7 render). localStorage capacity confirmed for 50\u00d750KB writes. UI thrash (15\u00d7 enter/exit gameplay), undo/redo stress (15+15 ops), RUN spam (10 calls), Quick Test spam (10 calls), 10\u00d7 resize event flood, blur/focus + visibilitychange cycle, mode-switch storm across all challenge modes \u2014 all clean. Cold-start localStorage clear removes 13 `signal*` keys without residue. Two verification-only learnings logged in LESSONS_LEARNED: (1) tier3-gated UI (Tournament/Random) needs a future `seedProgress()` dev helper to keep Harden coverage high without 18 manual completions, (2) `runSimulation()` re-entry is non-blocking by default \u2014 today idempotent + race-safe, but documented for future features.",
   "_priorRunNote": "Cycle 3 BUILD Week Day 3 complete \u2014 cycleDay 32, Day 84. Shipped Lab Bench II Seed Pack: 3 new advanced lab levels (L41 NAND-only, L42 hard cap 4 gates, L43 must include XOR) in new Chapter 10. Added 3 optional level fields (labConstraint, gateHardCap, mustIncludeGate) and a _validateLabConstraints() helper that runs after _consumeLabAttempt() in both runSimulation and runQuickTest \u2014 violations surface 'Submission rejected: \u2026' and still cost an attempt. UI adds a #lab-constraint amber chip in the lab HUD plus an .over-cap red pulse on #lab-budget. Legacy lab levels 36\u201340 untouched (validator returns ok when fields absent). Cache bust ?v=1779984000; sw v58. 49 CDP assertions pass, 0 console errors. Cold-start button chrome unchanged at 2. Day 85 next \u2014 Onboarding Experiment Flag.",
   "cycle2BuildRoadmap": "roadmaps/cycle-2-build.md",
   "nextCycle": {
     "cycleNumber": 3,
-    "weekType": "build",
-    "weekDay": 5,
-    "nextDay": 86,
-    "focus": "Cycle 3 BUILD Week Day 5 (cycleDay 34) \u2014 Module Split Foundation. Start the long-deferred module split safely by extracting the least-coupled code first or by introducing a build-time module boundary report if direct ES-module migration is too risky in one day. Acceptance: a measurable reduction in monolithic coupling or a repeatable module-health report checked into specs/; no gameplay regressions; cache-bust and SW version bumped together."
+    "weekType": "harden",
+    "weekDay": 1,
+    "nextDay": 87,
+    "focus": "Cycle 3 HARDEN Week Day 1 (cycleDay 35) \u2014 begin the harden audit. Reverse the BUILD-week posture: no new features, focus on stability, correctness, and surface area. Day 87 should open with a fresh module-health re-run (regenerate specs/module-health.md and diff against the Day 86 baseline), a top-to-bottom regression sweep of all four Cycle 3 BUILD-week features (Shareable Snapshot Cards / Tournament Backend Adapter / Lab Bench II / Onboarding Experiment Flag), and a triage pass over any latent bugs surfaced by the report or by harden-week testing. Acceptance per the roadmap: harden-week budget is correctness-only \u2014 no net new code unless it directly removes a bug or hardens an existing surface; cache-bust + SW version still bump together."
   },
   "expertReview": "reviews/prune-cycle-2-review.md",
   "reviewScore": 8.9,
@@ -1270,14 +1270,174 @@
         "coldStartButtonCount": 2,
         "defaultBehaviorPreserved": true
       }
+    },
+    "86": {
+      "items": [
+        "tools/module-health.js (new, ~240 LOC, pure Node, no npm deps): scans js/*.js, finds top-of-line declarations via regex (^(class|function|const|let|var)\\s+(\\w+)), cross-references identifier usage across files, emits markdown report",
+        "specs/module-health.md (new, auto-generated baseline ~270 LOC): summary + per-file metrics table + fan-in detail + fan-out detail + collisions table; idempotent re-runs",
+        "specs/day-86-module-split-foundation.md (new): spec describing what 'module-health' means here, output format, the chosen safe coupling reduction, methodology notes, acceptance criteria, and out-of-scope deferrals",
+        "Safe coupling reduction: removed dead-global 'const WIRE_COLORS = WIRE_COLORS_DEFAULT;' at js/wires.js:43 (referenced nowhere outside its own definition, also unused within wires.js). Replaced with 3-line archaeology comment.",
+        "Reduction delta: total top-level globals 111\u2192110; wires.js globals defined 11\u219210; wires.js fan-in unchanged at 3 symbols",
+        "qa-reports/day-86-qa.cdp.js (new): hand-rolled CDP harness over ws@8.20.0 via NODE_PATH; 9-phase regression suite",
+        "index.html: 11 ?v= refs bumped from ?v=1780070400 to ?v=1780156800",
+        "sw.js: CACHE_NAME bumped from 'signal-circuit-v59' to 'signal-circuit-v60'",
+        "BUGS.md: Day 86 section appended; 0 open bugs at start, 0 open bugs at end",
+        "LESSONS_LEARNED.md: 9 new Day 86 lessons appended (measurement-before-migration, dead-global pattern, regex-vs-AST trade, gates.js as natural first ESM target, ui.js as natural last, main.js as biggest lever, NODE_PATH for ws, gameState property pin list, runSimulation-vs-simulation.runAll)",
+        "build-reports/day-86-build.md (new): full build report",
+        "qa-reports/day-86-qa.md (new): full QA report with 19/19 assertions"
+      ],
+      "status": "complete",
+      "qa": "qa-reports/day-86-qa.md",
+      "feature": "Module Split Foundation",
+      "cacheBust": "?v=1780156800",
+      "swVersion": "signal-circuit-v60",
+      "verificationChecks": 19,
+      "verificationPassed": 19,
+      "consoleErrors": 0,
+      "moduleHealthBaseline": {
+        "filesScanned": 10,
+        "totalLOC": 21208,
+        "totalGlobals": 110,
+        "biggestFanOutFile": "ui.js",
+        "biggestFanOutSymbolCount": 25,
+        "biggestFanOutFileCount": 5,
+        "crossFileCollisions": 0,
+        "perFile": {
+          "achievements.js": {
+            "loc": 642,
+            "globals": 5,
+            "classes": 1,
+            "fanInSymbols": 5,
+            "fanInFiles": 2,
+            "fanOutSymbols": 7,
+            "fanOutFiles": 3
+          },
+          "audio.js": {
+            "loc": 1421,
+            "globals": 1,
+            "classes": 1,
+            "fanInSymbols": 1,
+            "fanInFiles": 1,
+            "fanOutSymbols": 4,
+            "fanOutFiles": 4
+          },
+          "canvas.js": {
+            "loc": 1038,
+            "globals": 1,
+            "classes": 1,
+            "fanInSymbols": 1,
+            "fanInFiles": 1,
+            "fanOutSymbols": 5,
+            "fanOutFiles": 2
+          },
+          "gates.js": {
+            "loc": 782,
+            "globals": 4,
+            "classes": 2,
+            "fanInSymbols": 4,
+            "fanInFiles": 8,
+            "fanOutSymbols": 0,
+            "fanOutFiles": 0
+          },
+          "levels.js": {
+            "loc": 2556,
+            "globals": 26,
+            "classes": 0,
+            "fanInSymbols": 22,
+            "fanInFiles": 3,
+            "fanOutSymbols": 2,
+            "fanOutFiles": 2
+          },
+          "main.js": {
+            "loc": 6838,
+            "globals": 60,
+            "classes": 14,
+            "fanInSymbols": 6,
+            "fanInFiles": 3,
+            "fanOutSymbols": 24,
+            "fanOutFiles": 9
+          },
+          "simulation.js": {
+            "loc": 428,
+            "globals": 1,
+            "classes": 1,
+            "fanInSymbols": 1,
+            "fanInFiles": 2,
+            "fanOutSymbols": 2,
+            "fanOutFiles": 1
+          },
+          "tutorial.js": {
+            "loc": 306,
+            "globals": 1,
+            "classes": 1,
+            "fanInSymbols": 1,
+            "fanInFiles": 1,
+            "fanOutSymbols": 2,
+            "fanOutFiles": 2
+          },
+          "ui.js": {
+            "loc": 6601,
+            "globals": 1,
+            "classes": 1,
+            "fanInSymbols": 1,
+            "fanInFiles": 3,
+            "fanOutSymbols": 25,
+            "fanOutFiles": 5
+          },
+          "wires.js": {
+            "loc": 596,
+            "globals": 10,
+            "classes": 2,
+            "fanInSymbols": 3,
+            "fanInFiles": 5,
+            "fanOutSymbols": 2,
+            "fanOutFiles": 1
+          }
+        },
+        "reductionExecuted": {
+          "target": "WIRE_COLORS",
+          "file": "js/wires.js",
+          "kind": "dead-global removal",
+          "rationale": "Defined as alias of WIRE_COLORS_DEFAULT at module load; referenced nowhere else in the codebase. Surfaced by fan-in=0 column in the baseline report.",
+          "before": {
+            "totalGlobals": 111,
+            "wiresGlobals": 11
+          },
+          "after": {
+            "totalGlobals": 110,
+            "wiresGlobals": 10
+          },
+          "delta": {
+            "totalGlobals": -1,
+            "wiresGlobals": -1
+          }
+        },
+        "naturalFirstExtractionTarget": "gates.js (fan-in=4 across 8 files, fan-out=0 \u2014 leaf of the dependency graph)",
+        "naturalLastExtractionTarget": "ui.js (fan-out=25, fan-in=1 \u2014 consumer-of-everything)",
+        "biggestLeverFile": "main.js (60 globals defined, 54% of all top-level globals; fan-out=24)"
+      },
+      "verification": {
+        "approach": "Permissive headless Chromium on port 9301 + CDP via ws@8.20.0 (NODE_PATH=/Users/openclaw/src/openclaw/node_modules); python3 -m http.server 8901 in repo root",
+        "phases": {
+          "1_build_identity": "11 cache-bust refs unified at ?v=1780156800; zero stale ?v=1780070400; sw CACHE_NAME signal-circuit-v60",
+          "2_cold_start_surface": "non-level buttons on #level-select-screen = 2",
+          "3_day85_onboarding": "__onboardingExperiment.getVariant() === 'silent-standard'; getCounters() JSON-serializable",
+          "4_l1_entry": "#run-btn visible on #gameplay-screen; 4 truth-table rows",
+          "5_l1_solve": "simulation.runAll() returns 4 rows all pass; runQuickTest produces 'Level complete!' status",
+          "6_day84_l41": "currentLevel.availableGates === ['NAND']; labConstraint chip visible with expected text",
+          "7_day83_tournament": "tournamentBackend.getMode() === 'local'; describe() returns local-leaderboard label",
+          "8_day78_staircase": "seedProgress(40) yields 18 non-level buttons + 40 .level-overflow-btn",
+          "9_console_errors": "0 Runtime.exceptionThrown, 0 console.error"
+        }
+      }
     }
   },
   "cycleStart": "2026-04-18",
   "cycleEnd": "2026-07-16",
   "weekType": "build",
-  "weekDay": 4,
+  "weekDay": 5,
   "cycleNumber": 3,
-  "cycleDay": 33,
+  "cycleDay": 34,
   "weekSchedule": "build \u2192 harden \u2192 prune (3-week rotation)",
   "promptFile": "/Users/openclaw/.openclaw/workspace/factory/prompts/signal-circuit-daily.md",
   "hardenWeek": {
@@ -1503,32 +1663,38 @@
       "Shareable Circuit Snapshot Cards",
       "Tournament Backend Adapter Shell",
       "Lab Bench II Seed Pack",
-      "Onboarding Experiment Flag"
+      "Onboarding Experiment Flag",
+      "Module Split Foundation"
     ],
     "openBugs": 0,
-    "cacheBust": "?v=1780070400",
-    "swVersion": "signal-circuit-v59",
+    "cacheBust": "?v=1780156800",
+    "swVersion": "signal-circuit-v60",
     "consoleErrorsAcrossDay": 0,
     "qaReports": [
       "qa-reports/day-82-qa.md",
       "qa-reports/day-83-qa.md",
       "qa-reports/day-84-qa.md",
-      "qa-reports/day-85-qa.md"
+      "qa-reports/day-85-qa.md",
+      "qa-reports/day-86-qa.md"
     ],
     "buildReports": [
       "build-reports/day-82-build.md",
       "build-reports/day-83-build.md",
       "build-reports/day-84-build.md",
-      "build-reports/day-85-build.md"
+      "build-reports/day-85-build.md",
+      "build-reports/day-86-build.md"
     ],
     "day83Complete": true,
     "day84Complete": true,
-    "day85Complete": true
+    "day85Complete": true,
+    "day86Complete": true
   },
   "_priorStatus_day82": "Cycle 3 BUILD Week Day 1 complete \u2014 cycleDay 30, Day 82. Wrote roadmaps/cycle-3-build.md with 5 targets (shareable circuit snapshots, tournament backend adapter shell, Lab Bench II seed pack, onboarding experiment flag, module split foundation). Shipped Shareable Circuit Snapshot Cards: existing \ud83d\udcf8 Share Card now renders a real solved-circuit preview panel inside the 1200\u00d7630 image using Day 43 preview data + _renderPreviewCanvas; added Save Image / Copy Image / Share / Close controls with aria-live status. Clipboard image copy uses ClipboardItem when available with text fallback; native Web Share uses image files when supported with link/text fallback; deterministic fallback art covers missing previews. Cache bust ?v=1779811200, sw v56. QA: node -c js/ui.js + js/main.js pass; localhost CDP solved L1 with 1 AND gate + 3 wires via Quick Test; preview persisted {gates:1,wires:3,io:3,gc:1}; share modal visible; canvas 1200x630; snapshot panel pixel diversity nonDark=4750/tealish=977; cold-start non-level buttons still 2; 0 JS errors. Day 83 begins Cycle 3 BUILD Week Day 2.",
   "_priorRunNote_day82": "Cycle 3 BUILD Week Day 1 complete \u2014 cycleDay 30, Day 82. Wrote roadmaps/cycle-3-build.md with 5 targets (shareable circuit snapshots, tournament backend adapter shell, Lab Bench II seed pack, onboarding experiment flag, module split foundation). Shipped Shareable Circuit Snapshot Cards: existing \ud83d\udcf8 Share Card now renders a real solved-circuit preview panel inside the 1200\u00d7630 image using Day 43 preview data + _renderPreviewCanvas; added Save Image / Copy Image / Share / Close controls with aria-live status. Clipboard image copy uses ClipboardItem when available with text fallback; native Web Share uses image files when supported with link/text fallback; deterministic fallback art covers missing previews. Cache bust ?v=1779811200, sw v56. QA: node -c js/ui.js + js/main.js pass; localhost CDP solved L1 with 1 AND gate + 3 wires via Quick Test; preview persisted {gates:1,wires:3,io:3,gc:1}; share modal visible; canvas 1200x630; snapshot panel pixel diversity nonDark=4750/tealish=977; cold-start non-level buttons still 2; 0 JS errors.",
   "_priorStatus_day83": "Cycle 3 BUILD Week Day 2 complete \u2014 cycleDay 31, Day 83. Shipped Tournament Backend Adapter Shell: added TournamentBackend interface, LocalTournamentAdapter (1:1 wrap of WeeklyTournament), RemoteTournamentAdapter (Worker-shaped, no-op until live mode is wired), and selectTournamentBackend() factory (detection: window.__SC_TOURNAMENT_BACKEND__ \u2192 localStorage flag \u2192 'local' default). GameState now instantiates this.tournamentBackend right after weeklyTournament; both gameplay-completion submitScore call sites in runSimulation and runQuickTest route through the adapter. UI gained a single calm #tournament-mode-label populated via backend.describe() \u2014 \ud83c\udfe0 Local leaderboard by default, \ud83c\udf10 Cloud-ready when remote mode is selected (with or without a workerUrl). No external writes performed today. Cache bust ?v=1779897600; sw v57. QA: node -c on main/ui pass; CDP suite confirms default LocalTournamentAdapter, submitScore(1,5) \u2192 {rank:1, percentile:98, isNewBest:true, score:100, podium:true, crowned:true, achievements:['tournament_podium', 'tournament_crowned'], weekKey:'2026-W21'}; achievements unlocked; remote toggle without credentials gracefully falls back to local; mode label flips; localStorage flag path also produces RemoteTournamentAdapter; restoring defaults returns to local; 0 console errors. Day 84 begins Cycle 3 BUILD Week Day 3 \u2014 Lab Bench II Seed Pack.",
   "_priorRunNote_day83": "Cycle 3 BUILD Week Day 2 complete \u2014 cycleDay 31, Day 83. Shipped Tournament Backend Adapter Shell: added TournamentBackend interface, LocalTournamentAdapter (1:1 wrap of WeeklyTournament), RemoteTournamentAdapter (Worker-shaped, no-op until live mode is wired), and selectTournamentBackend() factory (detection: window.__SC_TOURNAMENT_BACKEND__ \u2192 localStorage flag \u2192 'local' default). GameState now instantiates this.tournamentBackend right after weeklyTournament; both gameplay-completion submitScore call sites in runSimulation and runQuickTest route through the adapter. UI gained a single calm #tournament-mode-label populated via backend.describe() \u2014 \ud83c\udfe0 Local leaderboard by default, \ud83c\udf10 Cloud-ready when remote mode is selected (with or without a workerUrl). No external writes performed today. Cache bust ?v=1779897600; sw v57. QA: node -c on main/ui pass; CDP suite confirms default LocalTournamentAdapter, submitScore(1,5) \u2192 {rank:1, percentile:98, isNewBest:true, score:100, podium:true, crowned:true, achievements:['tournament_podium', 'tournament_crowned'], weekKey:'2026-W21'}; achievements unlocked; remote toggle without credentials gracefully falls back to local; mode label flips; localStorage flag path also produces RemoteTournamentAdapter; restoring defaults returns to local; 0 console errors. Day 84 begins Cycle 3 BUILD Week Day 3 \u2014 Lab Bench II Seed Pack.",
   "_priorStatus_day84": "Cycle 3 BUILD Week Day 3 complete \u2014 cycleDay 32, Day 84. Shipped Lab Bench II Seed Pack: new Chapter 10 ('Chapter 9: Lab Bench II', levels [41,42,43]) layering one extra constraint per level on the existing Day 70 lab machinery. L41 'Pure NAND Builder' = AND via NAND-only palette (chip: \ud83e\uddf1 NAND only \u2014 universal gate practice; optimal 2 gates: NAND then NAND-as-NOT). L42 'Budgeted Selector' = 2-to-1 MUX with strict gateHardCap 4 (chip: \ud83c\udfaf Hard cap: 4 gates). L43 'Parity Mandate' = 3-input XOR with mustIncludeGate ['XOR'] (chip: \u2733\ufe0f Must include an XOR gate). New helper _validateLabConstraints() runs right after _consumeLabAttempt() in BOTH runSimulation and runQuickTest \u2014 violations surface a precise 'Submission rejected: \u2026' message and still consume an attempt (preserves 'design first, submit once'). UI adds a single #lab-constraint chip in the lab HUD strip plus an .over-cap red pulse on #lab-budget when gateHardCap is exceeded; legacy lab levels 36\u201340 transparently omit all new fields. Cache bust ?v=1779984000; sw v58. QA: node -c on levels/main/ui pass; CDP suite (49 assertions, 0 console errors) confirms chapter wiring, per-level constraint fields, HUD chip visibility/text, L41 NAND-only toolbox + 2-gate solve, L42 5-gate rejection + .over-cap toggle + Reset Lab + 4-gate MUX solve + validator ok, L43 no-XOR rejection + XOR-chain solve + validator ok, L36 chip hidden, L1 lab HUD hidden, cold-start non-level button count still 2. Day 85 begins Cycle 3 BUILD Week Day 4 \u2014 Onboarding Experiment Flag.",
-  "_priorRunNoteDay84": "Cycle 3 BUILD Week Day 3 complete \u2014 cycleDay 32, Day 84. Shipped Lab Bench II Seed Pack: 3 new advanced lab levels (L41 NAND-only, L42 hard cap 4 gates, L43 must include XOR) in new Chapter 10. Added 3 optional level fields (labConstraint, gateHardCap, mustIncludeGate) and a _validateLabConstraints() helper that runs after _consumeLabAttempt() in both runSimulation and runQuickTest \u2014 violations surface 'Submission rejected: \u2026' and still cost an attempt. UI adds a #lab-constraint amber chip in the lab HUD plus an .over-cap red pulse on #lab-budget. Legacy lab levels 36\u201340 untouched (validator returns ok when fields absent). Cache bust ?v=1779984000; sw v58. 49 CDP assertions pass, 0 console errors. Cold-start button chrome unchanged at 2. Day 85 next \u2014 Onboarding Experiment Flag."
+  "_priorRunNoteDay84": "Cycle 3 BUILD Week Day 3 complete \u2014 cycleDay 32, Day 84. Shipped Lab Bench II Seed Pack: 3 new advanced lab levels (L41 NAND-only, L42 hard cap 4 gates, L43 must include XOR) in new Chapter 10. Added 3 optional level fields (labConstraint, gateHardCap, mustIncludeGate) and a _validateLabConstraints() helper that runs after _consumeLabAttempt() in both runSimulation and runQuickTest \u2014 violations surface 'Submission rejected: \u2026' and still cost an attempt. UI adds a #lab-constraint amber chip in the lab HUD plus an .over-cap red pulse on #lab-budget. Legacy lab levels 36\u201340 untouched (validator returns ok when fields absent). Cache bust ?v=1779984000; sw v58. 49 CDP assertions pass, 0 console errors. Cold-start button chrome unchanged at 2. Day 85 next \u2014 Onboarding Experiment Flag.",
+  "_priorStatus_day85": "Cycle 3 BUILD Week Day 4 complete \u2014 cycleDay 33, Day 85. Shipped Onboarding Experiment Flag: tiny local feature-flag surface (OnboardingExperiment class, ~150 LOC) for first-launch variants. Default variant 'silent-standard' preserves Day 78 behavior verbatim (silent setDifficultyMode('standard') + 4.5s welcome toast); 'explicit-chooser' re-opens ui.showDifficultySelector() on cold start; 'warm-toast' swaps in a warmer toast copy. Variant precedence URL > localStorage > default. Counters are local-only (firstLaunches, chooserShown, chooserPickedRelaxed/Standard/Hardcore, toastShown, toastVariant) and never sent anywhere. window.__onboardingExperiment exposes getVariant/getCounters/reset/applyFirstLaunch for QA. Settings \u2192 \ud83e\uddea Onboarding Experiment debug panel gated behind localStorage signal-circuit-debug=1 (cold-start chrome unchanged at 2 non-level buttons). Cache bust ?v=1780070400; sw v59. QA: 44 CDP assertions pass, 0 console errors. Day 86 next \u2014 Module Split Foundation.",
+  "_priorRunNoteDay85": "Cycle 3 BUILD Week Day 4 complete \u2014 cycleDay 33, Day 85. Shipped Onboarding Experiment Flag: new OnboardingExperiment class (~150 LOC) above NotificationManager in js/main.js manages a single localStorage key 'signal-circuit-onboarding-experiment' with shape {variant, assignedAt, counters}. Three variants: silent-standard (default \u2014 mirrors Day 78 silent setDifficultyMode('standard') + 4.5s toast), explicit-chooser (opens ui.showDifficultySelector() at cold start; records the player's pick), warm-toast (silent default Standard + warmer toast copy '\ud83d\udc4b Welcome \u2014 Standard mode is on. You can switch in Settings any time.'). Variant precedence: URL ?onboarding= > localStorage > default. Counters (local-only, never sent): firstLaunches, chooserShown, chooserPickedRelaxed/Standard/Hardcore, toastShown, toastVariant. GameState constructor instantiates the manager and exposes window.__onboardingExperiment {getVariant, getCounters, reset, applyFirstLaunch}. Day 78 silent-default block in _checkPlacementTest now calls this.onboardingExperiment.applyFirstLaunch() instead of inlining \u2014 default behavior preserved verbatim. New Settings \u2192 Developer surface (#settings-developer-section) gated behind localStorage signal-circuit-debug=1, holds a '\ud83e\uddea Onboarding Experiment' button that opens a small modal listing current variant, counters table, and a 'Reset onboarding state' button (clears DIFFICULTY_KEY + experiment key + reloads). Cache bust ?v=1780070400; sw v59. QA: node -c on main/ui pass; CDP suite (44 assertions, 0 console errors) confirms build identity, default variant + cold applyFirstLaunch + counters, idempotency, reset() + cold-state restoration, warm-toast variant + toast copy, explicit-chooser modal + chooserPickedStandard, variant persistence across reload, L1 normal gameplay regression, Day 84 L41 Lab HUD + constraint chip regression, debug-surface gating, cold-start non-level button count still 2. Day 86 next \u2014 Module Split Foundation."
 }

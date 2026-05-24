@@ -40,7 +40,9 @@ function getWireColors() {
   return WIRE_COLORS_DEFAULT;
 }
 
-const WIRE_COLORS = WIRE_COLORS_DEFAULT;
+// Day 86: removed dead-global `const WIRE_COLORS = WIRE_COLORS_DEFAULT;` —
+// it was assigned at module load and never referenced anywhere. Surfaced
+// by tools/module-health.js fan-in=0. See specs/day-86-module-split-foundation.md.
 
 let wireColorIndex = 0;
 
