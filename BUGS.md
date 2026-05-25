@@ -1,10 +1,66 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 86 — Cycle 3 Build Week, Day 5 (2026-05-24) — Module Split Foundation*
+*Updated: Day 87 — Cycle 3 HARDEN Week, Day 1 (2026-05-25) — Full Interaction Audit*
 
 ## Open Bugs
 
-*(none — Day 86 shipped the Module Split Foundation: a pure-Node module-health/coupling report (`tools/module-health.js`) that scans `js/*.js`, finds top-of-line globals via regex, cross-references their usage across files, and emits a markdown report at `specs/module-health.md`. Baseline: 10 files, 21,208 LOC, 110 top-level globals, biggest fan-out is `ui.js` at 25 cross-file symbols across 5 files. One safe coupling reduction shipped: deleted the dead-global `const WIRE_COLORS = WIRE_COLORS_DEFAULT;` in `js/wires.js`, dropping total globals 111→110 and `wires.js` globals 11→10. CDP QA on localhost:8901 ran 19 assertions across build identity, cold-start surface, Day 85 onboarding default, L1 entry+solve+celebration, Day 84 Lab Bench II L41 regression, Day 83 tournament adapter regression, Day 78 staircase end-game (18 nav + 40 overflow), and console-error tally — 19/19 passed, 0 console errors.)*
+*(none user-facing — Day 87 audit found 0 new bugs across 66 assertions, 29 phases, 0 console errors.)*
+
+## Latent Observations (P2, not user-reachable)
+
+### LO-1 — Direct `ui.showScreen('level-select')` bypasses Day 61 + Day 74 HUD cleanup
+
+- **Surfaced:** Day 87 (Cycle 3 HARDEN Day 1 — Full Interaction Audit).
+- **Symptom:** Calling `window.game.ui.showScreen('level-select')` directly from the dev console (or any future internal caller) leaves `speedrunMode=true` and `#speedrun-hud` `display: flex`. Same shape would surface for `blitzMode` if an internal caller bypassed `GameState.showLevelSelect()` while Blitz Mode is active.
+- **Severity:** P2 latent. Documented as code-smell, NOT a user-reachable bug.
+- **Why not user-reachable:** All user-facing transitions go through the `#back-btn` click handler, which calls `GameState.showLevelSelect()` — the wrapper that holds the Day 61 (Blitz) and Day 74 (Speedrun) defensive cleanup blocks. Day 87 explicitly verified the back-btn paths for both modes; both pass.
+- **Root cause:** The defensive HUD cleanup lives on the **GameState wrapper layer** (`GameState.showLevelSelect()`), not on the **UI layer** (`ui.showScreen('level-select')`). When the UI layer is invoked directly, the cleanup never runs.
+- **Fix plan (future Polish/Prune Week):** Move the cleanup blocks down to `ui.showScreen('level-select')` so the cleanup is invariant to caller. The cleanup is genuinely "any time this screen becomes visible" — the right home is the screen-transition function itself, not the high-level wrapper.
+- **Day 87 chose not to fix:** HARDEN Week policy is fix-only-user-facing-bugs. This observation is preserved here so a future Polish day can ship the fix at zero risk.
+
+## Day 87 — Cycle 3 HARDEN Week, Day 1 (Full Interaction Audit) summary
+
+**Build under test:** `?v=1780156800`, `sw.js CACHE_NAME = 'signal-circuit-v60'` (Day 86 build, **unchanged today**).
+**Result:** **66 / 66** assertions passed across 29 phases. **0** new user-facing bugs. **0** console errors. **1** latent observation logged (LO-1 above).
+
+**No code changed today** — cache-bust and SW version intentionally NOT bumped (Day 86 precedent: only bump on real change).
+
+**Module-health diff vs Day 86 baseline:** timestamp-only change. 10 files / 21208 LOC / 110 globals / 25-sym `ui.js` fan-out / 0 collisions — all byte-identical.
+
+**Audit coverage (29 phases / 66 assertions):**
+
+- Phase 1 (2): build identity — cache-bust + SW match Day 86.
+- Phase 2 (6): cold-start surface — 2 buttons, 43 level cards, 'silent-standard' onboarding, DIFFICULTY_KEY=`standard`.
+- Phase 3 (4): Settings modal — 13 buttons, accessibility toggles non-throwing, Difficulty Mode chooser opens, Install App click safe.
+- Phase 4 (1): How to Play modal opens.
+- Phase 5 (5): Day 82 Shareable Snapshot Cards regression — L1 solve + `#share-card-modal` 1200×630 canvas + 4 controls.
+- Phase 6 (4): Day 83 Tournament Backend Adapter regression — `getMode()==='local'`, `isLive()===false`, describe label, full interface.
+- Phase 7 (6): Day 84 Lab Bench II regression — L41 NAND-only + chip, L42 hard cap 4 + chip, L43 must include XOR + chip.
+- Phase 8 (2): Day 85 Onboarding Experiment Flag regression — default variant + full interface.
+- Phase 9 (2): Day 86 Module Split Foundation — report regenerated, 10 files / 110 globals confirmed.
+- Phase 10 (2): Daily Challenge — pre-screen + gameplay entry with `currentLevel.isDaily=true`.
+- Phase 11 (2): Random Challenge — config + generate → isChallengeMode=true.
+- Phase 12 (2): Blitz Mode — entry + back-btn HUD cleanup (Day 61 fix intact).
+- Phase 13 (2): Speedrun Mode — entry + back-btn HUD cleanup (Day 74 fix intact).
+- Phase 14 (1): Sandbox config screen opens.
+- Phase 15 (1): Creator config screen opens via `#create-level-btn`.
+- Phase 16 (3): Tournament screen — 3 tabs + Day 83 mode label live.
+- Phase 17 (1): Encyclopedia modal opens with content.
+- Phase 18 (2): Achievements modal — 269 row elements, 6 with `tier-mythic` class.
+- Phase 19 (1): Stats modal — 3 chart canvases render.
+- Phase 20 (1): Customize modal `#cosmetic-modal` opens.
+- Phase 21 (1): Logic Profile modal opens.
+- Phase 22 (1): Mastery Tree button visible at tier3 (seed=18).
+- Phase 23 (1): Circuit Collection modal opens.
+- Phase 24 (6): L6 gameplay deep dive — all 9 core buttons present, truth table 4 rows, hint/clear/panel/back all non-throwing.
+- Phase 25 (1): Tier3 staircase — 18 non-level buttons at seed=18 (Day 78 target).
+- Phase 26 (1): End-game — 18 nav + 40 overflow at seed=40 (Day 78 target).
+- Phase 27 (1): Mastery Tree modal opens at campaign complete.
+- Phase 28 (2): Day 79 dead-identifier regression — all 7 removed identifiers still undefined, `#weekly-puzzle-btn` DOM absent.
+- Phase 28b (info): LO-1 latent observation logged.
+- Phase 29 (1): 0 console errors across entire suite.
+
+**Cycle 3 BUILD-week regression verdict:** All 5 features (Days 82, 83, 84, 85, 86) intact end-to-end.
 
 ## Day 86 — Cycle 3 Build Week, Day 5 (Module Split Foundation) summary
 
