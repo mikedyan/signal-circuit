@@ -1,5 +1,39 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 88 — Cycle 3 HARDEN Week, Day 2 (2026-05-26) — Level Playthrough*
+
+## Day 88 — Cycle 3 HARDEN Week, Day 2 (Level Playthrough) summary
+
+**Build under test:** `?v=1780156800`, `sw.js CACHE_NAME = 'signal-circuit-v60'` (Day 86 build, **unchanged today**).
+**Result:** **100 / 100** assertions passed across 13 phases. **0** new user-facing bugs. **0** console errors. Day 87 latent observation **LO-1** remains deferred (not user-reachable).
+
+**No code changed today** — cache-bust and SW version intentionally NOT bumped (Day 86/87 precedent).
+
+**Audit coverage (13 phases / 100 assertions):**
+
+- Phase 1 (2): build identity — cache-bust + SW match Day 86/87.
+- Phase 2 (1): difficulty mode default = `standard` (silent-default from Day 78 #5 / Day 85 onboarding experiment).
+- Phase 3 (72): per-level static validation — 12 levels (1, 5, 10, 15, 20, 25, 30, 35, 40, 41, 42, 43) × 6 checks each:
+  - level resolves via `getLevel(N)`
+  - truth table matches re-derived semantics (AND / NOR / OR / Majority / MUX / ripple adder / demux / XOR / parity-3 / etc.)
+  - `hints[].length === 3`
+  - `calculateStars(opt) === 3`
+  - `calculateStars(good) ≤ 2`
+  - `calculateStars(good + 5) === 1`
+- Phase 4 (4): live L1 gameplay + `#hint-btn` click increments `hintsUsed` 0→1.
+- Phase 5 (2): `completeLevel(1, opt)` persists `{stars:3}`.
+- Phase 6 (4): Daily Challenge — pre-screen → `#start-daily-btn` → gameplay with `isDaily=true` → back-btn returns clean.
+- Phase 7 (2): Random Challenge — `seedProgress(18)` → `#random-challenge-btn` → `#generate-challenge-btn` → gameplay with `isChallengeMode=true`.
+- Phase 8 (2): Blitz Mode — entry + back-btn HUD cleanup (Day 61 fix intact).
+- Phase 9 (2): Speedrun Mode — entry + back-btn HUD cleanup (Day 74 fix intact).
+- Phase 10 (1): Sandbox config screen opens.
+- Phase 11 (4): Community levels 1–4 (`The Implication`, `Inverted AND`, `Either But Not A`, `Always Agree`) load via `ui.playCommunityLevel()` with `isCommunityLevel=true`.
+- Phase 12 (3): Day 84 Lab Bench II regression — L41 NAND-only chip, L42 hard cap 4 chip, L43 mustInclude XOR chip all live.
+- Phase 13 (1): 0 console errors across entire suite.
+
+Full report: `qa-reports/day-88-qa.md`.
+Harness: `qa-reports/day-88-qa.cdp.js`.
+
 *Updated: Day 87 — Cycle 3 HARDEN Week, Day 1 (2026-05-25) — Full Interaction Audit*
 
 ## Open Bugs
