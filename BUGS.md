@@ -1,5 +1,45 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 89 — Cycle 3 HARDEN Week, Day 3 (2026-05-27) — Edge Cases & Stress*
+
+## Day 89 — Cycle 3 HARDEN Week, Day 3 (Edge Cases & Stress) summary
+
+**Build under test:** `?v=1780156800`, `sw.js CACHE_NAME = 'signal-circuit-v60'` (Day 86 build, **unchanged today**).
+**Result:** **53 / 53** assertions passed across **25 test phases**. **0** new user-facing bugs. **0** console errors. Day 87 latent observation **LO-1** remains deferred (not user-reachable).
+
+**No code changed today** — cache-bust and SW version intentionally NOT bumped (Day 86/87/88 precedent).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day.
+
+**Stress sweep coverage (25 phases / 53 assertions):**
+
+- **T1–T3:** rapid gate placement during sim / wire-draw during animation / 10× window resize — all no-throw.
+- **T4:** localStorage cleared + reload — cold start lands on level-select with 2 buttons, 43 level cards, silent-default difficulty `standard`.
+- **T5:** Keyboard Tab reachability — 15 focusable elements on gameplay screen (Day 80 `:focus-visible` rings honor).
+- **T6:** Colorblind + light/dark mode class toggles round-trip cleanly.
+- **T7:** Performance probe — 10× canvas `renderer.render()` total 1.80ms, avg 0.180ms/frame.
+- **T8–T9:** 15× RUN spam + 15× Quick Test spam — all no-throw (re-entry contract holds).
+- **T10:** 20× undo + 20× redo — no-throw on empty stacks.
+- **T11:** Mode-switch storm — 10 alternating clicks across daily/random/sandbox/tournament/infinite all return to `level-select-screen` cleanly.
+- **T12:** `blur` + `visibilitychange` + `focus` event cycle no-throw.
+- **T13:** Lab Bench L36 attempt state machine walks `0 → 3 (exhausted=true) → reset → 0 (firstTryLocked=true)`; RUN labeled `📐 Submit Blueprint`.
+- **T17–T19 (Day 84 Lab Bench II under stress):** L41 NAND-only palette + chip live; L42 hard cap 4 chip + validator rejects 5-gate / accepts 4-gate; L43 mustInclude XOR chip + validator rejects no-XOR / accepts with-XOR.
+- **T14:** Tournament screen opens (3 tabs); `tournamentBackend.getMode()==='local'`; Day 83 describe label `🏠 Local leaderboard · same puzzle, deterministic bots` live.
+- **T15:** `#mythic-celebration` overlay lazy-mounts on `ui.showMythicCelebration()` (does NOT exist at cold start).
+- **T16:** localStorage 50×50KB writes succeed (no quota exceeded).
+- **T20:** Day 85 default variant `silent-standard` + counters JSON-serializable + silent-default difficulty `standard`.
+- **T21:** `?onboarding=warm-toast` URL override → variant `warm-toast`, persists into localStorage.
+- **T22:** `?onboarding=explicit-chooser` URL override → variant `explicit-chooser`, persists into localStorage.
+- **T23:** Day 86 module-health stability — `wires.js` retains `WIRE_COLORS_DEFAULT` and no longer redefines `WIRE_COLORS`; all 7 Day 79 dead identifiers still `undefined`; `#weekly-puzzle-btn` DOM absent.
+- **T24:** Day 78 staircase — cold 2 / tier3 18 / end-game 18 nav + 40 overflow.
+- **T25:** Build identity — 11 cache-bust refs at `?v=1780156800`, SW `signal-circuit-v60`.
+- **FINAL:** 0 `Runtime.exceptionThrown` + 0 `console.error` across entire suite.
+
+Additionally: `node tools/module-health.js` regenerated `specs/module-health.md` byte-identical to Day 86 baseline (timestamp line only).
+
+Full report: `qa-reports/day-89-qa.md`.
+Harness: `qa-reports/day-89-qa.cdp.js`.
+
 *Updated: Day 88 — Cycle 3 HARDEN Week, Day 2 (2026-05-26) — Level Playthrough*
 
 ## Day 88 — Cycle 3 HARDEN Week, Day 2 (Level Playthrough) summary
