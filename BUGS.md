@@ -1,5 +1,34 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 90 — Cycle 3 HARDEN Week, Day 4 (2026-05-28) — Fix Everything (Rest Day)*
+
+## Day 90 — Cycle 3 HARDEN Week, Day 4 (Fix Everything) summary
+
+**Build under test:** `?v=1780156800`, `sw.js CACHE_NAME = 'signal-circuit-v60'` (Day 86 build, **unchanged today**).
+**Mode:** Fix Day — nothing to fix.
+**Result:** **23 / 23** confirmation assertions passed. **0** new user-facing bugs. **0** console errors.
+
+**No code changed today** — the Open Bugs queue has been empty since Day 76 (Cycle 2 HARDEN wrap). Day 87 audit (66 assertions) + Day 88 playthrough (100 assertions) + Day 89 stress sweep (53 assertions) each closed with zero new user-facing bugs. With one deferred latent observation (LO-1, explicitly tagged "future Polish/Prune Week"), HARDEN policy says don't ship LO-1 in HARDEN week. Day 90 is a confirmation day.
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day.
+**Latent observations:** 1 (LO-1, deferred to Cycle 4 PRUNE Week — see below).
+
+**Confirmation probe coverage (10 phases / 23 assertions):**
+
+- **P1 (3):** Build identity unchanged — 11 cache-bust refs unified at `?v=1780156800`, SW `signal-circuit-v60` active.
+- **P2 (4):** Cold-start surface intact — 2 non-level buttons, 43 level cards, onboarding variant `silent-standard`, difficulty silent-default `standard`.
+- **P3 (2):** Day 89 stress invariants — 10× RUN spam + 10× Quick Test spam both no-throw.
+- **P4 (2):** Day 84 Lab Bench II L42 hard-cap validator — rejects 5 gates with `Submission rejected: 5 gates exceeds hard cap of 4.`, accepts 4 gates.
+- **P5 (3):** Day 83 Tournament backend adapter — `getMode()==='local'`, describe label live, `isLive()===false`.
+- **P6 (2):** Day 85 onboarding default variant — `silent-standard`, counters JSON-serializable.
+- **P7 (2):** Day 78 staircase end-game — 18 nav + 40 overflow buttons at `seedProgress(40)`.
+- **P8 (1):** Day 79 dead-identifier regression — all 7 removed identifiers still `undefined`, `#weekly-puzzle-btn` DOM absent.
+- **P9 (2):** LO-1 latent observation re-verification — user back-btn path cleans HUD (Day 74 fix intact), bypass path leaves HUD visible (LO-1 reproduces as documented).
+- **P10 (2):** 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+Full report: `qa-reports/day-90-qa.md`.
+Harness: `qa-reports/day-90-qa.cdp.js`.
+
 *Updated: Day 89 — Cycle 3 HARDEN Week, Day 3 (2026-05-27) — Edge Cases & Stress*
 
 ## Day 89 — Cycle 3 HARDEN Week, Day 3 (Edge Cases & Stress) summary
