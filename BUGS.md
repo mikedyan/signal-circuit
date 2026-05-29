@@ -1,5 +1,44 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 91 — Cycle 3 HARDEN Week, Day 5 (2026-05-29) — Regression Pass*
+
+## Day 91 — Cycle 3 HARDEN Week, Day 5 (Regression Pass) summary
+
+**Build under test:** **deployed** `https://mikedyan.github.io/signal-circuit/` · `?v=1780156800` · `sw.js CACHE_NAME = 'signal-circuit-v60'` (Day 86 build, **unchanged through entire HARDEN week**).
+**Result:** **44 / 44** assertions passed across 14 phases. **0** new user-facing bugs. **0** console errors.
+
+**No code changed today** — cache-bust and SW version intentionally NOT bumped (Day 86/87/88/89/90 precedent).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **16 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — deferred to Cycle 4 PRUNE Week).
+
+**Regression sweep coverage (14 phases / 44 assertions):**
+
+- **P1 (4):** Build identity on deployed host — `mikedyan.github.io`, 11 cache-bust refs unified at `?v=1780156800`, `sw.js` deployed with `CACHE_NAME = 'signal-circuit-v60'`.
+- **P2 (5):** Cold-start surface — level-select visible, 2 non-level buttons (How to Play + Settings), 43 level cards, onboarding variant `silent-standard`, difficulty silent-default `standard`.
+- **P3 (7):** Core loop end-to-end on L1 — gameplay screen visible, RUN button visible, 4 truth-table rows, 1 AND gate placed via `gs.addGate()`, 3 wires via `gs.addWireFromData()`, runQuickTest persists `{stars:3}`, L1 progress recorded.
+- **P4 (2):** Campaign progression — L2 unlocked after L1 solve, `gs.startLevel(2)` loads gameplay with `currentLevel.id===2`.
+- **P5 (2):** Daily Challenge — `#daily-challenge-btn` opens `daily-config-screen`, `#start-daily-btn` loads gameplay with `currentLevel.isDaily===true`.
+- **P6 (2):** Random Challenge — `#random-challenge-btn` opens `challenge-config-screen`, `#generate-challenge-btn` loads gameplay with `isChallengeMode===true`.
+- **P7 (3):** Blitz Mode — enters `blitzMode=true`, HUD `display=flex`, **Day 61 fix** intact (back-to-level-select cleans HUD).
+- **P8 (3):** Speedrun Mode — enters `speedrunMode=true`, HUD `display=flex`, **Day 74 fix** intact (back-to-level-select cleans HUD).
+- **P9 (1):** Sandbox — `#sandbox-btn` opens `sandbox-config-screen`.
+- **P10 (5):** Tournament — `tournament-screen` opens, 3 tabs (This Week / My Best / Archive), Day 83 adapter shape (`getMode`/`describe`/`isLive`), mode=`local`, label populated.
+- **P11 (2):** Infinite Mode (Day 68) — `#infinite-mode-btn` opens `infinite-pre-screen`, `#infinite-start-btn` loads gameplay with `infiniteRun.active===true`.
+- **P12 (4):** Day 84 Lab Bench II L42 — `gateHardCap===4`, `labConstraint` text `🎯 Hard cap: 4 gates`, validator rejects 5 gates with `Submission rejected: 5 gates exceeds hard cap of 4.`, accepts 4 gates.
+- **P13 (2):** Day 78 staircase end-game — 18 nav buttons + 40 overflow buttons at `seedProgress(40, {stars:3})`.
+- **P14 (2):** 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+**All 8 modes confirmed working on the deployed build:** Campaign · Daily · Random · Blitz · Speedrun · Sandbox · Tournament · Infinite.
+
+Full report: `qa-reports/day-91-qa.md`.
+Harness: `qa-reports/day-91-qa.cdp.js`.
+Cycle wrap: `reviews/harden-cycle-3-week-summary.md`.
+
+**Cycle 3 HARDEN Week total:** 286 assertions across Day 87 (66) + Day 88 (100) + Day 89 (53) + Day 90 (23) + Day 91 (44) on the same unchanged Day 86 artifact. **Zero new user-facing bugs**, **zero console errors**, **two-cycle empty-queue streak** (Cycle 2 also closed clean).
+
+---
+
 *Updated: Day 90 — Cycle 3 HARDEN Week, Day 4 (2026-05-28) — Fix Everything (Rest Day)*
 
 ## Day 90 — Cycle 3 HARDEN Week, Day 4 (Fix Everything) summary
