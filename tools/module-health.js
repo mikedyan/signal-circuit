@@ -47,9 +47,15 @@ for (const name of FILES) {
   sources[name] = fs.readFileSync(path.join(JS_DIR, name), 'utf8');
 }
 
-// Top-of-line declaration: class|function|const|let|var followed by an ident.
-// We anchor at line start (no leading whitespace) so we only catch globals.
-const DECL_RE = /^(class|function|const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)/gm;
+// Top-of-line declaration: class|function|const|let|var followed by an ident,
+// optionally prefixed with `export `. We anchor at line start so we only
+// catch globals. The optional `export ` prefix supports ES-module files
+// (Day 92+ — gates.js is the first ESM-converted module).
+const DECL_RE = /^(?:export\s+)?(class|function|const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)/gm;
+
+// ESM detection: a file is an ES module if it has any top-level `export `
+// (Day 92+ baseline). Day 86 baseline was zero ESM modules.
+const ESM_RE = /^export\s+/m;
 
 // Per-file declared globals.
 const declsByFile = {}; // name -> { kind, lineIndex } per symbol
@@ -143,8 +149,12 @@ for (const file of FILES) {
     fanInFiles: [...fanInFiles].sort(),
     fanOutSymbols, // [{sym, defIn, count}]
     fanOutFiles: [...fanOutFiles].sort(),
+    esm: ESM_RE.test(src), // Day 92+
   };
 }
+
+// ESM-converted count (Day 92 baseline: 1 of 10).
+const esmCount = FILES.filter((f) => perFile[f].esm).length;
 
 // Totals.
 const totalLoc = FILES.reduce((s, f) => s + perFile[f].loc, 0);
@@ -171,14 +181,17 @@ md += `- **Total top-level globals declared:** ${totalGlobals}\n`;
 md += `- **Biggest fan-out file:** \`${biggestFanOutFile}\` (` +
   `${perFile[biggestFanOutFile].fanOutSymbols.length} distinct cross-file ` +
   `globals referenced, across ${perFile[biggestFanOutFile].fanOutFiles.length} files)\n`;
-md += `- **Cross-file symbol collisions:** ${collisions.length}\n\n`;
+md += `- **Cross-file symbol collisions:** ${collisions.length}\n`;
+md += `- **ES-module-converted files:** ${esmCount} of ${FILES.length}` +
+  (esmCount > 0 ? ` (${FILES.filter((f) => perFile[f].esm).map((f) => `\`${f}\``).join(', ')})` : '') +
+  '\n\n';
 
 md += '## Per-file metrics\n\n';
-md += '| File | LOC | Globals | Classes | Fan-in syms | Fan-in files | Fan-out syms | Fan-out files |\n';
-md += '|------|----:|--------:|--------:|------------:|-------------:|-------------:|--------------:|\n';
+md += '| File | LOC | Globals | Classes | ESM | Fan-in syms | Fan-in files | Fan-out syms | Fan-out files |\n';
+md += '|------|----:|--------:|--------:|:---:|------------:|-------------:|-------------:|--------------:|\n';
 for (const file of FILES) {
   const m = perFile[file];
-  md += `| \`${file}\` | ${m.loc} | ${m.globalsDefined} | ${m.classesExposed.length} | ${m.fanInSymbols.length} | ${m.fanInFiles.length} | ${m.fanOutSymbols.length} | ${m.fanOutFiles.length} |\n`;
+  md += `| \`${file}\` | ${m.loc} | ${m.globalsDefined} | ${m.classesExposed.length} | ${m.esm ? '✅' : '—'} | ${m.fanInSymbols.length} | ${m.fanInFiles.length} | ${m.fanOutSymbols.length} | ${m.fanOutFiles.length} |\n`;
 }
 md += '\n';
 
@@ -243,7 +256,8 @@ fs.writeFileSync(OUT, md);
 console.log(
   `module-health: ${FILES.length} files, ${totalLoc} LOC, ${totalGlobals} globals, ` +
     `biggest fan-out=${biggestFanOutFile} (${perFile[biggestFanOutFile].fanOutSymbols.length} syms), ` +
-    `collisions=${collisions.length}. Wrote ${path.relative(ROOT, OUT)}.`,
+    `collisions=${collisions.length}, ESM=${esmCount}/${FILES.length}. ` +
+    `Wrote ${path.relative(ROOT, OUT)}.`,
 );
 
 function escapeRegExp(s) {

@@ -1,5 +1,39 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 92 — Cycle 4 BUILD Week, Day 1 (2026-05-30) — Module Split Phase 1*
+
+## Day 92 — Cycle 4 BUILD Week, Day 1 (Module Split Phase 1) summary
+
+**Build under test:** `?v=1780272000` · `sw.js CACHE_NAME = 'signal-circuit-v61'` · `<script type="module" src="js/gates.js">`.
+**Result:** **24 / 24** assertions passed across 8 phases. **0** new user-facing bugs. **0** console errors. **0** Runtime.exceptionThrown.
+
+**Feature shipped:** `js/gates.js` converted to a true ES module. The 4 top-level declarations (`GateTypes`, `Gate`, `IONode`, `roundRect`) now use `export` keyword + a tail block installs them on `window` for the 8 classic-script consumers. `index.html` loads gates.js via `<script type="module">` while the other 9 JS files remain classic scripts. `tools/module-health.js` gains ESM detection (Day 92 baseline: 1 of 10 files converted).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **17 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — still deferred to Cycle 4 PRUNE Week).
+
+**QA coverage (8 phases / 24 assertions):**
+
+- **P1 (4):** Build identity — 11 cache-bust refs unified at `?v=1780272000`, `index.html` loads gates.js via `<script type="module">`, gates.js HTTP body contains `export class Gate {` and `export const GateTypes`, `sw.js` CACHE_NAME = `signal-circuit-v61`.
+- **P2 (4):** Cold-start surface unchanged — level-select visible, 2 non-level buttons (`#how-to-play-btn` + `#open-settings-btn`), 43 level cards, onboarding variant `silent-standard`, difficulty silent-default `standard`.
+- **P3 (5):** ES-module globals installed on `window` — `typeof window.Gate === 'function'`, `Gate.toString().startsWith('class Gate')`, `window.GateTypes` is an object with 8 gate types (AND/OR/NOT/XOR/NAND/NOR/MYSTERY/MYSTERY3), `typeof window.IONode === 'function'`, `typeof window.roundRect === 'function'`.
+- **P4 (3):** Core loop end-to-end on L1 — `gs.startLevel(1)` loads L1 (ins=2, outs=1), synthetic AND-gate solve via `gs.addGate('AND', 400, 300)` + 3 wires via `gs.addWireFromData(...)` + `gs.runQuickTest()` persists `progress.levels['1'].stars === 3` (gates=1, wires=3), `gs.runSimulation()` runs without throwing.
+- **P5 (2):** Day 84 Lab Bench II L42 regression — `currentLevel.gateHardCap === 4`, `_validateLabConstraints()` with 5 gates returns `{ok: false, msg: 'Submission rejected: 5 gates exceeds hard cap of 4.'}`.
+- **P6 (2):** Day 83 Tournament backend adapter — `gs.tournamentBackend.getMode() === 'local'`, `describe()` returns the live label.
+- **P7 (2):** Day 78 staircase end-game intact — 40 overflow buttons + 18 nav buttons at `seedProgress(40, {stars:3})`.
+- **P8 (2):** Console hygiene — 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+**Verification:** ran a fresh permissive headless Chromium against `http://localhost:8901/` (port 9301) via the Day 86+ CDP-over-`ws` harness. All 9 classic-script consumers continue to find `Gate` / `GateTypes` / `IONode` / `roundRect` on `window` at method-invocation time, even though the symbols now flow through an ES-module boundary.
+
+Full report: `qa-reports/day-92-qa.md`.
+Harness: `qa-reports/day-92-qa.cdp.js`.
+Build report: `build-reports/day-92-build.md`.
+Spec: `specs/day-92-module-split-gates-esm.md`.
+
+**Cycle 4 BUILD Week begins.** Day 93 next: Tournament Backend Worker Go-Live (Cloudflare Worker + KV, adapter remote mode).
+
+---
+
 *Updated: Day 91 — Cycle 3 HARDEN Week, Day 5 (2026-05-29) — Regression Pass*
 
 ## Day 91 — Cycle 3 HARDEN Week, Day 5 (Regression Pass) summary

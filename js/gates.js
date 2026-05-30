@@ -1,6 +1,6 @@
 // gates.js — Gate definitions, logic, and rendering
 
-const GateTypes = {
+export const GateTypes = {
   AND: {
     name: 'AND',
     inputs: 2,
@@ -78,7 +78,7 @@ const GateTypes = {
   },
 };
 
-class Gate {
+export class Gate {
   constructor(type, x, y, id) {
     this.type = type;
     this.def = GateTypes[type];
@@ -619,7 +619,7 @@ class Gate {
   }
 
 }
-class IONode {
+export class IONode {
   constructor(type, label, x, y, id) {
     this.type = type;
     this.label = label;
@@ -766,7 +766,7 @@ class IONode {
   }
 }
 
-function roundRect(ctx, x, y, w, h, r) {
+export function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -778,4 +778,21 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+}
+
+// ── Day 92: Module Split Phase 1 — global rebind for classic-script consumers ──
+// gates.js is now a true ES module (loaded via `<script type="module">`).
+// The 8 other JS files (wires.js, simulation.js, levels.js, audio.js,
+// achievements.js, canvas.js, ui.js, main.js) still load as classic scripts
+// and reference `Gate` / `GateTypes` / `IONode` / `roundRect` as bare globals
+// inside method bodies. We install them on `window` here so those consumers
+// continue to resolve the symbols at call time.
+//
+// Removal plan: this block can be deleted once all 8 consumer files have
+// been converted to ES modules with explicit imports (Cycle 5+).
+if (typeof window !== 'undefined') {
+  window.Gate = Gate;
+  window.GateTypes = GateTypes;
+  window.IONode = IONode;
+  window.roundRect = roundRect;
 }
