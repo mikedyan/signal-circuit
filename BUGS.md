@@ -1,5 +1,40 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 93 — Cycle 4 BUILD Week, Day 2 (2026-05-31) — Tournament Backend Worker Go-Live*
+
+## Day 93 — Cycle 4 BUILD Week, Day 2 (Tournament Backend Worker Go-Live) summary
+
+**Build under test:** `?v=1780358400` · `sw.js CACHE_NAME = 'signal-circuit-v62'` · `RemoteTournamentAdapter` rewritten with real network path.
+**Result:** **24 / 24** assertions passed across 8 phases on first run. **0** new user-facing bugs. **0** console errors. **0** Runtime.exceptionThrown.
+
+**Feature shipped:** Promoted Day 83's `RemoteTournamentAdapter` stub to a real fetch-driven adapter with reachability cache + transparent local fallback. Added three new modes (`remote`, `remote-fallback`, `cloud-ready`) with distinct UI labels piped through the existing `#tournament-mode-label` chip. Shipped a deployable Cloudflare Worker (`tools/tournament-worker/worker.js` + `wrangler.toml` + `README.md`) and a zero-dep Node mock worker (`tools/tournament-worker/local-mock-worker.js`) on port 8902 that the CDP harness drives end-to-end. **Did not** deploy to Cloudflare — no credentials in scope; deploy procedure documented for a future credentialed run.
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **18 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — still deferred to Cycle 4 PRUNE Week).
+
+**QA coverage (8 phases / 24 assertions):**
+
+- **P1 (4):** Build identity — 11 cache-bust refs unified at `?v=1780358400`, `js/main.js` HTTP body contains new symbols (`refreshReachability`, `TOURNAMENT_WORKER_URL_LS_KEY`), `sw.js` CACHE_NAME = `signal-circuit-v62`, `tools/tournament-worker/` ships 4 files (worker.js + wrangler.toml + local-mock-worker.js + README.md).
+- **P2 (3):** Cold-start surface unchanged — level-select visible, 2 non-level buttons, 43 level cards.
+- **P3 (2):** Default local mode — `tournamentBackend.getMode() === 'local'`, describe contains `🏠`, `isLive() === false`.
+- **P4 (5):** Remote configured + mock worker reachable — background reachability probe lands within 4s, `getMode() === 'remote'`, `isLive() === true`, describe = `🌐 Live leaderboard · cloud-synced`, adapter is `RemoteTournamentAdapter`, `submitScore()` returns local sync-shape, **mock worker `/leaderboard/2026-W23` confirms the POST actually landed** (proves real network round-trip, not just stub passthrough).
+- **P5 (3):** Remote configured + dead URL (`http://127.0.0.1:9999`) — reachability probe times out, `getMode() === 'remote-fallback'`, `isLive() === false`, describe = `🌐 Live · offline (using local for now)`.
+- **P6 (2):** Mode toggle round-trip — clearing both LS keys reverts to `LocalTournamentAdapter`; explicit LS=`'local'` also resolves to `local`.
+- **P7 (3):** Regression — Day 78 staircase (40 overflow at seed=40), Day 84 Lab Bench II L42 hard cap, L1 core loop persists 3 stars.
+- **P8 (2):** Console hygiene — 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+**Verification:** harness boots and tears down its own mock worker (Node child process on port 8902); CDP harness reloads the page 4 times (default-mode / reachable-remote / unreachable-remote / cleared-LS) and exercises the full `submitScore → POST → server-read` round-trip from headless Chromium against the mock worker. Each mode-toggle reload re-runs `selectTournamentBackend()` which kicks off a fresh reachability probe; harness uses `waitFor` to settle on the expected mode within 4s.
+
+Full report: `qa-reports/day-93-qa.md`.
+Harness: `qa-reports/day-93-qa.cdp.js`.
+Build report: `build-reports/day-93-build.md`.
+Spec: `specs/day-93-tournament-worker-go-live.md`.
+Worker source: `tools/tournament-worker/`.
+
+**Cycle 4 BUILD Week Day 2 complete.** Day 94 next: **Lab Bench II Composite Constraints** (Lab Bench III seed) per `roadmaps/cycle-4-build.md`.
+
+---
+
 *Updated: Day 92 — Cycle 4 BUILD Week, Day 1 (2026-05-30) — Module Split Phase 1*
 
 ## Day 92 — Cycle 4 BUILD Week, Day 1 (Module Split Phase 1) summary

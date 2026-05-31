@@ -1283,6 +1283,9 @@ class WeeklyTournament {
 // =====================================================================
 
 const TOURNAMENT_BACKEND_LS_KEY = 'signal-circuit-tournament-backend';
+const TOURNAMENT_WORKER_URL_LS_KEY = 'signal-circuit-tournament-worker-url';
+const TOURNAMENT_REACH_TTL_MS = 5000;
+const TOURNAMENT_REACH_TIMEOUT_MS = 1200;
 
 class TournamentBackend {
   // Interface contract — subclasses must override.
@@ -1310,31 +1313,145 @@ class LocalTournamentAdapter extends TournamentBackend {
 }
 
 class RemoteTournamentAdapter extends TournamentBackend {
-  // Worker-shaped skeleton. Holds config, but performs no external writes
-  // until a workerUrl is configured AND a future revision wires up the
-  // actual fetch path. Until then, every call gracefully falls back to
-  // local so gameplay never blocks or shows a broken rank.
+  // Day 93: real network-aware adapter. Talks to the Cloudflare Worker (or
+  // the local mock in tools/tournament-worker/local-mock-worker.js). Every
+  // call still writes locally first so gameplay never blocks on the network;
+  // remote calls are fire-and-forget enrichment. If the worker is unreachable,
+  // the adapter transparently degrades to `remote-fallback` mode.
   constructor(weeklyTournament, config) {
     super();
     this.wt = weeklyTournament;
     this.config = config || {};
     this.local = new LocalTournamentAdapter(weeklyTournament);
+    this._lastReachable = null;  // null = unknown, true/false = last probe result
+    this._lastReachAt = 0;
+    this._reachInFlight = null;
+    this._remoteBoardCache = {}; // weekKey -> entries[]
   }
   _isConfigured() {
     return !!(this.config && typeof this.config.workerUrl === 'string' && this.config.workerUrl.length > 0);
   }
-  submitScore(gateCount, timeSec, displayName) {
-    // Cloud write path is intentionally not wired yet. Fall through.
-    return this.local.submitScore(gateCount, timeSec, displayName);
+  _workerUrl() {
+    let u = (this.config && this.config.workerUrl) || '';
+    return u.replace(/\/+$/, '');
   }
-  getLeaderboard(weekKey)   { return this.local.getLeaderboard(weekKey); }
+  _isReachable() {
+    // Synchronous accessor: returns the last cached probe result. Null if
+    // never probed (caller should kick off refreshReachability() first).
+    if (Date.now() - this._lastReachAt > TOURNAMENT_REACH_TTL_MS) return null;
+    return this._lastReachable;
+  }
+  refreshReachability() {
+    // Async probe. Returns a Promise<boolean>. De-dupes concurrent calls
+    // and caches the result for TOURNAMENT_REACH_TTL_MS so callers can
+    // poll cheaply.
+    if (!this._isConfigured()) {
+      this._lastReachable = false;
+      this._lastReachAt = Date.now();
+      return Promise.resolve(false);
+    }
+    if (this._reachInFlight) return this._reachInFlight;
+    const url = this._workerUrl() + '/health';
+    const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timer = (typeof setTimeout !== 'undefined' && ctrl) ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TOURNAMENT_REACH_TIMEOUT_MS) : null;
+    const p = (typeof fetch === 'function'
+      ? fetch(url, { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+      : Promise.reject(new Error('no_fetch')))
+      .then((res) => res && res.ok ? res.json().catch(() => ({ ok: true })) : Promise.reject(new Error('non_ok')))
+      .then((j) => !!(j && j.ok !== false))
+      .catch(() => false)
+      .then((reachable) => {
+        if (timer) clearTimeout(timer);
+        this._lastReachable = reachable;
+        this._lastReachAt = Date.now();
+        this._reachInFlight = null;
+        return reachable;
+      });
+    this._reachInFlight = p;
+    return p;
+  }
+  submitScore(gateCount, timeSec, displayName) {
+    // Always write locally first (this is what the UI reads synchronously).
+    const submission = this.local.submitScore(gateCount, timeSec, displayName);
+    if (this._isConfigured() && typeof fetch === 'function') {
+      try {
+        const url = this._workerUrl() + '/scores';
+        const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timer = (typeof setTimeout !== 'undefined' && ctrl) ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TOURNAMENT_REACH_TIMEOUT_MS) : null;
+        const body = JSON.stringify({
+          weekKey: submission && submission.weekKey,
+          gates: gateCount,
+          time: timeSec,
+          score: submission && submission.score,
+          name: displayName || 'You',
+          meta: { client: 'signal-circuit', ts: Date.now() },
+        });
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: body,
+          signal: ctrl ? ctrl.signal : undefined,
+        }).then((res) => {
+          if (timer) clearTimeout(timer);
+          if (res && res.ok) {
+            this._lastReachable = true;
+            this._lastReachAt = Date.now();
+          } else {
+            this._lastReachable = false;
+            this._lastReachAt = Date.now();
+          }
+        }).catch(() => {
+          if (timer) clearTimeout(timer);
+          this._lastReachable = false;
+          this._lastReachAt = Date.now();
+        });
+      } catch (e) { /* swallow */ }
+    }
+    return submission;
+  }
+  getLeaderboard(weekKey) {
+    // Synchronous return of local board; kick off async cloud refresh.
+    if (this._isConfigured() && typeof fetch === 'function') {
+      const key = weekKey || (this.wt && this.wt.getCurrentWeekInfo && this.wt.getCurrentWeekInfo().key);
+      if (key) {
+        try {
+          const url = this._workerUrl() + '/leaderboard/' + encodeURIComponent(key);
+          const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+          const timer = (typeof setTimeout !== 'undefined' && ctrl) ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TOURNAMENT_REACH_TIMEOUT_MS) : null;
+          fetch(url, { method: 'GET', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+            .then((res) => res && res.ok ? res.json() : null)
+            .then((j) => {
+              if (timer) clearTimeout(timer);
+              if (j && j.ok && Array.isArray(j.entries)) {
+                this._remoteBoardCache[key] = j.entries;
+                this._lastReachable = true;
+                this._lastReachAt = Date.now();
+              }
+            })
+            .catch(() => {
+              if (timer) clearTimeout(timer);
+              this._lastReachable = false;
+              this._lastReachAt = Date.now();
+            });
+        } catch (e) { /* swallow */ }
+      }
+    }
+    return this.local.getLeaderboard(weekKey);
+  }
   getCombinedBoard(weekKey) { return this.local.getCombinedBoard(weekKey); }
-  getMode()  { return this._isConfigured() ? 'remote-ready' : 'remote-ready'; }
-  isLive()   { return false; }
+  getMode() {
+    if (!this._isConfigured()) return 'cloud-ready';
+    const r = this._isReachable();
+    if (r === true) return 'remote';
+    if (r === false) return 'remote-fallback';
+    return 'cloud-ready';
+  }
+  isLive()   { return this.getMode() === 'remote'; }
   describe() {
-    return this._isConfigured()
-      ? '\ud83c\udf10 Cloud-ready \u00b7 Worker URL set, awaiting go-live'
-      : '\ud83c\udf10 Cloud-ready \u00b7 local fallback active (no Worker configured)';
+    const mode = this.getMode();
+    if (mode === 'remote') return '\ud83c\udf10 Live leaderboard \u00b7 cloud-synced';
+    if (mode === 'remote-fallback') return '\ud83c\udf10 Live \u00b7 offline (using local for now)';
+    return '\ud83c\udf10 Cloud-ready \u00b7 Worker URL set, awaiting first ping';
   }
 }
 
@@ -1343,6 +1460,9 @@ function selectTournamentBackend(weeklyTournament) {
   //   1. window.__SC_TOURNAMENT_BACKEND__ = { mode, workerUrl? }
   //   2. localStorage('signal-circuit-tournament-backend') === 'remote'
   //   3. default 'local'
+  // Worker URL detection (only when mode === 'remote'):
+  //   a. window.__SC_TOURNAMENT_BACKEND__.workerUrl
+  //   b. localStorage('signal-circuit-tournament-worker-url')
   let mode = null;
   let workerUrl = null;
   try {
@@ -1358,8 +1478,18 @@ function selectTournamentBackend(weeklyTournament) {
       if (lsMode === 'remote' || lsMode === 'local') mode = lsMode;
     }
   } catch (e) {}
+  try {
+    if (mode === 'remote' && !workerUrl && typeof localStorage !== 'undefined') {
+      const lsUrl = localStorage.getItem(TOURNAMENT_WORKER_URL_LS_KEY);
+      if (typeof lsUrl === 'string' && lsUrl.length > 0) workerUrl = lsUrl;
+    }
+  } catch (e) {}
   if (mode === 'remote') {
-    return new RemoteTournamentAdapter(weeklyTournament, { workerUrl });
+    const adapter = new RemoteTournamentAdapter(weeklyTournament, { workerUrl });
+    // Kick off a background reachability probe so the first getMode() call
+    // after page load has a populated cache. Failures are swallowed.
+    try { adapter.refreshReachability(); } catch (e) {}
+    return adapter;
   }
   return new LocalTournamentAdapter(weeklyTournament);
 }

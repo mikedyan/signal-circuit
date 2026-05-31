@@ -1,0 +1,18 @@
+name = "signal-circuit-tournament"
+main = "worker.js"
+compatibility_date = "2026-05-01"
+
+# Create the namespace first:
+#   wrangler kv:namespace create SIGNAL_CIRCUIT_TOURNAMENT
+#   wrangler kv:namespace create SIGNAL_CIRCUIT_TOURNAMENT --preview
+# then paste the ids below.
+
+[[kv_namespaces]]
+binding = "SIGNAL_CIRCUIT_TOURNAMENT"
+id = "REPLACE_WITH_PROD_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_PREVIEW_NAMESPACE_ID"
+
+# Optional: pin a custom route once a Cloudflare zone is registered.
+# routes = [
+#   { pattern = "tournament.signal-circuit.app/*", zone_name = "signal-circuit.app" }
+# ]

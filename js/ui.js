@@ -2537,11 +2537,26 @@ class UI {
     const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
     setText('tournament-week-label', `Week ${info.key} · 🌐 same puzzle for everyone`);
     // Day 83: surface the tournament backend mode (local vs cloud-ready).
+    // Day 93: when the adapter is in remote-mode, the first describe() may
+    // resolve to 'cloud-ready' (probe in flight). Kick a reachability refresh
+    // and re-render the label once it lands so the chip settles on the real
+    // remote/remote-fallback state without requiring a screen close+reopen.
     const backend = this.gameState.tournamentBackend;
     const modeLabel = (backend && typeof backend.describe === 'function')
       ? backend.describe()
       : '🏠 Local leaderboard';
     setText('tournament-mode-label', modeLabel);
+    if (backend && typeof backend.refreshReachability === 'function') {
+      try {
+        backend.refreshReachability().then(() => {
+          // Only repaint if the screen is still visible.
+          const screen = document.getElementById('tournament-screen');
+          if (!screen || screen.style.display === 'none') return;
+          const updated = (typeof backend.describe === 'function') ? backend.describe() : modeLabel;
+          setText('tournament-mode-label', updated);
+        });
+      } catch (e) { /* swallow */ }
+    }
     setText('tournament-puzzle-title', puzzle.title.replace(/^🏆 Tournament · /, ''));
     setText('tournament-puzzle-meta', `${puzzle.inputs.length} inputs · ${puzzle.outputs.length} output${puzzle.outputs.length > 1 ? 's' : ''} · par ${puzzle.optimalGates} gates`);
     setText('tournament-puzzle-story', puzzle.description || '');
