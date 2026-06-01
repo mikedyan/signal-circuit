@@ -1,5 +1,38 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 94 — Cycle 4 BUILD Week, Day 3 (2026-06-01) — Lab Bench II Composite Constraints*
+
+## Day 94 — Cycle 4 BUILD Week, Day 3 (Lab Bench II Composite Constraints) summary
+
+**Build under test:** `?v=1780444800` · `sw.js CACHE_NAME = 'signal-circuit-v63'` · `_validateLabConstraints()` rewritten to accumulate all violations + `#lab-constraint-2` sibling chip added + L44/L45 composite levels appended.
+**Result:** **31 / 31** assertions passed across 7 phases on first run. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Feature shipped:** Promoted Lab Bench II's single-axis constraint validator into a composite-aware accumulator: `_validateLabConstraints()` no longer short-circuits on the first violation, it now walks each active constraint, pushes a reason string, and joins them with `; ` in a single `Submission rejected: …` message. Single-violation messages remain byte-for-byte identical to Day 84 (covered by P3.2 + P3.3). HUD chip strip extended via a second sibling chip `#lab-constraint-2` so composite levels can render up to two chips side-by-side. Two new Chapter-10 lab levels demonstrate the shape: **L44 “NAND-Only Half Adder”** (`availableGates: ['NAND']` + `gateHardCap: 6`, optimal 5 NANDs producing SUM and CARRY) and **L45 “XOR-Heavy Multiplexer”** (`mustIncludeGate: ['XOR']` + `gateHardCap: 5`, optimal 3 gates via the XOR-based MUX identity OUT = A XOR ((A XOR B) AND S)). Chapter 10 `levels: [41,42,43]` → `[41,42,43,44,45]`; storyIntro + storyComplete updated.
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **19 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — still deferred to Cycle 4 PRUNE Week per `roadmaps/cycle-4-build.md` § Week Guardrails).
+
+**QA coverage (7 phases / 31 assertions):**
+
+- **P1 (5):** Build identity — 11 cache-bust refs unified at `?v=1780444800`, `sw.js` CACHE_NAME = `signal-circuit-v63`, `index.html` declares `#lab-constraint-2` sibling chip, `js/levels.js` declares L44 + L45, Chapter 10 `levels: [41..45]`.
+- **P2 (4):** Cold-start surface unchanged — level-select visible, 2 non-level buttons (`#how-to-play-btn` + `#open-settings-btn`), 45 level cards (was 43, +2 from L44/L45), onboarding variant `silent-standard` + difficulty silent-default `standard`.
+- **P3 (5):** Day 84 single-constraint regression — L41 single-chip NAND-only render unchanged (c1 visible, c2 hidden), L42 hardCap rejection message **byte-equivalent to Day 84** (`Submission rejected: 5 gates exceeds hard cap of 4.`), L43 mustIncludeGate rejection message **byte-equivalent** (`Submission rejected: blueprint must include an XOR gate.`), L42 4-gate validator accepts, L43 XOR-present validator accepts.
+- **P4 (6):** L44 NAND-Only Half Adder composite — `labConstraint` is array of length 2, `gateHardCap === 6`, `availableGates === ['NAND']`, both chips render (“🧱 NAND only” + “🎯 Hard cap: 6 gates”), 5-NAND build accepts, 7-NAND over-cap rejection lists hard-cap reason.
+- **P5 (6):** L45 XOR-Heavy Multiplexer composite — `labConstraint` array len 2, `gateHardCap === 5`, `mustIncludeGate === ['XOR']`, both chips render (“✳️ Must include an XOR gate” + “🎯 Hard cap: 5 gates”), **composite double-violation** `6 NANDs` returns `Submission rejected: 6 gates exceeds hard cap of 5; blueprint must include an XOR gate.` (both reasons joined by `;`), 3-gate XOR/AND/XOR build accepts.
+- **P6 (3):** Regression — `seedProgress(45, {stars:3})` yields 45 overflow buttons (Day 78 staircase scales naturally with +2 levels), tournament backend default mode=local + isLive=false (Day 83/93 contract), L1 core loop 1-gate AND solve persists 3 stars.
+- **P7 (2):** Console hygiene — 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+**Verification:** ran `qa-reports/day-94-qa.cdp.js` against permissive headless Chromium 146 on port 9301 against `http://localhost:8901/`. First-run pass — no harness iteration, no app fix needed. Composite validator double-violation message verified live in the running build: `Submission rejected: 6 gates exceeds hard cap of 5; blueprint must include an XOR gate.`
+
+Full report: `qa-reports/day-94-qa.md`.
+Harness: `qa-reports/day-94-qa.cdp.js`.
+Build report: `build-reports/day-94-build.md`.
+Spec: `specs/day-94-lab-bench-ii-composite-constraints.md`.
+
+**Cycle 4 BUILD Week Day 3 complete.** Day 95 next: **Onboarding Experiment Readout UI** (Settings → Developer card surfacing Day 85 counters behind `signal-circuit-debug=1`) per `roadmaps/cycle-4-build.md` § Day 95.
+
+---
+
 *Updated: Day 93 — Cycle 4 BUILD Week, Day 2 (2026-05-31) — Tournament Backend Worker Go-Live*
 
 ## Day 93 — Cycle 4 BUILD Week, Day 2 (Tournament Backend Worker Go-Live) summary

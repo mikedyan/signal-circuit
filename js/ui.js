@@ -3184,14 +3184,33 @@ class UI {
       budgetEl.classList.toggle('over-cap', overCap);
     }
     // Day 84: Lab Bench II — constraint chip (one-line copy per level).
+    // Day 94: composite-constraint extension — `labConstraint` may now be an
+    // ARRAY of strings (composite levels carry two constraints). Render up to
+    // two chips side-by-side using #lab-constraint + #lab-constraint-2.
+    // Backwards-compatible: a single-string value lights up only the first chip,
+    // preserving Day 84 L41/L42/L43 chip rendering byte-for-byte.
+    const lcRaw = level.labConstraint;
+    const lcList = Array.isArray(lcRaw)
+      ? lcRaw.filter(s => typeof s === 'string' && s.length)
+      : (typeof lcRaw === 'string' && lcRaw.length ? [lcRaw] : []);
     const constraintEl = document.getElementById('lab-constraint');
     if (constraintEl) {
-      if (level.labConstraint) {
-        constraintEl.textContent = level.labConstraint;
+      if (lcList[0]) {
+        constraintEl.textContent = lcList[0];
         constraintEl.style.display = '';
       } else {
         constraintEl.textContent = '';
         constraintEl.style.display = 'none';
+      }
+    }
+    const constraintEl2 = document.getElementById('lab-constraint-2');
+    if (constraintEl2) {
+      if (lcList[1]) {
+        constraintEl2.textContent = lcList[1];
+        constraintEl2.style.display = '';
+      } else {
+        constraintEl2.textContent = '';
+        constraintEl2.style.display = 'none';
       }
     }
     // Lock RUN button when exhausted, surface Reset Lab.

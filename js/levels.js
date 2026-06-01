@@ -130,12 +130,13 @@ const CHAPTERS = [
     },
   },
   // Day 84 — Lab Bench II Seed Pack (Cycle 3 BUILD Day 3)
+  // Day 94 — extended to include composite-constraint levels (L44, L45).
   {
-    id: 10, title: 'Chapter 9: Lab Bench II', levels: [41, 42, 43],
+    id: 10, title: 'Chapter 9: Lab Bench II', levels: [41, 42, 43, 44, 45],
     narrative: 'Constraints sharpen design.',
-    storyIntro: 'Three advanced briefs. Each carries one extra rule — palette, budget, or required tool. Read the constraint first, design second.',
-    storyComplete: '📐 Three rules, three blueprints. You can hold a constraint in your head and still find an elegant answer.',
-    gatesMastered: ['Universal Gates', 'Gate Budgeting', 'Required-Tool Design'],
+    storyIntro: 'Five advanced briefs. The first three each carry one extra rule — palette, budget, or required tool. The last two combine constraints: design under TWO rules at once.',
+    storyComplete: '📐 Five rules, five blueprints. You can hold composite constraints in your head and still find an elegant answer.',
+    gatesMastered: ['Universal Gates', 'Gate Budgeting', 'Required-Tool Design', 'Composite Constraints'],
     color: '#80F4FF',
     isBonus: true,
     realWorld: {
@@ -1619,6 +1620,81 @@ const LEVELS = [
     isLabBench: true,
     mustIncludeGate: ['XOR'],
     labConstraint: '✳️ Must include an XOR gate',
+  },
+
+  // ── Chapter 9 (cont.): Lab Bench II Composite Constraints (Day 94 — Cycle 4 BUILD Day 3) ──
+  // Each level layers TWO constraints. Validator surfaces both rejection reasons
+  // in a single message; HUD chip strip renders two chips side-by-side.
+  {
+    id: 44,
+    title: 'NAND-Only Half Adder',
+    description: 'Build a 1-bit half adder (SUM, CARRY) using NAND gates only. Hard cap: 6 gates.',
+    postSolveInsight: '🔓 The NAND-only half adder is the classic universal-gate exercise. Five NANDs gives you SUM and CARRY together — every other gate is a NAND identity in disguise.',
+    hints: [
+      'A half adder has two outputs: SUM = A XOR B, CARRY = A AND B.',
+      'Start with N1 = NAND(A, B). N1 is the inverse of CARRY, and feeds both the SUM tree and the CARRY tap.',
+      'SUM via NAND: N2=NAND(A,N1), N3=NAND(B,N1), SUM=NAND(N2,N3). CARRY via NAND: NAND(N1,N1) inverts N1 back to A AND B. Five NANDs total — well under the 6-gate cap.',
+    ],
+    hintHighlights: ['A', 'B', 'SUM', 'CARRY'],
+    availableGates: ['NAND'],
+    optimalGates: 5,
+    goodGates: 6,
+    inputs: [
+      { label: 'A', x: 60, y: 140 },
+      { label: 'B', x: 60, y: 260 },
+    ],
+    outputs: [
+      { label: 'SUM', x: 620, y: 140 },
+      { label: 'CARRY', x: 620, y: 260 },
+    ],
+    truthTable: [
+      { inputs: [0, 0], outputs: [0, 0] },
+      { inputs: [0, 1], outputs: [1, 0] },
+      { inputs: [1, 0], outputs: [1, 0] },
+      { inputs: [1, 1], outputs: [0, 1] },
+    ],
+    isDiscovery: true,
+    isLabBench: true,
+    gateHardCap: 6,
+    labConstraint: ['🧱 NAND only', '🎯 Hard cap: 6 gates'],
+  },
+  {
+    id: 45,
+    title: 'XOR-Heavy Multiplexer',
+    description: 'Build a 2-to-1 MUX (OUT = A when S=0, B when S=1). Must include at least one XOR. Hard cap: 5 gates.',
+    postSolveInsight: '🔓 OUT = A XOR ((A XOR B) AND S) is the XOR-based MUX identity. Three gates, two of them XORs — a clean way to satisfy both a required-cell mandate and a tight budget.',
+    hints: [
+      'Standard MUX uses NOT/AND/OR (4 gates). The constraint forces a different shape — you must include at least one XOR gate.',
+      'XOR-based MUX: let X = A XOR B. When S=0, OUT should be A; when S=1, OUT should be B. Toggling A by X is equivalent to picking B.',
+      'Three gates: XOR(A,B) → X, AND(X,S) → Y, XOR(A,Y) → OUT. Two XORs satisfy the mandate; 3 gates fits the cap of 5.',
+    ],
+    hintHighlights: ['S', 'A', 'B', 'OUT'],
+    availableGates: ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR'],
+    optimalGates: 3,
+    goodGates: 5,
+    inputs: [
+      { label: 'S', x: 60, y: 100 },
+      { label: 'A', x: 60, y: 200 },
+      { label: 'B', x: 60, y: 300 },
+    ],
+    outputs: [
+      { label: 'OUT', x: 620, y: 200 },
+    ],
+    truthTable: [
+      { inputs: [0, 0, 0], outputs: [0] },
+      { inputs: [0, 0, 1], outputs: [0] },
+      { inputs: [0, 1, 0], outputs: [1] },
+      { inputs: [0, 1, 1], outputs: [1] },
+      { inputs: [1, 0, 0], outputs: [0] },
+      { inputs: [1, 0, 1], outputs: [1] },
+      { inputs: [1, 1, 0], outputs: [0] },
+      { inputs: [1, 1, 1], outputs: [1] },
+    ],
+    isDiscovery: true,
+    isLabBench: true,
+    gateHardCap: 5,
+    mustIncludeGate: ['XOR'],
+    labConstraint: ['✳️ Must include an XOR gate', '🎯 Hard cap: 5 gates'],
   },
 ];
 

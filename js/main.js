@@ -3418,20 +3418,24 @@ class GameState {
   // { ok: bool, message?: string }. Called AFTER `_consumeLabAttempt()` has
   // already debited the attempt, so a constraint violation still costs a try
   // (matches the lab-bench “design first, submit once” philosophy).
+  //
+  // Day 94 (Cycle 4 BUILD Week Day 3) — composite-constraint extension.
+  // Previously this returned on the FIRST violation. Lab Bench II composite
+  // levels (L44, L45) can carry BOTH `gateHardCap` AND `mustIncludeGate` (or
+  // a NAND-only palette PLUS a hard cap). The validator now accumulates ALL
+  // active-constraint violations and joins them in a single rejection message.
+  // Single-violation message shape is preserved byte-for-byte so the Day 84
+  // QA assertions (e.g. L42 “5 gates exceeds hard cap of 4.”) still match.
   _validateLabConstraints() {
     if (!this._isLabBench()) return { ok: true };
     const level = this.currentLevel;
     if (!level) return { ok: true };
     const placed = this.gates.filter(g => !g._locked);
+    const reasons = [];
 
     // gateHardCap — strict ceiling on non-locked gate count
-    if (typeof level.gateHardCap === 'number') {
-      if (placed.length > level.gateHardCap) {
-        return {
-          ok: false,
-          message: `Submission rejected: ${placed.length} gates exceeds hard cap of ${level.gateHardCap}.`,
-        };
-      }
+    if (typeof level.gateHardCap === 'number' && placed.length > level.gateHardCap) {
+      reasons.push(`${placed.length} gates exceeds hard cap of ${level.gateHardCap}`);
     }
 
     // mustIncludeGate — at least one gate of each required type must be present
@@ -3440,14 +3444,15 @@ class GameState {
       const missing = level.mustIncludeGate.filter(t => !types.has(t));
       if (missing.length) {
         const list = missing.join(' / ');
-        return {
-          ok: false,
-          message: `Submission rejected: blueprint must include ${missing.length === 1 ? 'an' : ''} ${list} gate${missing.length === 1 ? '' : 's'}.`,
-        };
+        reasons.push(`blueprint must include ${missing.length === 1 ? 'an' : ''} ${list} gate${missing.length === 1 ? '' : 's'}`);
       }
     }
 
-    return { ok: true };
+    if (reasons.length === 0) return { ok: true };
+    return {
+      ok: false,
+      message: `Submission rejected: ${reasons.join('; ')}.`,
+    };
   }
 
   loadChallengeLevel(level) {
