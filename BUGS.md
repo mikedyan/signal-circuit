@@ -1,5 +1,39 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 95 — Cycle 4 BUILD Week, Day 4 (2026-06-02) — Onboarding Experiment Readout UI*
+
+## Day 95 — Cycle 4 BUILD Week, Day 4 (Onboarding Experiment Readout UI) summary
+
+**Build under test:** `?v=1780531200` · `sw.js CACHE_NAME = 'signal-circuit-v64'` · inline `#onboarding-readout-card` populated by `UI.renderOnboardingReadoutCard()` on every settings-modal open + new `appliedAt` field on `OnboardingExperiment._state`.
+**Result:** **28 / 28** assertions passed across 8 phases. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Feature shipped:** Promoted Day 85's `window.__onboardingExperiment.getCounters()` dev-console-only readout into a polished **Settings → Developer** inline card. The card surfaces the current variant, applied-at ISO timestamp (plus a relative-time string "3m ago"), all 7 counter rows, and a Reset button. Reset wipes `DIFFICULTY_KEY` + `ONBOARDING_EXPERIMENT_KEY` + counters, re-runs `applyFirstLaunch()` (which refreshes `appliedAt` to a new timestamp and re-fires the persisted variant), then re-renders the card **in place — no page reload, no modal close**. Auto-refresh on every settings-modal open guarantees the card never goes stale during a funnel walk. New `appliedAt: string | null` field on `OnboardingExperiment._state`, initialized to `null` and set the first time `applyFirstLaunch()` actually fires (the gate `!SafeStorage.getItem(DIFFICULTY_KEY)` was true). Day 85's `#onboarding-experiment-btn` modal-trigger is preserved for back-compat and now also surfaces `appliedAt`.
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **20 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — still deferred to Cycle 4 PRUNE Week per `roadmaps/cycle-4-build.md` § Week Guardrails).
+
+**QA coverage (8 phases / 28 assertions):**
+
+- **P1 (3):** Build identity — 11 cache-bust refs unified at `?v=1780531200`, `sw.js` CACHE_NAME = `signal-circuit-v64`, `index.html` declares `#onboarding-readout-card` placeholder.
+- **P2 (3):** Debug gate OFF — default profile keeps Developer section + readout card hidden when `signal-circuit-debug` flag absent, cold-start 2 non-level buttons (`#how-to-play-btn` + `#open-settings-btn`).
+- **P3 (5):** Debug gate ON — with `localStorage['signal-circuit-debug'] = '1'`, Settings opens with Developer section + readout card both visible, variant pill renders `silent-standard`, `appliedAt` ISO timestamp set on cold start (e.g. `2026-06-02T15:25:02.480Z`), counters table has 7 rows, reset button present.
+- **P4 (5):** Counter wiring — wipe all `signal-*` keys, navigate `?onboarding=explicit-chooser`, chooser modal renders 3 options, variant resolves to `explicit-chooser`, click "Standard" → `firstLaunches=1` + `chooserShown=1` + `chooserPickedStandard=1`, re-open Settings shows updated counters in card text (auto-refresh works).
+- **P5 (4):** Reset wipes state + re-renders in place — click card's Reset button → all `chooserPicked*` counters back to 0, `applyFirstLaunch()` re-fires for persisted `explicit-chooser` variant (so `firstLaunches=1`, `chooserShown=1`, `toastShown=0` — funnel restarted at top), `appliedAt` strictly different ISO timestamp (verified with 1.1s sleep), card re-rendered in place (`display:block` retained, 7 rows still present, **no page reload**).
+- **P6 (3):** L1 core loop regression — `startLevel(1)` brings `#gameplay-screen` visible, 5 truth-table rows, 1-gate AND solve via `runQuickTest()` persists 3 stars.
+- **P7 (3):** Day 78 + Day 94 regression — cold-start 2 non-level buttons (Day 78 staircase invariant), L42 hardCap rejection byte-equivalent (`Submission rejected: 5 gates exceeds hard cap of 4.`), L44 NAND-only + hard cap 6 composite (7-NAND rejects, 5-NAND accepts).
+- **P8 (2):** Console hygiene — 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+**Verification:** ran `qa-reports/day-95-qa.cdp.js` against permissive headless Chromium 146 on port 9301 against `http://localhost:8901/`. First run had 5 noisy P4/P5 failures from incomplete `localStorage` clearing in the harness — `signal-circuit-placement-done` was short-circuiting `_checkPlacementTest()` BEFORE it routed through `OnboardingExperiment.applyFirstLaunch()`. Fix: wipe ALL `signal-*` keys (not just experiment + difficulty). Second run also corrected P5 assertions: with `?onboarding=explicit-chooser` persisted in the URL bar, `reset() + applyFirstLaunch()` correctly re-fires the explicit-chooser variant (chooserShown=1, picks=0) — "funnel restart at top of currently-resolved variant" is the actual spec. After both harness fixes, 28/28 passed. **No app-side fix was needed.**
+
+Full report: `qa-reports/day-95-qa.md`.
+Harness: `qa-reports/day-95-qa.cdp.js`.
+Build report: `build-reports/day-95-build.md`.
+Spec: `specs/day-95-onboarding-experiment-readout.md`.
+
+**Cycle 4 BUILD Week Day 4 complete.** Day 96 next: **Snapshot Cards Library Tab** (Stats “📸 My Cards” gallery for Day 82 share cards) per `roadmaps/cycle-4-build.md` § Day 96.
+
+---
+
 *Updated: Day 94 — Cycle 4 BUILD Week, Day 3 (2026-06-01) — Lab Bench II Composite Constraints*
 
 ## Day 94 — Cycle 4 BUILD Week, Day 3 (Lab Bench II Composite Constraints) summary

@@ -1627,6 +1627,7 @@ class GameState {
       window.__onboardingExperiment = {
         getVariant: () => this.onboardingExperiment.getVariant(),
         getCounters: () => this.onboardingExperiment.getCounters(),
+        getAppliedAt: () => this.onboardingExperiment.getAppliedAt(),
         reset: () => this.onboardingExperiment.reset(),
         applyFirstLaunch: () => this.onboardingExperiment.applyFirstLaunch(),
       };
@@ -6302,6 +6303,9 @@ class OnboardingExperiment {
     return {
       variant: variant,
       assignedAt: typeof s.assignedAt === 'string' ? s.assignedAt : new Date().toISOString(),
+      // Day 95: appliedAt is only set the moment applyFirstLaunch() actually fires.
+      // Cold-load with no prior state leaves it null; reset() returns it to null.
+      appliedAt: typeof s.appliedAt === 'string' ? s.appliedAt : null,
       counters: counters,
     };
   }
@@ -6339,6 +6343,9 @@ class OnboardingExperiment {
 
   getCounters() { return Object.assign({}, this._state.counters); }
 
+  // Day 95: ISO timestamp of first applyFirstLaunch() fire, or null if not yet applied.
+  getAppliedAt() { return this._state.appliedAt; }
+
   reset() {
     try { SafeStorage.removeItem(DIFFICULTY_KEY); } catch (e) {}
     try { SafeStorage.removeItem(ONBOARDING_EXPERIMENT_KEY); } catch (e) {}
@@ -6355,6 +6362,13 @@ class OnboardingExperiment {
 
     const variant = this.getVariant();
     this._state.counters.firstLaunches = (this._state.counters.firstLaunches || 0) + 1;
+    // Day 95: record the moment the variant work actually fired. Only set on
+    // the first fire — re-runs against a populated DIFFICULTY_KEY short-circuit
+    // above and never reach this branch, so this stays a one-shot stamp until
+    // reset() clears it.
+    if (!this._state.appliedAt) {
+      this._state.appliedAt = new Date().toISOString();
+    }
 
     if (variant === 'explicit-chooser') {
       this._runExplicitChooser();

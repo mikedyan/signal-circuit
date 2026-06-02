@@ -615,6 +615,8 @@ class UI {
     const show = () => {
       this.gameState.audio.playButtonClick();
       // Day 85: Reveal Developer section only when debug flag is set.
+      // Day 95: Re-render the inline onboarding readout card on every open so a
+      // synthetic funnel walk reflects immediately without needing a reload.
       try {
         const dev = document.getElementById('settings-developer-section');
         if (dev) {
@@ -622,6 +624,9 @@ class UI {
             try { return localStorage.getItem('signal-circuit-debug') === '1'; } catch (e) { return false; }
           })();
           dev.style.display = isDebug ? 'block' : 'none';
+          if (isDebug && typeof this.renderOnboardingReadoutCard === 'function') {
+            try { this.renderOnboardingReadoutCard(); } catch (e) {}
+          }
         }
       } catch (e) {}
       modal.style.display = 'flex';
@@ -647,6 +652,78 @@ class UI {
     }
   }
 
+  // Day 95: Inline readout card rendered into #onboarding-readout-card inside
+  // the Settings > Developer section. Idempotent — safe to call on every
+  // settings-open. The card surfaces:
+  //   • Current variant
+  //   • Applied-at timestamp (or "Not yet applied")
+  //   • All 7 counter rows (firstLaunches / chooserShown / chooserPicked* / toast*)
+  //   • Reset button that wipes state + re-runs applyFirstLaunch() in place.
+  renderOnboardingReadoutCard() {
+    const oe = this.gameState && this.gameState.onboardingExperiment;
+    const card = document.getElementById('onboarding-readout-card');
+    if (!card || !oe) return;
+    // Only render when debug flag is set; mirror the parent section's gate.
+    let isDebug = false;
+    try { isDebug = localStorage.getItem('signal-circuit-debug') === '1'; } catch (e) {}
+    if (!isDebug) {
+      card.style.display = 'none';
+      card.innerHTML = '';
+      return;
+    }
+    const variant = oe.getVariant();
+    const counters = oe.getCounters();
+    const appliedAt = (typeof oe.getAppliedAt === 'function') ? oe.getAppliedAt() : null;
+    const relTime = (function() {
+      if (!appliedAt) return '—';
+      const then = Date.parse(appliedAt);
+      if (!isFinite(then)) return appliedAt;
+      const deltaSec = Math.max(0, Math.floor((Date.now() - then) / 1000));
+      if (deltaSec < 60) return deltaSec + 's ago';
+      if (deltaSec < 3600) return Math.floor(deltaSec / 60) + 'm ago';
+      if (deltaSec < 86400) return Math.floor(deltaSec / 3600) + 'h ago';
+      return Math.floor(deltaSec / 86400) + 'd ago';
+    })();
+    let rows = '';
+    Object.keys(counters).forEach(function(k) {
+      const v = counters[k];
+      const disp = (v === '' ? '—' : String(v));
+      rows += '<tr><td style="padding:3px 8px;color:#888;font-size:11px;">' + k + '</td><td style="padding:3px 8px;color:#0f0;text-align:right;font-size:11px;">' + disp + '</td></tr>';
+    });
+    const appliedLine = appliedAt
+      ? '<span style="color:#0f0;font-family:monospace;">' + appliedAt + '</span> <span style="color:#666;">· ' + relTime + '</span>'
+      : '<span style="color:#888;font-style:italic;">Not yet applied (DIFFICULTY_KEY already set)</span>';
+    card.style.display = 'block';
+    card.innerHTML =
+      '<div id="onboarding-readout-inner" style="margin-top:10px;padding:10px;background:rgba(0,255,0,0.03);border:1px solid #1a3a1a;border-radius:6px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+      +   '<strong style="color:#0f0;font-size:12px;">🧪 Onboarding Experiment</strong>'
+      +   '<span style="color:#666;font-size:10px;">local readout — no analytics sent</span>'
+      + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px;">'
+      +   '<span style="color:#888;font-size:11px;">Variant:</span>'
+      +   '<span id="onboarding-readout-variant" style="color:#0f0;font-family:monospace;font-size:12px;background:#0a1a0a;border:1px solid #1a3a1a;border-radius:4px;padding:2px 6px;">' + variant + '</span>'
+      + '</div>'
+      + '<div style="margin-bottom:6px;font-size:11px;"><span style="color:#888;">Applied:</span> ' + appliedLine + '</div>'
+      + '<table id="onboarding-readout-counters" style="width:100%;border-collapse:collapse;font-family:monospace;margin-bottom:8px;">' + rows + '</table>'
+      + '<div style="display:flex;justify-content:flex-end;">'
+      +   '<button id="onboarding-readout-reset" style="background:#3a1f1f;border:1px solid #800;color:#f88;padding:6px 12px;border-radius:5px;cursor:pointer;font-family:inherit;font-size:11px;">↻ Reset experiment state</button>'
+      + '</div>'
+      + '</div>';
+    const resetBtn = card.querySelector('#onboarding-readout-reset');
+    if (resetBtn) {
+      const self = this;
+      resetBtn.addEventListener('click', function() {
+        try { oe.reset(); } catch (e) {}
+        // Re-fire applyFirstLaunch so appliedAt refreshes to "just now" and
+        // the silent-standard variant re-applies a fresh DIFFICULTY_KEY.
+        try { oe.applyFirstLaunch(); } catch (e) {}
+        // Re-render in place — no page reload, no modal close.
+        try { self.renderOnboardingReadoutCard(); } catch (e) {}
+      });
+    }
+  }
+
   // Day 85: Debug panel showing current variant + counters + reset.
   showOnboardingExperimentPanel() {
     const oe = this.gameState && this.gameState.onboardingExperiment;
@@ -656,14 +733,20 @@ class UI {
     if (!modal || !content) return;
     const counters = oe.getCounters();
     const variant = oe.getVariant();
+    // Day 95: surface applied-at in the modal too.
+    const appliedAt = (typeof oe.getAppliedAt === 'function') ? oe.getAppliedAt() : null;
     let rows = '';
     Object.keys(counters).forEach((k) => {
       const v = counters[k];
       const disp = (v === '' ? '—' : String(v));
       rows += '<tr><td style="padding:4px 8px;color:#888;">' + k + '</td><td style="padding:4px 8px;color:#0f0;text-align:right;">' + disp + '</td></tr>';
     });
+    const appliedHtml = appliedAt
+      ? '<div style="color:#0f0;font-family:monospace;font-size:11px;">' + appliedAt + '</div>'
+      : '<div style="color:#888;font-style:italic;font-size:11px;">Not yet applied</div>';
     content.innerHTML = '<div style="text-align:center;margin-bottom:12px;"><h3 style="color:#0f0;margin-bottom:6px;">🧪 Onboarding Experiment</h3><p style="color:#888;font-size:11px;">Local feature flag — no analytics sent.</p></div>'
-      + '<div style="background:rgba(0,255,0,0.04);border:1px solid #222;border-radius:6px;padding:8px;margin-bottom:12px;"><div style="color:#888;font-size:11px;">Current variant</div><div style="color:#0f0;font-family:monospace;font-size:13px;">' + variant + '</div></div>'
+      + '<div style="background:rgba(0,255,0,0.04);border:1px solid #222;border-radius:6px;padding:8px;margin-bottom:8px;"><div style="color:#888;font-size:11px;">Current variant</div><div style="color:#0f0;font-family:monospace;font-size:13px;">' + variant + '</div></div>'
+      + '<div style="background:rgba(0,255,0,0.04);border:1px solid #222;border-radius:6px;padding:8px;margin-bottom:12px;"><div style="color:#888;font-size:11px;">Applied at</div>' + appliedHtml + '</div>'
       + '<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:monospace;margin-bottom:12px;">' + rows + '</table>'
       + '<div style="display:flex;gap:8px;justify-content:center;"><button id="onboarding-reset-btn" style="background:#3a1f1f;border:1px solid #800;color:#f88;padding:8px 14px;border-radius:6px;cursor:pointer;font-family:inherit;">Reset onboarding state</button><button id="onboarding-close-btn" style="background:transparent;border:1px solid #555;color:#ccc;padding:8px 14px;border-radius:6px;cursor:pointer;font-family:inherit;">Close</button></div>';
     modal.style.display = 'flex';

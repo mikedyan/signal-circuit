@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1780444800">
+  <link rel="stylesheet" href="css/style.css?v=1780531200">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -192,6 +192,8 @@
           <div id="developer-row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
             <button id="onboarding-experiment-btn" class="settings-btn" aria-label="Open onboarding experiment debug panel">🧪 Onboarding Experiment</button>
           </div>
+          <!-- Day 95: Inline readout card populated by UI.renderOnboardingReadoutCard() on settings-open. -->
+          <div id="onboarding-readout-card" style="display:none;"></div>
         </div>
         <button id="settings-close">Close</button>
       </div>
@@ -801,15 +803,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1780444800"></script>
-  <script src="js/wires.js?v=1780444800"></script>
-  <script src="js/simulation.js?v=1780444800"></script>
-  <script src="js/levels.js?v=1780444800"></script>
-  <script src="js/audio.js?v=1780444800"></script>
-  <script src="js/achievements.js?v=1780444800"></script>
-  <script src="js/canvas.js?v=1780444800"></script>
-  <script src="js/ui.js?v=1780444800"></script>
-  <script src="js/tutorial.js?v=1780444800"></script>
-  <script src="js/main.js?v=1780444800"></script>
+  <script type="module" src="js/gates.js?v=1780531200"></script>
+  <script src="js/wires.js?v=1780531200"></script>
+  <script src="js/simulation.js?v=1780531200"></script>
+  <script src="js/levels.js?v=1780531200"></script>
+  <script src="js/audio.js?v=1780531200"></script>
+  <script src="js/achievements.js?v=1780531200"></script>
+  <script src="js/canvas.js?v=1780531200"></script>
+  <script src="js/ui.js?v=1780531200"></script>
+  <script src="js/tutorial.js?v=1780531200"></script>
+  <script src="js/main.js?v=1780531200"></script>
 </body>
 </html>

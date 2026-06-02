@@ -1,5 +1,5 @@
 // Service Worker — Cache-first for offline PWA
-const CACHE_NAME = 'signal-circuit-v63';
+const CACHE_NAME = 'signal-circuit-v64';
 const ASSETS = [
   '/',
   '/index.html',
