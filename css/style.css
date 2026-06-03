@@ -7350,3 +7350,56 @@ body.light-mode .tournament-row-self .trow-name { color: #b8860b; }
 body.light-mode .tarc-week { color: #6a5a30; }
 body.light-mode #tournament-back-btn { color: #444; border-color: #b89a40; }
 body.light-mode #tournament-back-btn:hover { color: #000; border-color: #b8860b; }
+
+/* ── Day 96: Snapshot Cards Library Tab ── */
+#stats-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 10px;
+  border-bottom: 1px solid #1a3a2a;
+}
+.stats-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #888;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.stats-tab:hover { color: #0f0; }
+.stats-tab.active {
+  color: #0f0;
+  border-bottom-color: #0f0;
+}
+.stats-tab:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+#stats-cards-pane { animation: tFadeIn .25s ease; }
+.card-thumb {
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.card-thumb:hover {
+  transform: translateY(-2px);
+  border-color: #00e5ff !important;
+  box-shadow: 0 4px 12px rgba(0, 229, 255, 0.18);
+}
+.card-thumb:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+}
+body.light-mode .stats-tab { color: #6a5a30; }
+body.light-mode .stats-tab:hover { color: #0a5a0a; }
+body.light-mode .stats-tab.active {
+  color: #0a5a0a;
+  border-bottom-color: #0a5a0a;
+}
+body.light-mode #stats-tabs { border-bottom-color: #c8d8c0; }
+body.light-mode .card-thumb { background: #f0f4ec !important; border-color: #c8d8c0 !important; color: #333 !important; }
+body.light-mode .card-thumb:hover { border-color: #0a5a8a !important; box-shadow: 0 4px 12px rgba(10, 90, 138, 0.16); }
+body.light-mode .card-library-empty { color: #6a6a6a !important; }

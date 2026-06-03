@@ -35,6 +35,8 @@ const DAILY_LB_KEY = 'signal-circuit-daily-leaderboard';
 const SKILL_KEY = 'signal-circuit-skill';
 const SUBCIRCUIT_KEY = 'signal-circuit-subcircuits';
 const DIFFICULTY_KEY = 'signal-circuit-difficulty-mode';
+const CARD_LIBRARY_KEY = 'signal-circuit-card-library';
+const CARD_LIBRARY_CAP = 20;
 const SCHEMA_VERSION = 1;
 
 // F29-4: Safe localStorage wrapper — graceful fallback on quota exceeded
@@ -2221,6 +2223,65 @@ class GameState {
     this.progress = { levels: {}, version: SCHEMA_VERSION };
     this.saveProgress();
     this._levelSelectScrollY = 0; // #95: Reset scroll on progress reset
+    // Day 96: Reset Game also wipes the Snapshot Cards library.
+    try { this.resetCardLibrary(); } catch (e) { /* non-fatal */ }
+  }
+
+  // ── Day 96: Snapshot Cards Library ──
+  // Capped, LRU-evicting library of share-card data URLs the user has generated.
+  // Surfaced in Stats → 📸 My Cards tab. Reset Game wipes the library.
+  loadCardLibrary() {
+    try {
+      const raw = SafeStorage.getItem(CARD_LIBRARY_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  saveCardLibrary(library) {
+    try {
+      const arr = Array.isArray(library) ? library.slice(-CARD_LIBRARY_CAP) : [];
+      SafeStorage.setItem(CARD_LIBRARY_KEY, JSON.stringify(arr));
+      return arr;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  addSnapshotCard(card) {
+    if (!card || typeof card !== 'object') return null;
+    const lib = this.loadCardLibrary();
+    const entry = {
+      id: 'card-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      levelId: card.levelId || null,
+      levelTitle: card.levelTitle || '',
+      stars: typeof card.stars === 'number' ? card.stars : 0,
+      gateCount: typeof card.gateCount === 'number' ? card.gateCount : 0,
+      savedAt: Date.now(),
+      dataUrl: card.dataUrl || '',
+      title: card.title || '',
+      text: card.text || '',
+      fileName: card.fileName || 'signal-circuit-snapshot.png',
+    };
+    lib.push(entry);
+    // LRU eviction: keep last CARD_LIBRARY_CAP entries (newest at tail).
+    const trimmed = lib.length > CARD_LIBRARY_CAP
+      ? lib.slice(lib.length - CARD_LIBRARY_CAP)
+      : lib;
+    this.saveCardLibrary(trimmed);
+    return entry;
+  }
+
+  getCardLibrary() {
+    return this.loadCardLibrary();
+  }
+
+  resetCardLibrary() {
+    SafeStorage.removeItem(CARD_LIBRARY_KEY);
+    return [];
   }
 
   // ── Day 76: Dev/Harden seeder ──

@@ -716,3 +716,9 @@ Levels 1–5 played hands-on with truth tables verified and 3-star solves. All 4
 #### Audit Results — Day 58 (Harden Week 1, Day 1: Interaction Audit)
 
 All 20 screens tested and rendering correctly: Level Select, Gameplay (L1), Daily Challenge, Sandbox, Puzzle of the Week, Gate Encyclopedia, Achievements, Stats Dashboard, Customize, Mastery Tree, Circuit Collection, Logic Profile, How to Play, Light/Dark mode, Colorblind/Text Size/Simplified/Accessible Wiring/Difficulty buttons, Volume controls, Notification settings, Export/Import Progress, Review Suggested, Community Levels. 0 JS errors. 2 P2 bugs documented (Daily Leaderboard duplicate name, Stats empty sessions).
+
+### Day 96 — Cycle 4 BUILD Week, Day 5 (Snapshot Cards Library Tab)
+
+Shipped: Snapshot Cards library with Stats → 📸 My Cards tab, capped at 20 with FIFO eviction, click-to-reopen, and Reset Game wipe. 28 CDP assertions / 0 console errors / 0 exceptions. **21-day empty-queue streak preserved** (Day 76 → Day 96).
+
+**No new bugs at start of day. No new bugs at end of day.**

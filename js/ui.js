@@ -3583,7 +3583,10 @@ class UI {
     const closeBtn = document.getElementById('stats-close');
 
     const openStats = () => {
+      // Day 96: default to Overview tab on every open.
+      this._activeStatsTab = 'overview';
       this.renderEnhancedStats();
+      this._updateStatsTabsUI();
       if (modal) modal.style.display = 'flex';
       // Day 54: Lazy chart rendering - draw canvases after modal visible
       requestAnimationFrame(() => this._drawStatsCanvases());
@@ -3600,6 +3603,128 @@ class UI {
     if (modal) modal.addEventListener('click', (e) => {
       if (e.target === modal) closeStats();
     });
+
+    // Day 96: Tab strip wiring (Overview / My Cards).
+    const overviewTab = document.getElementById('stats-tab-overview');
+    const cardsTab = document.getElementById('stats-tab-cards');
+    if (overviewTab) {
+      overviewTab.addEventListener('click', () => this._switchStatsTab('overview'));
+    }
+    if (cardsTab) {
+      cardsTab.addEventListener('click', () => this._switchStatsTab('cards'));
+    }
+  }
+
+  // ── Day 96: Snapshot Cards Library Tab ──
+  _switchStatsTab(which) {
+    this._activeStatsTab = which;
+    const overviewPane = document.getElementById('stats-grid');
+    const cardsPane = document.getElementById('stats-cards-pane');
+    if (overviewPane) overviewPane.style.display = (which === 'overview') ? '' : 'none';
+    if (cardsPane) cardsPane.style.display = (which === 'cards') ? '' : 'none';
+    if (which === 'cards') {
+      this._renderCardLibraryGrid();
+    }
+    this._updateStatsTabsUI();
+  }
+
+  _updateStatsTabsUI() {
+    const which = this._activeStatsTab || 'overview';
+    const overviewTab = document.getElementById('stats-tab-overview');
+    const cardsTab = document.getElementById('stats-tab-cards');
+    if (overviewTab) {
+      overviewTab.classList.toggle('active', which === 'overview');
+      overviewTab.setAttribute('aria-selected', which === 'overview' ? 'true' : 'false');
+    }
+    if (cardsTab) {
+      cardsTab.classList.toggle('active', which === 'cards');
+      cardsTab.setAttribute('aria-selected', which === 'cards' ? 'true' : 'false');
+      // Live count badge in label.
+      const lib = (this.gameState && typeof this.gameState.getCardLibrary === 'function')
+        ? this.gameState.getCardLibrary() : [];
+      cardsTab.textContent = `📸 My Cards (${lib.length})`;
+    }
+  }
+
+  _renderCardLibraryGrid() {
+    const pane = document.getElementById('stats-cards-pane');
+    if (!pane) return;
+    const gs = this.gameState;
+    const library = (gs && typeof gs.getCardLibrary === 'function') ? gs.getCardLibrary() : [];
+    // Newest first.
+    const sorted = library.slice().sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+
+    if (sorted.length === 0) {
+      pane.innerHTML = `
+        <div class="card-library-empty" style="text-align:center;padding:32px 16px;color:#888;font-size:13px;line-height:1.5;">
+          <div style="font-size:42px;line-height:1;margin-bottom:8px;">📸</div>
+          <div style="color:#ccc;font-size:14px;margin-bottom:4px;">No snapshot cards yet</div>
+          <div>Solve a campaign level and tap <strong style="color:#7fffd4;">📸 Share Card</strong><br>to capture a snapshot here.</div>
+        </div>`;
+      return;
+    }
+
+    const cap = (typeof CARD_LIBRARY_CAP === 'number') ? CARD_LIBRARY_CAP : 20;
+    let html = `<div class="card-library-meta" style="font-size:11px;color:#888;margin:0 4px 8px;">${sorted.length} of ${cap} — newest first · click any card to re-open</div>`;
+    html += '<div class="card-library-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;">';
+    for (const card of sorted) {
+      const d = new Date(card.savedAt || Date.now());
+      const dateStr = (d.getMonth() + 1) + '/' + d.getDate();
+      const stars = Math.max(0, Math.min(3, card.stars || 0));
+      const starStr = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+      const title = (card.levelTitle || `Level ${card.levelId}`).replace(/[<>&]/g, '');
+      html += `
+        <button class="card-thumb" data-card-id="${card.id}" aria-label="Re-open snapshot for Level ${card.levelId}"
+          style="background:#0a0a1a;border:1px solid #1a3a3a;border-radius:6px;padding:6px;cursor:pointer;text-align:left;color:#ccc;font-family:inherit;">
+          <img src="${card.dataUrl}" alt="Level ${card.levelId} snapshot"
+            style="width:100%;height:auto;aspect-ratio:1200/630;display:block;border-radius:4px;background:#000;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;font-size:10px;">
+            <span style="color:#7fffd4;">L${card.levelId}</span>
+            <span style="color:#FFD700;">${starStr}</span>
+            <span style="color:#666;">${dateStr}</span>
+          </div>
+          <div style="font-size:11px;color:#ddd;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</div>
+        </button>`;
+    }
+    html += '</div>';
+    pane.innerHTML = html;
+
+    // Wire click handlers.
+    pane.querySelectorAll('.card-thumb').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-card-id');
+        const target = library.find(c => c.id === id);
+        if (target) this._openCachedShareCard(target);
+      });
+    });
+  }
+
+  _openCachedShareCard(card) {
+    if (!card || !card.dataUrl) return;
+    const canvas = document.getElementById('share-card-canvas');
+    const modal = document.getElementById('share-card-modal');
+    if (!canvas || !modal) return;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      // Paint at the canvas's native share-card resolution (1200x630).
+      canvas.width = img.width || 1200;
+      canvas.height = img.height || 630;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      this._lastShareCardMeta = {
+        title: card.title || `Signal Circuit — Level ${card.levelId}`,
+        text: card.text || `Signal Circuit Level ${card.levelId} snapshot.`,
+        fileName: card.fileName || `signal-circuit-l${card.levelId}-snapshot.png`,
+        libraryId: card.id,
+      };
+      this._setShareCardStatus(document.getElementById('share-card-status'), 'Snapshot reloaded from your library.', 'idle');
+      modal.style.display = 'flex';
+    };
+    img.onerror = () => {
+      this._setShareCardStatus(document.getElementById('share-card-status'), 'Could not reload that snapshot.', 'warning');
+    };
+    img.src = card.dataUrl;
   }
 
   renderStatsDashboard() {
@@ -5201,6 +5326,30 @@ class UI {
       fileName: `signal-circuit-l${level.id}-snapshot.png`,
     };
     this._setShareCardStatus(document.getElementById('share-card-status'), 'Snapshot ready — save, copy, or share it.', 'idle');
+
+    // Day 96: Persist this freshly rendered card into the Snapshot Cards library
+    // (skip if we are re-rendering a cached card via _openCachedShareCard).
+    if (!this._suppressShareCardCapture) {
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const gs2 = this.gameState;
+        if (gs2 && typeof gs2.addSnapshotCard === 'function') {
+          const stored = gs2.addSnapshotCard({
+            levelId: level.id,
+            levelTitle: level.title || `Level ${level.id}`,
+            stars,
+            gateCount,
+            dataUrl,
+            title: this._lastShareCardMeta.title,
+            text: this._lastShareCardMeta.text,
+            fileName: this._lastShareCardMeta.fileName,
+          });
+          if (stored) this._lastShareCardMeta.libraryId = stored.id;
+        }
+      } catch (e) {
+        // Storage quota or canvas tainted — fail silent; share-card UI still works.
+      }
+    }
 
     // Show modal
     const modal = document.getElementById('share-card-modal');
