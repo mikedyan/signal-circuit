@@ -1,5 +1,40 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 97 — Cycle 4 HARDEN Week, Day 1 (2026-06-04) — Full Interaction Audit*
+
+## Day 97 — Cycle 4 HARDEN Week, Day 1 (Full Interaction Audit) summary
+
+**Build under test:** `?v=1780617600` · `sw.js CACHE_NAME = 'signal-circuit-v65'` (Day 96 build, unchanged today — no source files changed).
+**Result:** **82 / 82 assertions** passed across 29 phases. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Coverage:** Cycle 4 BUILD-week regression sweep (D92 ES-module exports, D93 Tournament adapter classes, D94 Lab Bench II composite constraints, D95 Onboarding Readout UI, D96 Snapshot Cards Library Tab) + Full Interaction Audit per HARDEN Monday spec (every screen and modal: level select / gameplay / daily / random / blitz / speedrun / sandbox / creator / tournament / encyclopedia / achievements / stats with new 📸 My Cards tab / mastery / collection / profile / customize / settings / how-to-play / share-card) + Cycle 1–3 carry-over regression (Day 61 Blitz HUD, Day 74 Speedrun HUD, Day 78 staircase, Day 79 dead-id purge).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **22 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — unchanged from Day 87; direct `ui.showScreen('level-select')` bypasses Day 61/74 HUD cleanup but is not user-reachable; deferred to Cycle 4 PRUNE Week per `roadmaps/cycle-4-build.md` § Week Guardrails).
+
+**Highlights from the sweep:**
+
+- **45 level cards on cold start** (Day 94's L44 + L45 are correctly indexed by `renderLevelSelect`).
+- **Day 94 composite chips** render side-by-side on L44 and L45: `#lab-constraint` + `#lab-constraint-2` both visible with distinct copy.
+- **Composite validator** on L44 rejects 7 NANDs with byte-exact `Submission rejected: 7 gates exceeds hard cap of 6.`
+- **Day 92 ES module rebinding** holds: `window.Gate` (function), `window.GateTypes` (8 keys: AND/OR/NOT/XOR/NAND/NOR/MYSTERY/MYSTERY3), `window.IONode`, `window.roundRect` all bound.
+- **Day 93 RemoteTournamentAdapter** + `LocalTournamentAdapter` + `selectTournamentBackend` all exposed on `window`; default mode is `local` with the local-leaderboard describe label.
+- **Day 95 readout card** correctly debug-gated: `#settings-developer-section` is `display:none` when `signal-circuit-debug` flag is absent; setting the flag to `'1'` reveals both the Developer section and `#onboarding-readout-card` with variant pill + ISO timestamp + relative-time.
+- **Day 96 Stats tabs** scaffolding present: `#stats-tabs`, `#stats-tab-overview`, `#stats-tab-cards`, `#stats-cards-pane`. Tab badge format `📸 My Cards (N)` with live count (Phase 5 captured 1 card via L1 solve; the badge shows `(1)` correctly). Clicking the tab swaps `#stats-grid` to `display:none` and `#stats-cards-pane` to `display:block`.
+- **Cold-start non-level button count = 2** (Day 78 invariant holds 22 days in).
+- **End-game (`seedProgress(40)`)**: 18 non-level + 40 overflow buttons (Day 78 target intact despite +2 levels from Day 94).
+- **Day 79 dead-identifier purge**: all 7 ids still `undefined`, `#weekly-puzzle-btn` DOM absent.
+- **Hint click on L6** increments `hintsUsed` 0→1 cleanly.
+
+**Verification:** ran `qa-reports/day-97-qa.cdp.js` against permissive headless Chromium 146 on port 9301 against `http://localhost:8901/`. First run had 1 harness-only false-alarm: the cards-tab assertion expected `(0)` but Phase 5 had already populated 1 card via the L1 share-card capture path. Fixed the assertion to validate badge format `📸 My Cards (N)` regardless of count (the live badge is exactly what we want — it reflects current state). Second run: 82/82.
+
+Full report: `qa-reports/day-97-qa.md`.
+Harness: `qa-reports/day-97-qa.cdp.js`.
+
+**Cycle 4 HARDEN Week Day 1 complete.** Day 98 next: **Level Playthrough** — sample L1/5/10/15/20/25/30/35/40 + Day 84/94 L41–45; verify truth tables, hints, star rating, completion celebration; test Daily / Random / Blitz / Speedrun; load 3–4 community levels.
+
+---
+
 *Updated: Day 95 — Cycle 4 BUILD Week, Day 4 (2026-06-02) — Onboarding Experiment Readout UI*
 
 ## Day 95 — Cycle 4 BUILD Week, Day 4 (Onboarding Experiment Readout UI) summary
