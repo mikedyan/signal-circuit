@@ -1,5 +1,50 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 98 — Cycle 4 HARDEN Week, Day 2 (2026-06-05) — Level Playthrough*
+
+## Day 98 — Cycle 4 HARDEN Week, Day 2 (Level Playthrough) summary
+
+**Build under test:** `?v=1780617600` · `sw.js CACHE_NAME = 'signal-circuit-v65'` (Day 96 build, unchanged today — no source files changed).
+**Result:** **121 / 121 assertions** passed across 26 phases. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Coverage:** Per-level audit on 14 levels (campaign sweep L1/5/10/15/20/25/30/35/40 + Day 84 Lab Bench L41/42/43 + Day 94 Lab Bench II composite L44/45). For every sampled level: hints array length 3, truth table re-derived from semantics via a pure-JS spec (e.g. `(a,b,c)=>[a^b^c]` for odd parity, `(a1,a0,b1,b0)=>` decomposed for the 2-bit ripple adder), `calculateStars()` correctness at three input gate counts (optimal/good/over), and lab metadata. Plus: Lab Bench HUD chip render on all five Lab Bench levels (single vs composite), 9 `_validateLabConstraints()` assertions on L41–45, hands-on L1 solve via Quick Test, all four challenge mode entries (Daily/Random/Blitz/Speedrun) + HUD cleanup via `#back-btn` (Day 61 + Day 74 regressions), 4 community levels loaded via `buildCustomLevel`, and Cycle 4 BUILD-week regression sweep (D92 ES module exports + D93 tournament adapter + D94 composite chips + D95 onboarding readout + D96 snapshot cards library).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **23 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — unchanged from Day 87; deferred to Cycle 4 PRUNE Week).
+
+**Highlights from the sweep:**
+
+- **All 14 sampled levels** have exactly 3 hints, byte-correct truth tables (re-derived from semantics), and `calculateStars()` returning 3 at optimal / ≤2 at goodGates / 1 above goodGates.
+- **Lab Bench HUD chip render** verified on all five Lab Bench levels:
+  - L41: `🧱 NAND only — universal gate practice` (single)
+  - L42: `🎯 Hard cap: 4 gates` (single)
+  - L43: `✳️ Must include an XOR gate` (single)
+  - L44: `🧱 NAND only` + `🎯 Hard cap: 6 gates` (composite, side-by-side)
+  - L45: `✳️ Must include an XOR gate` + `🎯 Hard cap: 5 gates` (composite, side-by-side)
+- **`_validateLabConstraints()` byte-stable rejection strings**: `Submission rejected: 5 gates exceeds hard cap of 4.` (L42), `Submission rejected: blueprint must include an XOR gate.` (L43 + L45), `Submission rejected: 7 gates exceeds hard cap of 6.` (L44), `Submission rejected: 6 gates exceeds hard cap of 5.` (L45). Optimal-shape submissions accept cleanly: L44 with 5 NANDs and L45 with `XOR/AND/XOR` both pass.
+- **L1 hands-on solve** via Quick Test: 1 AND gate + 3 wires → `#star-display` visible, `progress.levels[1].stars === 3`.
+- **All 4 challenge modes** enter gameplay correctly and `#back-btn` cleanly tears down Blitz/Speedrun HUDs (Day 61 + Day 74 fixes hold).
+- **4 community levels** load via `buildCustomLevel`: `community_1 The Implication` (2/1), `community_5 One Hot` (2/1, XOR), `community_8 Majority Vote` (3/1, featured), `community_11 Half Adder Redux` (2/2, multi-output).
+- **Cycle 4 BUILD regression sweep**: D92 ES module exports (Gate/GateTypes×8/IONode/roundRect), D93 tournament adapter classes + `local` default mode, D94 composite chips + validator, D95 silent-standard variant + reset, D96 cards library API + Stats tab scaffolding — all green.
+- **Cold-start invariants hold**: 2 non-level buttons (Day 78), 45 level cards (Day 94).
+- **0 console errors** across the full sweep.
+
+**Verification:** ran `qa-reports/day-98-qa.cdp.js` against permissive headless Chrome for Testing 145.0.7632.6 on port 9301 against `http://localhost:8901/`. First run had 4 harness-only false alarms, all rooted in the same misunderstanding of the validator surface and one wrong DOM selector:
+
+1. `L41 rejects non-NAND gate` (validator returned `ok:true`) — NAND-only enforcement on L41 is **toolbox-level** (`availableGates: ['NAND']` hides the other buttons), not validator-level. `_validateLabConstraints()` only enforces `gateHardCap` + `mustIncludeGate`. Harness fixed to assert `availableGates === ['NAND']` instead.
+2. `L44 composite rejects 7 ANDs (both NAND + cap violations surfaced)` — same root cause: 7 ANDs on L44 only surfaces the cap violation, since NAND-only is toolbox-level. Harness fixed to assert just the cap rejection.
+3. `L1 completion overlay fires` — wrong selector. The completion celebration paints `#star-display`, not `#completion-overlay`. Harness fixed to probe `#star-display`.
+4. `L1 Quick Test increments attempts` — by design, `runQuickTest()` does not bump `game.attempts`. Only `runSimulation()` (the animated RUN path) increments `progress.levels[lvlId].attempts` at `js/main.js:3744`. The earned 3 stars + visible `#star-display` together prove the completion path fired. Harness fixed to drop this assertion.
+
+Second run: 121/121. **No app-side fix was needed.**
+
+Full report: `qa-reports/day-98-qa.md`.
+Harness: `qa-reports/day-98-qa.cdp.js`.
+
+**Cycle 4 HARDEN Week Day 2 complete.** Day 99 next: **HARDEN Week Day 3 — Edge Cases & Stress**.
+
+---
+
 *Updated: Day 97 — Cycle 4 HARDEN Week, Day 1 (2026-06-04) — Full Interaction Audit*
 
 ## Day 97 — Cycle 4 HARDEN Week, Day 1 (Full Interaction Audit) summary
