@@ -1,5 +1,40 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 99 — Cycle 4 HARDEN Week, Day 3 (2026-06-06) — Edge Cases & Stress*
+
+## Day 99 — Cycle 4 HARDEN Week, Day 3 (Edge Cases & Stress) summary
+
+**Build under test:** `?v=1780617600` · `sw.js CACHE_NAME = 'signal-circuit-v65'` (Day 96 build, unchanged through Days 97/98/99 — no source files modified during HARDEN week).
+**Result:** **77 / 77 assertions** passed across 30 phases. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Coverage:** Day 89's 25-test stress sweep template (T1–T25) re-run against the current build identity, plus **5 new Cycle 4 BUILD-week feature stress blocks (T26–T30)** corresponding to Days 92–96. Notable additions:
+
+- **T26 (D92 ES module exports under stress)**: 100× `Gate`+`IONode` instantiation no-throw; `window.GateTypes` has all 8 expected keys (AND/MYSTERY/MYSTERY3/NAND/NOR/NOT/OR/XOR).
+- **T27 (D93 Tournament adapter toggle stress)**: 5× backend-mode toggle (local↔remote) through `selectTournamentBackend()` factory; all 5 describe labels populated; mode resolution correct (`local→local`, `remote→cloud-ready` — the latter is the Day 83 spec, NOT a regression).
+- **T28 (D94 composite Lab Bench rapid validator stress)**: L44 + L45 composite chips both render distinct copy; **100× rapid `_validateLabConstraints()` calls** on L44 cycling 1–10 gates no-throw; L45 composite (XOR-mandate + cap=5) rejection of 6-AND input fires both clauses in one string: `Submission rejected: 6 gates exceeds hard cap of 5; blueprint must include an XOR gate.`
+- **T29 (D95 Onboarding readout debug-flag toggle storm)**: 5× toggle of `signal-circuit-debug` flag; `#settings-developer-section` correctly visible when flag=`'1'`, hidden when absent.
+- **T30 (D96 Snapshot card library flood)**: 25 cards pushed → library capped at 20 (FIFO eviction); Stats tab scaffolding + library API surface (`getCardLibrary`/`addSnapshotCard`/`resetCardLibrary`) intact.
+
+**Cycle 4 BUILD-week regression sweep:** Day 78 staircase (cold=2, seed18=18 nav, seed45=18 nav + 45 overflow), Day 79 dead-id purge (7 ids undefined, `#weekly-puzzle-btn` absent), Day 84 Lab Bench II L41/L42/L43 constraint chips + validator, Day 85 onboarding URL overrides (warm-toast + explicit-chooser) — all green.
+
+**Performance:** 10× canvas render = **0.180ms/frame avg**; 100× rapid validator calls no-throw; 50×50KB localStorage writes all succeed; 5× adapter toggle no-throw.
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **24 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — unchanged from Day 87; deferred to Cycle 4 PRUNE Week per `roadmaps/cycle-4-build.md` § Week Guardrails).
+
+**Verification:** ran `qa-reports/day-99-qa.cdp.js` against permissive headless Chrome for Testing 146.0.7663.0 on port 9301 against `http://localhost:8901/`. **One first-run harness false alarm**:
+
+1. `T27.4 mode resolves correctly (local→local, remote→remote)` failed because the Day 83 spec actually maps `remote`-with-no-Worker-URL to `getMode() === 'cloud-ready'`. The mode name encodes intent-vs-capability (per Day 83 lesson): selecting the remote adapter is the intent, but without a live Worker URL the *capability* is `cloud-ready` (the live-mode capability would be a separate state). Harness fixed to allow `remote→cloud-ready` as the correct mapping. **No app-side fix needed.**
+
+Second run: **77 / 77** assertions pass.
+
+Full report: `qa-reports/day-99-qa.md`.
+Harness: `qa-reports/day-99-qa.cdp.js`.
+
+**Cycle 4 HARDEN Week Day 3 complete.** Day 100 next: **HARDEN Week Day 4 — Fix Everything**. With the open queue empty since Day 76 and LO-1 deferred to PRUNE Week, Day 100 will most likely follow the Day 90 precedent (confirmation probe + rest day) unless a fresh latent observation surfaces.
+
+---
+
 *Updated: Day 98 — Cycle 4 HARDEN Week, Day 2 (2026-06-05) — Level Playthrough*
 
 ## Day 98 — Cycle 4 HARDEN Week, Day 2 (Level Playthrough) summary
