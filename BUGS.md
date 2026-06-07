@@ -1,5 +1,39 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 100 — Cycle 4 HARDEN Week, Day 4 (2026-06-07) — Fix Everything*
+
+## Day 100 — Cycle 4 HARDEN Week, Day 4 (Fix Everything) summary
+
+**Build under test:** `?v=1780617600` · `sw.js CACHE_NAME = 'signal-circuit-v65'` (Day 96 build, **unchanged through Days 97/98/99/100**).
+**Decision:** **Rest Day** — Day 90 precedent applied to Cycle 4. Open Bugs queue empty since Day 76 (25-day streak); LO-1 deferred to Cycle 4 PRUNE Week per `roadmaps/cycle-4-build.md` § Week Guardrails; HARDEN Week policy is fix-only-user-facing-bugs.
+**Result:** **39 / 39** confirmation assertions passed (first run). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Probe shape:** 11 phases instead of re-running the Day 99 30-phase stress suite (the build artifact is unchanged; Days 97/98/99 already ran 280 assertions over it).
+
+- **P1** build identity — 11 cache-bust refs unified at `?v=1780617600`, SW active.
+- **P2** cold-start surface — 2 non-level buttons, **45 level cards** (post-Day-94), variant `silent-standard`, difficulty silent-default `standard`.
+- **P3** Day 99 stress invariants — 10× RUN spam + 10× Quick Test spam, both no-throw.
+- **P4** Day 94 Lab Bench II composite constraints — L44 hardCap=6 (rejects 7 NAND with byte-exact `Submission rejected: 7 gates exceeds hard cap of 6.`, accepts 6 NAND); L45 hardCap=5 + `mustIncludeGate=['XOR']` (composite rejection emits BOTH clauses in one string: `Submission rejected: 6 gates exceeds hard cap of 5; blueprint must include an XOR gate.`); XOR-containing 3-gate solve passes.
+- **P5** Day 83/93 Tournament backend — `getMode='local'`, describe label live, isLive=false, `selectTournamentBackend` factory + `LocalTournamentAdapter` + `RemoteTournamentAdapter` all exposed on window.
+- **P6** Day 85 onboarding + Day 95 readout debug-gating — default variant `silent-standard`, counters JSON-serializable, `#settings-developer-section` hidden when `signal-circuit-debug` absent, visible when flag=`'1'`.
+- **P7** Day 78 staircase end-game — `seedProgress(45,{stars:3})` reveals 18 nav buttons + 45 overflow buttons.
+- **P8** Day 79 dead-identifier purge — all 7 identifiers still `undefined` (showFirstLaunchDifficultyModal, checkLightning, checkEclipseRun, checkArchitect, isMythic, _showHud, getCurrentStep) + `#weekly-puzzle-btn` DOM absent.
+- **P9** Day 92 ES module + Day 96 snapshot card library — `window.Gate`/`IONode`/`roundRect` all functions; `GateTypes` has 8 keys (AND/MYSTERY/MYSTERY3/NAND/NOR/NOT/OR/XOR); `addSnapshotCard` x3 grows library count by 3; `resetCardLibrary` zeros.
+- **P10** LO-1 latent observation — user back-btn path cleans HUD (`speedrunMode=false`, hud display `none`); bypass path leaves HUD visible (`speedrunMode=true`, hud display `flex`). LO-1 reproduces as documented, still not user-reachable.
+- **P11** 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+**Cycle 4 HARDEN Week scorecard 4-of-5 days:** 319 assertions / 96 phases / **0 user-facing bugs** / 0 console errors (Days 97+98+99+100 = 82+121+77+39).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **25 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — unchanged from Day 87; deferred to Cycle 4 PRUNE Week).
+
+Full report: `qa-reports/day-100-qa.md`.
+Harness: `qa-reports/day-100-qa.cdp.js`.
+
+**Cycle 4 HARDEN Week Day 4 complete.** Day 101 next: **HARDEN Week Day 5 — Regression Pass** + Cycle 4 HARDEN Week wrap report.
+
+---
+
 *Updated: Day 99 — Cycle 4 HARDEN Week, Day 3 (2026-06-06) — Edge Cases & Stress*
 
 ## Day 99 — Cycle 4 HARDEN Week, Day 3 (Edge Cases & Stress) summary
