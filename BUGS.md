@@ -1,5 +1,42 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 101 — Cycle 4 HARDEN Week, Day 5 (2026-06-08) — Regression Pass*
+
+## Day 101 — Cycle 4 HARDEN Week, Day 5 (Regression Pass) summary
+
+**Build under test:** **deployed** `https://mikedyan.github.io/signal-circuit/` · `?v=1780617600` · `sw.js CACHE_NAME = 'signal-circuit-v65'` (Day 96 build, **unchanged through Days 97/98/99/100/101**).
+**Result:** **44 / 44** regression assertions passed (first run, deployed site). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Probe shape:** 14-phase regression sweep on the deployed GitHub Pages URL — Day 91's harness transplanted verbatim with three constants swapped (cache-bust v60→v65, expected card count 43→45, end-game seed 40→45).
+
+- **P1** build identity on deployed site — 11 cache-bust refs unified at `?v=1780617600`, SW deployed with `CACHE_NAME=signal-circuit-v65` (verified via direct `fetch('sw.js')` + grep).
+- **P2** cold-start surface — 2 non-level buttons, **45 level cards** (post-Day-94), variant `silent-standard`, difficulty silent-default `standard`.
+- **P3** core loop end-to-end on L1 — gameplay screen visible, RUN visible, 4 truth-table rows, 1 AND gate placed, 3 wires drawn, L1 progress recorded with 3 stars (optimal).
+- **P4** campaign progression — L2 unlocked after L1 solve, L2 loads on gameplay with `currentLevel.id === 2`.
+- **P5** Daily Challenge — pre-screen opens, `#start-daily-btn` loads gameplay with `isDaily=true`.
+- **P6** Random Challenge — config screen opens, `#generate-challenge-btn` loads gameplay with `isChallengeMode=true`.
+- **P7** Blitz Mode + Day 61 fix — entry sets `blitzMode=true` + HUD `display=flex`; back-btn cleans `blitzMode=false` + HUD `display=none`.
+- **P8** Speedrun Mode + Day 74 fix — entry sets `speedrunMode=true` + HUD `display=flex`; back-btn cleans `speedrunMode=false` + HUD `display=none`.
+- **P9** Sandbox config screen opens.
+- **P10** Tournament Mode — screen opens, 3 tabs (This Week / My Best / Archive), Day 83 adapter shape (`getMode`/`describe`/`isLive`), mode `local`, label `🏠 Local leaderboard · same puzzle, deterministic bots`.
+- **P11** Infinite Mode — pre-screen opens, `#infinite-start-btn` loads gameplay with `infiniteRun.active=true`.
+- **P12** Day 84 Lab Bench II L42 — `gateHardCap=4`, constraint chip `🎯 Hard cap: 4 gates`, validator rejects 5 gates with byte-exact `Submission rejected: 5 gates exceeds hard cap of 4.`, accepts 4 gates.
+- **P13** Day 78 staircase end-game — `seedProgress(45,{stars:3})` reveals 18 nav buttons + 45 overflow buttons.
+- **P14** 0 `Runtime.exceptionThrown`, 0 `console.error`.
+
+**Cycle 4 HARDEN Week scorecard (5-of-5 days, full week):** **363 assertions / 110 phases / 0 user-facing bugs / 0 console errors** (Days 97+98+99+100+101 = 82+121+77+39+44). This is the cleanest HARDEN-week scorecard the factory has shipped (Cycle 2 ~150, Cycle 3 286, **Cycle 4 363**, +27% over Cycle 3).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **26 consecutive days** since Day 76).
+**Latent observations:** 1 (LO-1 — unchanged from Day 87; lands tomorrow as Cycle 4 PRUNE Day 1 Tier-1 cut).
+
+Full report: `qa-reports/day-101-qa.md`.
+Harness: `qa-reports/day-101-qa.cdp.js`.
+Week wrap: `reviews/harden-cycle-4-week-summary.md`.
+
+**Cycle 4 HARDEN Week complete.** Day 102 next: **Cycle 4 PRUNE Week Day 1 — Fresh Eyes Audit** + first source-file change since Day 96 (LO-1 fix lands as Tier 1).
+
+---
+
 *Updated: Day 100 — Cycle 4 HARDEN Week, Day 4 (2026-06-07) — Fix Everything*
 
 ## Day 100 — Cycle 4 HARDEN Week, Day 4 (Fix Everything) summary
