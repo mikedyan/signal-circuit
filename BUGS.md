@@ -1,5 +1,63 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 102 — Cycle 4 PRUNE Week, Day 1 (2026-06-09) — Fresh Eyes Audit*
+
+## Day 102 — Cycle 4 PRUNE Week, Day 1 (Fresh Eyes Audit) summary
+
+**Build under audit:** deployed `https://mikedyan.github.io/signal-circuit/` · `?v=1780617600` · `sw.js CACHE_NAME = 'signal-circuit-v65'` (Day 96 build, **unchanged through Days 97/98/99/100/101 = 6 consecutive HARDEN-week days**, today is the 7th).
+**Result:** **49 / 49** fresh-eyes assertions passed across 8 phases (first run, no harness iterations). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Clutter score:** **4 / 10** (Cycle 2 closed at 5/10; Cycle 1 baseline 8/10). Weighted by where players spend time (most users live in the L6–L18 range), tighter than Cycle 2 thanks to the Day 78 staircase + Day 79 dead-code purge holding for 28 days.
+
+**Tier staircase walk (deployed build, fresh profile, live counts):**
+
+| seed | Nav buttons | Overflow buttons | Level cards |
+|------|-------------|------------------|-------------|
+| 0    | 2           | 0                | 45          |
+| 3    | 2           | 3                | 45          |
+| 6    | 5           | 6                | 45          |
+| 9    | 7           | 9                | 45          |
+| 12   | 10          | 12               | 45          |
+| 15   | 13          | 15               | 45          |
+| 18   | 18          | 18               | 45          |
+| 45   | 18          | 45               | **50**      |
+
+**Three new clutter sources identified** (vs Cycle 2's 3):
+
+1. **Mastery surprise at end-game** — `seedProgress(45)` reveals 5 Chapter Mastery cards co-rendered with campaign cards (no visual distinction). Cards: 45 → 50.
+2. **Tournament mode label verbosity** (Day 83/93) — 60-character status line `🏠 Local leaderboard · same puzzle, deterministic bots`. The Worker live mode labels add more parenthetical apology copy.
+3. **Lab Bench II 3-chip HUD stack** at composite levels (L44/L45) — `#lab-constraint` + `#lab-constraint-2` + `#lab-budget` all in one strip, mixing constraints (rules) with state (count).
+
+**Two Cycle 2 carry-overs SHIPPED** since Day 81 (verified live today):
+
+- ✅ Top-left gameplay icons now carry `title` + `aria-label` (Encyclopedia / Shortcuts / KB-Wiring).
+- ✅ Step chips no longer render on locked cards (0 visible).
+
+**Two Cycle 2 carry-overs still unshipped:**
+
+- ❌ Difficulty Mode (`🔧 Mode: Standard`) still filed under Display & Accessibility (Cycle 2 Tier-2 #8).
+- ❌ `📲 Install App` button still always visible in Settings even when app is in standalone mode (Cycle 2 Tier-2 #9).
+
+**Proposed cuts:** 14 total (5 Tier 1 + 5 Tier 2 + 4 Tier 3). Tier 1 list (locked as Day 103 deliverable):
+
+1. **LO-1 fix** — move HUD cleanup from `GameState.showLevelSelect()` wrapper into `ui.showScreen('level-select')` transition layer.
+2. **Tournament mode label compression** — 4 short labels keyed off Day 93's 4-state machine (`🏠 Local leaderboard` / `🌐 Live leaderboard` / `🌐 Live · offline` / `🌐 Connecting…`).
+3. **Stats modal default tab** — if `library.length > 0`, default to Cards tab.
+4. **Mastery card gating** — gate Chapter Mastery cards behind the Mastery Tree modal (or `.level-btn.mastery` distinct class).
+5. **Lab budget chip move** — move `#lab-budget` out of the constraint-chip strip into its own row.
+
+**LO-1 (latent observation):** 11th day re-verified today. Audit phase P5 explicitly reproduced BOTH halves on Speedrun (`gs.ui.showScreen('level-select')` leaves `speedrunMode=true` + HUD `display=flex`) AND on Blitz (symmetric). LO-1 is a real abstraction-layer bug, not a Speedrun-specific quirk. **Lands tomorrow as Tier-1 cut #1.**
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **27 consecutive days** since Day 76).
+
+Full report: `qa-reports/day-102-qa.md`.
+Harness: `qa-reports/day-102-qa.cdp.js`.
+Full PRUNE plan: `PRUNE_REPORT.md`.
+
+**Day 103 next: PRUNE Week Day 2 — Design Simplification (ship the 5 Tier-1 cuts as the first source-file change since Day 96).**
+
+---
+
 *Updated: Day 101 — Cycle 4 HARDEN Week, Day 5 (2026-06-08) — Regression Pass*
 
 ## Day 101 — Cycle 4 HARDEN Week, Day 5 (Regression Pass) summary
