@@ -507,7 +507,8 @@ class UI {
     // Day 32 T10: Render spaced repetition review section
     this.renderReviewSection();
     this.renderCommunitySection(); // Day 49
-    this.renderMasterySection(); // Day 55
+    // Day 103 PRUNE Cut #4: mastery challenges no longer co-render in the
+    // campaign grid — they live inside the 🌳 Mastery Tree modal now.
     this.applyProgressGating(); // Day 64: gate secondary modes by completion
   }
 
@@ -4935,6 +4936,8 @@ class UI {
 
     if (btn) btn.addEventListener('click', () => {
       this.renderMasteryTree();
+      // Day 103 PRUNE Cut #4: surface the 5 Mastery Challenges inside the modal.
+      this.renderMasterySection();
       if (modal) modal.style.display = 'flex';
     });
     if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });

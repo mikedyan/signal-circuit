@@ -117,12 +117,8 @@
           <button id="community-submit-btn" class="challenge-btn" style="margin-top:8px;" aria-label="Submit your own level">✏️ Submit Your Level</button>
         </div>
 
-        <!-- Day 55: Mastery Challenges Section -->
-        <div id="mastery-section" style="display:none;">
-          <div class="chapter-title mastery-title">🏆 Mastery Challenges <span id="mastery-progress-count" style="font-size:11px;color:#888;"></span></div>
-          <p style="color:#b8a0d0;font-size:11px;margin:4px 0 10px;">Expert-level challenges for campaign completionists. Prove your mastery.</p>
-          <div id="mastery-levels-grid" class="level-grid"></div>
-        </div>
+        <!-- Day 55: Mastery Challenges Section moved Day 103 PRUNE Cut #4
+             into the Mastery Tree modal so the campaign grid stays at 45 cards. -->
 
         <button id="create-level-btn" class="challenge-btn" style="margin-top:10px;" aria-label="Open level creator">✏️ Creator</button>
         <button id="how-to-play-btn" class="challenge-btn" style="margin-top:10px;" aria-label="How to Play">📖 How to Play</button>
@@ -656,11 +652,18 @@
     </div>
   </div>
 
-  <!-- Mastery Tree Modal (Day 31) -->
+  <!-- Mastery Tree Modal (Day 31). Day 103 PRUNE Cut #4: the Day 55 Mastery
+       Challenges section moved here so it stops co-rendering in the campaign
+       grid at end-game (end-game card count returns to a clean 45). -->
   <div id="mastery-tree-modal" style="display:none;">
     <div id="mastery-tree-content">
       <h3>🌳 Mastery Tree</h3>
       <div id="mastery-tree-view"></div>
+      <div id="mastery-section" style="display:none;margin-top:16px;">
+        <div class="chapter-title mastery-title">🏆 Mastery Challenges <span id="mastery-progress-count" style="font-size:11px;color:#888;"></span></div>
+        <p style="color:#b8a0d0;font-size:11px;margin:4px 0 10px;">Expert-level challenges for campaign completionists. Prove your mastery.</p>
+        <div id="mastery-levels-grid" class="level-grid"></div>
+      </div>
       <button id="mastery-tree-close">Close</button>
     </div>
   </div>
