@@ -544,13 +544,22 @@
 
         <div id="controls">
           <!-- Day 70: Lab Bench / Blueprint Mode HUD (hidden unless on a Lab Bench level) -->
+          <!-- Day 103 PRUNE Cut #5: split into two rows so #lab-budget (a STATE
+               chip) doesn't sit inside the constraint-chip strip (RULES). Top
+               row carries the constraint manifest + tries + reset; bottom row
+               is the budget state chip. Preserves Lab Bench III’s constraint
+               vocabulary. -->
           <div id="lab-hud" style="display:none;" aria-label="Lab Bench status">
-            <span id="lab-label">📐 Blueprint draft</span>
-            <span id="lab-budget" class="lab-chip">≈ 0 gates · target —</span>
-            <span id="lab-constraint" class="lab-chip lab-constraint" style="display:none;"></span>
-            <span id="lab-constraint-2" class="lab-chip lab-constraint" style="display:none;"></span>
-            <span id="lab-tries" class="lab-chip">0/3 submissions</span>
-            <button id="lab-reset-btn" style="display:none;" aria-label="Reset Lab — grants 3 fresh submissions">🔬 Reset Lab</button>
+            <div class="lab-hud-row">
+              <span id="lab-label">📐 Blueprint draft</span>
+              <span id="lab-constraint" class="lab-chip lab-constraint" style="display:none;"></span>
+              <span id="lab-constraint-2" class="lab-chip lab-constraint" style="display:none;"></span>
+              <span id="lab-tries" class="lab-chip">0/3 submissions</span>
+              <button id="lab-reset-btn" style="display:none;" aria-label="Reset Lab — grants 3 fresh submissions">🔬 Reset Lab</button>
+            </div>
+            <div class="lab-hud-row lab-hud-budget-row">
+              <span id="lab-budget" class="lab-chip">≈ 0 gates · target —</span>
+            </div>
           </div>
           <button id="run-btn" aria-label="Run simulation">▶ RUN</button>
           <div id="secondary-controls">

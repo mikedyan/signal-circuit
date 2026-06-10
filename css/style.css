@@ -6938,12 +6938,15 @@ body.light-mode .onboard-step {
 /* Day 70 — Lab Bench / Blueprint Mode (Discovery Lab redesign) */
 /* ──────────────────────────────────────────────────────────── */
 
-/* Lab HUD strip — sits above the RUN button on Lab Bench levels */
+/* Lab HUD strip — sits above the RUN button on Lab Bench levels.
+   Day 103 PRUNE Cut #5: HUD now stacks two rows — a top constraint-manifest
+   row (label + constraint chips + tries + reset) and a separate budget row
+   below so the state chip stops diluting the rules vocabulary. */
 #lab-hud {
   display: none;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
   margin: 8px 0 10px 0;
   padding: 8px 10px;
   background: rgba(0, 229, 255, 0.07);
@@ -6954,6 +6957,13 @@ body.light-mode .onboard-step {
   font-size: 12px;
   letter-spacing: 0.3px;
 }
+#lab-hud .lab-hud-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+#lab-hud .lab-hud-budget-row { margin-top: 0; }
 
 #lab-label {
   font-weight: bold;
