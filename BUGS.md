@@ -1,6 +1,36 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 102 — Cycle 4 PRUNE Week, Day 1 (2026-06-09) — Fresh Eyes Audit*
+*Updated: Day 103 — Cycle 4 PRUNE Week, Day 2 (2026-06-10) — Design Simplification*
+
+## Day 103 — Cycle 4 PRUNE Week, Day 2 (Design Simplification) summary
+
+**Build under test:** local `?v=1780704000` · `sw.js CACHE_NAME = 'signal-circuit-v66'` (first source-file change since Day 96). Cache-bust + SW bumped together per Day 78 precedent.
+**Result:** **40 / 40** assertions passed across 7 phases on first run (Day 103 harness). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`. **LO-1 retired** — Day 102 P5 / P5b reproduction harness FAILS on this build (the documented success signal).
+
+**Ships:** 5 Tier-1 PRUNE cuts from `PRUNE_REPORT.md`.
+
+1. **Cut #1 — LO-1 fix (mandatory first).** HUD cleanup moved from `GameState.showLevelSelect()` wrapper into `UI.showScreen()` transition layer. When destination is `'level-select'`, the transition layer cleans BOTH `blitzMode`/`blitzTimer`/`#blitz-hud` AND `speedrunMode`/`speedrunTimer`/`speedrunStart`/`#speedrun-hud`. Day 61 + Day 74 defensive blocks in `GameState.showLevelSelect()` removed (transition layer now owns the contract). **LO-1 retires after 12 days of latency** (re-verified non-user-reachable on Days 87/88/89/90/91/97/98/99/100/101/102).
+2. **Cut #2 — Tournament label compression.** `LocalTournamentAdapter.describe()` + `RemoteTournamentAdapter.describe()` switched to a 4-state, 1–2-word vocabulary keyed off Day 93's machine. `local`→`🏠 Local leaderboard`, `remote`→`🌐 Live leaderboard`, `remote-fallback`→`🌐 Live · offline`, `cloud-ready`→`🌐 Connecting…`. CSS `max-width`/`text-overflow:ellipsis`/`white-space:nowrap` on `#tournament-mode-label` bounds future state strings.
+3. **Cut #3 — Stats modal default-to-Cards.** `UI.setupStatsDashboard()` open handler now reads `gameState.getCardLibrary().length` and routes through `_switchStatsTab('cards')` when non-empty (Day 96 default preserved for empty libraries).
+4. **Cut #4 — Mastery card gating.** `<div id="mastery-section">` moved from the level-select panel into the `🌳 Mastery Tree` modal. `renderLevelSelect()` no longer calls `renderMasterySection()`; the Mastery Tree open handler does instead. End-game level grid drops **50 → 45 cards**; all 5 Chapter Mastery challenges remain reachable through the modal.
+5. **Cut #5 — `#lab-budget` out of constraint chip strip.** `#lab-hud` restructured into two `.lab-hud-row` divs with `flex-direction: column` on the parent. Top row: label + constraint chips + tries + reset (the constraint manifest). Bottom row: `#lab-budget` alone (state, not rule). Preserves Lab Bench III's "constraint manifest" vocabulary predicted by Day 94 LESSONS_LEARNED.md.
+
+**LOC delta** (5 source files): +103 / -53 = +50 net. Insertions are dominated by per-cut `// Day 103 PRUNE Cut #N:` audit-trail breadcrumbs at the touch sites; comment-stripped delta is approximately net-zero. PRUNE-week net-negative-LOC mandate carries forward to Day 104 (Code Cleanup).
+
+**Cache-bust + SW bump:** `?v=1780617600` → `?v=1780704000` (11 refs in `index.html`); `signal-circuit-v65` → `signal-circuit-v66` (in `sw.js`). Both required because Day 96 build had been pinned through Days 97/98/99/100/101/102.
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **28 consecutive days** since Day 76).
+**Latent observations:** **0 — LO-1 retired** (see Resolved section below).
+
+**Atomic commits:** 5 cuts × 1 commit + 1 wrap commit (Day 78 precedent).
+
+Full report: `qa-reports/day-103-qa.md`.
+Harness: `qa-reports/day-103-qa.cdp.js` (471 LOC, 40 assertions across 7 phases).
+Full PRUNE plan: `PRUNE_REPORT.md`.
+
+**Day 104 next: PRUNE Week Day 3 — Code Cleanup** (Day 79 precedent). Dead-code sweep + orphan-helper scan + Tier-2 carry-overs #8 (Difficulty Mode filing) and #9 (Install-App gating).
+
+---
 
 ## Day 102 — Cycle 4 PRUNE Week, Day 1 (Fresh Eyes Audit) summary
 
@@ -526,19 +556,24 @@ Harness: `qa-reports/day-88-qa.cdp.js`.
 
 ## Open Bugs
 
-*(none user-facing — Day 87 audit found 0 new bugs across 66 assertions, 29 phases, 0 console errors.)*
+*(none user-facing — Open Bugs queue empty since Day 76, 28-day streak through Day 103.)*
 
 ## Latent Observations (P2, not user-reachable)
+
+*(empty — LO-1 retired Day 103, see Resolved section.)*
+
+## Resolved — LO-1 (Day 87 surfaced → Day 103 fixed)
 
 ### LO-1 — Direct `ui.showScreen('level-select')` bypasses Day 61 + Day 74 HUD cleanup
 
 - **Surfaced:** Day 87 (Cycle 3 HARDEN Day 1 — Full Interaction Audit).
-- **Symptom:** Calling `window.game.ui.showScreen('level-select')` directly from the dev console (or any future internal caller) leaves `speedrunMode=true` and `#speedrun-hud` `display: flex`. Same shape would surface for `blitzMode` if an internal caller bypassed `GameState.showLevelSelect()` while Blitz Mode is active.
+- **Symptom:** Calling `window.game.ui.showScreen('level-select')` directly from the dev console (or any future internal caller) left `speedrunMode=true` and `#speedrun-hud` `display: flex`. Symmetric shape surfaced for `blitzMode` (re-verified Day 102).
 - **Severity:** P2 latent. Documented as code-smell, NOT a user-reachable bug.
-- **Why not user-reachable:** All user-facing transitions go through the `#back-btn` click handler, which calls `GameState.showLevelSelect()` — the wrapper that holds the Day 61 (Blitz) and Day 74 (Speedrun) defensive cleanup blocks. Day 87 explicitly verified the back-btn paths for both modes; both pass.
-- **Root cause:** The defensive HUD cleanup lives on the **GameState wrapper layer** (`GameState.showLevelSelect()`), not on the **UI layer** (`ui.showScreen('level-select')`). When the UI layer is invoked directly, the cleanup never runs.
-- **Fix plan (future Polish/Prune Week):** Move the cleanup blocks down to `ui.showScreen('level-select')` so the cleanup is invariant to caller. The cleanup is genuinely "any time this screen becomes visible" — the right home is the screen-transition function itself, not the high-level wrapper.
-- **Day 87 chose not to fix:** HARDEN Week policy is fix-only-user-facing-bugs. This observation is preserved here so a future Polish day can ship the fix at zero risk.
+- **Re-verified non-user-reachable on:** Days 87 / 88 / 89 / 90 / 91 / 97 / 98 / 99 / 100 / 101 / 102 (12 days of latency).
+- **Root cause:** The defensive HUD cleanup lived on the **GameState wrapper layer** (`GameState.showLevelSelect()`), not on the **UI layer** (`ui.showScreen('level-select')`). When the UI layer was invoked directly, the cleanup never ran.
+- **Day 103 fix (this resolution):** Day 61 + Day 74 cleanup blocks moved from `GameState.showLevelSelect()` into `UI.showScreen()`. When destination is `'level-select'`, the transition layer cleans BOTH Blitz and Speedrun mode + timer + HUD. The two defensive blocks in `GameState.showLevelSelect()` were removed (the transition layer is now the single owner of the contract).
+- **Regression baseline:** `qa-reports/day-103-qa.cdp.js` P2 + P3 explicitly replay the Day 102 P5 / P5b bypass-path reproduction — both now leave `speedrunMode=false` + hud `display=none` (and the Blitz analogue). Day 102 P5.c / P5.d / P5b.b would FAIL to reproduce LO-1 on the Day 103 build (the documented success signal).
+- **Day 87 lesson honored:** HUD cleanup belongs at the screen-transition layer, not at the orchestrator wrapper. PRUNE Week was the right home for this fix — it tightened a contract without removing a feature.
 
 ## Day 87 — Cycle 3 HARDEN Week, Day 1 (Full Interaction Audit) summary
 
