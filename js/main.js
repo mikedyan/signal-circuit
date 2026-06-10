@@ -1311,7 +1311,8 @@ class LocalTournamentAdapter extends TournamentBackend {
   getCombinedBoard(weekKey) { return this.wt.getCombinedBoard(weekKey); }
   getMode()  { return 'local'; }
   isLive()   { return false; }
-  describe() { return '\ud83c\udfe0 Local leaderboard \u00b7 same puzzle, deterministic bots'; }
+  // Day 103 PRUNE Cut #2: compress mode label to icon + 1-2 word state.
+  describe() { return '\ud83c\udfe0 Local leaderboard'; }
 }
 
 class RemoteTournamentAdapter extends TournamentBackend {
@@ -1449,11 +1450,12 @@ class RemoteTournamentAdapter extends TournamentBackend {
     return 'cloud-ready';
   }
   isLive()   { return this.getMode() === 'remote'; }
+  // Day 103 PRUNE Cut #2: compress 4-state mode label vocabulary.
   describe() {
     const mode = this.getMode();
-    if (mode === 'remote') return '\ud83c\udf10 Live leaderboard \u00b7 cloud-synced';
-    if (mode === 'remote-fallback') return '\ud83c\udf10 Live \u00b7 offline (using local for now)';
-    return '\ud83c\udf10 Cloud-ready \u00b7 Worker URL set, awaiting first ping';
+    if (mode === 'remote') return '\ud83c\udf10 Live leaderboard';
+    if (mode === 'remote-fallback') return '\ud83c\udf10 Live \u00b7 offline';
+    return '\ud83c\udf10 Connecting\u2026';
   }
 }
 

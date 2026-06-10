@@ -7189,6 +7189,14 @@ body.light-mode #lab-tutorial-close:hover { background: #00aacc; }
 }
 #tournament-back-btn:hover { color: #fff; border-color: #888; }
 #tournament-week-label { text-align: center; }
+/* Day 103 PRUNE Cut #2: bound mode-label width + ellipsis so future state
+   strings can’t spill into a paragraph apology copy. */
+#tournament-mode-label {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .tournament-tabs {
   display: flex;
   gap: 4px;
