@@ -852,6 +852,30 @@ class UI {
   }
 
   showScreen(screen) {
+    // Day 103 PRUNE Cut #1 (LO-1 fix): HUD cleanup belongs at the screen-transition
+    // layer, not at the GameState.showLevelSelect() wrapper. When destination is
+    // 'level-select', clean BOTH Blitz and Speedrun mode + HUD so direct
+    // ui.showScreen('level-select') calls (bypass paths) are equally safe.
+    // Subsumes the Day 61 (Blitz) + Day 74 (Speedrun) defensive blocks that
+    // previously lived in GameState.showLevelSelect().
+    if (screen === 'level-select') {
+      const gs = this.gameState;
+      if (gs) {
+        if (gs.blitzMode || gs.blitzTimer) {
+          if (gs.blitzTimer) { clearInterval(gs.blitzTimer); gs.blitzTimer = null; }
+          gs.blitzMode = false;
+          const _bh = document.getElementById('blitz-hud');
+          if (_bh) _bh.style.display = 'none';
+        }
+        if (gs.speedrunMode || gs.speedrunTimer) {
+          if (gs.speedrunTimer) { clearInterval(gs.speedrunTimer); gs.speedrunTimer = null; }
+          gs.speedrunMode = false;
+          gs.speedrunStart = null;
+          const _sh = document.getElementById('speedrun-hud');
+          if (_sh) _sh.style.display = 'none';
+        }
+      }
+    }
     const screens = ['level-select-screen', 'gameplay-screen', 'challenge-config-screen', 'sandbox-config-screen', 'creator-config-screen', 'daily-config-screen', 'infinite-pre-screen', 'infinite-summary-screen', 'tournament-screen'];
     // T6: Play transition whoosh on screen change
     if (this.gameState.audio) this.gameState.audio.playTransitionWhoosh();

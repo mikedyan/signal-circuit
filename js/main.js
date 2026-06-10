@@ -2680,22 +2680,10 @@ class GameState {
     this.gateBudget = 0;
     // Day 48: Reset KB wiring state (but preserve mode preference)
     this._kbResetOnLevelChange();
-    // Day 61 (Harden Day 4): Defensive Blitz/Speedrun HUD cleanup — fixes P2 blitz-info persistence
-    if (this.blitzMode || this.blitzTimer) {
-      if (this.blitzTimer) { clearInterval(this.blitzTimer); this.blitzTimer = null; }
-      this.blitzMode = false;
-      const _bh = document.getElementById('blitz-hud');
-      if (_bh) _bh.style.display = 'none';
-    }
-    // Day 74 (Harden Day 2 — Cycle 2): Defensive Speedrun HUD cleanup — fixes P2 speedrun-hud persistence
-    // The Day 61 comment claimed Speedrun coverage but only Blitz was wired. Sibling fix lands here.
-    if (this.speedrunMode || this.speedrunTimer) {
-      if (this.speedrunTimer) { clearInterval(this.speedrunTimer); this.speedrunTimer = null; }
-      this.speedrunMode = false;
-      this.speedrunStart = null;
-      const _sh = document.getElementById('speedrun-hud');
-      if (_sh) _sh.style.display = 'none';
-    }
+    // Day 103 PRUNE Cut #1 (LO-1 fix): The Day 61 (Blitz) + Day 74 (Speedrun)
+    // defensive HUD cleanup blocks that lived here were removed once UI.showScreen()
+    // owns the contract. ui.showScreen('level-select') below now performs the
+    // cleanup for BOTH wrapper and bypass paths.
     this.stopTimer();
     this.trackPlaytimeEnd();
     // Day 54: Log session entry
