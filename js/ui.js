@@ -3607,11 +3607,14 @@ class UI {
     const closeBtn = document.getElementById('stats-close');
 
     const openStats = () => {
-      // Day 96: default to Overview tab on every open.
-      this._activeStatsTab = 'overview';
+      // Day 103 PRUNE Cut #3: default to Cards tab when the snapshot library
+      // has content; otherwise stay on Overview (Day 96 default).
+      const gs = this.gameState;
+      const lib = (gs && typeof gs.getCardLibrary === 'function') ? gs.getCardLibrary() : [];
+      const defaultTab = (lib && lib.length > 0) ? 'cards' : 'overview';
       this.renderEnhancedStats();
-      this._updateStatsTabsUI();
       if (modal) modal.style.display = 'flex';
+      this._switchStatsTab(defaultTab);
       // Day 54: Lazy chart rendering - draw canvases after modal visible
       requestAnimationFrame(() => this._drawStatsCanvases());
     };
