@@ -6635,12 +6635,20 @@ class NotificationManager {
     // Day 69: Settings → Install App entry
     const settingsBtn = document.getElementById('install-app-btn');
     if (settingsBtn) {
-      settingsBtn.addEventListener('click', () => {
-        // Close settings modal first if open
-        const settingsModal = document.getElementById('settings-modal');
-        if (settingsModal) settingsModal.style.display = 'none';
-        this.maybeShowInstallModal({ source: 'settings', force: true });
-      });
+      // Day 104 PRUNE Cut #3 (Cycle 2 Tier-2 carry-over #9):
+      // hide the Settings entry when running standalone (PWA installed)
+      // so the row stops carrying a no-op button. The matching auto-arc
+      // already guards on _isStandalone() at maybeShowInstallModal().
+      if (this._isStandalone()) {
+        settingsBtn.style.display = 'none';
+      } else {
+        settingsBtn.addEventListener('click', () => {
+          // Close settings modal first if open
+          const settingsModal = document.getElementById('settings-modal');
+          if (settingsModal) settingsModal.style.display = 'none';
+          this.maybeShowInstallModal({ source: 'settings', force: true });
+        });
+      }
     }
     // Day 69: Wire branded modal buttons (idempotent — safe to call once)
     this._wireInstallModal();
