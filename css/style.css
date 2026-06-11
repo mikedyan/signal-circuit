@@ -6193,32 +6193,10 @@ body.light-mode .community-featured-card {
   text-shadow: 0 0 8px rgba(180, 130, 255, 0.4);
 }
 
-#mastery-levels-grid .level-btn.mastery-level {
-  border-color: #7744aa;
-  background: linear-gradient(135deg, rgba(100, 50, 180, 0.15), rgba(200, 170, 0, 0.1));
-  position: relative;
-}
-
-#mastery-levels-grid .level-btn.mastery-level:hover {
-  border-color: #aa66dd;
-  background: linear-gradient(135deg, rgba(100, 50, 180, 0.25), rgba(200, 170, 0, 0.15));
-  box-shadow: 0 0 12px rgba(180, 130, 255, 0.3);
-}
-
-#mastery-levels-grid .level-btn.mastery-level.completed {
-  border-color: #d4af37;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(100, 50, 180, 0.1));
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
-}
-
-#mastery-levels-grid .level-btn.mastery-level .level-number {
-  color: #c8a0ff;
-  font-size: 14px;
-}
-
-#mastery-levels-grid .level-btn.mastery-level.completed .level-number {
-  color: #d4af37;
-}
+/* Day 104 PRUNE Cut #1: removed 5 orphan `.mastery-level` selectors —
+   the class was never applied. renderMasterySection() in js/ui.js sets
+   `level-btn` + `completed mastery-completed` and relies on inline
+   borderColor (`#ffd700` or `#6a3d9a`) for the gold/purple framing. */
 
 /* Day 56: Campaign Difficulty Modes */
 .hardcore-badge {
