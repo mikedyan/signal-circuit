@@ -3671,6 +3671,9 @@ class UI {
       const lib = (this.gameState && typeof this.gameState.getCardLibrary === 'function')
         ? this.gameState.getCardLibrary() : [];
       cardsTab.textContent = `📸 My Cards (${lib.length})`;
+      // Day 104 PRUNE Cut #4 (Tier 2 #6): dim the tab when the library is
+      // empty so first-time openers don't read it as a count of new content.
+      cardsTab.classList.toggle('empty', lib.length === 0);
     }
   }
 

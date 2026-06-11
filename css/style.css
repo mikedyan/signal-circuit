@@ -7371,6 +7371,8 @@ body.light-mode #tournament-back-btn:hover { color: #000; border-color: #b8860b;
   color: #0f0;
   border-bottom-color: #0f0;
 }
+/* Day 104 PRUNE Cut #4 (Tier 2 #6): dim My Cards tab when library empty. */
+.stats-tab.empty:not(.active) { opacity: 0.55; }
 .stats-tab:focus-visible {
   outline: 2px solid #00e5ff;
   outline-offset: 2px;
