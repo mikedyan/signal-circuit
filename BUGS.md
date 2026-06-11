@@ -1,6 +1,34 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 103 — Cycle 4 PRUNE Week, Day 2 (2026-06-10) — Design Simplification*
+*Updated: Day 104 — Cycle 4 PRUNE Week, Day 3 (2026-06-11) — Code Cleanup*
+
+## Day 104 — Cycle 4 PRUNE Week, Day 3 (Code Cleanup) summary
+
+**Build under test:** local `?v=1780790400` · `sw.js CACHE_NAME = 'signal-circuit-v67'` (second source-file day in a row after Day 103 broke the 7-day Day 96 build pin). Cache-bust + SW bumped together per Day 78 precedent.
+**Result:** **34 / 34** assertions passed across 8 phases on first run (Day 104 harness). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`. PRUNE-week net-negative-LOC mandate held: +43 / −44 = **−1 net** across 5 source files.
+
+**Ships:** 4 PRUNE cuts — 1 orphan-CSS removal + 2 Cycle 2 Tier-2 carry-overs + 1 Cycle 4 Tier-2 polish.
+
+1. **Cut #1 — Orphan `.mastery-level` CSS removed (Code Cleanup).** 5 selectors under `#mastery-levels-grid .level-btn.mastery-level` deleted from `css/style.css` (−26 / +5 LOC). The class is never applied — `renderMasterySection()` in `js/ui.js` sets `level-btn` + `completed mastery-completed` and uses inline `borderColor` for the gold/purple framing. Surfaced by re-tracing what Day 103 Cut #4's modal re-parent actually still reached.
+2. **Cut #2 — Difficulty Mode filed under Gameplay (Cycle 2 Tier-2 carry-over #8).** `🔧 Mode: Standard` button moved out of `Display & Accessibility` into a new `Gameplay` section between Display and Audio. New `#settings-gameplay-row` wrapper. Button label, aria-label, click handler, and the 3-option chooser modal are byte-identical — only the parent section changes.
+3. **Cut #3 — Install-App settings button gated when standalone (Cycle 2 Tier-2 carry-over #9).** `setupInstallPrompt()` now hides `#install-app-btn` when `this._isStandalone()` returns true (`matchMedia('(display-mode: standalone)').matches` OR `navigator.standalone` on iOS). The auto-arc has guarded on the same helper since Day 69; this brings the Settings entry under the same gate so the Data row stops carrying a no-op button when the PWA is installed.
+4. **Cut #4 — My Cards stats tab dimmed when library empty (Cycle 4 Tier-2 #6).** `_updateStatsTabsUI()` toggles a `.empty` class on `#stats-tab-cards` when `getCardLibrary().length === 0`. CSS `.stats-tab.empty:not(.active) { opacity: 0.55 }` dims the tab so `📸 My Cards (0)` reads as a placeholder, not a content count. Active styling overrides the dim so clicking still gives the normal active treatment.
+
+**LOC delta** (5 source files: `css/style.css`, `index.html`, `js/main.js`, `js/ui.js`, `sw.js`): **+43 / −44 = −1 net**. Cut #1 alone is −26 / +5; the carry-over cuts add small breadcrumb comments. Comment-stripped delta is well below zero — the PRUNE-week net-negative mandate holds.
+
+**Cache-bust + SW bump:** `?v=1780704000` → `?v=1780790400` (11 refs in `index.html`); `signal-circuit-v66` → `signal-circuit-v67` (in `sw.js`).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **29 consecutive days** since Day 76).
+**Latent observations:** **0 → 0** (LO-1 retired on Day 103; no new LOs surfaced today).
+
+**Atomic commits:** 4 cuts × 1 commit + 1 wrap commit (Day 78 / Day 103 precedent).
+
+Full report: `qa-reports/day-104-qa.md`.
+Harness: `qa-reports/day-104-qa.cdp.js` (34 assertions across 8 phases).
+
+**Day 105 next: PRUNE Week Day 4 — Polish Sprint** (Day 80 precedent). Tier-3 backlog: smoothness/animation polish on the new Gameplay section reveal, focus-ring audit on the relocated difficulty button, mobile-layout double-check on the now-stacked settings sections, defaults audit before Day 106 (Expert Panel + Validation, target ≥9.0).
+
+---
 
 ## Day 103 — Cycle 4 PRUNE Week, Day 2 (Design Simplification) summary
 
