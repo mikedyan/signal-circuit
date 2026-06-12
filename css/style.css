@@ -6454,6 +6454,30 @@ body.light-mode .community-featured-card {
   padding-bottom: 12px;
   border-bottom: 1px solid #2a2a3e;
 }
+/* Day 105 PRUNE Polish Sprint #1: subtle staggered fade-in on each
+   .settings-section when #settings-modal first paints. Triggered by the
+   .is-opening class set in setupSettingsModal()'s show() handler; class
+   is stripped after 600ms so a second open re-fires the animation.
+   Five sections today (Display & Accessibility / Gameplay / Audio /
+   Notifications / Data) — Day 104 added Gameplay; the stagger makes the
+   new section feel intentional rather than abrupt. Developer section
+   only animates when debug-flag-revealed (display:none otherwise). */
+@keyframes settingsSectionFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#settings-modal.is-opening .settings-section {
+  animation: settingsSectionFadeIn 220ms ease-out both;
+}
+#settings-modal.is-opening .settings-section:nth-of-type(1) { animation-delay:   0ms; }
+#settings-modal.is-opening .settings-section:nth-of-type(2) { animation-delay:  35ms; }
+#settings-modal.is-opening .settings-section:nth-of-type(3) { animation-delay:  70ms; }
+#settings-modal.is-opening .settings-section:nth-of-type(4) { animation-delay: 105ms; }
+#settings-modal.is-opening .settings-section:nth-of-type(5) { animation-delay: 140ms; }
+#settings-modal.is-opening .settings-section:nth-of-type(6) { animation-delay: 175ms; }
+@media (prefers-reduced-motion: reduce) {
+  #settings-modal.is-opening .settings-section { animation: none !important; }
+}
 .settings-section:last-of-type {
   border-bottom: none;
 }
@@ -7364,7 +7388,11 @@ body.light-mode #tournament-back-btn:hover { color: #000; border-color: #b8860b;
   font-family: inherit;
   font-size: 12px;
   border-bottom: 2px solid transparent;
-  transition: color .15s, border-color .15s;
+  /* Day 105 PRUNE Polish Sprint #2: include opacity in the transition so
+     the Day 104 .empty class toggle on #stats-tab-cards animates between
+     the dim (0.55) and live (1.0) states instead of snapping at the
+     first-card save. */
+  transition: color .15s, border-color .15s, opacity .15s;
 }
 .stats-tab:hover { color: #0f0; }
 .stats-tab.active {

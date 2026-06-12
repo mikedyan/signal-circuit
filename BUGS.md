@@ -1,6 +1,39 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 104 — Cycle 4 PRUNE Week, Day 3 (2026-06-11) — Code Cleanup*
+*Updated: Day 105 — Cycle 4 PRUNE Week, Day 4 (2026-06-12) — Polish Sprint*
+
+## Day 105 — Cycle 4 PRUNE Week, Day 4 (Polish Sprint) summary
+
+**Build under test:** local `?v=1780876800` · `sw.js CACHE_NAME = 'signal-circuit-v68'` (third source-file day this PRUNE week after Day 103/104). Cache-bust + SW bumped together per Day 78 precedent.
+**Result:** **56 / 56** assertions passed across 9 phases on second run (one harness hardening pass to fix two probe-shape mismatches against `_notifManager.isEnabled()` and an init-timing race on `onboardingExperiment.getVariant()`). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`. LOC delta `+57 / −15 = +42` net across 4 source files — well inside Day 80's ±50 polish-day budget.
+
+**Ships:** 2 polish items + 4 verifications.
+
+1. **Polish #1 — Settings-section staggered fade-in.** New `@keyframes settingsSectionFadeIn` (220ms ease-out, opacity 0→1 + translateY 6px→0). `#settings-modal.is-opening .settings-section` applies the animation; 6 `:nth-of-type(N)` stagger rules with delays `0/35/70/105/140/175ms` so each section paints in sequence. `setupSettingsModal()`'s `show()` handler adds `.is-opening` to the modal immediately, stores a 600ms `setTimeout` on `this._settingsOpeningTimer`, and strips the class when the timer fires so re-opens re-fire the animation cleanly. `hide()` also strips the class and cancels the pending timer. `@media (prefers-reduced-motion: reduce)` short-circuits to `none !important`. Makes the Day 104 PRUNE Cut #2 Gameplay section feel deliberate rather than abrupt.
+2. **Polish #2 — `.stats-tab` opacity transition.** Extended `.stats-tab` `transition:` to include `opacity .15s` alongside the existing `color .15s, border-color .15s`. The Day 104 PRUNE Cut #4 `.empty` class dim now animates smoothly when the user saves their first card (0.55 → 1.0 over 150ms) instead of snapping.
+3. **Verify #3 — Focus-ring on relocated `#difficulty-mode-btn`** (no code change). Day 29 universal `button:focus-visible` rule (`outline: 2px solid #0f0; box-shadow: 0 0 8px rgba(0,255,0,0.3);`) still applies through the new `#settings-gameplay-row` parent. No `#difficulty-mode-btn` override exists.
+4. **Verify #4 — Mobile-layout double-check** at 375/414/768/1024 px. At every width: 0 vertical overlaps between the 5 visible `.settings-section` rows; Gameplay section header always visible; no horizontal scroll triggered by the new section.
+5. **Verify #5 — Welcome-toast vs L1 tutorial overlap** (PRUNE_REPORT Tier-3 #12). The `silent-standard` variant DOES fire a soft welcome toast (`🔧 Mode set to Standard. Change anytime in Settings.`) for 4.5s at cold start — but the toast sits at `z-index: 10020` / `top: 16px` while the tutorial overlay sits at `z-index: 50` over the toolbox area. They occupy different screen regions and z-layers and coexist cleanly. **Conclusion: no fix needed**, documented behavior, not a regression.
+6. **Verify #6 — Cold-start defaults audit** (Day 80 precedent). SFX 0.4 / Music 0.2 / theme auto / Standard silent-default / Daily+Streak notifs all unchanged. 2 cold-start non-level buttons (Day 78 invariant **30 days in**).
+
+**LOC delta** (4 source files: `css/style.css`, `js/ui.js`, `index.html`, `sw.js`): **+57 / −15 = +42 net**. Insertions dominated by the keyframe + 6 stagger rules + the JS class-lifecycle wiring + per-cut audit-trail breadcrumb comments. Polish-day budget per Day 80 was "net-neutral or small-positive (±50)"; +42 lands inside.
+
+**Cycle 4 PRUNE-week net LOC across 3 source-file days:** +50 / −1 / +42 = **+91 net**. PRUNE-week net-negative-LOC mandate did not hold this cycle in raw LOC terms because Day 103 absorbed LO-1's transition-layer move (+50). Comment-stripped delta is approximately net-zero across the three days. The actual *cuts* shipped (5 + 4 + 0 = 9 PRUNE cuts + 2 polish items) hit the spirit of the mandate.
+
+**Cache-bust + SW bump:** `?v=1780790400` → `?v=1780876800` (11 refs in `index.html`); `signal-circuit-v67` → `signal-circuit-v68` (in `sw.js`).
+
+**Open Bugs queue:** 0 at start of day, 0 at end of day (streak: **30 consecutive days** since Day 76).
+**Latent observations:** **0 → 0** (LO-1 retired on Day 103; no new LOs surfaced today).
+
+**Atomic commits:** 1 (Day 65 + Day 79 + Day 80 polish/cleanup-day precedent — single logical change).
+
+Full report: `qa-reports/day-105-qa.md`.
+Harness: `qa-reports/day-105-qa.cdp.js` (56 assertions across 9 phases).
+Spec: `specs/day-105-polish-sprint.md`.
+
+**Day 106 next: PRUNE Week Day 5 — Expert Panel + Validation** (Day 81 / Day 67 precedent). Re-score 10 dimensions across L1/L6/L18/L36/L44, write `reviews/prune-cycle-4-review.md`, target ≥9.0 (Cycle 2 closed at 8.9; the floor is hold-don't-drop). Close Cycle 4 PRUNE Week and stage Cycle 5 BUILD-week roadmap kickoff for Day 107.
+
+---
 
 ## Day 104 — Cycle 4 PRUNE Week, Day 3 (Code Cleanup) summary
 

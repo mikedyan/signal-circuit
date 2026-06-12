@@ -631,8 +631,31 @@ class UI {
         }
       } catch (e) {}
       modal.style.display = 'flex';
+      // Day 105 PRUNE Polish Sprint #1: tag the modal as "opening" so the
+      // CSS staggered .settings-section fade-in runs once on every open.
+      // Strip the class after the longest stagger (6 sections × 35ms +
+      // 220ms animation ≈ 430ms) plus a tiny margin so a rapid re-open
+      // still re-fires the animation cleanly. Respects
+      // prefers-reduced-motion via the matching CSS @media rule.
+      try {
+        modal.classList.add('is-opening');
+        if (this._settingsOpeningTimer) clearTimeout(this._settingsOpeningTimer);
+        this._settingsOpeningTimer = setTimeout(() => {
+          modal.classList.remove('is-opening');
+          this._settingsOpeningTimer = null;
+        }, 600);
+      } catch (e) {}
     };
-    const hide = () => { modal.style.display = 'none'; };
+    const hide = () => {
+      modal.style.display = 'none';
+      // Day 105 PRUNE Polish Sprint: clear the animation tag on hide so
+      // the next open re-triggers the staggered fade-in.
+      try { modal.classList.remove('is-opening'); } catch (e) {}
+      if (this._settingsOpeningTimer) {
+        clearTimeout(this._settingsOpeningTimer);
+        this._settingsOpeningTimer = null;
+      }
+    };
     open.addEventListener('click', show);
     if (close) close.addEventListener('click', hide);
     // Click outside content to close
