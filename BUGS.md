@@ -1,6 +1,36 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 105 — Cycle 4 PRUNE Week, Day 4 (2026-06-12) — Polish Sprint*
+*Updated: Day 106 — Cycle 4 PRUNE Week, Day 5 (2026-06-13) — Expert Panel + Validation*
+
+## Day 106 — Cycle 4 PRUNE Week, Day 5 (Expert Panel + Validation) summary
+
+**Build under test:** local `?v=1780876800` · `sw.js CACHE_NAME = 'signal-circuit-v68'` (Day 105 build, unchanged today). 0 source-file changes.
+**Result:** **80 / 80** assertions passed across 7 phases on second run (first run had 15 harness shape mismatches — selectors pointed at non-existent `#challenge-modes`/`#info-modes` parents and a `.screen.active` selector that doesn't match the actual `#level-select-screen` markup; all fixed by adopting Day 102's nav-button-filter primitive). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**Re-scored the 10-dimension expert rubric across L1/L6/L18/L36/L44** (Day 81 / Day 67 precedent). Final score: **9.1 / 10** (+0.2 from Cycle 2 close 8.9, +1.8 from Day 35 baseline 7.3). Two dimensions moved: Difficulty Curve +1 (Lab Bench II composite L41-L45 bridges L40→L60 with a unique post-campaign identity) and Bug-Free +1 (31-day empty-queue streak + 363-assertion HARDEN clean week + LO-1 retired). The remaining 7 dimensions are at their 9-ceiling.
+
+**Validation coverage:**
+- Build identity (11 ?v=1780876800 refs, sw v68, GameState constructed)
+- Cold-start audit (2 nav buttons, 45 level cards, 0 mastery cards in grid, silent-default difficulty='standard', SFX 0.4, Music 0.2)
+- Tier staircase (seeds 0/3/6/9/12/15/18/45 — Day 78 #2 cadence holds 28 days later; end-game = 63 = 18 nav + 45 overflow)
+- L1 (cold tutorial path), L6 (end Ch1), L18 (Tier-3 unlock), L36 (Lab Bench I), L44 (Lab Bench II NAND-only Half Adder, validator rejects 7-NAND submission with byte-exact `"Submission rejected: 7 gates exceeds hard cap of 6."`)
+- Cycle-4 invariants: Day 103 #1 LO-1 fix (bypass path cleans Blitz HUD), Day 103 #2 Tournament label compressed to 20 chars, Day 103 #3 Stats default-tab=overview cold, Day 103 #4 mastery cards out of grid, Day 103 #5 Lab HUD has 2 .lab-hud-row containers, Day 104 #2 Difficulty filed under Gameplay, Day 105 #1 settingsSectionFadeIn keyframe present
+- Day 79 dead-id purge: 7 identifiers undefined + #weekly-puzzle-btn DOM absent (27 days post-purge)
+- Console hygiene: 0/0
+
+**Open Bugs queue:** 0 → 0 (streak: **31 consecutive days** since Day 76).
+**Latent observations:** 0 → 0 (LO-1 retired on Day 103).
+
+**Atomic commits:** 1 (Day 81 / Day 67 PRUNE Day 5 precedent — review + state update wrap as a single logical change).
+
+Full report: `qa-reports/day-106-qa.md`.
+Harness: `qa-reports/day-106-qa.cdp.js` (80 assertions across 7 phases).
+Review: `reviews/prune-cycle-4-review.md` (15 KB).
+
+**Cycle 4 PRUNE Week closes. Cycle 5 BUILD Week begins Day 107 (tomorrow).** Roadmap target: Tournament Worker go-live (Day 83/93 adapter shell ready), Module split Phase 2 (wires.js → ES module), Lab Bench III mini-chapter (L46-L50 with fan-out budget constraint), shareable circuit images polish, gameplay HUD personal-best badge.
+
+---
+
 
 ## Day 105 — Cycle 4 PRUNE Week, Day 4 (Polish Sprint) summary
 
