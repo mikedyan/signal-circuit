@@ -1,7 +1,14 @@
 // wires.js — Wire management, drawing, selection, and deletion
+//
+// Day 107 (Cycle 5 BUILD Day 1): Module Split Phase 2 — wires.js is now a
+// true ES module (loaded via `<script type="module">`). Day 92 converted
+// gates.js as Phase 1. Tail block below installs the externally-consumed
+// names (Wire, WireManager, WIRE_COLORS_DEFAULT, getWireColors) on `window`
+// so the 4 classic-script consumers (simulation.js, canvas.js, ui.js,
+// main.js) continue to resolve them as bare globals at call time.
 
 // Wire color palette — breadboard jumper wire colors
-const WIRE_COLORS_DEFAULT = [
+export const WIRE_COLORS_DEFAULT = [
   '#4488ff', // blue
   '#ff6644', // orange-red
   '#44cc44', // green
@@ -15,7 +22,7 @@ const WIRE_COLORS_DEFAULT = [
 ];
 
 // Deuteranopia-safe palette
-const WIRE_COLORS_COLORBLIND = [
+export const WIRE_COLORS_COLORBLIND = [
   '#0077BB', // strong blue
   '#EE7733', // orange
   '#CC3311', // red
@@ -28,7 +35,7 @@ const WIRE_COLORS_COLORBLIND = [
   '#DDCC77', // sand
 ];
 
-function getWireColors() {
+export function getWireColors() {
   try {
     if (document.body.classList.contains('colorblind-mode')) return WIRE_COLORS_COLORBLIND;
     // Day 40: Check cosmetic wire palette
@@ -65,7 +72,7 @@ function _resetSemanticColors() {
   _semanticColorNext = 0;
 }
 
-class Wire {
+export class Wire {
   constructor(fromGateId, fromPinIndex, toGateId, toPinIndex, id) {
     this.id = id;
     this.fromGateId = fromGateId;
@@ -93,7 +100,7 @@ class Wire {
   }
 }
 
-class WireManager {
+export class WireManager {
   constructor(gameState) {
     this.gameState = gameState;
     this.wires = [];
@@ -592,4 +599,19 @@ class WireManager {
   }
 }
 
+// ── Day 107: Module Split Phase 2 — global rebind for classic-script consumers ──
+// wires.js is now a true ES module. The 4 classic-script consumers
+// (simulation.js, canvas.js, ui.js, main.js) still reference `Wire` /
+// `WireManager` / `WIRE_COLORS_DEFAULT` / `getWireColors` as bare globals
+// inside method bodies. We install them on `window` here so those consumers
+// continue to resolve the symbols at call time.
+//
+// Removal plan: this block can be deleted once all 4 consumer files have
+// been converted to ES modules with explicit imports (Cycle 6+).
+if (typeof window !== 'undefined') {
+  window.Wire = Wire;
+  window.WireManager = WireManager;
+  window.WIRE_COLORS_DEFAULT = WIRE_COLORS_DEFAULT;
+  window.getWireColors = getWireColors;
+}
 

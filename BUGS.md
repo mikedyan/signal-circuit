@@ -1,6 +1,35 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 106 — Cycle 4 PRUNE Week, Day 5 (2026-06-13) — Expert Panel + Validation*
+*Updated: Day 107 — Cycle 5 BUILD Week, Day 1 (2026-06-14) — Module Split Phase 2 (wires.js → ES module)*
+
+## Day 107 — Cycle 5 BUILD Week, Day 1 (Module Split Phase 2) summary
+
+**Build under test:** local `?v=1781049600` · `sw.js CACHE_NAME = 'signal-circuit-v69'`.
+**Result:** **34 / 34** assertions passed across 7 phases on second run (first run had 3 self-bugs: vCount expected 11 `<script>` tags when it's actually 10 scripts + 1 stylesheet = 11 `?v=` refs total; campaign entry path is `startLevel(id)` not bare `loadLevel(id)`; field name is `gs.gates` not `gs.placedGates` — all 3 fixed harness-side, zero app changes). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+Shipped Cycle 5 BUILD Day 1: **`js/wires.js` → true ES module**. Day 92 precedent (gates.js) applied to wires.js: 5 top-level declarations gained `export` (`WIRE_COLORS_DEFAULT`, `WIRE_COLORS_COLORBLIND`, `getWireColors`, `Wire`, `WireManager`); tail rebind block installs the 4 externally-consumed names (`Wire`, `WireManager`, `WIRE_COLORS_DEFAULT`, `getWireColors`) on `window` so the 4 classic-script consumers (`simulation.js`, `canvas.js`, `ui.js`, `main.js`) continue to resolve them as bare globals at call time. `WIRE_COLORS_COLORBLIND` deliberately NOT rebound — it's internal to `wires.js` only.
+
+**Verification highlights:**
+- `window.game.wireManager instanceof window.WireManager === true` (binding-identity proof: the rebind is canonical, not a re-export).
+- 11 cache-bust refs unified at `?v=1781049600` (10 scripts + 1 stylesheet).
+- L1 AND-gate synthetic solve through `new window.Gate('AND', ...)` + 3 × `new window.Wire(...)` + `runQuickTest()` → `progress.levels[1].stars === 3`.
+- Day 92 gates.js Phase 1 contract untouched: `window.Gate` / `window.GateTypes` / `window.IONode` / `window.roundRect` still present + correct shape.
+- Day 79 dead-id purge regression intact (7 identifiers undefined + #weekly-puzzle-btn DOM absent).
+- Cold-start Day 78 + Day 103 invariants hold (2 nav buttons, 45 level cards, silent-default difficulty='standard').
+
+**Source changes:** `js/wires.js` (+18/-6); `index.html` (cache-bust ×11 + `type="module"` on wires.js); `sw.js` (CACHE_NAME bump v68→v69).
+
+**Open Bugs queue:** 0 → 0 (streak: **32 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+**New bugs found today:** 0. **New bugs introduced today:** 0.
+
+Full report: `qa-reports/day-107-qa.md`.
+Harness: `qa-reports/day-107-qa.cdp.js` (34 assertions across 7 phases).
+Roadmap: `roadmaps/cycle-5-build.md`.
+
+**Day 108 next:** Tournament Worker Go-Live — write `tools/tournament-worker/` (Cloudflare Worker + KV store), wire `RemoteTournamentAdapter` to it, verify offline fallback.
+
+---
 
 ## Day 106 — Cycle 4 PRUNE Week, Day 5 (Expert Panel + Validation) summary
 
