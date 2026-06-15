@@ -23,7 +23,7 @@ CORS: `Access-Control-Allow-Origin: *` (read-only data; no auth today — see TO
 
 ### `POST /scores`
 
-Request body:
+Legacy submission route (Day 93). Body carries `weekKey`.
 
 ```json
 {
@@ -39,10 +39,27 @@ Request body:
 Response (200):
 
 ```json
-{ "ok": true, "rank": 3, "total": 12 }
+{ "ok": true, "rank": 3, "total": 12, "weekKey": "2026-W22" }
 ```
 
 400 on invalid payload (`invalid_json`, `invalid_payload`).
+
+### `POST /submit/:weekKey` *(Day 108)*
+
+Roadmap-spec REST surface. Same payload as `/scores` minus the body `weekKey`
+(URL wins; body-supplied `weekKey` is ignored when the URL key is set).
+
+```json
+{
+  "gates": 4,
+  "time": 87,
+  "score": 487,
+  "name": "Mike"
+}
+```
+
+Response identical to `/scores`. Use this route for new integrations;
+`/scores` is kept for backward compatibility with the Day 93 client.
 
 ### `GET /leaderboard/:weekKey`
 
@@ -113,4 +130,4 @@ location.reload();
 - **Auth / anti-cheat** — today's POST is open. Future work: Cloudflare Turnstile or HMAC of `{weekKey, score, ts}` with a build-time secret.
 - **Rate limit** — Cloudflare Worker can use `CF-IPCountry` + a per-IP KV counter, or Turnstile.
 - **Schema version field** — add `version` to submission payload + a server-side migration on read so additive client fields don't break old workers.
-- **Merged leaderboard UI** — today only `submitScore()` round-trips. The tournament screen still renders the local board. A future day will merge cloud entries into the rendered top-10.
+- ~~**Merged leaderboard UI**~~ — **shipped Day 108.** `RemoteTournamentAdapter` now exposes `getRemoteEntries(weekKey)` + `onBoardUpdate(weekKey, cb)`; `ui.js _renderTournamentLeaderboard()` merges cloud entries (sorted by score) into the top-10 view when in remote mode + cache non-empty. `.tournament-row-cloud` CSS variant + 🌐 prefix make cloud rows visually distinct.

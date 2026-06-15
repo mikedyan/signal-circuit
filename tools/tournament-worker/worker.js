@@ -16,6 +16,7 @@
  * Routes:
  *   GET  /health
  *   POST /scores              body: {weekKey, gates, time, score, name, meta?}
+ *   POST /submit/:weekKey     body: {gates, time, score, name, meta?}   (Day 108 alias)
  *   GET  /leaderboard/:wkkey
  */
 
@@ -54,14 +55,23 @@ async function handleHealth() {
   return json({ ok: true, mode: 'cloudflare-worker', ts: Date.now() });
 }
 
-async function handleSubmit(request, env) {
+function _kv(env) {
+  // Day 108: roadmap binding is TOURNAMENT_KV. Legacy binding name
+  // SIGNAL_CIRCUIT_TOURNAMENT is honored for backward compat if an existing
+  // wrangler.toml still uses it.
+  return (env && (env.TOURNAMENT_KV || env.SIGNAL_CIRCUIT_TOURNAMENT)) || null;
+}
+
+async function handleSubmit(request, env, weekKeyFromUrl) {
   let body;
   try {
     body = await request.json();
   } catch (e) {
     return json({ ok: false, error: 'invalid_json' }, 400);
   }
-  const weekKey = isValidWeekKey(body.weekKey) ? body.weekKey : null;
+  // Day 108: URL-scoped /submit/:weekKey wins; legacy /scores reads weekKey from body.
+  const candidateKey = weekKeyFromUrl || body.weekKey;
+  const weekKey = isValidWeekKey(candidateKey) ? candidateKey : null;
   const gates = safeInt(body.gates, 0, 10000);
   const time = safeInt(body.time, 0, 24 * 3600);
   const score = safeInt(body.score, 0, 10_000_000);
@@ -69,8 +79,10 @@ async function handleSubmit(request, env) {
   if (!weekKey || gates === null || time === null || score === null) {
     return json({ ok: false, error: 'invalid_payload' }, 400);
   }
+  const kv = _kv(env);
+  if (!kv) return json({ ok: false, error: 'kv_unbound' }, 500);
   const kvKey = `lb:${weekKey}`;
-  const raw = await env.SIGNAL_CIRCUIT_TOURNAMENT.get(kvKey);
+  const raw = await kv.get(kvKey);
   let list = [];
   try { list = raw ? JSON.parse(raw) : []; } catch (e) { list = []; }
   if (!Array.isArray(list)) list = [];
@@ -78,14 +90,16 @@ async function handleSubmit(request, env) {
   list.sort((a, b) => a.score - b.score);
   const total = list.length;
   if (list.length > TOP_N) list = list.slice(0, TOP_N);
-  await env.SIGNAL_CIRCUIT_TOURNAMENT.put(kvKey, JSON.stringify(list));
+  await kv.put(kvKey, JSON.stringify(list));
   const rank = list.findIndex((e) => e.score === score && e.name === name && e.gates === gates && e.time === time);
-  return json({ ok: true, rank: rank >= 0 ? rank + 1 : null, total });
+  return json({ ok: true, rank: rank >= 0 ? rank + 1 : null, total, weekKey });
 }
 
 async function handleLeaderboard(weekKey, env) {
   if (!isValidWeekKey(weekKey)) return json({ ok: false, error: 'invalid_weekkey' }, 400);
-  const raw = await env.SIGNAL_CIRCUIT_TOURNAMENT.get(`lb:${weekKey}`);
+  const kv = _kv(env);
+  if (!kv) return json({ ok: false, error: 'kv_unbound' }, 500);
+  const raw = await kv.get(`lb:${weekKey}`);
   let list = [];
   try { list = raw ? JSON.parse(raw) : []; } catch (e) { list = []; }
   if (!Array.isArray(list)) list = [];
@@ -102,7 +116,12 @@ export default {
       return handleHealth();
     }
     if (request.method === 'POST' && url.pathname === '/scores') {
-      return handleSubmit(request, env);
+      return handleSubmit(request, env, null);
+    }
+    // Day 108: roadmap-spec alias POST /submit/:weekKey.
+    const sm = url.pathname.match(/^\/submit\/(.+)$/);
+    if (request.method === 'POST' && sm) {
+      return handleSubmit(request, env, decodeURIComponent(sm[1]));
     }
     const m = url.pathname.match(/^\/leaderboard\/(.+)$/);
     if (request.method === 'GET' && m) {

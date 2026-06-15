@@ -1,6 +1,41 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 107 — Cycle 5 BUILD Week, Day 1 (2026-06-14) — Module Split Phase 2 (wires.js → ES module)*
+*Updated: Day 108 — Cycle 5 BUILD Week, Day 2 (2026-06-15) — Tournament Worker Go-Live*
+
+## Day 108 — Cycle 5 BUILD Week, Day 2 (Tournament Worker Go-Live) summary
+
+**Build under test:** local `?v=1781136000` · `sw.js CACHE_NAME = 'signal-circuit-v70'`.
+**Result:** **48 / 48** assertions across 9 phases on second run (first run had 1 harness self-bug: P3.2 compared `workerUrl` against a literal `${MOCK_URL}` template tag — fixed harness-side, zero app changes). **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+Shipped Cycle 5 BUILD Day 2: **Tournament Worker is live in the rendered leaderboard**. Day 93 had the adapter shell + cloud-ready/remote/remote-fallback state machine + fire-and-forget POST, but explicitly deferred reading the cloud cache into the UI. Today closes that loop and lands the roadmap-spec REST surface.
+
+**Net changes:**
+- **Worker REST surface:** roadmap-spec `POST /submit/:weekKey` URL-keyed alias added to `worker.js` + `local-mock-worker.js`; legacy `POST /scores` preserved for back-compat. Response payloads now echo `weekKey`. `wrangler.toml` binding renamed to `TOURNAMENT_KV` per roadmap; worker reads either `env.TOURNAMENT_KV` (new) or `env.SIGNAL_CIRCUIT_TOURNAMENT` (Day 93 legacy).
+- **Adapter:** `RemoteTournamentAdapter` gains `getRemoteEntries(weekKey)` (sync cache reader, returns array or null) + `onBoardUpdate(weekKey, cb)` (listener/disposer pair, fires after async `/leaderboard/:weekKey` fetch lands). `TournamentBackend` base + `LocalTournamentAdapter` ship inert defaults so renderers never type-sniff the backend class.
+- **Renderer:** `ui.js _renderTournamentLeaderboard()` — when mode is `remote` AND cloud cache non-empty, render cloud entries merged with the player's local best, sorted by score, top 10. `.tournament-row-cloud` cyan-tinted CSS variant + 🌐 prefix mark cloud rows; ⭐ wins on the self row. Every other mode keeps the local pseudo-board (gameplay-unaffecting fallback).
+- **Listener lifecycle:** `showTournamentScreen()` disposes any prior listener and registers a fresh one keyed on the current week. Kicks `backend.getLeaderboard(info.key)` to fire the async fetch.
+- **CSS:** `.tournament-row-cloud` + light-mode mirror.
+
+**Verification highlights:**
+- P4: `submitScore(3, 25, 'Mochi')` → mock worker `GET /leaderboard/:wk` shows exactly 1 entry, stored score == local-submission score (no drift).
+- P5: 3 cloud rows render in the tournament screen, 1 self-cloud row, first-row name prefix is 🌐 or ⭐, mode label = `🌐 Live leaderboard`.
+- P6: kill mock → `getMode() === 'remote-fallback'` → forced re-render shows 0 `.tournament-row-cloud` rows + 10 local pseudo-rows. `submitScore` on fallback still returns a local payload (gameplay never blocks on the network).
+- P7: `POST /submit/2026-Wxx` returns `{ok: true, weekKey, rank: 1}`; legacy `POST /scores` still 200; `POST /submit/notaweek` returns 400.
+- P8: Day 78 cold-start 2 nav buttons; Day 103 45 level cards; Day 79 dead identifiers undefined + `#weekly-puzzle-btn` DOM absent; Day 107 `window.Wire`/`WireManager` still classes; Day 92 `window.Gate`/`GateTypes` still bound.
+
+**Source changes:** `js/main.js` (+~50), `js/ui.js` (+~50), `css/style.css` (+10), `tools/tournament-worker/worker.js` (+30/-10), `tools/tournament-worker/local-mock-worker.js` (+20/-3), `tools/tournament-worker/wrangler.toml` (binding rename), `index.html` (cache-bust ×11), `sw.js` (CACHE_NAME bump v69→v70).
+
+**Open Bugs queue:** 0 → 0 (streak: **33 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+**New bugs found today:** 0. **New bugs introduced today:** 0.
+
+Full report: `qa-reports/day-108-qa.md`.
+Harness: `qa-reports/day-108-qa.cdp.js` (48 assertions across 9 phases, self-spawns + tears down the mock worker).
+Roadmap: `roadmaps/cycle-5-build.md`.
+
+**Day 109 next:** Lab Bench III mini-chapter (L46-L50) with fan-out budget — third constraint axis, composite with NAND-only + hardCap.
+
+---
 
 ## Day 107 — Cycle 5 BUILD Week, Day 1 (Module Split Phase 2) summary
 

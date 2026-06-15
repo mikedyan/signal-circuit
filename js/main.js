@@ -1297,6 +1297,10 @@ class TournamentBackend {
   getMode()    { return 'unknown'; }
   isLive()     { return false; }
   describe()   { return 'Tournament backend (unknown)'; }
+  // Day 108: live-board surface used by ui.js to render cloud entries.
+  // Local-only backends return null + a no-op disposer.
+  getRemoteEntries(/* weekKey */) { return null; }
+  onBoardUpdate(/* weekKey, cb */) { return () => {}; }
 }
 
 class LocalTournamentAdapter extends TournamentBackend {
@@ -1330,6 +1334,36 @@ class RemoteTournamentAdapter extends TournamentBackend {
     this._lastReachAt = 0;
     this._reachInFlight = null;
     this._remoteBoardCache = {}; // weekKey -> entries[]
+    this._boardListeners = [];   // Day 108: [{ weekKey, cb }]
+  }
+  // Day 108: synchronous read of the cached cloud board (or null if not
+  // fetched yet). UI calls this on every render; getLeaderboard() kicks
+  // the async fetch and fires _emitBoardUpdate() when it lands.
+  getRemoteEntries(weekKey) {
+    if (!weekKey || !this._remoteBoardCache) return null;
+    const cached = this._remoteBoardCache[weekKey];
+    return Array.isArray(cached) ? cached : null;
+  }
+  // Day 108: subscribe to async board-cache updates for a given weekKey.
+  // Returns a disposer fn. UI registers on screen-open and disposes on
+  // screen-close to avoid stale closures.
+  onBoardUpdate(weekKey, cb) {
+    if (!weekKey || typeof cb !== 'function') return () => {};
+    const entry = { weekKey, cb };
+    this._boardListeners.push(entry);
+    return () => {
+      const i = this._boardListeners.indexOf(entry);
+      if (i >= 0) this._boardListeners.splice(i, 1);
+    };
+  }
+  _emitBoardUpdate(weekKey) {
+    if (!weekKey || !Array.isArray(this._boardListeners)) return;
+    // Iterate over a copy so listeners that dispose themselves don't skip neighbors.
+    const snap = this._boardListeners.slice();
+    for (const entry of snap) {
+      if (entry.weekKey !== weekKey) continue;
+      try { entry.cb(this._remoteBoardCache[weekKey] || []); } catch (e) { /* swallow */ }
+    }
   }
   _isConfigured() {
     return !!(this.config && typeof this.config.workerUrl === 'string' && this.config.workerUrl.length > 0);
@@ -1429,6 +1463,8 @@ class RemoteTournamentAdapter extends TournamentBackend {
                 this._remoteBoardCache[key] = j.entries;
                 this._lastReachable = true;
                 this._lastReachAt = Date.now();
+                // Day 108: notify renderers that cloud entries are available.
+                this._emitBoardUpdate(key);
               }
             })
             .catch(() => {

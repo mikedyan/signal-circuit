@@ -13,6 +13,7 @@
  * Routes (identical to the Cloudflare Worker):
  *   GET  /health
  *   POST /scores              body: {weekKey, gates, time, score, name, meta?}
+ *   POST /submit/:weekKey     body: {gates, time, score, name, meta?}   (Day 108)
  *   GET  /leaderboard/:wkkey
  *
  * Extra debug-only route:
@@ -86,10 +87,11 @@ async function readBody(req) {
   });
 }
 
-function handleSubmit(body) {
+function handleSubmit(body, weekKeyFromUrl) {
   let parsed;
   try { parsed = JSON.parse(body); } catch (e) { return { status: 400, body: { ok: false, error: 'invalid_json' } }; }
-  const weekKey = isValidWeekKey(parsed.weekKey) ? parsed.weekKey : null;
+  const candidateKey = weekKeyFromUrl || parsed.weekKey;
+  const weekKey = isValidWeekKey(candidateKey) ? candidateKey : null;
   const gates = safeInt(parsed.gates, 0, 10000);
   const time = safeInt(parsed.time, 0, 24 * 3600);
   const score = safeInt(parsed.score, 0, 10_000_000);
@@ -104,7 +106,7 @@ function handleSubmit(body) {
   if (list.length > TOP_N) list = list.slice(0, TOP_N);
   store.set(weekKey, list);
   const rank = list.findIndex((e) => e.score === score && e.name === name && e.gates === gates && e.time === time);
-  return { status: 200, body: { ok: true, rank: rank >= 0 ? rank + 1 : null, total } };
+  return { status: 200, body: { ok: true, rank: rank >= 0 ? rank + 1 : null, total, weekKey } };
 }
 
 function handleLeaderboard(weekKey) {
@@ -127,7 +129,15 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url.pathname === '/scores') {
       const raw = await readBody(req);
-      const result = handleSubmit(raw);
+      const result = handleSubmit(raw, null);
+      sendJson(res, result.status, result.body);
+      return;
+    }
+    // Day 108: roadmap-spec POST /submit/:weekKey alias.
+    const sm = url.pathname.match(/^\/submit\/(.+)$/);
+    if (req.method === 'POST' && sm) {
+      const raw = await readBody(req);
+      const result = handleSubmit(raw, decodeURIComponent(sm[1]));
       sendJson(res, result.status, result.body);
       return;
     }

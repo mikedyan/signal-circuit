@@ -7273,6 +7273,17 @@ body.light-mode #lab-tutorial-close:hover { background: #00aacc; }
   background: rgba(255, 215, 0, 0.12);
   border-radius: 4px;
 }
+/* Day 108: cloud-sourced rows are subtly tinted cyan so they’re visibly
+   distinct from the local pseudo-board. Self-row gold tint wins on overlap. */
+.tournament-row-cloud {
+  background: rgba(0, 200, 255, 0.06);
+  border-left: 2px solid rgba(0, 200, 255, 0.35);
+  padding-left: 6px;
+}
+.tournament-row-cloud.tournament-row-self {
+  background: rgba(255, 215, 0, 0.14);
+  border-left-color: rgba(255, 215, 0, 0.55);
+}
 .trow-rank { width: 32px; color: #888; font-weight: bold; }
 .trow-name { flex: 1; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tournament-row-self .trow-name { color: #ffd700; }
@@ -7367,6 +7378,9 @@ body.light-mode .tournament-stat-row { border-bottom-color: #eedfc0; color: #2a2
 body.light-mode .tournament-archive-row { border-bottom-color: #eedfc0; }
 body.light-mode .tournament-row-self { background: rgba(184, 134, 11, 0.18); }
 body.light-mode .tournament-row-self .trow-name { color: #b8860b; }
+/* Day 108: cloud-row tint mirror in light mode. */
+body.light-mode .tournament-row-cloud { background: rgba(0, 140, 200, 0.08); border-left-color: rgba(0, 140, 200, 0.45); }
+body.light-mode .tournament-row-cloud.tournament-row-self { background: rgba(184, 134, 11, 0.18); border-left-color: rgba(184, 134, 11, 0.6); }
 body.light-mode .tarc-week { color: #6a5a30; }
 body.light-mode #tournament-back-btn { color: #444; border-color: #b89a40; }
 body.light-mode #tournament-back-btn:hover { color: #000; border-color: #b8860b; }

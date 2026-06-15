@@ -2694,6 +2694,28 @@ class UI {
     // Reset tabs to This Week
     document.querySelectorAll('.tournament-tab').forEach((t) => t.classList.toggle('active', t.getAttribute('data-tab') === 'this-week'));
     document.querySelectorAll('.tournament-tab-pane').forEach((p) => { p.style.display = (p.id === 'tournament-tab-this-week') ? '' : 'none'; });
+    // Day 108: dispose any prior board-update listener, then register a fresh
+    // one for this week's key. Repaint when cloud entries land asynchronously.
+    if (typeof this._tournamentBoardUnsub === 'function') {
+      try { this._tournamentBoardUnsub(); } catch (e) {}
+      this._tournamentBoardUnsub = null;
+    }
+    if (backend && typeof backend.onBoardUpdate === 'function') {
+      try {
+        this._tournamentBoardUnsub = backend.onBoardUpdate(info.key, () => {
+          const screen = document.getElementById('tournament-screen');
+          if (!screen || screen.style.display === 'none') return;
+          this._renderTournamentLeaderboard();
+          const updated = (typeof backend.describe === 'function') ? backend.describe() : modeLabel;
+          setText('tournament-mode-label', updated);
+        });
+      } catch (e) { /* swallow */ }
+    }
+    // Day 108: kick the cloud fetch so the async fire-and-forget GET
+    // /leaderboard/:weekKey lands and triggers the board-update listener.
+    if (backend && typeof backend.getLeaderboard === 'function') {
+      try { backend.getLeaderboard(info.key); } catch (e) { /* swallow */ }
+    }
     this._renderTournamentLeaderboard();
     this.showScreen('tournament');
   }
@@ -2703,8 +2725,43 @@ class UI {
     if (!wt) return;
     const list = document.getElementById('tournament-leaderboard');
     if (!list) return;
-    const board = wt.getCombinedBoard().slice(0, 10);
     const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    // Day 108: when the backend is in remote mode AND has cached cloud
+    // entries for this week, surface the real cloud leaderboard instead of
+    // the local pseudo-board. Empty cloud + remote mode falls back to local
+    // (so a brand-new week with zero cloud submissions still shows the
+    // synthetic field). Local / cloud-ready / remote-fallback modes keep the
+    // existing pseudo-board path verbatim.
+    const backend = this.gameState.tournamentBackend;
+    const info = wt.getCurrentWeekInfo();
+    const mode = (backend && typeof backend.getMode === 'function') ? backend.getMode() : 'local';
+    const cloud = (backend && typeof backend.getRemoteEntries === 'function')
+      ? backend.getRemoteEntries(info.key)
+      : null;
+    if (mode === 'remote' && Array.isArray(cloud) && cloud.length > 0) {
+      // Merge “You” (local best) into cloud entries so the player’s own
+      // best is visible even before the cloud round-trip rebroadcasts it.
+      const myBest = wt.getBest(info.key);
+      let merged = cloud.slice();
+      if (myBest && !cloud.some((c) => c && c.score === myBest.score && c.gates === myBest.gates && c.time === myBest.time)) {
+        merged.push({ name: 'You', gates: myBest.gates, time: myBest.time, score: myBest.score, isPlayer: true });
+      } else if (myBest) {
+        // Mark the existing cloud row that matches the player’s best.
+        merged = merged.map((c) => (c && c.score === myBest.score && c.gates === myBest.gates && c.time === myBest.time) ? { ...c, isPlayer: true } : c);
+      }
+      merged.sort((a, b) => (a.score - b.score));
+      const top = merged.slice(0, 10);
+      list.innerHTML = top.map((entry, i) => {
+        const rank = i + 1;
+        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+        const cls = entry.isPlayer ? 'tournament-row tournament-row-cloud tournament-row-self' : 'tournament-row tournament-row-cloud';
+        const tag = entry.isPlayer ? '⭐ ' : '🌐 ';
+        const safeName = String(entry.name || 'Player').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+        return `<div class="${cls}"><span class="trow-rank">${medal}</span><span class="trow-name">${tag}${safeName}</span><span class="trow-stats">${entry.gates} gates · ${fmtTime(entry.time)} · score ${entry.score}</span></div>`;
+      }).join('');
+      return;
+    }
+    const board = wt.getCombinedBoard().slice(0, 10);
     list.innerHTML = board.map((entry, i) => {
       const rank = i + 1;
       const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
