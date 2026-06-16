@@ -1,6 +1,43 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 108 — Cycle 5 BUILD Week, Day 2 (2026-06-15) — Tournament Worker Go-Live*
+*Updated: Day 109 — Cycle 5 BUILD Week, Day 3 (2026-06-16) — Lab Bench III mini-chapter (L46-L50) with fan-out budget*
+
+## Day 109 — Cycle 5 BUILD Week, Day 3 (Lab Bench III — fan-out budget) summary
+
+**Build under test:** local `?v=1781222400` · `sw.js CACHE_NAME = 'signal-circuit-v71'`.
+**Result:** **42 / 42** assertions across 10 phases on **first run**. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+Shipped Cycle 5 BUILD Day 3: **Lab Bench III mini-chapter (L46-L50)** with a third validator constraint axis — **fan-out budget**. The first triple-composite level (L48: NAND palette + hardCap=3 + maxFanOut=2) lights up the new 3-chip HUD slot and the multi-clause validator path in a single design.
+
+**Net changes:**
+- **Levels:** 5 new lab-bench levels in Chapter 11 (`isLabBench:true` + `maxFanOut:2`). L46 single-constraint (intro). L47 fan-out + hardCap. **L48 triple-composite** (NAND-only + hardCap=3 + maxFanOut=2). L49 mustIncludeGate=[XOR] + fan-out + hardCap. L50 NAND-only + fan-out + hardCap=2. Each level has 3 escalating hints; truth tables verified.
+- **Validator (`js/main.js _validateLabConstraints()`):** third clause appended after `mustIncludeGate`. Counts wires per `(fromGateId, fromPinIndex)` source (input-node outputs + gate output pins treated uniformly). Rejection clause: byte-exact `"fan-out K exceeds budget of N"`. Day 94 multi-reason `.join('; ')` handles the composite case.
+- **HUD (`js/ui.js updateLabHud()`):** populates new `#lab-constraint-3` slot from `level.labConstraint[2]` using the same show/hide pattern. L46 single-string still hides chips 2 + 3; L48 renders all three side-by-side.
+- **DOM (`index.html`):** new `<span id="lab-constraint-3" class="lab-chip lab-constraint">` inserted after `#lab-constraint-2`.
+- **Chapter metadata (`js/levels.js` CHAPTERS):** new entry `id:11, title:'Chapter 11: Lab Bench III', levels:[46-50], isBonus:true, color:'#A0F8FF'`.
+
+**Verification highlights:**
+- P4.3: L46 with 3 wires from input A → byte-exact `"Submission rejected: fan-out 3 exceeds budget of 2."` (single-clause format).
+- P5.5: L48 with 4 NANDs + A fanned to 3 → byte-exact `"Submission rejected: 4 gates exceeds hard cap of 3; fan-out 3 exceeds budget of 2."` (composite format via Day 94 `; ` join).
+- P6.4: L48 shows all 3 chips visible with texts matching `labConstraint` array; L46 keeps chips 2+3 hidden.
+- P7.3: L48 optimal 2-NAND solve (G1 = NAND(A,B); G2 = NAND(G1,G1)) completes via `runQuickTest()` with stars persisted.
+- P8.2: Day 94 regression — L44 (NAND-only Half Adder, hardCap=6) with 7 NANDs still rejects byte-exact `"Submission rejected: 7 gates exceeds hard cap of 6."`. No fan-out clause leaks because L44 has no `maxFanOut`.
+- P9: cold-start invariants — 2 nav buttons (Day 78), **50 level cards** (45 baseline + 5 new bonus L46-L50), silent-default difficulty, Day 79 dead-IDs undefined, Day 92 `window.Gate/GateTypes`, Day 107 `window.Wire/WireManager`, SW v71 all PASS.
+
+**Source LOC:** `js/levels.js` (+187), `js/main.js` (+22), `js/ui.js` (+14), `index.html` (+12/-11), `sw.js` (+1/-1) — **+236/-12 net**.
+
+**Open Bugs queue:** 0 → 0 (streak: **34 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+**New bugs found today:** 0. **New bugs introduced today:** 0.
+
+Full report: `qa-reports/day-109-qa.md`.
+Harness: `qa-reports/day-109-qa.cdp.js` (42 assertions across 10 phases).
+Spec: `specs/day-109-lab-bench-iii.md`.
+Roadmap: `roadmaps/cycle-5-build.md`.
+
+**Day 110 next:** Gameplay HUD personal-best badge — `#level-best-badge` shows best gate/time/star on revisit; suppressed cold; live-updates on improvement.
+
+---
 
 ## Day 108 — Cycle 5 BUILD Week, Day 2 (Tournament Worker Go-Live) summary
 

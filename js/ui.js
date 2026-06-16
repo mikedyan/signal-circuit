@@ -3375,6 +3375,10 @@ class UI {
     // Day 94: composite-constraint extension — `labConstraint` may now be an
     // ARRAY of strings (composite levels carry two constraints). Render up to
     // two chips side-by-side using #lab-constraint + #lab-constraint-2.
+    // Day 109: Lab Bench III — third chip slot (#lab-constraint-3) for the
+    // triple-composite levels (L48 NAND-only + hardCap + maxFanOut; L49 XOR +
+    // fan-out + hardCap; L50 NAND-only + fan-out + hardCap). Up to 3 chips
+    // render side-by-side; flex-wrap in the HUD row handles narrow widths.
     // Backwards-compatible: a single-string value lights up only the first chip,
     // preserving Day 84 L41/L42/L43 chip rendering byte-for-byte.
     const lcRaw = level.labConstraint;
@@ -3399,6 +3403,16 @@ class UI {
       } else {
         constraintEl2.textContent = '';
         constraintEl2.style.display = 'none';
+      }
+    }
+    const constraintEl3 = document.getElementById('lab-constraint-3');
+    if (constraintEl3) {
+      if (lcList[2]) {
+        constraintEl3.textContent = lcList[2];
+        constraintEl3.style.display = '';
+      } else {
+        constraintEl3.textContent = '';
+        constraintEl3.style.display = 'none';
       }
     }
     // Lock RUN button when exhausted, surface Reset Lab.

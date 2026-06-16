@@ -3536,6 +3536,28 @@ class GameState {
       }
     }
 
+    // Day 109: maxFanOut — every wire source (input-node output OR gate output
+    // pin) must emit at most `level.maxFanOut` wires. Forces players to share
+    // intermediate signals instead of duplicating gates feeding multiple
+    // destinations. Keyed by `${fromGateId}:${fromPinIndex}` so multi-output
+    // gates get per-pin accounting (today only single-output gates exist in
+    // lab levels, but the keying is forward-compatible).
+    if (typeof level.maxFanOut === 'number') {
+      const fanout = {};
+      const wires = (this.wireManager && this.wireManager.wires) || [];
+      for (const w of wires) {
+        const k = `${w.fromGateId}:${w.fromPinIndex}`;
+        fanout[k] = (fanout[k] || 0) + 1;
+      }
+      let maxSeen = 0;
+      for (const k of Object.keys(fanout)) {
+        if (fanout[k] > maxSeen) maxSeen = fanout[k];
+      }
+      if (maxSeen > level.maxFanOut) {
+        reasons.push(`fan-out ${maxSeen} exceeds budget of ${level.maxFanOut}`);
+      }
+    }
+
     if (reasons.length === 0) return { ok: true };
     return {
       ok: false,
