@@ -1,6 +1,43 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 109 — Cycle 5 BUILD Week, Day 3 (2026-06-16) — Lab Bench III mini-chapter (L46-L50) with fan-out budget*
+*Updated: Day 110 — Cycle 5 BUILD Week, Day 4 (2026-06-17) — Gameplay HUD personal-best badge*
+
+## Day 110 — Cycle 5 BUILD Week, Day 4 (Personal-best badge) summary
+
+**Build under test:** local `?v=1781308800` · `sw.js CACHE_NAME = 'signal-circuit-v72'`.
+**Result:** **34 / 34** assertions across 9 phases on **first run**. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+Shipped Cycle 5 BUILD Day 4: **Personal-best badge** in the gameplay info panel. On level revisits (campaign + lab-bench only) where the player has already cleared the level, a new `#level-best-badge` chip renders `🏆 Your best: N gates · mm:ss · ⭐⭐⭐` with a `📈 Try to beat` CTA (or `✨ Perfect run — try a no-hint speedrun?` when 3★ at optimal). Suppressed on first entry and across sandbox / challenge / daily / infinite / tournament. Live-updates after `completeLevel()` saves a new best (with a cyan pulse via `.lbb-improved`).
+
+**Net changes:**
+- **DOM (`index.html`):** new `<div id="level-best-badge">` inserted after `#gate-indicator` inside `#level-info`, containing `#level-best-text` + `#level-best-cta`.
+- **CSS (`css/style.css`):** new `#level-best-badge` block + `@keyframes lbbImprovedPulse` + `prefers-reduced-motion` guard + light-mode mirror.
+- **`js/ui.js`:** new `UI.updateLevelBestBadge({improved?})` method (~68 LOC). Reads `gs.progress.levels[level.id]`, suppresses across non-campaign modes (`isSandbox|isChallenge|isDaily` flags + `gs.isSandboxMode|isChallengeMode|isInfinite|isTournament|isTournamentArchive`), renders gate/time/star tuple, picks one of two CTAs based on perfect-run heuristic. Called from `updateLevelInfo()` tail.
+- **`js/main.js`:** `updateLevelBestBadge({improved:true})` hook at end of `completeLevel()` (after `saveProgress()`).
+
+**Verification highlights:**
+- P2.3: Cold L1 entry — badge `style.display === 'none'` (no prior progress).
+- P3.1–3.5: Synthetic `progress[1] = {bestGateCount:1, bestTime:22, stars:3}` + `loadLevel(1)` → badge `display:flex`, text contains `"1 gate"` (singular handled), `"0:22"` (mm:ss), 3 `⭐` glyphs, perfect-run CTA fires.
+- P4.3–4.6: Inferior prior (`{bestGateCount:3, bestTime:60, stars:1}`) overwritten by synthetic 30s + `completeLevel(1, 1)` run → returns `stars=3`, progress updates to `bestGateCount:1`, badge text changes to `"1 gate"`, `.lbb-improved` class applies (pulse animation fires).
+- P5: Equal-best save — `completeLevel(1, 1)` on already-optimal entry → `bestGateCount` unchanged, badge stays visible, 0 throws.
+- P6: Sandbox mode → badge `display:none`.
+- P7: Daily mode → badge `display:none`.
+- P8: cold-start invariants — **50 level cards** (Day 109 invariant), Day 79 7 dead IDs all `undefined`, `#weekly-puzzle-btn` DOM absent, Day 92 `window.Gate/GateTypes`, Day 107 `window.Wire/WireManager` bindings live.
+
+**Source LOC:** `index.html` (+9), `css/style.css` (+50), `js/ui.js` (+68), `js/main.js` (+6), `sw.js` (+1/-1) — **≈ +133/-11 net**.
+
+**Open Bugs queue:** 0 → 0 (streak: **35 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+**New bugs found today:** 0. **New bugs introduced today:** 0.
+
+Full report: `qa-reports/day-110-qa.md`.
+Harness: `qa-reports/day-110-qa.cdp.js` (34 assertions across 9 phases).
+Spec: `specs/day-110-level-best-badge.md`.
+Roadmap: `roadmaps/cycle-5-build.md`.
+
+**Day 111 next:** Stats Dashboard Enhancement — Tournament History tab inside Stats modal (per `roadmaps/cycle-5-build.md`).
+
+---
 
 ## Day 109 — Cycle 5 BUILD Week, Day 3 (Lab Bench III — fan-out budget) summary
 

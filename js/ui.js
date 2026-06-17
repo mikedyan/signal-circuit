@@ -1336,6 +1336,9 @@ class UI {
       document.getElementById('run-btn').textContent = level.isLabBench ? '📐 Submit Blueprint' : '▶ RUN';
     }
 
+    // Day 110: Personal-best badge on revisits
+    this.updateLevelBestBadge();
+
     // #91: Cross-level "Used In" forward references
     // Day 64 (Prune): only surface refs the player has actually unlocked.
     const usedInEl = document.getElementById('used-in-refs');
@@ -1354,6 +1357,82 @@ class UI {
       } else {
         usedInEl.style.display = 'none';
       }
+    }
+  }
+
+  // Day 110: Personal-best badge — gated on revisits w/ completed campaign progress.
+  // Suppressed on first entry of a level (no prior data) and for all non-campaign
+  // modes (sandbox, challenge, daily, infinite, tournament). Live-updates after
+  // GameState.completeLevel() saves a new best.
+  updateLevelBestBadge(opts) {
+    const el = document.getElementById('level-best-badge');
+    if (!el) return;
+    const gs = this.gameState;
+    const level = gs && gs.currentLevel;
+    if (!level) { el.style.display = 'none'; return; }
+
+    // Suppress in any non-campaign mode. Lab Bench levels DO show the badge —
+    // they're part of campaign progression and revisits benefit from a target.
+    if (level.isSandbox || level.isChallenge || level.isDaily ||
+        gs.isSandboxMode || gs.isChallengeMode || gs.isInfinite ||
+        gs.isTournament || gs.isTournamentArchive) {
+      el.style.display = 'none';
+      return;
+    }
+
+    const p = gs.progress && gs.progress.levels && gs.progress.levels[level.id];
+    if (!p || !p.completed) {
+      el.style.display = 'none';
+      return;
+    }
+
+    const gates = (typeof p.bestGateCount === 'number' && p.bestGateCount > 0) ? p.bestGateCount : null;
+    const stars = (typeof p.stars === 'number' && p.stars >= 1) ? Math.min(3, Math.max(1, p.stars)) : null;
+    const timeSec = (typeof p.bestTime === 'number' && isFinite(p.bestTime) && p.bestTime > 0) ? p.bestTime : null;
+
+    if (gates == null && stars == null && timeSec == null) {
+      el.style.display = 'none';
+      return;
+    }
+
+    const fmtTime = (s) => {
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${String(sec).padStart(2, '0')}`;
+    };
+
+    const parts = [];
+    if (gates != null) parts.push(`<span class="lbb-metric">${gates} gate${gates === 1 ? '' : 's'}</span>`);
+    if (timeSec != null) parts.push(`<span class="lbb-metric">${fmtTime(timeSec)}</span>`);
+    if (stars != null) {
+      let starsHtml = '';
+      for (let i = 0; i < 3; i++) starsHtml += (i < stars ? '⭐' : '☆');
+      parts.push(`<span class="lbb-stars">${starsHtml}</span>`);
+    }
+
+    const textEl = document.getElementById('level-best-text');
+    if (textEl) textEl.innerHTML = `Your best: ${parts.join(' · ')}`;
+
+    const ctaEl = document.getElementById('level-best-cta');
+    if (ctaEl) {
+      // Only invite a beat-attempt if there's still room (stars<3 OR gates>optimal).
+      const hasRoom = (stars != null && stars < 3) ||
+                      (gates != null && level.optimalGates && gates > level.optimalGates) ||
+                      true; // always show the CTA for revisit motivation
+      ctaEl.textContent = (stars === 3 && (!level.optimalGates || gates === level.optimalGates))
+        ? '✨ Perfect run — try a no-hint speedrun?'
+        : '📈 Try to beat';
+      ctaEl.style.display = hasRoom ? '' : 'none';
+    }
+
+    el.style.display = 'flex';
+
+    if (opts && opts.improved) {
+      el.classList.remove('lbb-improved');
+      // Restart animation by forcing reflow before re-adding class.
+      void el.offsetWidth;
+      el.classList.add('lbb-improved');
+      setTimeout(() => { try { el.classList.remove('lbb-improved'); } catch (e) {} }, 900);
     }
   }
 

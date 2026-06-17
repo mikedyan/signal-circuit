@@ -1224,6 +1224,49 @@ body.light-mode #focus-failed-btn {
 #gate-stars-preview .star-gold { color: #ffd700; }
 #gate-stars-preview .star-dim { color: #333; }
 
+/* Day 110: Personal-best badge on gameplay HUD (revisits only) */
+#level-best-badge {
+  margin-top: 6px;
+  padding: 7px 10px;
+  background: linear-gradient(135deg, rgba(0, 200, 220, 0.07), rgba(255, 215, 0, 0.05));
+  border: 1px solid #2a6a72;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: #cfeff3;
+  transition: opacity .18s ease-out;
+}
+#level-best-badge #level-best-row {
+  font-weight: bold;
+  letter-spacing: 0.2px;
+}
+#level-best-badge .lbb-stars {
+  color: #ffd700;
+  letter-spacing: 1px;
+}
+#level-best-badge .lbb-metric {
+  color: #aee9f0;
+}
+#level-best-badge #level-best-cta {
+  font-size: 10.5px;
+  color: #7fb8be;
+  font-style: italic;
+  letter-spacing: 0.3px;
+}
+#level-best-badge.lbb-improved {
+  animation: lbbImprovedPulse 800ms ease-out;
+}
+@keyframes lbbImprovedPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 220, 240, 0.0); }
+  35%  { box-shadow: 0 0 14px 2px rgba(0, 220, 240, 0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 220, 240, 0.0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #level-best-badge.lbb-improved { animation: none; }
+}
+
 /* ── Progress Bar ── */
 #progress-bar-container {
   max-width: 600px;
@@ -4871,6 +4914,15 @@ body.light-mode #level-info p,
 body.light-mode #level-desc {
   color: #444;
 }
+
+/* Day 110: light-mode mirror for personal-best badge */
+body.light-mode #level-best-badge {
+  background: linear-gradient(135deg, rgba(0, 140, 160, 0.10), rgba(200, 165, 0, 0.08));
+  border-color: #b8d4d8;
+  color: #1a4d52;
+}
+body.light-mode #level-best-badge .lbb-metric { color: #1a4d52; }
+body.light-mode #level-best-badge #level-best-cta { color: #4d7a80; }
 
 body.light-mode #truth-table th {
   background: #ddd;

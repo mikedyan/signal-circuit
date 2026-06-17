@@ -2682,6 +2682,12 @@ class GameState {
       if (this.ui && this.ui.updateLabHud) this.ui.updateLabHud();
     }
 
+    // Day 110: Live-update the personal-best badge. Pass improved:true so the
+    // badge can flash the pulse animation when a new best replaces the prior one.
+    if (this.ui && typeof this.ui.updateLevelBestBadge === 'function') {
+      try { this.ui.updateLevelBestBadge({ improved: true }); } catch (e) {}
+    }
+
     return stars;
   }
 
