@@ -1179,6 +1179,48 @@ class WeeklyTournament {
     return this.data.byWeek[key] || null;
   }
 
+  // Day 111: All weeks the player has actually submitted a score for. Returns
+  // an array of submission rows newest-first (by ts, with weekKey tiebreak),
+  // each enriched with the recomputed rank/percentile against the seeded
+  // pseudo-board for that week. The Stats Dashboard's Tournament History tab
+  // is the only consumer today — the original tournament screen keeps its own
+  // archive renderer for the in-flow `Last 8 weeks` strip.
+  getSubmissionHistory() {
+    const out = [];
+    const byWeek = this.data.byWeek || {};
+    const curKey = this.getCurrentWeekInfo().key;
+    for (const key of Object.keys(byWeek)) {
+      const entry = byWeek[key];
+      if (!entry || typeof entry.score !== 'number') continue;
+      // Recompute rank/percentile defensively so stale persisted values from
+      // older builds can't render as wrong here (the pseudo-board math is
+      // deterministic per weekKey, but the fields were only written from
+      // Day 72 onward).
+      const rank = this.getRank(key, entry.score);
+      const percentile = this.getPercentile(key, entry.score);
+      out.push({
+        weekKey: key,
+        gates: entry.gates,
+        time: entry.time,
+        score: entry.score,
+        name: entry.name || 'You',
+        rank,
+        percentile,
+        podium: rank <= 3,
+        crowned: rank === 1,
+        ts: entry.ts || 0,
+        isCurrent: key === curKey,
+      });
+    }
+    out.sort((a, b) => {
+      // Newest first by timestamp, weekKey tiebreak (lexical desc covers
+      // YYYY-Www reliably).
+      if (b.ts !== a.ts) return b.ts - a.ts;
+      return b.weekKey.localeCompare(a.weekKey);
+    });
+    return out;
+  }
+
   // Last N completed weeks (oldest-first for display).
   getRecentWeeks(n) {
     const out = [];

@@ -3806,25 +3806,40 @@ class UI {
     });
 
     // Day 96: Tab strip wiring (Overview / My Cards).
+    // Day 111: Tournament History tab added — gated on ≥1 submission.
     const overviewTab = document.getElementById('stats-tab-overview');
     const cardsTab = document.getElementById('stats-tab-cards');
+    const tournamentTab = document.getElementById('stats-tab-tournament');
     if (overviewTab) {
       overviewTab.addEventListener('click', () => this._switchStatsTab('overview'));
     }
     if (cardsTab) {
       cardsTab.addEventListener('click', () => this._switchStatsTab('cards'));
     }
+    if (tournamentTab) {
+      tournamentTab.addEventListener('click', () => this._switchStatsTab('tournament'));
+    }
   }
 
   // ── Day 96: Snapshot Cards Library Tab ──
+  // ── Day 111: Tournament History Tab joins the rotation ──
   _switchStatsTab(which) {
+    // Day 111: route an unknown / hidden tab to Overview so cold-start
+    // openers and stale `_activeStatsTab` values from older sessions never
+    // strand the modal on an empty pane.
+    const validTabs = ['overview', 'cards', 'tournament'];
+    if (!validTabs.includes(which)) which = 'overview';
     this._activeStatsTab = which;
     const overviewPane = document.getElementById('stats-grid');
     const cardsPane = document.getElementById('stats-cards-pane');
+    const tournamentPane = document.getElementById('stats-tournament-pane');
     if (overviewPane) overviewPane.style.display = (which === 'overview') ? '' : 'none';
     if (cardsPane) cardsPane.style.display = (which === 'cards') ? '' : 'none';
+    if (tournamentPane) tournamentPane.style.display = (which === 'tournament') ? '' : 'none';
     if (which === 'cards') {
       this._renderCardLibraryGrid();
+    } else if (which === 'tournament') {
+      this._renderTournamentHistoryGrid();
     }
     this._updateStatsTabsUI();
   }
@@ -3833,6 +3848,7 @@ class UI {
     const which = this._activeStatsTab || 'overview';
     const overviewTab = document.getElementById('stats-tab-overview');
     const cardsTab = document.getElementById('stats-tab-cards');
+    const tournamentTab = document.getElementById('stats-tab-tournament');
     if (overviewTab) {
       overviewTab.classList.toggle('active', which === 'overview');
       overviewTab.setAttribute('aria-selected', which === 'overview' ? 'true' : 'false');
@@ -3848,6 +3864,25 @@ class UI {
       // empty so first-time openers don't read it as a count of new content.
       cardsTab.classList.toggle('empty', lib.length === 0);
     }
+    if (tournamentTab) {
+      tournamentTab.classList.toggle('active', which === 'tournament');
+      tournamentTab.setAttribute('aria-selected', which === 'tournament' ? 'true' : 'false');
+      const submissions = this._getTournamentSubmissions();
+      tournamentTab.textContent = `🏆 Tournament (${submissions.length})`;
+      // Day 111: mirror the My Cards .empty dim treatment so a Tournament-naive
+      // player reads the tab as inert rather than as missed content.
+      tournamentTab.classList.toggle('empty', submissions.length === 0);
+    }
+  }
+
+  // Day 111: tiny wrapper around the WeeklyTournament helper so renderers
+  // never have to null-check the backend twice.
+  _getTournamentSubmissions() {
+    const gs = this.gameState;
+    if (!gs || !gs.weeklyTournament || typeof gs.weeklyTournament.getSubmissionHistory !== 'function') {
+      return [];
+    }
+    return gs.weeklyTournament.getSubmissionHistory();
   }
 
   _renderCardLibraryGrid() {
@@ -3899,6 +3934,69 @@ class UI {
         const id = btn.getAttribute('data-card-id');
         const target = library.find(c => c.id === id);
         if (target) this._openCachedShareCard(target);
+      });
+    });
+  }
+
+  // ── Day 111: Tournament History Tab ──
+  // Renders the player's per-week tournament submissions inside the Stats
+  // modal. Empty state mirrors the My Cards empty pane. Each row exposes a
+  // "View Replay" button that loads the archived puzzle for that week via
+  // WeeklyTournament.startArchiveWeek() (no score persists on replay).
+  _renderTournamentHistoryGrid() {
+    const pane = document.getElementById('stats-tournament-pane');
+    if (!pane) return;
+    const submissions = this._getTournamentSubmissions();
+    const gs = this.gameState;
+    const wt = gs ? gs.weeklyTournament : null;
+
+    if (!submissions.length) {
+      pane.innerHTML = `
+        <div class="tournament-history-empty" style="text-align:center;padding:32px 16px;color:#888;font-size:13px;line-height:1.5;">
+          <div style="font-size:42px;line-height:1;margin-bottom:8px;">🏆</div>
+          <div style="color:#ccc;font-size:14px;margin-bottom:4px;">No tournament runs yet</div>
+          <div>Open the <strong style="color:#ffd700;">🏆 Tournament</strong> screen from the<br>level select, solve this week's puzzle, and<br>your runs will show up here.</div>
+        </div>`;
+      return;
+    }
+
+    const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    let html = `<div class="tournament-history-meta" style="font-size:11px;color:#888;margin:0 4px 8px;">${submissions.length} ${submissions.length === 1 ? 'submission' : 'submissions'} · newest first · tap Replay to revisit the puzzle</div>`;
+    html += '<div class="tournament-history-list">';
+    for (const s of submissions) {
+      const podiumChip = s.crowned
+        ? '<span class="th-chip th-chip-crowned">👑 #1</span>'
+        : s.podium
+          ? `<span class="th-chip th-chip-podium">🏅 #${s.rank}</span>`
+          : `<span class="th-chip th-chip-rank">#${s.rank}</span>`;
+      const liveChip = s.isCurrent ? '<span class="th-chip th-chip-live">Live</span>' : '';
+      const pct = Math.max(0, Math.min(100, s.percentile));
+      const safeKey = String(s.weekKey || '').replace(/[<>&"]/g, '');
+      html += `<div class="tournament-history-row">
+        <div class="th-week">${safeKey}${liveChip ? ' ' + liveChip : ''}</div>
+        <div class="th-stats">${podiumChip} <span class="th-stat">${s.gates} ${s.gates === 1 ? 'gate' : 'gates'} · ${fmtTime(s.time)} · top ${100 - pct}%</span></div>
+        <button class="settings-btn th-replay" data-week-key="${safeKey}" data-current="${s.isCurrent ? '1' : '0'}">View Replay</button>
+      </div>`;
+    }
+    html += '</div>';
+    pane.innerHTML = html;
+
+    pane.querySelectorAll('.th-replay').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-week-key');
+        const isCurrent = btn.getAttribute('data-current') === '1';
+        if (!wt || !key) return;
+        // Close the Stats modal before launching gameplay so the replay
+        // surface owns the screen.
+        const modal = document.getElementById('stats-modal');
+        if (modal) modal.style.display = 'none';
+        // Live week launches the live puzzle (score will count); past weeks
+        // launch the archive puzzle (no score recorded — see
+        // WeeklyTournament.startArchiveWeek). Saved circuits are not yet
+        // restored — the spec's "View Replay" hook is a no-op for the
+        // circuit state today and the player rebuilds from scratch.
+        if (isCurrent) wt.startCurrentWeek();
+        else wt.startArchiveWeek(key);
       });
     });
   }

@@ -1,6 +1,42 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 110 — Cycle 5 BUILD Week, Day 4 (2026-06-17) — Gameplay HUD personal-best badge*
+*Updated: Day 111 — Cycle 5 BUILD Week, Day 5 (2026-06-18) — Stats Dashboard Tournament History tab*
+
+## Day 111 — Cycle 5 BUILD Week, Day 5 (Tournament History tab) summary
+
+**Build under test:** local `?v=1781395200` · `sw.js CACHE_NAME = 'signal-circuit-v73'`.
+**Result:** **35 / 35** assertions across 9 phases on **first run**. **0** new user-facing bugs. **0** console errors. **0** `Runtime.exceptionThrown`.
+
+Shipped Cycle 5 BUILD Day 5: **Tournament History tab inside the Stats modal**. Third `.stats-tab` joins the Day 96 Overview / My Cards rotation. Gated on having ≥1 submission (cold-start = empty state with the same dim-tab treatment as My Cards via Day 104's `.empty` class). Each row carries weekKey, rank chip (`👑 #1` crowned / `🏅 #N` podium / `#N` neutral), gates / mm:ss / top X% stat, a `Live` chip on the current-week row, and a `View Replay` button that closes the modal and launches `WeeklyTournament.startCurrentWeek()` or `startArchiveWeek(weekKey)`.
+
+**Net changes:**
+- **DOM (`index.html`):** new `<button id="stats-tab-tournament">` + `<div id="stats-tournament-pane">` siblings of the Day 96 Cards tab/pane.
+- **CSS (`css/style.css`):** new `.tournament-history-*` block (row, chips, week column, light-mode mirror) reusing the Day 96 `tFadeIn` keyframe for tab fade-in.
+- **`js/main.js`:** new `WeeklyTournament.getSubmissionHistory()` method — filters `data.byWeek`, recomputes rank/percentile defensively per render, newest-first sort by `ts` with `weekKey` tiebreak.
+- **`js/ui.js`:** `_switchStatsTab(which)` validates input against a whitelist (defaults to `'overview'` so stale `_activeStatsTab` values can never strand the modal); `_updateStatsTabsUI()` updates the third tab's text + `.active` + `.empty`; new `_renderTournamentHistoryGrid()` renders rows or empty state and wires the Replay button into `WeeklyTournament` after closing the modal.
+
+**Verification highlights:**
+- P3.1–3.2: Stats modal opens to Overview (Day 96 default), both Cards + Tournament panes hidden.
+- P4.2–4.3: Empty-state pane renders `🏆 No tournament runs yet` copy; tab text `🏆 Tournament (0)` carries `.empty` dim class.
+- P5: `weeklyTournament.submitScore(3, 25, 'Mochi')` → row count 1, tab `(1)`, `.empty` strips, row text contains `3 gates` + `0:25`, Replay button labeled `View Replay` with `data-current="1"`.
+- P6: backfill `2026-W18` directly into `byWeek` → row count 2, tab `(2)`, current-week row sits above the older `2026-W18` (newest-first by `ts`).
+- P7: stub `startArchiveWeek` → archive Replay click captured `{ kind: 'archive', key: '2026-W18' }` and `stats-modal` closed (`display:none`).
+- P8: cold-start invariants — How to Play + Settings visible (Day 78), **50** level cards (Day 109 invariant), 7 Day 79 dead IDs `undefined`, `#weekly-puzzle-btn` absent, Day 92 `window.Gate/GateTypes` + Day 107 `window.Wire/WireManager` all PASS.
+
+**Source LOC:** `index.html` (+5/-2), `css/style.css` (+76), `js/main.js` (+42), `js/ui.js` (+90), `sw.js` (+1/-1) — **≈ +214/-3 net**.
+
+**Open Bugs queue:** 0 → 0 (streak: **36 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+**New bugs found today:** 0. **New bugs introduced today:** 0.
+
+Full report: `qa-reports/day-111-qa.md`.
+Harness: `qa-reports/day-111-qa.cdp.js` (35 assertions across 9 phases).
+Spec: `specs/day-111-tournament-history-tab.md`.
+Roadmap: `roadmaps/cycle-5-build.md`.
+
+**Day 112 next:** Cycle 5 BUILD Week complete → Cycle 5 HARDEN Week Day 1: Full Interaction Audit.
+
+---
 
 ## Day 110 — Cycle 5 BUILD Week, Day 4 (Personal-best badge) summary
 

@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1781308800">
+  <link rel="stylesheet" href="css/style.css?v=1781395200">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -244,9 +244,12 @@
         <div id="stats-tabs" role="tablist" aria-label="Stats sections">
           <button id="stats-tab-overview" class="stats-tab active" role="tab" aria-selected="true">📊 Overview</button>
           <button id="stats-tab-cards" class="stats-tab" role="tab" aria-selected="false">📸 My Cards (0)</button>
+          <!-- Day 111: Tournament History tab (gated on ≥1 submission). -->
+          <button id="stats-tab-tournament" class="stats-tab" role="tab" aria-selected="false">🏆 Tournament (0)</button>
         </div>
         <div id="stats-grid"></div>
         <div id="stats-cards-pane" style="display:none;"></div>
+        <div id="stats-tournament-pane" style="display:none;"></div>
         <button id="stats-close">Close</button>
       </div>
     </div>
@@ -835,15 +838,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1781308800"></script>
-  <script type="module" src="js/wires.js?v=1781308800"></script>
-  <script src="js/simulation.js?v=1781308800"></script>
-  <script src="js/levels.js?v=1781308800"></script>
-  <script src="js/audio.js?v=1781308800"></script>
-  <script src="js/achievements.js?v=1781308800"></script>
-  <script src="js/canvas.js?v=1781308800"></script>
-  <script src="js/ui.js?v=1781308800"></script>
-  <script src="js/tutorial.js?v=1781308800"></script>
-  <script src="js/main.js?v=1781308800"></script>
+  <script type="module" src="js/gates.js?v=1781395200"></script>
+  <script type="module" src="js/wires.js?v=1781395200"></script>
+  <script src="js/simulation.js?v=1781395200"></script>
+  <script src="js/levels.js?v=1781395200"></script>
+  <script src="js/audio.js?v=1781395200"></script>
+  <script src="js/achievements.js?v=1781395200"></script>
+  <script src="js/canvas.js?v=1781395200"></script>
+  <script src="js/ui.js?v=1781395200"></script>
+  <script src="js/tutorial.js?v=1781395200"></script>
+  <script src="js/main.js?v=1781395200"></script>
 </body>
 </html>

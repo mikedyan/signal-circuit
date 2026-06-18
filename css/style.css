@@ -7492,6 +7492,82 @@ body.light-mode .stats-tab.active {
   border-bottom-color: #0a5a0a;
 }
 body.light-mode #stats-tabs { border-bottom-color: #c8d8c0; }
+
+/* Day 111: Tournament History tab inside the Stats modal. Mirrors the
+   tournament-row visual language so a player switching tabs reads the
+   surface as one continuous story rather than two parallel UIs. */
+#stats-tournament-pane { animation: tFadeIn .25s ease; }
+.tournament-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tournament-history-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 12px;
+}
+.tournament-history-row:last-child { border-bottom: none; }
+.tournament-history-row .th-week {
+  width: 92px;
+  color: #c8a2ff;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tournament-history-row .th-stats {
+  flex: 1;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tournament-history-row .th-stat { color: #888; font-size: 11px; }
+.tournament-history-row .th-chip {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ddd;
+}
+.tournament-history-row .th-chip-rank { color: #aaa; }
+.tournament-history-row .th-chip-podium {
+  background: rgba(255, 215, 0, 0.14);
+  color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.4);
+}
+.tournament-history-row .th-chip-crowned {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  border-color: rgba(255, 170, 0, 0.6);
+  font-weight: bold;
+}
+.tournament-history-row .th-chip-live {
+  background: rgba(0, 200, 255, 0.12);
+  color: #00e5ff;
+  border-color: rgba(0, 200, 255, 0.4);
+  font-size: 10px;
+  padding: 1px 6px;
+}
+.tournament-history-row .th-replay {
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+}
+.tournament-history-empty { color: #888; font-style: normal; }
+body.light-mode .tournament-history-row { border-bottom-color: #eedfc0; }
+body.light-mode .tournament-history-row .th-week { color: #6a3aa8; }
+body.light-mode .tournament-history-row .th-stats { color: #6a6a6a; }
+body.light-mode .tournament-history-row .th-chip { background: rgba(0, 0, 0, 0.05); color: #444; }
+body.light-mode .tournament-history-row .th-chip-podium { background: rgba(184, 134, 11, 0.18); color: #b8860b; border-color: rgba(184, 134, 11, 0.45); }
+body.light-mode .tournament-history-row .th-chip-live { background: rgba(0, 140, 200, 0.12); color: #007aa8; border-color: rgba(0, 140, 200, 0.4); }
+body.light-mode .tournament-history-empty { color: #6a6a6a !important; }
 body.light-mode .card-thumb { background: #f0f4ec !important; border-color: #c8d8c0 !important; color: #333 !important; }
 body.light-mode .card-thumb:hover { border-color: #0a5a8a !important; box-shadow: 0 4px 12px rgba(10, 90, 138, 0.16); }
 body.light-mode .card-library-empty { color: #6a6a6a !important; }
