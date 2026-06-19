@@ -16,4 +16,4 @@ Full interaction audit per HARDEN Monday spec (every screen and modal), includin
 - **Day 110**: Gameplay HUD personal-best badge.
 - **Day 111**: Stats Dashboard Tournament History tab.
 
-All Cycle 5 invariant UI surfaces held perfectly. Lab Bench assertions updated to reflect L46-L50 range logic.
+All Cycle 5 invariant UI surfaces held perfectly. Lab Bench assertions updated to reflect L41-L45 range logic.
