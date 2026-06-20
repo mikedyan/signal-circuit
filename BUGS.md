@@ -1266,3 +1266,7 @@ All 20 screens tested and rendering correctly: Level Select, Gameplay (L1), Dail
 Shipped: Snapshot Cards library with Stats → 📸 My Cards tab, capped at 20 with FIFO eviction, click-to-reopen, and Reset Game wipe. 28 CDP assertions / 0 console errors / 0 exceptions. **21-day empty-queue streak preserved** (Day 76 → Day 96).
 
 **No new bugs at start of day. No new bugs at end of day.**
+
+## Day 113
+**Latent Observations**
+- **LO-2**: Local `puppeteer-core` test harness for Full Interaction Audit fails on the factory orchestrator due to missing `@puppeteer/browsers` dependencies. Needs fallback pure-CDP websocket runner (`ws@8.20.0`) or OpenClaw container configuration update.
