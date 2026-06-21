@@ -1269,4 +1269,19 @@ Shipped: Snapshot Cards library with Stats → 📸 My Cards tab, capped at 20 w
 
 ## Day 113
 **Latent Observations**
-- **LO-2**: Local `puppeteer-core` test harness for Full Interaction Audit fails on the factory orchestrator due to missing `@puppeteer/browsers` dependencies. Needs fallback pure-CDP websocket runner (`ws@8.20.0`) or OpenClaw container configuration update.
+- **LO-2** ~~Local `puppeteer-core` test harness for Full Interaction Audit fails on the factory orchestrator due to missing `@puppeteer/browsers` dependencies. Needs fallback pure-CDP websocket runner (`ws@8.20.0`) or OpenClaw container configuration update.~~ **RESOLVED Day 114.**
+
+## Day 114 — Cycle 5 HARDEN Week, Day 2 (Level Playthrough) summary
+
+**Build under test:** local `?v=1781395200` · `sw.js CACHE_NAME = 'signal-circuit-v73'` (Day 111 build, unchanged).
+**Result:** **32 / 32** assertions across 7 phases (28/32 first run with 4 harness-shape self-bugs, all fixed harness-side, 0 app changes). **0** console errors. **0** `Runtime.exceptionThrown`.
+
+**LO-2 RESOLVED.** Root cause: the CDP harness never needed puppeteer — it speaks raw CDP over `ws@8.x` (present in the openclaw node_modules). It only needed a Chromium binary launched on the CDP port. Fix shipped: `tools/cdp-launch.sh` boots the static server (8901) + headless Chromium (`/Users/openclaw/Applications/Chromium.app`, Chrome/146) with `--remote-debugging-port=9301 --remote-allow-origins=*`, with a Playwright-cache fallback. Future HARDEN/PRUNE QA is unblocked.
+
+**Level Playthrough coverage:** 13 sampled levels (1/5/10/15/20/25/30/35/40 + lab 45/46/48/50) — truth-table rows == 2^numInputs, per-row IO arity, ≥1 hint, `calculateStars` monotonic (3★ at optimal, <3 above goodGates). Hands-on L1 solve → 3 stars. Mode entries: Daily/Random/Blitz/Speedrun/Sandbox + Blitz/Speedrun HUD cleanup (Day 61/74). 4 community levels load via `buildCustomLevel`. Cold-start invariants (50 cards, 2 nav buttons, Day 79 dead-IDs, Day 92/107 window bindings, sw v73) all hold.
+
+**Open Bugs queue:** 0 → 0. **Latent observations:** 1 (LO-2) → **0** (LO-2 retired). **New bugs:** 0.
+
+Report: `qa-reports/day-114-qa.md`. Harness: `qa-reports/day-114-qa.cdp.js`. Launcher: `tools/cdp-launch.sh`.
+
+**Day 115 next:** Cycle 5 HARDEN Week Day 3 — Edge Cases & Stress.
