@@ -1,5 +1,37 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 115 — Cycle 5 HARDEN Week, Day 3 (2026-06-22) — Edge Cases & Stress*
+
+## Day 115 — Cycle 5 HARDEN Week, Day 3 (Edge Cases & Stress) summary
+
+**Build under test:** local `?v=1781395200` · `sw.js CACHE_NAME = 'signal-circuit-v73'` (Day 111 build, unchanged — HARDEN week ships ZERO features).
+**Result:** **24 / 24** assertions across 14 phases (23/24 first run — 1 harness-shape self-bug: D109 probe read `res.reason` but `_validateLabConstraints()` returns `res.message`; fixed harness-side, 0 app changes). **0** console.error. **0** `Runtime.exceptionThrown`.
+
+Re-ran the HARDEN Wednesday Edge Cases & Stress sweep against the current build:
+
+- **T1** 25× gate placement during active simulation — no throw.
+- **T2** 10× wire push while `isAnimating=true` — no throw.
+- **T3** 10× window resize mid-gameplay (device-metric override + `resize` event + `renderer.resize()`) — renders clean, gameplay screen intact.
+- **T4** clear localStorage + reload — 50 cards, silent-default difficulty `standard`, clean key set.
+- **T5** keyboard-only nav — 14 focusable elements on gameplay, programmatic focus lands.
+- **T6** colorblind mode toggle on→off — `getWireColors()` resolves under `.colorblind-mode`.
+- **T7** light/dark mode round-trip — both render.
+- **T8** 40+ wires (44 wires / 22 gates) — **0.76 ms avg frame** (budget < 16 ms).
+- **T9** 20× undo + 20× redo — no throw.
+- **T10** 10× RUN + 10× Quick Test spam — no throw (idempotent re-entry contract holds).
+
+**Cycle 5 BUILD regression sweep (Days 107–111):** D107/D92 window bindings (Gate/GateTypes×8 + Wire/WireManager); D108 tournament backend `local` + `🏠 Local leaderboard`; D109 L48 composite metadata (maxFanOut=2, hardCap=3, NAND-only) + validator rejects 4 gates byte-exact `Submission rejected: 4 gates exceeds hard cap of 3.`; D110 PB badge suppressed cold; D111 Stats tournament tab + pane + `_switchStatsTab` — all PASS.
+
+**Open Bugs queue:** 0 → 0 (streak: **40 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+**New bugs found today:** 0. **New bugs introduced today:** 0. **Source-file changes:** 0.
+
+Full report: `qa-reports/day-115-qa.md`. Harness: `qa-reports/day-115-qa.cdp.js` (24 assertions across 14 phases).
+
+**Day 116 next:** Cycle 5 HARDEN Week Day 4 — Fix Everything (open queue empty → likely Day 90/100 rest-day confirmation-probe precedent).
+
+---
+
 *Updated: Day 111 — Cycle 5 BUILD Week, Day 5 (2026-06-18) — Stats Dashboard Tournament History tab*
 
 ## Day 111 — Cycle 5 BUILD Week, Day 5 (Tournament History tab) summary
