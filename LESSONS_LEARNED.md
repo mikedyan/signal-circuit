@@ -1,5 +1,12 @@
 # Lessons Learned
 
+## Day 116 — Cycle 5 HARDEN Week, Day 4: Fix Everything
+
+- **Empty-queue Fix Day is a valid HARDEN state, but it still needs a browser proof.** Day 116 had no open user-facing bugs to fix, so the correct move was the Day 90 / Day 100 rest-day shape: do not invent a feature or polish change, run a confirmation probe, and preserve the pinned BUILD artifact. "Nothing to fix" only counts after the actual CDP browser run comes back green.
+- **The confirmation probe can reuse yesterday's stress harness when the artifact is unchanged.** The Day 111 build stayed pinned at `?v=1781395200` / sw v73. Re-running the high-signal Day 115 stress + Cycle 5 regression sweep was better than writing a novel harness: it rechecked the exact seams that break under state churn while avoiding new harness-shape risk.
+- **Manual long-running browser sessions are more reliable than `cdp-launch.sh start` in this cron shell.** `tools/cdp-launch.sh start` printed readiness but both the HTTP server and Chromium were gone by the time the harness connected. Starting `python3 -m http.server 8901` and Chromium as separate exec sessions kept them alive for the test, then `tools/cdp-launch.sh stop` cleaned them up. The script is still the standard path, but if it flickers in this orchestrator, promote the child processes to long-running sessions.
+- **Do not bump cache-bust on no-code HARDEN days.** Day 116 only touched QA/report/state files. Keeping the app build identity pinned is the whole point of HARDEN: every green result describes the same Day 111 artifact, not a cosmetically re-versioned copy.
+
 ## Day 115 — Cycle 5 HARDEN Week, Day 3: Edge Cases & Stress
 
 - **`tools/cdp-launch.sh` is now the standard HARDEN/PRUNE entry point — it worked first-try on Day 115.** The Day 114 LO-2 recovery script booted the static server + headless Chromium cleanly (`http :: 200`, `cdp :: Chrome/146.0.7663.0`) with no re-derivation. Codifying the launch invocation as a committed tool paid off exactly one day later: the entire stress sweep ran without touching the browser-launch problem again. Confirms the Day 114 lesson — recurring environment setup belongs in a script, not in episodic memory.

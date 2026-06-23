@@ -1,5 +1,33 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 116 — Cycle 5 HARDEN Week, Day 4 (2026-06-23) — Fix Everything*
+
+## Day 116 — Cycle 5 HARDEN Week, Day 4 (Fix Everything) summary
+
+**Build under test:** local `?v=1781395200` · `sw.js CACHE_NAME = 'signal-circuit-v73'` (Day 111 build, unchanged — HARDEN week ships ZERO features).
+**Mode:** Fix Day with an empty queue — no app source changes.
+**Result:** **24 / 24** assertions across 14 phases. **0** console.error. **0** `Runtime.exceptionThrown`.
+
+Open Bugs queue was empty at start of day, so Day 116 followed the Day 90 / Day 100 precedent: no speculative fixes, just a confirmation probe over the pinned HARDEN artifact.
+
+Confirmation probe highlights:
+
+- Build identity unchanged: 11 `?v=1781395200` refs, `sw.js` v73.
+- Cold-start invariants intact: 50 cards, 2 non-level buttons, Day 79 dead identifiers undefined, `#weekly-puzzle-btn` absent.
+- Stress invariants intact: rapid gate placement, mid-animation wires, resize storm, keyboard nav, colorblind/light-mode toggles, 44-wire render, undo/redo, RUN/Quick Test spam — all no-throw.
+- 40+ wire performance stayed at **0.76 ms avg frame**.
+- Cycle 5 BUILD regression sweep: D107/D92 module bindings, D108 local tournament backend, D109 L48 lab validator, D110 PB badge suppression, D111 Stats tournament tab — all PASS.
+
+**Open Bugs queue:** 0 → 0 (streak: **41 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+**New bugs found today:** 0. **New bugs introduced today:** 0. **Source-file changes:** 0.
+
+Full report: `qa-reports/day-116-qa.md`. Harness: `qa-reports/day-116-qa.cdp.js` (24 assertions across 14 phases).
+
+**Day 117 next:** Cycle 5 HARDEN Week Day 5 — Regression Pass on deployed GitHub Pages build + HARDEN week summary.
+
+---
+
 *Updated: Day 115 — Cycle 5 HARDEN Week, Day 3 (2026-06-22) — Edge Cases & Stress*
 
 ## Day 115 — Cycle 5 HARDEN Week, Day 3 (Edge Cases & Stress) summary
