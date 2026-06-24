@@ -1,5 +1,12 @@
 # Lessons Learned
 
+## Day 117 — Cycle 5 HARDEN Week, Day 5: Regression Pass
+
+- **The Day 91/101 deployed-Friday primitive cloned cleanly a third time.** Day 117 followed the same shape: confirm Pages caught up to the pinned artifact (`fetch`-grep the deployed `index.html` + `sw.js`), then run build-identity → cold-start → core-loop on L1 → one assertion per mode → BUILD-week markers → console hygiene against the live URL. The deployed `?v` + `CACHE_NAME` matched local before any in-browser work started, so the rest of the sweep was pure confirmation. Keep cloning this for HARDEN Fridays.
+- **Order matters in single-session deployed probes: cold-suppression checks must run before any completion side-effects.** First-run self-bug (21/22): the D110 PB-badge cold-suppression probe ran *after* P3 had already completed L1, so `localStorage` carried 3★ progress and the badge correctly showed (`display:flex`) per the Day 110 spec. The app was right; the harness assumed a clean slate it had already dirtied. Fix: `localStorage.clear()` + reload immediately before the cold probe. Lesson: when one harness mutates persistent state (completes a level, saves a card) and a later phase asserts a *cold* invariant, that later phase must reset state first — don't assume phase independence inside a single page session.
+- **Four consecutive empty-queue HARDEN weeks (Cycles 2–5) make "certify, don't manufacture fixes" the standing HARDEN contract.** 935 (Cycles 2-4) + 184 (Cycle 5) assertions on unchanged artifacts with 0 user-facing bugs. The leaner-each-day taper (82→32→24→24→22) is correct; the only real risk this cycle was the test rig (LO-2), not the product.
+- **Coverage rotation is now a 3-cycle-old debt.** Cycles 3, 4, and 5 HARDEN weeks all flagged the same untested surfaces (sandbox deep-play, community-loader edge cases, audio-engine state across mode switches, cosmetic×accessibility paint, SW stale-cache fallback) and all stuck to the proven 10-12 surfaces anyway. Logging it a fourth time is not progress — Cycle 6 HARDEN Day 1 must actually write one of these probes.
+
 ## Day 116 — Cycle 5 HARDEN Week, Day 4: Fix Everything
 
 - **Empty-queue Fix Day is a valid HARDEN state, but it still needs a browser proof.** Day 116 had no open user-facing bugs to fix, so the correct move was the Day 90 / Day 100 rest-day shape: do not invent a feature or polish change, run a confirmation probe, and preserve the pinned BUILD artifact. "Nothing to fix" only counts after the actual CDP browser run comes back green.

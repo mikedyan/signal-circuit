@@ -1,5 +1,30 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 117 — Cycle 5 HARDEN Week, Day 5 (2026-06-24) — Regression Pass*
+
+## Day 117 — Cycle 5 HARDEN Week, Day 5 (Regression Pass) summary
+
+**Build under test:** **deployed** `https://mikedyan.github.io/signal-circuit/` · `?v=1781395200` · `sw.js CACHE_NAME = 'signal-circuit-v73'` (Day 111 build — caught up on Pages, unchanged the entire HARDEN week).
+**Result:** **22 / 22** assertions across 12 phases (21/22 first run — 1 harness-ordering self-bug on the D110 PB-badge cold probe; fixed harness-side, 0 app changes). **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs. **0** source-file changes.
+
+Deployment confirmed: Pages serves 11× `?v=1781395200` + `sw v73` (matches local). 14-phase deployed regression sweep:
+
+- Build identity + cold-start invariants (50 cards, 2 nav buttons, D92/D107 ESM bindings, Day 79 dead-IDs absent).
+- Core loop end-to-end on L1: place AND gate + 3 wires + Quick Test + RUN + `completeLevel(1)` persists 3★.
+- All 8 modes reachable: campaign / daily / random / blitz / speedrun / sandbox / tournament / adaptive(infinite). Blitz + Speedrun HUDs cleaned on return (Day 61/74/103 fixes hold).
+- Cycle 5 BUILD regression D107-D111: L48 composite validator byte-exact (`4 gates exceeds hard cap of 3`), PB badge `display:none` on truly-cold L1, Stats tournament tab + pane + `_switchStatsTab` present, Tournament backend `local` + `🏠 Local leaderboard` + isLive=false.
+
+**Harness self-bug (first run):** D110 probe ran *after* P3 had completed L1, so the PB badge correctly showed (`display:flex`) per the Day 110 spec. Fixed by clearing localStorage + reloading before the cold-suppression probe. Same class as Days 97/98/99/107/108/115 — harness over-assumed state, app behaved correctly.
+
+**Open Bugs queue:** 0 → 0 (streak: **42 consecutive days** since Day 76).
+**Latent observations:** 0 → 0 (LO-2 resolved Day 114).
+
+Full report: `qa-reports/day-117-qa.md`. Harness: `qa-reports/day-117-qa.cdp.js` (22 assertions across 12 phases). Week wrap: `reviews/harden-cycle-5-week-summary.md`.
+
+**Cycle 5 HARDEN Week complete.** Day 118 next: Cycle 5 PRUNE Week Day 1 — Fresh Eyes Audit.
+
+---
+
 *Updated: Day 116 — Cycle 5 HARDEN Week, Day 4 (2026-06-23) — Fix Everything*
 
 ## Day 116 — Cycle 5 HARDEN Week, Day 4 (Fix Everything) summary
