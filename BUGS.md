@@ -1,5 +1,30 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 118 — Cycle 5 PRUNE Week, Day 1 (2026-06-25) — Fresh Eyes Audit*
+
+## Day 118 — Cycle 5 PRUNE Week, Day 1 (Fresh Eyes Audit) summary
+
+**Build under audit:** deployed `https://mikedyan.github.io/signal-circuit/` · `?v=1781395200` · `sw.js CACHE_NAME = 'signal-circuit-v73'` (Day 111 build, unchanged through the Cycle 5 HARDEN week).
+**Result:** **44 / 44** assertions across 8 phases (43/44 first run — 1 harness-ordering self-bug on the Day 110 PB-badge cold probe; fixed by wiping localStorage + reloading before the cold check, 0 app changes). **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs.
+
+**Clutter score: 4/10** (held from Cycle 4; Cycle 2 closed 5/10, Cycle 1 baseline 8/10). Tier staircase smooth: nav `2/2/5/10/18/18`, overflow `0/3/6/12/18/50`, cards `50` throughout. Cycle 4 Tier-1 cuts all held (LO-1 retired, mastery cards out of grid, Difficulty under Gameplay, Tournament label 20 chars).
+
+**Two new clutter sources + one growth concern identified:**
+1. **Tournament history duplicated** across the Tournament screen `My Best` tab and the Day 111 Stats `🏆 Tournament` tab → Tier-1 Cut #1.
+2. **Stats modal shows two `(0)` tabs** (`📸 My Cards (0)` + `🏆 Tournament (0)`) to brand-new players → Tier-1 Cut #3.
+3. **Lab Bench grew to 15 levels / 3 mini-chapters** (L36–50), L48 stacks 3 constraint chips → Tier-2/3 cuts #5/#7.
+
+**Carry-overs re-proposed:** `⚠ Reset Progress` one-click footgun → typed/hold confirm (Cycle 4 Tier-3 #14 promoted to Tier-1 Cut #2); 5 collection modals still unmerged (18-button Tier-3 plateau) → Tier-2 Cut #4.
+
+**Open Bugs queue:** 0 → 0 (streak: **43 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-118-qa.md`. Harness: `qa-reports/day-118-qa.cdp.js` (44 assertions, 8 phases). Full PRUNE plan: `PRUNE_REPORT.md`.
+
+**Day 119 next:** Cycle 5 PRUNE Week Day 2 — Design Simplification (ship the 3 Tier-1 cuts as the first source-file change since Day 111).
+
+---
+
 *Updated: Day 117 — Cycle 5 HARDEN Week, Day 5 (2026-06-24) — Regression Pass*
 
 ## Day 117 — Cycle 5 HARDEN Week, Day 5 (Regression Pass) summary
