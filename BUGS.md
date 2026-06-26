@@ -1,5 +1,29 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 119 — Cycle 5 PRUNE Week, Day 2 (2026-06-26) — Design Simplification*
+
+## Day 119 — Cycle 5 PRUNE Week, Day 2 (Design Simplification) summary
+
+**Build:** `?v=1781395200` / sw v73 → **`?v=1782432000` / sw v74** (first source-file change since Day 111).
+**Result:** **35 / 35** assertions across 6 phases on the **first run**. **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs.
+
+Shipped the 3 Tier-1 cuts from the Day 118 `PRUNE_REPORT.md`:
+
+1. **Cut #1 — Tournament history de-duplication.** Removed the `My Best` tab + `#tournament-tab-my-best` pane from the Tournament screen; added a one-line pointer to **Stats → 🏆 Tournament** (Day 111 canonical personal history). Tournament screen now = `This Week` + `Archive`. `_renderTournamentMyBest()` is now orphaned → deferred to Day 120 Code Cleanup.
+2. **Cut #2 — `⚠ Reset Progress` typed-confirm gate.** New `UI.showTypedConfirmModal()` requires typing `RESET` before the OK button arms. Disarmed-click is a verified no-op (progress untouched, modal stays open); Cancel aborts; the shared `showConfirmModal` keeps the new input hidden so non-destructive confirms are unaffected. Removes the one-tap save-wipe footgun.
+3. **Cut #3 — Hide zero-count Stats tabs.** `📸 My Cards (0)` + `🏆 Tournament (0)` are now `display:none` until their count goes positive (supersedes the Day 104/111 `.empty` dim). A new player's Stats modal collapses to a single `📊 Overview`. Defensive `_switchStatsTab` guard prevents stranding on a hidden tab.
+
+**Source LOC:** +121 / −24 across `index.html`, `js/ui.js`, `css/style.css`, `sw.js`. Cuts #1/#3 remove surfaces; Cut #2's typed-confirm modal is the additive piece (anticipated by the PRUNE_REPORT).
+
+**Open Bugs queue:** 0 → 0 (streak: **44 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-119-qa.md`. Harness: `qa-reports/day-119-qa.cdp.js`. Spec: `specs/day-119-design-simplification.md`.
+
+**Day 120 next:** Cycle 5 PRUNE Week Day 3 — Code Cleanup (remove orphaned `_renderTournamentMyBest()`, sweep `my-best` CSS, collection-modal merge groundwork).
+
+---
+
 *Updated: Day 118 — Cycle 5 PRUNE Week, Day 1 (2026-06-25) — Fresh Eyes Audit*
 
 ## Day 118 — Cycle 5 PRUNE Week, Day 1 (Fresh Eyes Audit) summary
