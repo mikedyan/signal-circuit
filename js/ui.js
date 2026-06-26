@@ -235,11 +235,63 @@ class UI {
     };
   }
 
+  // Day 119 PRUNE Cut #2: typed-confirm gate for destructive actions.
+  // Requires the user to type `confirmWord` (e.g. RESET) before the OK button
+  // arms. Falls back to the plain confirm modal if the input element is absent.
+  showTypedConfirmModal(message, confirmWord, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    const msgEl = document.getElementById('confirm-modal-message');
+    const cancelBtn = document.getElementById('confirm-modal-cancel');
+    const okBtn = document.getElementById('confirm-modal-ok');
+    const input = document.getElementById('confirm-modal-input');
+    if (!input) { this.showConfirmModal(message, onConfirm); return; }
+
+    const word = String(confirmWord || 'CONFIRM').toUpperCase();
+    const matches = () => input.value.trim().toUpperCase() === word;
+    msgEl.textContent = message;
+    input.style.display = '';
+    input.value = '';
+    input.setAttribute('placeholder', `Type ${word} to confirm`);
+    input.setAttribute('aria-label', `Type ${word} to confirm`);
+    okBtn.disabled = true;
+    okBtn.classList.add('is-disabled');
+    modal.style.display = 'flex';
+    setTimeout(() => { try { input.focus(); } catch (e) {} }, 0);
+
+    const cleanup = () => {
+      modal.style.display = 'none';
+      input.style.display = 'none';
+      input.value = '';
+      input.oninput = null;
+      input.onkeydown = null;
+      cancelBtn.onclick = null;
+      okBtn.onclick = null;
+      okBtn.disabled = false;
+      okBtn.classList.remove('is-disabled');
+    };
+    const arm = () => {
+      const ok = matches();
+      okBtn.disabled = !ok;
+      okBtn.classList.toggle('is-disabled', !ok);
+    };
+    input.oninput = arm;
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter' && matches()) { cleanup(); onConfirm(); }
+    };
+    cancelBtn.onclick = cleanup;
+    okBtn.onclick = () => {
+      if (!matches()) return;
+      cleanup();
+      onConfirm();
+    };
+  }
+
   // ── Level Select Screen ──
   setupLevelSelect() {
     const container = document.getElementById('chapters-container');
     document.getElementById('reset-progress-btn').addEventListener('click', () => {
-      this.showConfirmModal('Reset all progress? This cannot be undone.', () => {
+      // Day 119 PRUNE Cut #2: typed-confirm gate replaces the one-click footgun.
+      this.showTypedConfirmModal('Reset all progress? This wipes every star, level, saved card, and tournament result. This cannot be undone.', 'RESET', () => {
         this.gameState.resetProgress();
         this.renderLevelSelect();
       });
@@ -2241,7 +2293,7 @@ class UI {
         document.querySelectorAll('.tournament-tab-pane').forEach((p) => {
           p.style.display = (p.id === 'tournament-tab-' + which) ? '' : 'none';
         });
-        if (which === 'my-best') this._renderTournamentMyBest();
+        // Day 119 PRUNE Cut #1: 'my-best' tab retired (history canonical in Stats → Tournament).
         if (which === 'archive') this._renderTournamentArchive();
       });
     });
@@ -3829,6 +3881,15 @@ class UI {
     // strand the modal on an empty pane.
     const validTabs = ['overview', 'cards', 'tournament'];
     if (!validTabs.includes(which)) which = 'overview';
+    // Day 119 PRUNE Cut #3: a tab hidden for zero-count must never be the
+    // active pane. If something routes here while empty, fall back to Overview.
+    if (which === 'cards') {
+      const lib = (this.gameState && typeof this.gameState.getCardLibrary === 'function')
+        ? this.gameState.getCardLibrary() : [];
+      if (!lib || lib.length === 0) which = 'overview';
+    } else if (which === 'tournament') {
+      if (this._getTournamentSubmissions().length === 0) which = 'overview';
+    }
     this._activeStatsTab = which;
     const overviewPane = document.getElementById('stats-grid');
     const cardsPane = document.getElementById('stats-cards-pane');
@@ -3860,18 +3921,21 @@ class UI {
       const lib = (this.gameState && typeof this.gameState.getCardLibrary === 'function')
         ? this.gameState.getCardLibrary() : [];
       cardsTab.textContent = `📸 My Cards (${lib.length})`;
-      // Day 104 PRUNE Cut #4 (Tier 2 #6): dim the tab when the library is
-      // empty so first-time openers don't read it as a count of new content.
-      cardsTab.classList.toggle('empty', lib.length === 0);
+      // Day 119 PRUNE Cut #3: hide the tab entirely until the player has saved
+      // at least one card (supersedes the Day 104 .empty dim). Reveals on the
+      // first positive count. Collapses a new player's Stats modal to Overview.
+      cardsTab.classList.remove('empty');
+      cardsTab.style.display = (lib.length === 0) ? 'none' : '';
     }
     if (tournamentTab) {
       tournamentTab.classList.toggle('active', which === 'tournament');
       tournamentTab.setAttribute('aria-selected', which === 'tournament' ? 'true' : 'false');
       const submissions = this._getTournamentSubmissions();
       tournamentTab.textContent = `🏆 Tournament (${submissions.length})`;
-      // Day 111: mirror the My Cards .empty dim treatment so a Tournament-naive
-      // player reads the tab as inert rather than as missed content.
-      tournamentTab.classList.toggle('empty', submissions.length === 0);
+      // Day 119 PRUNE Cut #3: hide the tab until the player has ≥1 tournament
+      // submission (supersedes the Day 111 .empty dim). Reveals on first entry.
+      tournamentTab.classList.remove('empty');
+      tournamentTab.style.display = (submissions.length === 0) ? 'none' : '';
     }
   }
 

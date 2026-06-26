@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1781395200">
+  <link rel="stylesheet" href="css/style.css?v=1782432000">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -404,11 +404,12 @@
         <div id="tournament-week-label" class="muted" style="color:#888;font-size:12px;margin-bottom:6px;">—</div>
         <div id="tournament-mode-label" class="muted" style="color:#7a8a9a;font-size:11px;margin-bottom:8px;" aria-live="polite">—</div>
         <p class="muted" style="color:#888;font-size:12px;margin-bottom:14px;">Single-shot run. Score = gates × 100 + over-budget seconds. Lower wins. Best of week locks Sunday midnight PT.</p>
+        <!-- Day 119 PRUNE Cut #1: My Best tab retired; personal history is now canonical in Stats → 🏆 Tournament (Day 111). Tournament screen = competition only. -->
         <div class="tournament-tabs">
           <button class="tournament-tab active" data-tab="this-week">This Week</button>
-          <button class="tournament-tab" data-tab="my-best">My Best</button>
           <button class="tournament-tab" data-tab="archive">Archive</button>
         </div>
+        <div class="tournament-history-pointer muted" style="color:#7a8a9a;font-size:10px;margin:2px 0 8px;">📊 Your personal tournament history lives in <strong>Stats → 🏆 Tournament</strong>.</div>
         <div id="tournament-tab-this-week" class="tournament-tab-pane">
           <div id="tournament-puzzle-card">
             <div class="tcard-title" id="tournament-puzzle-title">—</div>
@@ -418,9 +419,6 @@
           <button id="tournament-play-btn" class="challenge-btn generate-btn" aria-label="Play this week's tournament">▶ Play This Week</button>
           <div class="tournament-section-title">🏁 Leaderboard (top 10)</div>
           <div id="tournament-leaderboard"></div>
-        </div>
-        <div id="tournament-tab-my-best" class="tournament-tab-pane" style="display:none;">
-          <div id="tournament-mybest"></div>
         </div>
         <div id="tournament-tab-archive" class="tournament-tab-pane" style="display:none;">
           <div class="tournament-section-title">Last 8 weeks</div>
@@ -769,6 +767,8 @@
   <div id="confirm-modal" style="display:none;">
     <div id="confirm-modal-content">
       <p id="confirm-modal-message"></p>
+      <!-- Day 119 PRUNE Cut #2: typed-confirm input for destructive actions (Reset Progress). Hidden unless showTypedConfirmModal() reveals it. -->
+      <input id="confirm-modal-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" style="display:none;" />
       <div id="confirm-modal-buttons">
         <button id="confirm-modal-cancel">Cancel</button>
         <button id="confirm-modal-ok">Confirm</button>
@@ -838,15 +838,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1781395200"></script>
-  <script type="module" src="js/wires.js?v=1781395200"></script>
-  <script src="js/simulation.js?v=1781395200"></script>
-  <script src="js/levels.js?v=1781395200"></script>
-  <script src="js/audio.js?v=1781395200"></script>
-  <script src="js/achievements.js?v=1781395200"></script>
-  <script src="js/canvas.js?v=1781395200"></script>
-  <script src="js/ui.js?v=1781395200"></script>
-  <script src="js/tutorial.js?v=1781395200"></script>
-  <script src="js/main.js?v=1781395200"></script>
+  <script type="module" src="js/gates.js?v=1782432000"></script>
+  <script type="module" src="js/wires.js?v=1782432000"></script>
+  <script src="js/simulation.js?v=1782432000"></script>
+  <script src="js/levels.js?v=1782432000"></script>
+  <script src="js/audio.js?v=1782432000"></script>
+  <script src="js/achievements.js?v=1782432000"></script>
+  <script src="js/canvas.js?v=1782432000"></script>
+  <script src="js/ui.js?v=1782432000"></script>
+  <script src="js/tutorial.js?v=1782432000"></script>
+  <script src="js/main.js?v=1782432000"></script>
 </body>
 </html>

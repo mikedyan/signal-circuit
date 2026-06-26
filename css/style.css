@@ -2177,6 +2177,39 @@ body.light-mode #mythic-celebration-hint { color: #888; }
   box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
 }
 
+/* Day 119 PRUNE Cut #2: typed-confirm input + armed/disarmed OK state */
+#confirm-modal-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 4px 0 14px;
+  padding: 9px 12px;
+  background: #0c0f14;
+  color: #e8f0f8;
+  border: 2px solid #f44;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+#confirm-modal-input:focus {
+  outline: none;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
+}
+
+#confirm-modal-ok.is-disabled,
+#confirm-modal-ok:disabled {
+  background: #3a2222;
+  border-color: #5a3a3a;
+  color: #8a7a7a;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
 /* ── Mobile Delete Button ── */
 /* ── Zoom Reset Button ── */
 #zoom-reset-btn {
