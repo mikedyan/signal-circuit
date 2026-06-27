@@ -7373,31 +7373,8 @@ body.light-mode #lab-tutorial-close:hover { background: #00aacc; }
 .trow-name { flex: 1; color: #ddd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tournament-row-self .trow-name { color: #ffd700; }
 .trow-stats { color: #888; font-size: 11px; }
-.tournament-stat-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 4px;
-  border-bottom: 1px solid #1a1a2e;
-  font-size: 12px;
-  color: #ccc;
-}
-.tournament-stat-row:last-child { border-bottom: none; }
-.tournament-best-card {
-  background: rgba(212, 175, 55, 0.08);
-  border: 1px solid #3a2e10;
-  border-radius: 6px;
-  padding: 12px 14px;
-  margin-bottom: 12px;
-}
-.tournament-mybest-empty {
-  color: #888;
-  font-size: 12px;
-  padding: 14px 8px;
-  text-align: center;
-  background: rgba(255, 215, 0, 0.04);
-  border-radius: 6px;
-  margin-bottom: 12px;
-}
+/* Day 120 PRUNE: .tournament-stat-row / .tournament-best-card / .tournament-mybest-empty
+   removed — sole consumer was the orphaned _renderTournamentMyBest() (Day 119 Cut #1). */
 .tournament-archive-row {
   display: flex;
   align-items: center;
@@ -7423,11 +7400,6 @@ body.light-mode #lab-tutorial-close:hover { background: #00aacc; }
   border-radius: 12px;
   border: 1px solid rgba(255, 215, 0, 0.4);
 }
-.tournament-badge-gold {
-  background: linear-gradient(135deg, #ffd700, #ffaa00);
-  color: #000;
-  border-color: #ffd700;
-}
 
 /* Tournament button on level select */
 .challenge-btn.tournament-btn {
@@ -7450,8 +7422,7 @@ body.light-mode #tournament-content h2,
 body.light-mode #tournament-week-label,
 body.light-mode .tournament-section-title,
 body.light-mode .tcard-title { color: #b8860b; }
-body.light-mode #tournament-puzzle-card,
-body.light-mode .tournament-best-card {
+body.light-mode #tournament-puzzle-card {
   background: rgba(184, 134, 11, 0.08);
   border-color: rgba(184, 134, 11, 0.3);
 }
@@ -7459,7 +7430,6 @@ body.light-mode .tournament-tab { color: #6a5a30; }
 body.light-mode .tournament-tab.active,
 body.light-mode .tournament-tab:hover { color: #b8860b; border-bottom-color: #b8860b; }
 body.light-mode .tournament-row { border-bottom-color: #eedfc0; }
-body.light-mode .tournament-stat-row { border-bottom-color: #eedfc0; color: #2a2410; }
 body.light-mode .tournament-archive-row { border-bottom-color: #eedfc0; }
 body.light-mode .tournament-row-self { background: rgba(184, 134, 11, 0.18); }
 body.light-mode .tournament-row-self .trow-name { color: #b8860b; }

@@ -2901,39 +2901,9 @@ class UI {
     }).join('');
   }
 
-  _renderTournamentMyBest() {
-    const wt = this.gameState.weeklyTournament;
-    if (!wt) return;
-    const target = document.getElementById('tournament-mybest');
-    if (!target) return;
-    const cur = wt.getCurrentWeekInfo();
-    const best = wt.getBest(cur.key);
-    const lifetime = wt.data || {};
-    const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-    if (!best) {
-      target.innerHTML = `<div class="tournament-mybest-empty">You haven’t played this week’s tournament yet. Click “This Week” to play.</div>
-        <div class="tournament-section-title">Lifetime</div>
-        <div class="tournament-stat-row"><span>Total attempts</span><span>${lifetime.totalAttempts || 0}</span></div>
-        <div class="tournament-stat-row"><span>Podium finishes</span><span>${lifetime.podiums || 0}</span></div>
-        <div class="tournament-stat-row"><span>Crowned weeks</span><span>${lifetime.wins || 0}</span></div>`;
-      return;
-    }
-    target.innerHTML = `
-      <div class="tournament-best-card">
-        <div class="tcard-title">Week ${cur.key}</div>
-        <div class="tournament-stat-row"><span>Score</span><span>${best.score}</span></div>
-        <div class="tournament-stat-row"><span>Gates</span><span>${best.gates}</span></div>
-        <div class="tournament-stat-row"><span>Time</span><span>${fmtTime(best.time)}</span></div>
-        <div class="tournament-stat-row"><span>Rank</span><span>#${best.rank || '?'}</span></div>
-        <div class="tournament-stat-row"><span>Percentile</span><span>top ${100 - (best.percentile || 0)}%</span></div>
-        ${best.crowned ? '<div class="tournament-badge tournament-badge-gold">🏆 Crowned</div>' : best.podium ? '<div class="tournament-badge">🏅 Podium</div>' : ''}
-      </div>
-      <div class="tournament-section-title">Lifetime</div>
-      <div class="tournament-stat-row"><span>Total attempts</span><span>${lifetime.totalAttempts || 0}</span></div>
-      <div class="tournament-stat-row"><span>Podium finishes</span><span>${lifetime.podiums || 0}</span></div>
-      <div class="tournament-stat-row"><span>Crowned weeks</span><span>${lifetime.wins || 0}</span></div>`;
-  }
-
+  // Day 119 PRUNE Cut #1 retired the Tournament-screen "My Best" tab; canonical
+  // personal history now lives in Stats → 🏆 Tournament (Day 111). Day 120 removed
+  // the orphaned _renderTournamentMyBest() renderer left behind by that cut.
   _renderTournamentArchive() {
     const wt = this.gameState.weeklyTournament;
     if (!wt) return;

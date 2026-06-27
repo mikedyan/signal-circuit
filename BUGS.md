@@ -1,5 +1,31 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 120 — Cycle 5 PRUNE Week, Day 3 (2026-06-27) — Code Cleanup*
+
+## Day 120 — Cycle 5 PRUNE Week, Day 3 (Code Cleanup) summary
+
+**Build:** `?v=1782432000` / sw v74 → **`?v=1782518400` / sw v75**.
+**Result:** **25 / 25** assertions across 5 phases on the **first run**. **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs.
+
+Net-negative day. Removed the dead code left behind by the Day 119 Cut #1 IA change:
+
+1. **Orphaned renderer removed.** `js/ui.js` `_renderTournamentMyBest()` (its caller + the `My Best` tab/pane were deleted Day 119) is gone; replaced with a 3-line breadcrumb comment pointing future agents at Stats → 🏆 Tournament (Day 111 canonical).
+2. **Dead CSS swept.** Removed the rules whose *sole* consumer was the orphaned renderer: `.tournament-stat-row` (+`:last-child` +light-mode), `.tournament-best-card` (+light-mode), `.tournament-mybest-empty`, `.tournament-badge-gold`. **KEPT** (still referenced): `.tournament-badge` (archive Live pill, ui.js), `.tcard-title` (`#tournament-puzzle-title`, index.html), `.tournament-section-title` (index.html leaderboard/archive headers), `.tournament-archive-row`.
+3. **Day 121 groundwork (planning only, not shipped).** Wrote `specs/day-121-collection-merge-scaffold.md` mapping the 5 collection modals → open buttons → setup methods for the Tier-2 Cut #4 Profile merge (Achievements/Mastery/Customize/Collection/Logic Profile).
+
+**Source LOC:** +18 / −78 = **net −60** across `js/ui.js`, `css/style.css`, `index.html` (11 cache-bust bumps), `sw.js`. PRUNE-week net-negative mandate satisfied.
+
+**Dead-identifier sweep (Day 79 invariant):** 7 ids still undefined + `#weekly-puzzle-btn` absent — PASS.
+
+**Open Bugs queue:** 0 → 0 (streak: **45 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-120-qa.cdp.js`. Scaffold: `specs/day-121-collection-merge-scaffold.md`.
+
+**Day 121 next:** Cycle 5 PRUNE Week Day 4 — Polish Sprint (Day 80/105 precedent).
+
+---
+
 *Updated: Day 119 — Cycle 5 PRUNE Week, Day 2 (2026-06-26) — Design Simplification*
 
 ## Day 119 — Cycle 5 PRUNE Week, Day 2 (Design Simplification) summary
