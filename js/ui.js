@@ -262,6 +262,7 @@ class UI {
       modal.style.display = 'none';
       input.style.display = 'none';
       input.value = '';
+      input.classList.remove('is-armed');
       input.oninput = null;
       input.onkeydown = null;
       cancelBtn.onclick = null;
@@ -273,6 +274,8 @@ class UI {
       const ok = matches();
       okBtn.disabled = !ok;
       okBtn.classList.toggle('is-disabled', !ok);
+      // Day 121 PRUNE Polish #2: green 'armed' affordance on a correct match.
+      input.classList.toggle('is-armed', ok);
     };
     input.oninput = arm;
     input.onkeydown = (e) => {

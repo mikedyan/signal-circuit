@@ -2126,6 +2126,8 @@ body.light-mode #mythic-celebration-hint { color: #888; }
   max-width: 380px;
   width: 90%;
   text-align: center;
+  /* Day 121 PRUNE Polish #1: gentle entrance (reuses modalPop keyframe). */
+  animation: modalPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 #confirm-modal-message {
@@ -2193,11 +2195,25 @@ body.light-mode #mythic-celebration-hint { color: #888; }
   letter-spacing: 2px;
   text-align: center;
   text-transform: uppercase;
+  /* Day 121 PRUNE Polish #2: smooth the red->green armed flip. */
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
 
 #confirm-modal-input:focus {
   outline: none;
   box-shadow: 0 0 8px rgba(255, 68, 68, 0.4);
+}
+
+/* Day 121 PRUNE Polish #2: positive 'armed' affordance — when the typed word
+   matches, the input flips from destructive-red to confirm-green so the user
+   knows the gate is satisfied before pressing the (still-red) destructive OK. */
+#confirm-modal-input.is-armed {
+  border-color: #0f0;
+  color: #d6ffd6;
+}
+
+#confirm-modal-input.is-armed:focus {
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.35);
 }
 
 #confirm-modal-ok.is-disabled,

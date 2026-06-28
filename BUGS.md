@@ -1,5 +1,32 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 121 — Cycle 5 PRUNE Week, Day 4 (2026-06-28) — Polish Sprint*
+
+## Day 121 — Cycle 5 PRUNE Week, Day 4 (Polish Sprint) summary
+
+**Build:** `?v=1782518400` / sw v75 → **`?v=1782604800` / sw v76**.
+**Result:** **29 / 29** assertions across 6 phase groups (27/29 first run — 2 harness self-bugs, 0 app changes). **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs.
+
+**Scope decision:** the Tier-2 Cut #4 collection-modal merge (`specs/day-121-collection-merge-scaffold.md`) was judged too large/risky for one unattended polish day (5 duplicate close/backdrop handlers, live-mutating cosmetic renderer, Logic-Profile canvas leak risk) and **DEFERRED** per the Day 105 precedent. Shipped two small net-near-zero UX wins instead:
+
+1. **Polish #1 — `#confirm-modal-content` entrance animation.** Added `animation: modalPop 0.28s …` (reuses the **existing** `modalPop` keyframe — no new keyframe) so the confirm modal animates in like the chapter-complete modal instead of snapping. Global `prefers-reduced-motion` rule (css ~3160) already neutralizes it.
+2. **Polish #2 — typed-confirm "armed" green affordance.** The Day 119 `⚠ Reset Progress` typed-confirm only signalled correctness by enabling OK; the input stayed alarming-red even when `RESET` was typed correctly. New `.is-armed` class (toggled in `arm()` in `js/ui.js`) flips the input border red→green (`#0f0`, 0.18s transition) so the user gets positive feedback the gate is satisfied. `cleanup()` strips it. OK button stays red — still a destructive action.
+
+**Harness self-bugs (both first-run, 0 app changes):** (P3.e) sampled the input border at 60ms but Polish #2's new 0.18s transition meant the read caught a mid-transition intermediate — fixed by waiting 300ms; the `.is-armed` class was correctly applied on the first run (P3.d passed) and no light-mode override exists. (P4.h) asserted difficulty `=== null` but silent-default persists `'standard'` (Day 89/105 invariant) — fixed the assertion.
+
+**Source LOC:** `css/style.css` +16 · `js/ui.js` +3 · `index.html` +11/−11 (cache-bust only) · `sw.js` +1/−1 = **net ≈ +19 functional LOC**, inside Day 105's ±50 polish-day budget.
+
+**Dead-identifier sweep (Day 79 invariant):** 7 ids still undefined + `#weekly-puzzle-btn` absent — PASS.
+
+**Open Bugs queue:** 0 → 0 (streak: **46 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-121-qa.md` + `qa-reports/day-121-qa.cdp.js`.
+
+**Day 122 next:** Cycle 5 PRUNE Week Day 5 — Expert Panel + Validation (close Cycle 5, target ≥9.1).
+
+---
+
 *Updated: Day 120 — Cycle 5 PRUNE Week, Day 3 (2026-06-27) — Code Cleanup*
 
 ## Day 120 — Cycle 5 PRUNE Week, Day 3 (Code Cleanup) summary
