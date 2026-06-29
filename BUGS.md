@@ -1,5 +1,32 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 122 — Cycle 5 PRUNE Week, Day 5 (2026-06-29) — Expert Panel + Validation*
+
+## Day 122 — Cycle 5 PRUNE Week, Day 5 (Expert Panel + Validation) summary
+
+**Build under test:** local `?v=1782604800` / sw v76 (Day 121 artifact, **unchanged** — 0 source-file changes).
+**Result:** **33 / 33** assertions across 7 phases (32/33 first run → 2 first-run harness self-bugs, fixed harness-side, **0 app changes**). **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs.
+
+Pure-validation day (Day 81 / Day 106 precedent). Re-scored the 10-dimension expert rubric: **Cycle 5 = 9.2 / 10** (+0.1 from Cycle 4's 9.1; Addictiveness 9 → 10, the engagement loop closed by Cycle 5 BUILD; 9 dimensions at ceiling). Wrote `reviews/prune-cycle-5-review.md`.
+
+Validation sweep highlights:
+- Build identity: 11 `?v=1782604800` refs, sw v76.
+- Tier staircase: cold 2 nav / 50 cards → end-game 18 nav + 50 overflow + 50 cards.
+- Level samples L1/L6/L18/L36/L48 (L48 Lab Bench III triple-composite: maxFanOut=2 + hardCap=3 + 3-chip constraint).
+- Cycle 5 PRUNE cuts all intact: Day 119 Tournament 2-tab + typed-confirm + hidden-empty Stats tabs; Day 120 orphan/CSS removal; Day 121 modalPop entrance + armed red→green affordance.
+- Day 79 dead-id purge PASS; Day 92/107 ESM bindings PASS.
+
+**First-run harness self-bugs (0 app changes):** (P3.g) read L48 metadata via non-existent `gs.getLevel(48)` — real accessor is global `window.getLevel(id)`; direct probe confirmed app data correct, fixed harness-side. (P4.i) sampled typed-confirm border at 300ms but the Day 121 modalPop entrance defers the 0.18s transition start — stepped probe confirmed solid green by ~300ms, fixed by waiting 550ms.
+
+**Open Bugs queue:** 0 → 0 (streak: **47 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-122-qa.md`. Harness: `qa-reports/day-122-qa.cdp.js` (33 assertions across 7 phases). Review: `reviews/prune-cycle-5-review.md`.
+
+**Cycle 5 PRUNE Week complete → Cycle 5 closed. Day 123 next: Cycle 6 BUILD Week Day 1.**
+
+---
+
 *Updated: Day 121 — Cycle 5 PRUNE Week, Day 4 (2026-06-28) — Polish Sprint*
 
 ## Day 121 — Cycle 5 PRUNE Week, Day 4 (Polish Sprint) summary
