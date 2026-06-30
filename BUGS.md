@@ -1,5 +1,30 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 123 — Cycle 6 BUILD Week, Day 1 (2026-06-30) — Module Split Phase 3*
+
+## Day 123 — Cycle 6 BUILD Week, Day 1 (Module Split Phase 3) summary
+
+**Build:** `?v=1782604800` / sw v76 → **`?v=1782691200` / sw v77** (first source-file change since Day 121).
+**Result:** **25 / 25** assertions across 8 phases on the **FIRST run** (`qa-reports/day-123-qa.cdp.js`). **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs.
+
+Converted `js/simulation.js` from a classic-script global-leaking file into a true ES module (Day 92 `gates.js` / Day 107 `wires.js` precedent). `class Simulation` → `export class Simulation`; tail rebinds `window.Simulation = Simulation` so the classic-script `main.js` consumer resolves it at construction time (`new Simulation(this)` on DOMContentLoaded, after the deferred module evaluates). The two Day 42 prototype augmentations (`traceFailurePath`, `detectConstantOutputs`) stay in module scope unchanged. `Gate`/`IONode` (used only inside method bodies) resolve via module-scope global fall-through to the Day 92 `window` rebind.
+
+- **P2 binding-identity proof:** `game.simulation instanceof window.Simulation === true`.
+- **P3 evaluate path:** L1 AND-gate synthetic solve → `runAll()` evaluates 4 rows, all pass, 3★ persisted.
+- **P4 trace path:** empty circuit → 1 disconnected-output trace with message; `detectConstantOutputs()` callable.
+- **P5:** Day 92 + Day 107 module bindings intact. **P6:** Day 79 dead-id purge PASS. **P7:** cold 2 nav / 50 cards / silent-default difficulty.
+
+**Source LOC:** `js/simulation.js` +14/−1, `index.html` +11/−11, `sw.js` +1/−1 = net ≈ +14 functional.
+
+**Open Bugs queue:** 0 → 0 (streak: **48 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-123-qa.md`. Harness: `qa-reports/day-123-qa.cdp.js`. Spec: `specs/day-123-module-split-phase3.md`. Roadmap: `roadmaps/cycle-6-build.md`.
+
+**Day 124 next:** Cycle 6 BUILD Week Day 2 — Collection-Modal Merge → tabbed Profile hub.
+
+---
+
 *Updated: Day 122 — Cycle 5 PRUNE Week, Day 5 (2026-06-29) — Expert Panel + Validation*
 
 ## Day 122 — Cycle 5 PRUNE Week, Day 5 (Expert Panel + Validation) summary

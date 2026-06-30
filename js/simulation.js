@@ -1,6 +1,6 @@
 // simulation.js — Circuit evaluation engine with animation support
 
-class Simulation {
+export class Simulation {
   constructor(gameState) {
     this.gameState = gameState;
     this.animating = false;
@@ -425,3 +425,19 @@ Simulation.prototype.detectConstantOutputs = function(results) {
   }
   return constants;
 };
+
+// ── Day 123: Module Split Phase 3 — global rebind for classic-script consumers ──
+// simulation.js is now a true ES module (loaded via `<script type="module">`).
+// The 1 classic-script consumer (main.js) still references `Simulation` as a
+// bare global at construction time (`new Simulation(this)` inside the Game
+// constructor, which runs on DOMContentLoaded — after this module evaluates).
+// We install it on `window` here so that consumer resolves the symbol at call
+// time. The `Gate` / `IONode` symbols this file uses inside method bodies are
+// already on `window` (Day 92 gates.js rebind) and resolve via module-scope
+// global fall-through at call time.
+//
+// Removal plan: this block can be deleted once main.js is converted to an
+// ES module with explicit imports (Cycle 7+).
+if (typeof window !== 'undefined') {
+  window.Simulation = Simulation;
+}
