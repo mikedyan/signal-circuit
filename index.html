@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1782691200">
+  <link rel="stylesheet" href="css/style.css?v=1782777600">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -125,16 +125,13 @@
         <button id="open-settings-btn" class="challenge-btn" style="margin-top:10px;" aria-label="Open settings">⚙️ Settings</button>
         <div id="info-buttons-row">
           <button id="encyclopedia-btn" class="challenge-btn info-btn" aria-label="Gate Encyclopedia">📚 Gate Encyclopedia</button>
-          <button id="achievements-btn" class="challenge-btn info-btn" aria-label="Achievements">🏆 Achievements</button>
           <button id="stats-btn" class="challenge-btn info-btn" aria-label="Stats">📊 Stats</button>
         </div>
-        <div id="info-buttons-row-cosmetics">
-          <button id="customize-btn" class="challenge-btn info-btn" aria-label="Customize">🎨 Customize</button>
-        </div>
+        <!-- Day 124 BUILD: the 5 collection modals (Achievements / Mastery /
+             Customize / Collection / Logic Profile) merged into one Profile
+             hub. This single button (reveals at g12) replaces all five. -->
         <div id="info-buttons-row-2">
-          <button id="mastery-tree-btn" class="challenge-btn info-btn" aria-label="Mastery Tree">🌳 Mastery Tree</button>
-          <button id="collection-btn" class="challenge-btn info-btn" aria-label="Circuit Collection">🗂️ Collection</button>
-          <button id="profile-btn" class="challenge-btn info-btn" aria-label="Logic Profile">🧬 Logic Profile</button>
+          <button id="profile-hub-btn" class="challenge-btn info-btn" aria-label="Profile hub">🗂️ Profile</button>
         </div>
       </div>
     </div>
@@ -219,11 +216,44 @@
     </div>
 
     <!-- Achievements Modal -->
-    <div id="achievements-modal" style="display:none;">
-      <div id="achievements-content">
-        <h3>🏆 Achievements</h3>
-        <div id="achievements-list"></div>
-        <button id="achievements-close">Close</button>
+    <!-- Day 124 BUILD: Profile Hub — merges Achievements / Mastery / Customize /
+         Collection / Logic Profile into one tabbed modal (Day 96 stats-tab
+         pattern). The five content roots below keep their original ids so every
+         render*() method writes into them unchanged; the old modal wrappers are
+         removed. Keep #stats-modal SEPARATE (data/analytics surface). -->
+    <div id="profile-hub-modal" style="display:none;">
+      <div id="profile-hub-content">
+        <h3>🗂️ Profile</h3>
+        <div id="profile-hub-tabs" role="tablist" aria-label="Profile sections">
+          <button id="phub-tab-achievements" class="phub-tab active" role="tab" aria-selected="true">🏆 Achievements</button>
+          <button id="phub-tab-mastery" class="phub-tab" role="tab" aria-selected="false">🌳 Mastery</button>
+          <button id="phub-tab-customize" class="phub-tab" role="tab" aria-selected="false">🎨 Customize</button>
+          <button id="phub-tab-collection" class="phub-tab" role="tab" aria-selected="false">🗂️ Collection</button>
+          <button id="phub-tab-profile" class="phub-tab" role="tab" aria-selected="false">🧬 Logic</button>
+        </div>
+        <div id="profile-hub-panes">
+          <div id="phub-pane-achievements" class="phub-pane">
+            <div id="achievements-list"></div>
+          </div>
+          <div id="phub-pane-mastery" class="phub-pane" style="display:none;">
+            <div id="mastery-tree-view"></div>
+            <div id="mastery-section" style="display:none;margin-top:16px;">
+              <div class="chapter-title mastery-title">🏆 Mastery Challenges <span id="mastery-progress-count" style="font-size:11px;color:#888;"></span></div>
+              <p style="color:#b8a0d0;font-size:11px;margin:4px 0 10px;">Expert-level challenges for campaign completionists. Prove your mastery.</p>
+              <div id="mastery-levels-grid" class="level-grid"></div>
+            </div>
+          </div>
+          <div id="phub-pane-customize" class="phub-pane" style="display:none;">
+            <div id="cosmetic-sections"></div>
+          </div>
+          <div id="phub-pane-collection" class="phub-pane" style="display:none;">
+            <div id="collection-list"></div>
+          </div>
+          <div id="phub-pane-profile" class="phub-pane" style="display:none;">
+            <div id="profile-view"></div>
+          </div>
+        </div>
+        <button id="profile-hub-close">Close</button>
       </div>
     </div>
 
@@ -676,39 +706,10 @@
     </div>
   </div>
 
-  <!-- Mastery Tree Modal (Day 31). Day 103 PRUNE Cut #4: the Day 55 Mastery
-       Challenges section moved here so it stops co-rendering in the campaign
-       grid at end-game (end-game card count returns to a clean 45). -->
-  <div id="mastery-tree-modal" style="display:none;">
-    <div id="mastery-tree-content">
-      <h3>🌳 Mastery Tree</h3>
-      <div id="mastery-tree-view"></div>
-      <div id="mastery-section" style="display:none;margin-top:16px;">
-        <div class="chapter-title mastery-title">🏆 Mastery Challenges <span id="mastery-progress-count" style="font-size:11px;color:#888;"></span></div>
-        <p style="color:#b8a0d0;font-size:11px;margin:4px 0 10px;">Expert-level challenges for campaign completionists. Prove your mastery.</p>
-        <div id="mastery-levels-grid" class="level-grid"></div>
-      </div>
-      <button id="mastery-tree-close">Close</button>
-    </div>
-  </div>
-
-  <!-- Circuit Collection Modal (Day 31) -->
-  <div id="collection-modal" style="display:none;">
-    <div id="collection-content">
-      <h3>🗂️ Circuit Collection</h3>
-      <div id="collection-list"></div>
-      <button id="collection-close">Close</button>
-    </div>
-  </div>
-
-  <!-- Logic Profile Modal (Day 31) -->
-  <div id="profile-modal" style="display:none;">
-    <div id="profile-content">
-      <h3>🧬 Your Logic Profile</h3>
-      <div id="profile-view"></div>
-      <button id="profile-close">Close</button>
-    </div>
-  </div>
+  <!-- Day 124 BUILD: Mastery Tree / Circuit Collection / Logic Profile modals
+       merged into #profile-hub-modal (see above). Their content roots
+       (#mastery-tree-view, #mastery-section, #collection-list, #profile-view)
+       now live inside the hub panes. -->
 
   <!-- Share Card Modal (Day 31) -->
   <div id="share-card-modal" style="display:none;">
@@ -754,15 +755,8 @@
     </div>
   </div>
 
-  <!-- Confirm Modal -->
-  <!-- Day 40: Cosmetic Customization Modal -->
-  <div id="cosmetic-modal" style="display:none;">
-    <div id="cosmetic-content">
-      <h3>🎨 Customize</h3>
-      <div id="cosmetic-sections"></div>
-      <button id="cosmetic-close">Close</button>
-    </div>
-  </div>
+  <!-- Day 124 BUILD: Cosmetic Customization modal merged into #profile-hub-modal
+       (Customize tab). Its #cosmetic-sections root now lives in the hub. -->
 
   <div id="confirm-modal" style="display:none;">
     <div id="confirm-modal-content">
@@ -838,15 +832,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1782691200"></script>
-  <script type="module" src="js/wires.js?v=1782691200"></script>
-  <script type="module" src="js/simulation.js?v=1782691200"></script>
-  <script src="js/levels.js?v=1782691200"></script>
-  <script src="js/audio.js?v=1782691200"></script>
-  <script src="js/achievements.js?v=1782691200"></script>
-  <script src="js/canvas.js?v=1782691200"></script>
-  <script src="js/ui.js?v=1782691200"></script>
-  <script src="js/tutorial.js?v=1782691200"></script>
-  <script src="js/main.js?v=1782691200"></script>
+  <script type="module" src="js/gates.js?v=1782777600"></script>
+  <script type="module" src="js/wires.js?v=1782777600"></script>
+  <script type="module" src="js/simulation.js?v=1782777600"></script>
+  <script src="js/levels.js?v=1782777600"></script>
+  <script src="js/audio.js?v=1782777600"></script>
+  <script src="js/achievements.js?v=1782777600"></script>
+  <script src="js/canvas.js?v=1782777600"></script>
+  <script src="js/ui.js?v=1782777600"></script>
+  <script src="js/tutorial.js?v=1782777600"></script>
+  <script src="js/main.js?v=1782777600"></script>
 </body>
 </html>

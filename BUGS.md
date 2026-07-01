@@ -1,5 +1,34 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 124 — Cycle 6 BUILD Week, Day 2 (2026-07-01) — Collection-Modal Merge*
+
+## Day 124 — Cycle 6 BUILD Week, Day 2 (Collection-Modal Merge → tabbed Profile hub) summary
+
+**Build:** `?v=1782691200` / sw v77 → **`?v=1782777600` / sw v78**.
+**Result:** **33 / 33** assertions across 9 phases on the **FIRST run** (`qa-reports/day-124-qa.cdp.js`). **0** console.error. **0** `Runtime.exceptionThrown`. **0** new user-facing bugs.
+
+Merged the five standalone collection modals (Achievements / Mastery / Customize / Collection / Logic Profile) into ONE tabbed `#profile-hub-modal` — the deferred Cycle 5 Tier-2 Cut #4, promoted to a dedicated BUILD day. Re-parented (did not rewrite) each content root; every `render*()` stays untouched because the content-root ids are preserved. A single **🗂️ Profile** button (reveals at g12) replaces the five header buttons — end-game nav-button count drops **18 → 14**.
+
+- **Re-parent map:** `#achievements-list`, `#mastery-tree-view`+`#mastery-section`, `#cosmetic-sections`, `#collection-list`, `#profile-view` moved into 5 `.phub-pane` panes; old modal wrappers deleted.
+- **Tab pattern:** mirrors Day 96 `#stats-tabs` / `_switchStatsTab` — lazy-render on tab open. New `setupProfileHub()` + `_switchProfileTab()` + `_updateProfileTabsUI()` + `_profileCompletedCount()` + `_profileTabAvailable()`.
+- **Tier gating:** Achievements + Customize (old g12) show from g12; Mastery/Collection/Logic (old g15) self-hide until g15. Strand-guard routes a gated tab → Achievements (P6.c: active tab non-stranded at g12).
+- **ONE consolidated backdrop/close handler** on the hub (avoids the Day 61/74 duplicate-path bug). P5 verified close-button + backdrop both hide the hub.
+- **Logic Profile lifecycle:** `#profile-view` cleared on hub close (Day 54 chart-lifecycle discipline). P5.c: pane content 4099 → 0 on close.
+- **P4 live-mutate proof:** clicking the `blue` wire-color card (from active `classic`) flips the active cosmetic through the re-parented `#cosmetic-sections` — the render-attached click delegation survived re-parenting.
+
+**Source LOC:** `index.html` (−40/+38 + 11 cache-bust), `css/style.css` (+~80), `js/ui.js` (+~110/−6), `sw.js` (+1/−1). Net user-facing surface: **−4 top-level buttons**.
+
+**The 5 old `setup*` methods** (setupAchievements / setupMasteryTree / setupCircuitCollection / setupLogicProfile / setupCosmeticModal) keep their old button/modal wiring but no-op on the now-absent elements (`if (btn)` / `if (!btn||!modal) return` guards). Old button ids (`achievements-btn`, `customize-btn`, `mastery-tree-btn`, `collection-btn`, `profile-btn`) are now dead → fold into the Day 79 dead-id sweep in Cycle 6 PRUNE Code Cleanup.
+
+**Open Bugs queue:** 0 → 0 (streak: **49 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-124-qa.md`. Harness: `qa-reports/day-124-qa.cdp.js`. Spec: `specs/day-124-collection-modal-merge.md`.
+
+**Day 125 next:** Cycle 6 BUILD Week Day 3 — Tournament Worker production-readiness + opt-in display name.
+
+---
+
 *Updated: Day 123 — Cycle 6 BUILD Week, Day 1 (2026-06-30) — Module Split Phase 3*
 
 ## Day 123 — Cycle 6 BUILD Week, Day 1 (Module Split Phase 3) summary

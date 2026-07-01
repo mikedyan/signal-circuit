@@ -7457,6 +7457,82 @@ body.light-mode #tournament-back-btn { color: #444; border-color: #b89a40; }
 body.light-mode #tournament-back-btn:hover { color: #000; border-color: #b8860b; }
 
 /* ── Day 96: Snapshot Cards Library Tab ── */
+/* Day 124 BUILD: Profile Hub — one tabbed modal replacing the 5 collection
+   modals. Overlay + container + tab strip mirror the Day 96 stats-tab pattern. */
+#profile-hub-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#profile-hub-content {
+  background: #1a1a2e;
+  border: 2px solid #5a4828;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 560px;
+  width: 90%;
+  max-height: 82vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+#profile-hub-content h3 {
+  color: #0f0;
+  margin-bottom: 12px;
+  text-align: center;
+}
+#profile-hub-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 14px;
+  border-bottom: 1px solid #1a3a2a;
+  flex-wrap: wrap;
+}
+.phub-tab {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  color: #888;
+  padding: 8px 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s, opacity .15s;
+}
+.phub-tab:hover { color: #0f0; }
+.phub-tab.active {
+  color: #0f0;
+  border-bottom-color: #0f0;
+}
+.phub-tab:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.phub-pane { animation: tFadeIn .25s ease; }
+#profile-hub-close {
+  margin-top: 16px;
+}
+body.light-mode #profile-hub-content {
+  background: #eef2e8;
+  border-color: #c8a860;
+}
+body.light-mode #profile-hub-content h3 { color: #0a5a0a; }
+body.light-mode .phub-tab { color: #6a5a30; }
+body.light-mode .phub-tab:hover { color: #0a5a0a; }
+body.light-mode .phub-tab.active {
+  color: #0a5a0a;
+  border-bottom-color: #0a5a0a;
+}
+body.light-mode #profile-hub-tabs { border-bottom-color: #c8d8c0; }
+
 #stats-tabs {
   display: flex;
   gap: 4px;

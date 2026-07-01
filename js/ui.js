@@ -44,6 +44,7 @@ class UI {
     this.setupLightMode(); // Day 35 T5
     this.setupUndoTimeline(); // Day 35 T6
     this.setupCosmeticModal(); // Day 40
+    this.setupProfileHub(); // Day 124: tabbed Profile hub (merges 5 collection modals)
     this.setupDailyScreen(); // Day 44
     this.setupCommunitySection(); // Day 49
     this.updateDailyButtonBadge(); // Day 44
@@ -885,12 +886,12 @@ class UI {
     setVis('sandbox-btn', g9);
     // L12 — mid-progression skill+meta
     setVis('adaptive-challenge-btn', g12);
-    setVis('achievements-btn', g12);
-    setVis('customize-btn', g12);
-    // L15 — collectibles + identity
-    setVis('mastery-tree-btn', g15);
-    setVis('profile-btn', g15);
-    setVis('collection-btn', g15);
+    // Day 124 BUILD: the 5 collection buttons (Achievements/Customize at g12 +
+    // Mastery/Collection/Logic at g15) collapse into ONE Profile hub button.
+    // It reveals at g12 (earliest of the five); the hub's internal tabs
+    // self-gate — Mastery/Collection/Logic stay hidden until g15 so the
+    // staircase stays smooth (see _profileTabAvailable).
+    setVis('profile-hub-btn', g12);
     // L18 — Tier 3 endgame surface
     setVis('tournament-btn', g18);
     setVis('infinite-mode-btn', g18); // Day 68
@@ -6941,6 +6942,124 @@ class UI {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.style.display = 'none';
     });
+  }
+
+  // ── Day 124: Profile Hub ──
+  // Merges the 5 standalone collection modals (Achievements / Mastery /
+  // Customize / Collection / Logic Profile) into one tabbed surface. Mirrors
+  // the Day 96 #stats-tabs / _switchStatsTab pattern. Re-parents (does not
+  // rewrite) each content root; each render*() stays untouched.
+  setupProfileHub() {
+    const modal = document.getElementById('profile-hub-modal');
+    if (!modal) return;
+    const btn = document.getElementById('profile-hub-btn');
+    const closeBtn = document.getElementById('profile-hub-close');
+
+    const openHub = () => {
+      modal.style.display = 'flex';
+      // Restore last tab if still available, else default to Achievements.
+      let tab = this._activeProfileTab || 'achievements';
+      if (!this._profileTabAvailable(tab)) tab = 'achievements';
+      this._switchProfileTab(tab);
+    };
+    const closeHub = () => {
+      modal.style.display = 'none';
+      // Day 54 chart-lifecycle discipline: the Logic Profile pane renders an
+      // inline SVG sparkline; clear its content on close so nothing lingers.
+      const pv = document.getElementById('profile-view');
+      if (pv) pv.innerHTML = '';
+    };
+
+    if (btn) btn.addEventListener('click', openHub);
+    if (closeBtn) closeBtn.addEventListener('click', closeHub);
+    // ONE consolidated backdrop handler (avoid the Day 61/74 duplicate-path bug).
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeHub(); });
+
+    // Tab strip wiring.
+    const tabs = [
+      ['phub-tab-achievements', 'achievements'],
+      ['phub-tab-mastery', 'mastery'],
+      ['phub-tab-customize', 'customize'],
+      ['phub-tab-collection', 'collection'],
+      ['phub-tab-profile', 'profile'],
+    ];
+    for (const [id, key] of tabs) {
+      const t = document.getElementById(id);
+      if (t) t.addEventListener('click', () => this._switchProfileTab(key));
+    }
+  }
+
+  _profileCompletedCount() {
+    const progress = (this.gameState && this.gameState.progress) || { levels: {} };
+    let c = 0;
+    for (const k in progress.levels) {
+      if (progress.levels[k] && progress.levels[k].completed) c++;
+    }
+    return c;
+  }
+
+  // Achievements + Customize reveal with the hub button at g12. Mastery /
+  // Collection / Logic stay gated to g15 (their old button tier) so merging
+  // them behind one entry doesn't prematurely expose the Day-15 collectibles.
+  _profileTabAvailable(key) {
+    if (key === 'mastery' || key === 'collection' || key === 'profile') {
+      return this._profileCompletedCount() >= 15;
+    }
+    return true;
+  }
+
+  _switchProfileTab(which) {
+    const valid = ['achievements', 'mastery', 'customize', 'collection', 'profile'];
+    if (!valid.includes(which)) which = 'achievements';
+    // Strand-guard: never land on a tier-gated tab that isn't available yet.
+    if (!this._profileTabAvailable(which)) which = 'achievements';
+    this._activeProfileTab = which;
+
+    const panes = {
+      achievements: 'phub-pane-achievements',
+      mastery: 'phub-pane-mastery',
+      customize: 'phub-pane-customize',
+      collection: 'phub-pane-collection',
+      profile: 'phub-pane-profile',
+    };
+    for (const [key, paneId] of Object.entries(panes)) {
+      const pane = document.getElementById(paneId);
+      if (pane) pane.style.display = (key === which) ? '' : 'none';
+    }
+
+    // Lazy-render only the active pane (Day 96 stats-tab precedent).
+    if (which === 'achievements') {
+      this.renderAchievements();
+    } else if (which === 'mastery') {
+      this.renderMasteryTree();
+      this.renderMasterySection();
+    } else if (which === 'customize') {
+      this.renderCosmeticModal();
+    } else if (which === 'collection') {
+      this.renderCircuitCollection();
+    } else if (which === 'profile') {
+      this.renderLogicProfile();
+    }
+    this._updateProfileTabsUI();
+  }
+
+  _updateProfileTabsUI() {
+    const which = this._activeProfileTab || 'achievements';
+    const map = {
+      achievements: 'phub-tab-achievements',
+      mastery: 'phub-tab-mastery',
+      customize: 'phub-tab-customize',
+      collection: 'phub-tab-collection',
+      profile: 'phub-tab-profile',
+    };
+    for (const [key, id] of Object.entries(map)) {
+      const t = document.getElementById(id);
+      if (!t) continue;
+      t.classList.toggle('active', key === which);
+      t.setAttribute('aria-selected', key === which ? 'true' : 'false');
+      // Tier-gated tabs hide until their condition is met (staircase discipline).
+      t.style.display = this._profileTabAvailable(key) ? '' : 'none';
+    }
   }
 
   renderCosmeticModal() {
