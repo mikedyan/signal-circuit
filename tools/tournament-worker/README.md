@@ -9,6 +9,7 @@ Day 93 (Cycle 4 BUILD Week, Day 2) ships the backend half of the live tournament
 | `worker.js` | Cloudflare Worker module. Production target. |
 | `wrangler.toml` | Worker config: name, compat date, KV namespace binding. |
 | `local-mock-worker.js` | Node http server with the same API. Used for CDP harness + local dev. **No deps.** |
+| `deploy.sh` | Idempotent deploy helper (Day 125): preflight checks + deploy plan. Never runs `wrangler deploy` without `--yes`. |
 | `README.md` | This file. |
 
 ## API contract
@@ -90,29 +91,53 @@ The Day 93 CDP harness boots the mock on `127.0.0.1:8902`, points `localStorage(
 
 ## Cloudflare deploy procedure (operator-action)
 
-`wrangler` is not invoked by the factory because no Cloudflare credentials are wired in. To deploy from a credentialed machine:
+`wrangler` is not invoked by the factory because no Cloudflare credentials are
+wired in. **Day 125 adds `deploy.sh`** — an idempotent, safe-to-re-run helper
+that preflights the config and prints the exact command sequence. It never runs
+`wrangler deploy` unless you explicitly pass `--yes`.
+
+```bash
+# Preflight (default): verify worker.js, wrangler.toml, wrangler on PATH, KV ids
+tools/tournament-worker/deploy.sh check
+
+# Print the full deploy plan (+ optional client bootstrap for a given URL)
+tools/tournament-worker/deploy.sh plan --url https://signal-circuit-tournament.<account>.workers.dev
+
+# Actually deploy (must pass --yes; aborts on placeholder KV ids)
+tools/tournament-worker/deploy.sh deploy --yes
+```
+
+Manual equivalent from a credentialed machine:
 
 ```bash
 cd tools/tournament-worker
 
 # 1. Create KV namespaces (one prod, one preview)
-wrangler kv:namespace create SIGNAL_CIRCUIT_TOURNAMENT
-wrangler kv:namespace create SIGNAL_CIRCUIT_TOURNAMENT --preview
+wrangler kv:namespace create TOURNAMENT_KV
+wrangler kv:namespace create TOURNAMENT_KV --preview
 
 # 2. Paste the returned ids into wrangler.toml under [[kv_namespaces]].id / preview_id
 
-# 3. Deploy
+# 3. Deploy (idempotent — wrangler diffs + updates in place; safe to re-run)
 wrangler deploy
 
-# 4. Note the assigned workers.dev URL. Paste it into the game by running
-#    in DevTools console:
-#       localStorage.setItem('signal-circuit-tournament-backend', 'remote')
-#       localStorage.setItem('signal-circuit-tournament-worker-url',
-#                            'https://signal-circuit-tournament.<account>.workers.dev')
-#    and reload.
+# 4. Note the assigned workers.dev URL, then connect it IN-GAME (Day 125):
+#       Settings → Tournament (Online) → Worker URL → 🔌 Connect
 ```
 
-`wrangler.toml` ships with placeholder ids; deploy will fail until they are replaced — this is intentional so an accidental deploy can't silently write to a different account's namespace.
+`wrangler.toml` ships with placeholder ids; `deploy.sh deploy` refuses to run
+until they are replaced — this is intentional so an accidental deploy can't
+silently write to a different account's namespace.
+
+## Opt-in display name + privacy (Day 125)
+
+The client is **anonymous by default**. `RemoteTournamentAdapter.submitScore()`
+only POSTs a personal `name` if the player has explicitly set one via
+**Settings → Tournament (Online) → Display name**
+(`signal-circuit-tournament-display-name`). With no name set, the POST body
+carries `name: "Anonymous"` + `anonymous: true`, and the daily-leaderboard name
+is never forwarded to the cloud without consent. The local pseudo-board still
+shows `"You"` — that data never leaves the device.
 
 ## Client integration (already shipped in Day 93)
 

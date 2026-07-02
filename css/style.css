@@ -7666,3 +7666,54 @@ body.light-mode .tournament-history-empty { color: #6a6a6a !important; }
 body.light-mode .card-thumb { background: #f0f4ec !important; border-color: #c8d8c0 !important; color: #333 !important; }
 body.light-mode .card-thumb:hover { border-color: #0a5a8a !important; box-shadow: 0 4px 12px rgba(10, 90, 138, 0.16); }
 body.light-mode .card-library-empty { color: #6a6a6a !important; }
+
+/* ── Day 125: Tournament (Online) settings surface ── */
+#tournament-settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.ts-field { display: flex; flex-direction: column; gap: 6px; }
+.ts-label {
+  font-size: 12px;
+  color: #8fb8a8;
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+.ts-hint { color: #6a7d75; font-size: 11px; font-style: italic; }
+.ts-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background: #0a1512;
+  border: 1px solid #24413a;
+  border-radius: 6px;
+  color: #d4f0e6;
+  font-family: inherit;
+  font-size: 13px;
+}
+.ts-input:focus {
+  outline: none;
+  border-color: #2fd4a0;
+  box-shadow: 0 0 0 2px rgba(47, 212, 160, 0.18);
+}
+.ts-btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.ts-status {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(120, 140, 130, 0.1);
+  border: 1px solid #24413a;
+  color: #a8ccc0;
+}
+.ts-status[data-mode="remote"] { background: rgba(0, 200, 140, 0.12); border-color: rgba(0, 200, 140, 0.4); color: #45e0a8; }
+.ts-status[data-mode="remote-fallback"] { background: rgba(230, 160, 0, 0.1); border-color: rgba(230, 160, 0, 0.35); color: #e0a94a; }
+.ts-status[data-mode="cloud-ready"] { background: rgba(0, 150, 210, 0.1); border-color: rgba(0, 150, 210, 0.35); color: #4ac0e0; }
+body.light-mode .ts-label { color: #3a6a58; }
+body.light-mode .ts-input { background: #f0f4ec; border-color: #c8d8c0; color: #22332c; }
+body.light-mode .ts-status { background: rgba(60, 100, 84, 0.08); border-color: #c8d8c0; color: #3a6a58; }

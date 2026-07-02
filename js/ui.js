@@ -686,6 +686,10 @@ class UI {
           }
         }
       } catch (e) {}
+      // Day 125: refresh the Tournament (Online) surface on every open so the
+      // worker-URL input, display-name input, and connection-status chip
+      // reflect the current localStorage state without a reload.
+      try { this.renderTournamentSettings(); } catch (e) {}
       modal.style.display = 'flex';
       // Day 105 PRUNE Polish Sprint #1: tag the modal as "opening" so the
       // CSS staggered .settings-section fade-in runs once on every open.
@@ -729,6 +733,106 @@ class UI {
         modal.style.display = 'none';
         this.showOnboardingExperimentPanel();
       });
+    }
+    // Day 125: Tournament (Online) connection + opt-in display name wiring.
+    this._wireTournamentSettings();
+  }
+
+  // Day 125: one-time wiring for the Tournament (Online) settings surface.
+  _wireTournamentSettings() {
+    const wurlInput = document.getElementById('tournament-worker-url-input');
+    const wsave = document.getElementById('tournament-worker-save-btn');
+    const wclear = document.getElementById('tournament-worker-clear-btn');
+    const nameInput = document.getElementById('tournament-display-name-input');
+    const nsave = document.getElementById('tournament-name-save-btn');
+    const nclear = document.getElementById('tournament-name-clear-btn');
+    const self = this;
+    const applyUrl = (raw) => {
+      const url = String(raw || '').trim().replace(/\/+$/, '');
+      try {
+        if (url) {
+          localStorage.setItem('signal-circuit-tournament-worker-url', url);
+          localStorage.setItem('signal-circuit-tournament-backend', 'remote');
+        } else {
+          localStorage.removeItem('signal-circuit-tournament-worker-url');
+          localStorage.setItem('signal-circuit-tournament-backend', 'local');
+        }
+      } catch (e) {}
+      if (self.gameState && typeof self.gameState.reconfigureTournamentBackend === 'function') {
+        self.gameState.reconfigureTournamentBackend();
+      }
+      try { self.gameState.audio.playButtonClick(); } catch (e) {}
+      self.updateTournamentConnectionStatus();
+    };
+    if (wsave && wurlInput) {
+      wsave.addEventListener('click', () => applyUrl(wurlInput.value));
+      wurlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyUrl(wurlInput.value); });
+    }
+    if (wclear) {
+      wclear.addEventListener('click', () => { if (wurlInput) wurlInput.value = ''; applyUrl(''); });
+    }
+    if (nsave && nameInput) {
+      const saveName = () => {
+        const cleaned = (typeof window.setTournamentDisplayName === 'function')
+          ? window.setTournamentDisplayName(nameInput.value) : '';
+        nameInput.value = cleaned;
+        try { self.gameState.audio.playButtonClick(); } catch (e) {}
+        self.updateTournamentConnectionStatus();
+      };
+      nsave.addEventListener('click', saveName);
+      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); });
+    }
+    if (nclear) {
+      nclear.addEventListener('click', () => {
+        try { if (typeof window.clearTournamentDisplayName === 'function') window.clearTournamentDisplayName(); } catch (e) {}
+        if (nameInput) nameInput.value = '';
+        try { self.gameState.audio.playButtonClick(); } catch (e) {}
+        self.updateTournamentConnectionStatus();
+      });
+    }
+  }
+
+  // Day 125: populate the Tournament (Online) inputs + status chip from the
+  // current localStorage state. Idempotent — safe to call on every open.
+  renderTournamentSettings() {
+    const urlInput = document.getElementById('tournament-worker-url-input');
+    const nameInput = document.getElementById('tournament-display-name-input');
+    if (urlInput) {
+      let url = '';
+      try { url = localStorage.getItem('signal-circuit-tournament-worker-url') || ''; } catch (e) {}
+      urlInput.value = url;
+    }
+    if (nameInput) {
+      let name = '';
+      try { name = (typeof window.getTournamentDisplayName === 'function') ? window.getTournamentDisplayName() : ''; } catch (e) {}
+      nameInput.value = name;
+    }
+    this.updateTournamentConnectionStatus();
+  }
+
+  // Day 125: paint the connection-status chip using Day 93's 4-state describe()
+  // vocabulary (🏠 Local / 🌐 Live / 🌐 Live · offline / 🌐 Connecting…). For
+  // remote backends it kicks a reachability probe and repaints when it lands.
+  updateTournamentConnectionStatus() {
+    const statusEl = document.getElementById('tournament-connection-status');
+    if (!statusEl) return;
+    const backend = this.gameState && this.gameState.tournamentBackend;
+    const label = (backend && typeof backend.describe === 'function') ? backend.describe() : '🏠 Local leaderboard';
+    const mode = (backend && typeof backend.getMode === 'function') ? backend.getMode() : 'local';
+    statusEl.textContent = label;
+    statusEl.setAttribute('data-mode', mode);
+    if (backend && typeof backend.refreshReachability === 'function' && mode !== 'local') {
+      try {
+        backend.refreshReachability().then(() => {
+          const el = document.getElementById('tournament-connection-status');
+          if (!el) return;
+          const modal = document.getElementById('settings-modal');
+          if (!modal || modal.style.display === 'none') return;
+          const updated = (typeof backend.describe === 'function') ? backend.describe() : label;
+          el.textContent = updated;
+          try { el.setAttribute('data-mode', backend.getMode()); } catch (e) {}
+        });
+      } catch (e) {}
     }
   }
 

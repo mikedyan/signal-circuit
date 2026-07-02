@@ -1328,8 +1328,34 @@ class WeeklyTournament {
 
 const TOURNAMENT_BACKEND_LS_KEY = 'signal-circuit-tournament-backend';
 const TOURNAMENT_WORKER_URL_LS_KEY = 'signal-circuit-tournament-worker-url';
+// Day 125: opt-in tournament display name. Privacy default is anonymous — the
+// RemoteTournamentAdapter never POSTs a personal name unless the player has
+// explicitly set one here. The local pseudo-board is unaffected (it keeps
+// showing "You"); this key governs only what leaves the device.
+const TOURNAMENT_DISPLAY_NAME_LS_KEY = 'signal-circuit-tournament-display-name';
+const TOURNAMENT_DISPLAY_NAME_MAX = 16;
 const TOURNAMENT_REACH_TTL_MS = 5000;
 const TOURNAMENT_REACH_TIMEOUT_MS = 1200;
+
+// Day 125: opt-in display-name accessors. Kept as free functions so both the
+// adapter (network POST) and ui.js (Settings surface) share one source of truth.
+function getTournamentDisplayName() {
+  try {
+    const n = SafeStorage.getItem(TOURNAMENT_DISPLAY_NAME_LS_KEY);
+    return (typeof n === 'string') ? n : '';
+  } catch (e) { return ''; }
+}
+function setTournamentDisplayName(name) {
+  const clean = String(name == null ? '' : name).trim().slice(0, TOURNAMENT_DISPLAY_NAME_MAX);
+  try {
+    if (clean) SafeStorage.setItem(TOURNAMENT_DISPLAY_NAME_LS_KEY, clean);
+    else SafeStorage.removeItem(TOURNAMENT_DISPLAY_NAME_LS_KEY);
+  } catch (e) {}
+  return clean;
+}
+function clearTournamentDisplayName() {
+  try { SafeStorage.removeItem(TOURNAMENT_DISPLAY_NAME_LS_KEY); } catch (e) {}
+}
 
 class TournamentBackend {
   // Interface contract — subclasses must override.
@@ -1457,12 +1483,21 @@ class RemoteTournamentAdapter extends TournamentBackend {
         const url = this._workerUrl() + '/scores';
         const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
         const timer = (typeof setTimeout !== 'undefined' && ctrl) ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TOURNAMENT_REACH_TIMEOUT_MS) : null;
+        // Day 125: privacy — only POST a personal name if the player has
+        // explicitly opted in via Settings → Tournament. Default is anonymous;
+        // the local board (read synchronously by the UI) still shows the
+        // passed-in displayName. The `displayName` argument is intentionally
+        // NOT used for the network name to prevent the daily-leaderboard name
+        // from leaking to the cloud without consent.
+        const optInName = getTournamentDisplayName();
+        const isAnonymous = !optInName;
         const body = JSON.stringify({
           weekKey: submission && submission.weekKey,
           gates: gateCount,
           time: timeSec,
           score: submission && submission.score,
-          name: displayName || 'You',
+          name: optInName || 'Anonymous',
+          anonymous: isAnonymous,
           meta: { client: 'signal-circuit', ts: Date.now() },
         });
         fetch(url, {
@@ -1583,6 +1618,10 @@ try {
     window.LocalTournamentAdapter = LocalTournamentAdapter;
     window.RemoteTournamentAdapter = RemoteTournamentAdapter;
     window.selectTournamentBackend = selectTournamentBackend;
+    // Day 125: expose opt-in display-name accessors for the Settings surface + QA harness.
+    window.getTournamentDisplayName = getTournamentDisplayName;
+    window.setTournamentDisplayName = setTournamentDisplayName;
+    window.clearTournamentDisplayName = clearTournamentDisplayName;
   }
 } catch (e) {}
 
@@ -2273,6 +2312,20 @@ class GameState {
   }
 
   // ── Progress Persistence ──
+  // Day 125: re-select the tournament backend after the player changes the
+  // worker URL / backend mode in Settings, without requiring a page reload.
+  // Mirrors the Day 83 selection logic (localStorage-driven) so the Settings
+  // surface and the cold-start path share one code path.
+  reconfigureTournamentBackend() {
+    try {
+      this.tournamentBackend = selectTournamentBackend(this.weeklyTournament);
+      if (this.tournamentBackend && typeof this.tournamentBackend.refreshReachability === 'function') {
+        try { this.tournamentBackend.refreshReachability(); } catch (e) {}
+      }
+    } catch (e) {}
+    return this.tournamentBackend;
+  }
+
   loadProgress() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);

@@ -1,6 +1,30 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 124 — Cycle 6 BUILD Week, Day 2 (2026-07-01) — Collection-Modal Merge*
+*Updated: Day 125 — Cycle 6 BUILD Week, Day 3 (2026-07-02) — Tournament Worker production-readiness + opt-in display name*
+
+## Day 125 — Cycle 6 BUILD Week, Day 3 (Tournament Worker production-readiness + opt-in display name) summary
+
+**Build:** `?v=1782777600` / sw v78 → **`?v=1782864000` / sw v79**.
+**Result:** **49 / 49** assertions across 8 phases (second run); **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+Made the Day 108 tournament backend genuinely deployable. Shipped: (1) a Settings → Tournament (Online) surface with a worker-URL input + 🔌 Connect / 🏠 Go Local buttons + a connection-status chip driven by Day 93's 4-state `describe()` vocabulary; (2) an opt-in display name (`signal-circuit-tournament-display-name`) — no personal name POSTed unless explicitly set, default anonymous; (3) `tools/tournament-worker/deploy.sh`, an idempotent deploy helper (external `wrangler deploy` stays a manual human step).
+
+- **Privacy is the headline.** `RemoteTournamentAdapter.submitScore()` POST body now sends `name: optInName || 'Anonymous'` + `anonymous: !optInName`. The `displayName` argument (the daily-leaderboard name) is intentionally NOT forwarded to the cloud. P4.3 proved a submit with no opt-in name stores `"Anonymous"` server-side; P4.7 proved an opt-in name (clamped ≤16) stores exactly.
+- **Live reconfigure, no reload:** `GameState.reconfigureTournamentBackend()` re-runs `selectTournamentBackend()` when the URL/mode changes. P3 flipped the live backend Local→Remote via the Connect button; P5 flipped it back via Go Local.
+- **Two harness self-bugs on the way to green (0 app changes):** (1) a P6 multi-statement eval ended on `reconfigureTournamentBackend()`, whose return value (the full adapter, circular refs) blew up `returnByValue` serialization — fixed by appending `true;`; (2) an orphaned mock worker from the crashed first run held port 8902, so the offline-fallback probe stayed reachable — killed the orphan.
+
+**Source LOC:** `js/main.js` +~55, `js/ui.js` +~95, `index.html` +21 (+11 cache-bust), `css/style.css` +51, `sw.js` v78→v79, `tools/tournament-worker/deploy.sh` new (+~155), README docs.
+
+**No cold-start surface added** — the Tournament section lives inside the existing Settings modal. Cold nav-button count holds at 2 (Day 78 invariant).
+
+**Open Bugs queue:** 0 → 0 (streak: **50 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-125-qa.md`. Harness: `qa-reports/day-125-qa.cdp.js`. Spec: `specs/day-125-tournament-worker-productionization.md`.
+
+**Day 126 next:** Cycle 6 BUILD Week Day 4 — Onboarding A/B readout: Local-only vs Live cohort (engagement instrumentation).
+
+---
 
 ## Day 124 — Cycle 6 BUILD Week, Day 2 (Collection-Modal Merge → tabbed Profile hub) summary
 

@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1782777600">
+  <link rel="stylesheet" href="css/style.css?v=1782864000">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -177,6 +177,31 @@
           <div id="notif-settings-row" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
             <button id="notif-daily-btn" class="settings-btn" aria-label="Toggle daily challenge notification">🔔 Daily: On</button>
             <button id="notif-streak-btn" class="settings-btn" aria-label="Toggle streak alert notification">🔥 Streak: On</button>
+          </div>
+        </div>
+        <!-- Day 125: Online tournament connection surface. Opt-in by design —
+             no worker URL and no display name are set by default, so a fresh
+             install stays fully local + anonymous. -->
+        <div class="settings-section" id="settings-tournament-section">
+          <h4>Tournament (Online)</h4>
+          <div id="tournament-settings-row">
+            <div class="ts-field">
+              <label class="ts-label" for="tournament-worker-url-input">Worker URL</label>
+              <input type="url" id="tournament-worker-url-input" class="ts-input" placeholder="https://…workers.dev (leave blank = local)" autocomplete="off" spellcheck="false" aria-label="Tournament worker URL">
+              <div class="ts-btn-row">
+                <button id="tournament-worker-save-btn" class="settings-btn" aria-label="Connect tournament worker">🔌 Connect</button>
+                <button id="tournament-worker-clear-btn" class="settings-btn" aria-label="Disconnect tournament worker">🏠 Go Local</button>
+              </div>
+            </div>
+            <div id="tournament-connection-status" class="ts-status" aria-live="polite">🏠 Local leaderboard</div>
+            <div class="ts-field">
+              <label class="ts-label" for="tournament-display-name-input">Display name <span class="ts-hint">(optional — blank = anonymous)</span></label>
+              <input type="text" id="tournament-display-name-input" class="ts-input" maxlength="16" placeholder="Anonymous" autocomplete="off" aria-label="Tournament display name">
+              <div class="ts-btn-row">
+                <button id="tournament-name-save-btn" class="settings-btn" aria-label="Save tournament display name">💾 Save Name</button>
+                <button id="tournament-name-clear-btn" class="settings-btn" aria-label="Clear tournament display name">🖩 Anonymous</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="settings-section">
@@ -832,15 +857,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1782777600"></script>
-  <script type="module" src="js/wires.js?v=1782777600"></script>
-  <script type="module" src="js/simulation.js?v=1782777600"></script>
-  <script src="js/levels.js?v=1782777600"></script>
-  <script src="js/audio.js?v=1782777600"></script>
-  <script src="js/achievements.js?v=1782777600"></script>
-  <script src="js/canvas.js?v=1782777600"></script>
-  <script src="js/ui.js?v=1782777600"></script>
-  <script src="js/tutorial.js?v=1782777600"></script>
-  <script src="js/main.js?v=1782777600"></script>
+  <script type="module" src="js/gates.js?v=1782864000"></script>
+  <script type="module" src="js/wires.js?v=1782864000"></script>
+  <script type="module" src="js/simulation.js?v=1782864000"></script>
+  <script src="js/levels.js?v=1782864000"></script>
+  <script src="js/audio.js?v=1782864000"></script>
+  <script src="js/achievements.js?v=1782864000"></script>
+  <script src="js/canvas.js?v=1782864000"></script>
+  <script src="js/ui.js?v=1782864000"></script>
+  <script src="js/tutorial.js?v=1782864000"></script>
+  <script src="js/main.js?v=1782864000"></script>
 </body>
 </html>
