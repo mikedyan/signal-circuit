@@ -1577,3 +1577,9 @@ Shipped: Snapshot Cards library with Stats → 📸 My Cards tab, capped at 20 w
 Report: `qa-reports/day-114-qa.md`. Harness: `qa-reports/day-114-qa.cdp.js`. Launcher: `tools/cdp-launch.sh`.
 
 **Day 115 next:** Cycle 5 HARDEN Week Day 3 — Edge Cases & Stress.
+
+## Day 126 — Cycle 6 BUILD Week, Day 4 (Onboarding A/B cohort instrumentation)
+
+**No open bugs at start of day. No open bugs at end of day.**
+
+Shipped deterministic Local/Live cohort assignment + return-session counter + debug-gated readout (behind the Day 95 Developer section). 44/44 assertions across 8 phases on the FIRST run (`qa-reports/day-126-qa.cdp.js`); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs; 0 harness self-bugs. Open Bugs queue: 0 → 0 (**51-day empty-queue streak** since Day 76). Latent observations: 0 → 0.

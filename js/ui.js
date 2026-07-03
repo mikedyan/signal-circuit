@@ -877,6 +877,28 @@ class UI {
     const appliedLine = appliedAt
       ? '<span style="color:#0f0;font-family:monospace;">' + appliedAt + '</span> <span style="color:#666;">· ' + relTime + '</span>'
       : '<span style="color:#888;font-style:italic;">Not yet applied (DIFFICULTY_KEY already set)</span>';
+    // Day 126: A/B cohort + return-session block (Local-only vs Live cohort).
+    let cohortHtml = '';
+    if (typeof oe.getSessionStats === 'function') {
+      const ss = oe.getSessionStats() || {};
+      const cohort = ss.cohort || '—';
+      const cohortColor = cohort === 'live' ? '#5cf' : (cohort === 'local' ? '#fc5' : '#888');
+      const installId = (typeof oe.getInstallId === 'function') ? (oe.getInstallId() || '—') : '—';
+      cohortHtml =
+        '<div id="onboarding-readout-cohort" style="margin-bottom:8px;padding:8px;background:rgba(80,140,255,0.05);border:1px solid #1a2a3a;border-radius:6px;">'
+        + '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px;">'
+        +   '<span style="color:#888;font-size:11px;">A/B cohort:</span>'
+        +   '<span id="onboarding-readout-cohort-badge" data-cohort="' + cohort + '" style="color:' + cohortColor + ';font-family:monospace;font-size:12px;background:#0a1420;border:1px solid #1a2a3a;border-radius:4px;padding:2px 6px;">' + cohort + '</span>'
+        +   '<span style="color:#555;font-size:10px;font-family:monospace;">' + String(installId).slice(0, 14) + '</span>'
+        + '</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-family:monospace;">'
+        +   '<tr><td style="padding:3px 8px;color:#888;font-size:11px;">sessionDays (distinct UTC days)</td><td id="onboarding-readout-session-days" style="padding:3px 8px;color:#5cf;text-align:right;font-size:11px;">' + (ss.sessionDays || 0) + '</td></tr>'
+        +   '<tr><td style="padding:3px 8px;color:#888;font-size:11px;">daysActive (calendar span)</td><td id="onboarding-readout-days-active" style="padding:3px 8px;color:#5cf;text-align:right;font-size:11px;">' + (ss.daysActive || 0) + '</td></tr>'
+        +   '<tr><td style="padding:3px 8px;color:#888;font-size:11px;">firstSessionDay</td><td style="padding:3px 8px;color:#0f0;text-align:right;font-size:11px;">' + (ss.firstSessionDay || '—') + '</td></tr>'
+        +   '<tr><td style="padding:3px 8px;color:#888;font-size:11px;">lastSessionDay</td><td style="padding:3px 8px;color:#0f0;text-align:right;font-size:11px;">' + (ss.lastSessionDay || '—') + '</td></tr>'
+        + '</table>'
+        + '</div>';
+    }
     card.style.display = 'block';
     card.innerHTML =
       '<div id="onboarding-readout-inner" style="margin-top:10px;padding:10px;background:rgba(0,255,0,0.03);border:1px solid #1a3a1a;border-radius:6px;">'
@@ -889,6 +911,7 @@ class UI {
       +   '<span id="onboarding-readout-variant" style="color:#0f0;font-family:monospace;font-size:12px;background:#0a1a0a;border:1px solid #1a3a1a;border-radius:4px;padding:2px 6px;">' + variant + '</span>'
       + '</div>'
       + '<div style="margin-bottom:6px;font-size:11px;"><span style="color:#888;">Applied:</span> ' + appliedLine + '</div>'
+      + cohortHtml
       + '<table id="onboarding-readout-counters" style="width:100%;border-collapse:collapse;font-family:monospace;margin-bottom:8px;">' + rows + '</table>'
       + '<div style="display:flex;justify-content:flex-end;">'
       +   '<button id="onboarding-readout-reset" style="background:#3a1f1f;border:1px solid #800;color:#f88;padding:6px 12px;border-radius:5px;cursor:pointer;font-family:inherit;font-size:11px;">↻ Reset experiment state</button>'

@@ -1751,6 +1751,11 @@ class GameState {
         getAppliedAt: () => this.onboardingExperiment.getAppliedAt(),
         reset: () => this.onboardingExperiment.reset(),
         applyFirstLaunch: () => this.onboardingExperiment.applyFirstLaunch(),
+        // Day 126: A/B cohort instrumentation (Local-only vs Live leaderboard).
+        getCohort: () => this.onboardingExperiment.getCohort(),
+        getInstallId: () => this.onboardingExperiment.getInstallId(),
+        getSessionStats: () => this.onboardingExperiment.getSessionStats(),
+        getDaysActive: () => this.onboardingExperiment.getDaysActive(),
       };
     } catch (e) {}
   }
@@ -6476,11 +6481,60 @@ const ONBOARDING_TOAST_COPY = {
   'warm-toast': '\ud83d\udc4b Welcome \u2014 Standard mode is on. You can switch in Settings any time.',
 };
 
+// ── Day 126: Onboarding A/B cohort instrumentation ──
+// Deterministic Local-only vs Live-leaderboard cohort assignment on first run,
+// plus a return-session counter (once per UTC day). All localStorage, no
+// external analytics. Surfaced only behind the Day 95 debug-gated readout.
+// The install id is a stable, per-install random token; the cohort is derived
+// from it deterministically, so a cohort survives an onboarding-experiment
+// reset (the install id key is NOT wiped by reset()). QA can force a bucket via
+// ?cohort=local / ?cohort=live (persists, mirroring the variant override).
+const INSTALL_ID_KEY = 'signal-circuit-install-id';
+const ONBOARDING_COHORTS = ['local', 'live'];
+
+function getOrCreateInstallId() {
+  let id = null;
+  try { id = SafeStorage.getItem(INSTALL_ID_KEY); } catch (e) {}
+  if (id && typeof id === 'string' && id.length >= 8) return id;
+  let rnd = '';
+  try {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+      const arr = new Uint32Array(4);
+      window.crypto.getRandomValues(arr);
+      rnd = Array.from(arr).map((n) => n.toString(36)).join('');
+    }
+  } catch (e) {}
+  if (!rnd) rnd = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  id = 'sc-' + rnd;
+  try { SafeStorage.setItem(INSTALL_ID_KEY, id); } catch (e) {}
+  return id;
+}
+
+// FNV-1a → parity → 50/50 local/live bucket. Deterministic for a given id.
+function cohortForInstallId(id) {
+  let h = 2166136261 >>> 0;
+  const s = String(id || '');
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return (h % 2 === 0) ? 'local' : 'live';
+}
+
+// UTC day string YYYY-MM-DD — the session-counter granularity.
+function utcDayString(d) {
+  return (d || new Date()).toISOString().slice(0, 10);
+}
+
 class OnboardingExperiment {
   constructor(gameState) {
     this.gameState = gameState;
+    // Day 126: stable per-install token, created once and never wiped by reset().
+    this._installId = getOrCreateInstallId();
     this._state = this._load();
     this._resolveVariant(); // may persist if URL override is present
+    this._resolveCohort();  // Day 126: deterministic (or ?cohort=-forced) bucket
+    this._recordSession();  // Day 126: return-session counter, once per UTC day
   }
 
   _load() {
@@ -6517,6 +6571,12 @@ class OnboardingExperiment {
       // Cold-load with no prior state leaves it null; reset() returns it to null.
       appliedAt: typeof s.appliedAt === 'string' ? s.appliedAt : null,
       counters: counters,
+      // Day 126: A/B cohort + return-session instrumentation.
+      cohort: (s.cohort === 'local' || s.cohort === 'live') ? s.cohort : null,
+      cohortAssignedAt: typeof s.cohortAssignedAt === 'string' ? s.cohortAssignedAt : null,
+      sessionDays: (typeof s.sessionDays === 'number' && s.sessionDays >= 0) ? s.sessionDays : 0,
+      lastSessionDay: typeof s.lastSessionDay === 'string' ? s.lastSessionDay : null,
+      firstSessionDay: typeof s.firstSessionDay === 'string' ? s.firstSessionDay : null,
     };
   }
 
@@ -6556,11 +6616,88 @@ class OnboardingExperiment {
   // Day 95: ISO timestamp of first applyFirstLaunch() fire, or null if not yet applied.
   getAppliedAt() { return this._state.appliedAt; }
 
+  // ── Day 126: A/B cohort + return-session accessors ──
+  getInstallId() { return this._installId; }
+  getCohort() { return this._state.cohort; }
+
+  _readUrlCohort() {
+    try {
+      const m = /[?&]cohort=(local|live)/i.exec(window.location.search || '');
+      if (m) return m[1].toLowerCase();
+    } catch (e) {}
+    return null;
+  }
+
+  // Precedence: URL ?cohort= override > persisted value > deterministic hash of
+  // the install id. Persists on first assignment (and on a URL-forced change).
+  _resolveCohort() {
+    const urlCohort = this._readUrlCohort();
+    if (urlCohort) {
+      if (this._state.cohort !== urlCohort) {
+        this._state.cohort = urlCohort;
+        this._state.cohortAssignedAt = new Date().toISOString();
+        this._persist();
+      }
+      return this._state.cohort;
+    }
+    if (this._state.cohort !== 'local' && this._state.cohort !== 'live') {
+      this._state.cohort = cohortForInstallId(this._installId);
+      this._state.cohortAssignedAt = new Date().toISOString();
+      this._persist();
+    }
+    return this._state.cohort;
+  }
+
+  // Increment the distinct-active-day counter at most once per UTC calendar day.
+  // Runs on every cold load (constructor). Pure localStorage; no timers.
+  _recordSession() {
+    const today = utcDayString();
+    let changed = false;
+    if (!this._state.firstSessionDay) { this._state.firstSessionDay = today; changed = true; }
+    if (this._state.lastSessionDay !== today) {
+      this._state.sessionDays = (this._state.sessionDays || 0) + 1;
+      this._state.lastSessionDay = today;
+      changed = true;
+    }
+    if (changed) this._persist();
+    return {
+      sessionDays: this._state.sessionDays,
+      lastSessionDay: this._state.lastSessionDay,
+      firstSessionDay: this._state.firstSessionDay,
+    };
+  }
+
+  // Calendar span (inclusive) between first observed session and today, in days.
+  getDaysActive() {
+    if (!this._state.firstSessionDay) return 0;
+    const first = Date.parse(this._state.firstSessionDay + 'T00:00:00Z');
+    const today = Date.parse(utcDayString() + 'T00:00:00Z');
+    if (!isFinite(first) || !isFinite(today)) return 0;
+    return Math.floor((today - first) / 86400000) + 1;
+  }
+
+  getSessionStats() {
+    return {
+      cohort: this._state.cohort,
+      cohortAssignedAt: this._state.cohortAssignedAt,
+      sessionDays: this._state.sessionDays || 0,
+      lastSessionDay: this._state.lastSessionDay,
+      firstSessionDay: this._state.firstSessionDay,
+      daysActive: this.getDaysActive(),
+    };
+  }
+
   reset() {
     try { SafeStorage.removeItem(DIFFICULTY_KEY); } catch (e) {}
     try { SafeStorage.removeItem(ONBOARDING_EXPERIMENT_KEY); } catch (e) {}
+    // Day 126: intentionally does NOT remove INSTALL_ID_KEY — the cohort is a
+    // property of the install, not the experiment run, so it stays stable
+    // (deterministic) across a reset. Re-resolving below re-derives the same
+    // bucket and re-records today's session.
     this._state = this._normalize({});
     this._resolveVariant();
+    this._resolveCohort();
+    this._recordSession();
   }
 
   // Run on cold start: decide variant behavior, but only if the player
