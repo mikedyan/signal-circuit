@@ -7667,6 +7667,78 @@ body.light-mode .card-thumb { background: #f0f4ec !important; border-color: #c8d
 body.light-mode .card-thumb:hover { border-color: #0a5a8a !important; box-shadow: 0 4px 12px rgba(10, 90, 138, 0.16); }
 body.light-mode .card-library-empty { color: #6a6a6a !important; }
 
+/* ── Day 127: per-chapter completion heatmap (Stats → 📈 Progress) ──
+   One cell per chapter, tinted by completion band over the chapter's own hue
+   (set inline by the renderer). Reads as the campaign palette, not a generic
+   green ramp. Mirrors the tFadeIn entrance of the sibling panes. */
+#stats-progress-pane { animation: tFadeIn .25s ease; }
+.progress-heatmap-meta {
+  font-size: 11px;
+  color: #888;
+  margin: 0 4px 8px;
+}
+.progress-heatmap-section {
+  font-size: 11px;
+  color: #7a8a9a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 12px 4px 6px;
+  border-top: 1px solid #1a2a2a;
+  padding-top: 8px;
+}
+.progress-heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+.phm-cell {
+  position: relative;
+  border: 1px solid rgba(120, 130, 140, 0.30);
+  border-radius: 8px;
+  padding: 10px 8px 9px;
+  min-height: 62px;
+  color: #e8f0f0;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.phm-cell:hover { transform: translateY(-2px); }
+.phm-cell .phm-title {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.phm-cell .phm-pct {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.phm-cell .phm-sub {
+  font-size: 10px;
+  color: #dfeaea;
+  margin-top: 3px;
+  opacity: 0.92;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.phm-cell .phm-check {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  color: #FFD700;
+  font-size: 13px;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.7);
+}
+.phm-cell.phm-done { border-width: 1.5px; }
+body.light-mode #stats-progress-pane .phm-cell { color: #1a2a2a; }
+body.light-mode #stats-progress-pane .phm-cell .phm-title,
+body.light-mode #stats-progress-pane .phm-cell .phm-pct,
+body.light-mode #stats-progress-pane .phm-cell .phm-sub { text-shadow: none; }
+body.light-mode #stats-progress-pane .phm-cell .phm-sub { color: #2a3a3a; }
+body.light-mode .progress-heatmap-section { color: #6a6a6a; border-top-color: #d8e0d0; }
+body.light-mode .progress-heatmap-empty { color: #6a6a6a !important; }
+
 /* ── Day 125: Tournament (Online) settings surface ── */
 #tournament-settings-row {
   display: flex;

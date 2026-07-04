@@ -1583,3 +1583,11 @@ Report: `qa-reports/day-114-qa.md`. Harness: `qa-reports/day-114-qa.cdp.js`. Lau
 **No open bugs at start of day. No open bugs at end of day.**
 
 Shipped deterministic Local/Live cohort assignment + return-session counter + debug-gated readout (behind the Day 95 Developer section). 44/44 assertions across 8 phases on the FIRST run (`qa-reports/day-126-qa.cdp.js`); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs; 0 harness self-bugs. Open Bugs queue: 0 → 0 (**51-day empty-queue streak** since Day 76). Latent observations: 0 → 0.
+
+## Day 127 — Cycle 6 BUILD Week, Day 5 (Stats per-chapter completion heatmap)
+
+**No open bugs at start of day. No open bugs at end of day.**
+
+Shipped the 📈 Progress heatmap tab in the Stats modal — one cell per chapter, palette-native completion-band tint, ★ overlay, 100% ✓+glow, bonus chapters in a second section, hidden-when-empty (Day 119). 31/31 assertions across 7 phases (`qa-reports/day-127-qa.cdp.js`); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs. 1 harness self-bug on first run (`game.gameState.progress` vs `game.progress` — `window.game` IS the GameState), fixed harness-side, 0 app changes. Open Bugs queue: 0 → 0 (**52-day empty-queue streak** since Day 76). Latent observations: 0 → 0. **Closes Cycle 6 BUILD week.**
+
+Report: `qa-reports/day-127-qa.md`. **Day 128 next:** Cycle 6 HARDEN Week Day 1 — Full Interaction Audit.

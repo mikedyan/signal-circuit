@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1782950400">
+  <link rel="stylesheet" href="css/style.css?v=1783036800">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -301,10 +301,13 @@
           <button id="stats-tab-cards" class="stats-tab" role="tab" aria-selected="false">📸 My Cards (0)</button>
           <!-- Day 111: Tournament History tab (gated on ≥1 submission). -->
           <button id="stats-tab-tournament" class="stats-tab" role="tab" aria-selected="false">🏆 Tournament (0)</button>
+          <!-- Day 127: per-chapter completion heatmap (gated on ≥1 completed level). -->
+          <button id="stats-tab-progress" class="stats-tab" role="tab" aria-selected="false">📈 Progress</button>
         </div>
         <div id="stats-grid"></div>
         <div id="stats-cards-pane" style="display:none;"></div>
         <div id="stats-tournament-pane" style="display:none;"></div>
+        <div id="stats-progress-pane" style="display:none;"></div>
         <button id="stats-close">Close</button>
       </div>
     </div>
@@ -857,15 +860,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1782950400"></script>
-  <script type="module" src="js/wires.js?v=1782950400"></script>
-  <script type="module" src="js/simulation.js?v=1782950400"></script>
-  <script src="js/levels.js?v=1782950400"></script>
-  <script src="js/audio.js?v=1782950400"></script>
-  <script src="js/achievements.js?v=1782950400"></script>
-  <script src="js/canvas.js?v=1782950400"></script>
-  <script src="js/ui.js?v=1782950400"></script>
-  <script src="js/tutorial.js?v=1782950400"></script>
-  <script src="js/main.js?v=1782950400"></script>
+  <script type="module" src="js/gates.js?v=1783036800"></script>
+  <script type="module" src="js/wires.js?v=1783036800"></script>
+  <script type="module" src="js/simulation.js?v=1783036800"></script>
+  <script src="js/levels.js?v=1783036800"></script>
+  <script src="js/audio.js?v=1783036800"></script>
+  <script src="js/achievements.js?v=1783036800"></script>
+  <script src="js/canvas.js?v=1783036800"></script>
+  <script src="js/ui.js?v=1783036800"></script>
+  <script src="js/tutorial.js?v=1783036800"></script>
+  <script src="js/main.js?v=1783036800"></script>
 </body>
 </html>

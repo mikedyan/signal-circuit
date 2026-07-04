@@ -3963,6 +3963,7 @@ class UI {
     const overviewTab = document.getElementById('stats-tab-overview');
     const cardsTab = document.getElementById('stats-tab-cards');
     const tournamentTab = document.getElementById('stats-tab-tournament');
+    const progressTab = document.getElementById('stats-tab-progress');
     if (overviewTab) {
       overviewTab.addEventListener('click', () => this._switchStatsTab('overview'));
     }
@@ -3972,6 +3973,10 @@ class UI {
     if (tournamentTab) {
       tournamentTab.addEventListener('click', () => this._switchStatsTab('tournament'));
     }
+    // Day 127: per-chapter completion heatmap tab.
+    if (progressTab) {
+      progressTab.addEventListener('click', () => this._switchStatsTab('progress'));
+    }
   }
 
   // ── Day 96: Snapshot Cards Library Tab ──
@@ -3980,7 +3985,7 @@ class UI {
     // Day 111: route an unknown / hidden tab to Overview so cold-start
     // openers and stale `_activeStatsTab` values from older sessions never
     // strand the modal on an empty pane.
-    const validTabs = ['overview', 'cards', 'tournament'];
+    const validTabs = ['overview', 'cards', 'tournament', 'progress'];
     if (!validTabs.includes(which)) which = 'overview';
     // Day 119 PRUNE Cut #3: a tab hidden for zero-count must never be the
     // active pane. If something routes here while empty, fall back to Overview.
@@ -3990,18 +3995,25 @@ class UI {
       if (!lib || lib.length === 0) which = 'overview';
     } else if (which === 'tournament') {
       if (this._getTournamentSubmissions().length === 0) which = 'overview';
+    } else if (which === 'progress') {
+      // Day 127: same hidden-when-empty discipline — no completions, no heatmap.
+      if (this._progressCompletedTotal() === 0) which = 'overview';
     }
     this._activeStatsTab = which;
     const overviewPane = document.getElementById('stats-grid');
     const cardsPane = document.getElementById('stats-cards-pane');
     const tournamentPane = document.getElementById('stats-tournament-pane');
+    const progressPane = document.getElementById('stats-progress-pane');
     if (overviewPane) overviewPane.style.display = (which === 'overview') ? '' : 'none';
     if (cardsPane) cardsPane.style.display = (which === 'cards') ? '' : 'none';
     if (tournamentPane) tournamentPane.style.display = (which === 'tournament') ? '' : 'none';
+    if (progressPane) progressPane.style.display = (which === 'progress') ? '' : 'none';
     if (which === 'cards') {
       this._renderCardLibraryGrid();
     } else if (which === 'tournament') {
       this._renderTournamentHistoryGrid();
+    } else if (which === 'progress') {
+      this._renderProgressHeatmap();
     }
     this._updateStatsTabsUI();
   }
@@ -4011,6 +4023,7 @@ class UI {
     const overviewTab = document.getElementById('stats-tab-overview');
     const cardsTab = document.getElementById('stats-tab-cards');
     const tournamentTab = document.getElementById('stats-tab-tournament');
+    const progressTab = document.getElementById('stats-tab-progress');
     if (overviewTab) {
       overviewTab.classList.toggle('active', which === 'overview');
       overviewTab.setAttribute('aria-selected', which === 'overview' ? 'true' : 'false');
@@ -4038,6 +4051,116 @@ class UI {
       tournamentTab.classList.remove('empty');
       tournamentTab.style.display = (submissions.length === 0) ? 'none' : '';
     }
+    // Day 127: Progress heatmap tab — same hidden-when-empty discipline. Hidden
+    // until the player has completed ≥1 level; reveals on first completion so a
+    // brand-new player's Stats modal collapses to 📊 Overview.
+    if (progressTab) {
+      progressTab.classList.toggle('active', which === 'progress');
+      progressTab.setAttribute('aria-selected', which === 'progress' ? 'true' : 'false');
+      progressTab.style.display = (this._progressCompletedTotal() === 0) ? 'none' : '';
+    }
+  }
+
+  // ── Day 127: per-chapter completion heatmap ──
+  // Total campaign levels marked completed in progress. Drives both the
+  // hidden-when-empty gate and the heatmap summary strip.
+  _progressCompletedTotal() {
+    const levels = (this.gameState && this.gameState.progress && this.gameState.progress.levels) || {};
+    let n = 0;
+    for (const key of Object.keys(levels)) {
+      if (levels[key] && levels[key].completed) n++;
+    }
+    return n;
+  }
+
+  _renderProgressHeatmap() {
+    const pane = document.getElementById('stats-progress-pane');
+    if (!pane) return;
+    const chapters = (typeof getChapters === 'function') ? getChapters() : [];
+    const levelProgress = (this.gameState && this.gameState.progress && this.gameState.progress.levels) || {};
+
+    // Defensive empty state (the tab is normally hidden when empty, but a
+    // stale _activeStatsTab could route here on an empty profile).
+    if (this._progressCompletedTotal() === 0 || chapters.length === 0) {
+      pane.innerHTML = `
+        <div class="progress-heatmap-empty" style="text-align:center;padding:32px 16px;color:#888;font-size:13px;line-height:1.5;">
+          <div style="font-size:42px;line-height:1;margin-bottom:8px;">📈</div>
+          <div style="color:#ccc;font-size:14px;margin-bottom:4px;">No progress yet</div>
+          <div>Complete a campaign level to light up<br>your chapter progress map.</div>
+        </div>`;
+      return;
+    }
+
+    // Per-chapter tallies.
+    const rows = chapters.map((ch) => {
+      const ids = ch.levels || [];
+      const total = ids.length;
+      let completed = 0;
+      let stars = 0;
+      for (const id of ids) {
+        const p = levelProgress[id];
+        if (p && p.completed) {
+          completed++;
+          stars += Math.max(0, Math.min(3, p.stars || 0));
+        }
+      }
+      const pct = total > 0 ? completed / total : 0;
+      return { ch, total, completed, stars, maxStars: total * 3, pct };
+    });
+
+    // Completion band → alpha over the chapter's own hue (Day 127 palette-native ramp).
+    const bandAlpha = (pct) => {
+      if (pct <= 0) return 0;
+      if (pct < 0.34) return 0.22;
+      if (pct < 0.67) return 0.42;
+      if (pct < 1) return 0.66;
+      return 0.9;
+    };
+    const hexToRgb = (hex) => {
+      let h = String(hex || '#888').replace('#', '');
+      if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+      const int = parseInt(h, 16);
+      if (isNaN(int)) return { r: 136, g: 136, b: 136 };
+      return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+    };
+
+    const totalLevels = rows.reduce((a, r) => a + r.total, 0);
+    const totalDone = rows.reduce((a, r) => a + r.completed, 0);
+    const totalStars = rows.reduce((a, r) => a + r.stars, 0);
+    const totalMaxStars = rows.reduce((a, r) => a + r.maxStars, 0);
+
+    const cellHtml = (r) => {
+      const { r: rr, g: gg, b: bb } = hexToRgb(r.ch.color);
+      const a = bandAlpha(r.pct);
+      const bg = a > 0
+        ? `rgba(${rr},${gg},${bb},${a})`
+        : 'rgba(120,130,140,0.10)';
+      const border = a > 0 ? `rgba(${rr},${gg},${bb},0.85)` : 'rgba(120,130,140,0.30)';
+      const done = r.pct >= 1;
+      const title = String(r.ch.title || `Chapter ${r.ch.id}`).replace(/[<>&]/g, '');
+      const pctLabel = Math.round(r.pct * 100);
+      const glow = done ? `box-shadow:0 0 10px rgba(${rr},${gg},${bb},0.55);` : '';
+      const check = done ? '<span class="phm-check" aria-hidden="true">✓</span>' : '';
+      return `
+        <div class="phm-cell${done ? ' phm-done' : ''}" style="background:${bg};border-color:${border};${glow}"
+          title="${title} — ${r.completed}/${r.total} levels, ${r.stars}/${r.maxStars}★">
+          ${check}
+          <div class="phm-title">${title}</div>
+          <div class="phm-pct">${pctLabel}%</div>
+          <div class="phm-sub">${r.completed}/${r.total} · ★${r.stars}/${r.maxStars}</div>
+        </div>`;
+    };
+
+    const mainRows = rows.filter((r) => !r.ch.isBonus);
+    const bonusRows = rows.filter((r) => r.ch.isBonus);
+
+    let html = `<div class="progress-heatmap-meta">${totalDone} / ${totalLevels} levels · ★ ${totalStars} / ${totalMaxStars} · tap-hold a cell for details</div>`;
+    html += '<div class="progress-heatmap-grid">' + mainRows.map(cellHtml).join('') + '</div>';
+    if (bonusRows.length) {
+      html += '<div class="progress-heatmap-section">Bonus &amp; Lab Bench</div>';
+      html += '<div class="progress-heatmap-grid">' + bonusRows.map(cellHtml).join('') + '</div>';
+    }
+    pane.innerHTML = html;
   }
 
   // Day 111: tiny wrapper around the WeeklyTournament helper so renderers
