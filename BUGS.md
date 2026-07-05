@@ -1591,3 +1591,11 @@ Shipped deterministic Local/Live cohort assignment + return-session counter + de
 Shipped the 📈 Progress heatmap tab in the Stats modal — one cell per chapter, palette-native completion-band tint, ★ overlay, 100% ✓+glow, bonus chapters in a second section, hidden-when-empty (Day 119). 31/31 assertions across 7 phases (`qa-reports/day-127-qa.cdp.js`); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs. 1 harness self-bug on first run (`game.gameState.progress` vs `game.progress` — `window.game` IS the GameState), fixed harness-side, 0 app changes. Open Bugs queue: 0 → 0 (**52-day empty-queue streak** since Day 76). Latent observations: 0 → 0. **Closes Cycle 6 BUILD week.**
 
 Report: `qa-reports/day-127-qa.md`. **Day 128 next:** Cycle 6 HARDEN Week Day 1 — Full Interaction Audit.
+
+## Day 128 — Cycle 6 HARDEN Week, Day 1 (Full Interaction Audit)
+
+**No open bugs at start of day. No open bugs at end of day.**
+
+Full Interaction Audit on the Day 127 build (`?v=1783036800` / sw v81, unchanged). 85/85 assertions across 27 phases on the second run (82/85 first run — 3 harness-shape self-bugs, all fixed harness-side, 0 app changes); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs. Verified all Cycle 6 BUILD-week surfaces intact: D123 simulation.js ESM (`game.simulation instanceof window.Simulation`), D124 Profile-hub merge (5 tabs render + tier gating + cosmetic live-render + close clears #profile-view), D125 Tournament Worker settings (connect/clear/opt-in-name), D126 onboarding A/B cohort (deterministic + debug readout), D127 Progress heatmap (11 chapter cells + summary strip + full-seed correctness). Standing regression floor held: Day 78 staircase (cold 2 / end-game **14** nav post-Day-124-merge / 50 overflow), Day 79 dead-ids, Day 92/107 ESM, Day 61/74 HUD cleanup, Tournament 2-tab (Day 119). Two new coverage-rotation probes added (Sandbox deep-play + cosmetic×colorblind live-paint) — both pass. Open Bugs queue: 0 → 0 (**53-day empty-queue streak** since Day 76). Latent observations: 0 → 0.
+
+Report: `qa-reports/day-128-qa.md`. Harness: `qa-reports/day-128-qa.cdp.js`.
