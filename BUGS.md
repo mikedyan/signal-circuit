@@ -1,6 +1,24 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 125 — Cycle 6 BUILD Week, Day 3 (2026-07-02) — Tournament Worker production-readiness + opt-in display name*
+*Updated: Day 129 — Cycle 6 HARDEN Week, Day 2 (2026-07-06) — Level Playthrough*
+
+## Day 129 — Cycle 6 HARDEN Week, Day 2 (Level Playthrough) summary
+
+**Build:** `?v=1783036800` / sw v81 (Day 127 artifact, **unchanged** — playthrough day, no code change).
+**Result:** **40 / 40** assertions across 8 phases on the **FIRST run**; **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs; **0** harness self-bugs.
+
+Played through 13 sampled levels (campaign 1/5/10/15/20/25/30/35/40 + Lab Bench 45/46/48/50). Every truth table has exactly 2^numInputs rows with correct per-row input/output arity, ≥1 hint (all 3), and `calculateStars` is monotonic (3★ at optimal, <3 at goodGates+3). Hands-on L1 AND-gate solve → Quick Test → 3★ persisted. All 5 challenge/sandbox entries reachable (Daily / Random / Blitz / Speedrun / Sandbox) with Blitz (Day 61) + Speedrun (Day 74) HUD cleanup on back. 4/4 sampled community levels load via `buildCustomLevel`. **New this playthrough:** verified the Day 127 Progress heatmap reflects completed levels across empty (empty-state, no meta) / seed-10 (`10 / 50 levels · ★ 30 / 150`, ≥1 lit cell) / full-seed-50 (`50 / 50 levels · ★ 150 / 150`, all 11 cells complete) states.
+
+Standing regression floor held: cold 50 cards / 2 nav (Day 78/109), Day 79 dead-ids (7 undefined + `#weekly-puzzle-btn` absent), Day 92 Gate/GateTypes-8, Day 107 Wire/WireManager, Day 123 `window.Simulation` ESM binding, LEVELS=50 + `getChapters` fn.
+
+**Open Bugs queue:** 0 → 0 (streak: **54 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-129-qa.md`. Harness: `qa-reports/day-129-qa.cdp.js`.
+
+**Day 130 next:** Cycle 6 HARDEN Week Day 3 — Edge Cases & Stress.
+
+---
 
 ## Day 125 — Cycle 6 BUILD Week, Day 3 (Tournament Worker production-readiness + opt-in display name) summary
 
