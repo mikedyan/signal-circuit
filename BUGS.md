@@ -1617,3 +1617,13 @@ Report: `qa-reports/day-127-qa.md`. **Day 128 next:** Cycle 6 HARDEN Week Day 1 
 Full Interaction Audit on the Day 127 build (`?v=1783036800` / sw v81, unchanged). 85/85 assertions across 27 phases on the second run (82/85 first run — 3 harness-shape self-bugs, all fixed harness-side, 0 app changes); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs. Verified all Cycle 6 BUILD-week surfaces intact: D123 simulation.js ESM (`game.simulation instanceof window.Simulation`), D124 Profile-hub merge (5 tabs render + tier gating + cosmetic live-render + close clears #profile-view), D125 Tournament Worker settings (connect/clear/opt-in-name), D126 onboarding A/B cohort (deterministic + debug readout), D127 Progress heatmap (11 chapter cells + summary strip + full-seed correctness). Standing regression floor held: Day 78 staircase (cold 2 / end-game **14** nav post-Day-124-merge / 50 overflow), Day 79 dead-ids, Day 92/107 ESM, Day 61/74 HUD cleanup, Tournament 2-tab (Day 119). Two new coverage-rotation probes added (Sandbox deep-play + cosmetic×colorblind live-paint) — both pass. Open Bugs queue: 0 → 0 (**53-day empty-queue streak** since Day 76). Latent observations: 0 → 0.
 
 Report: `qa-reports/day-128-qa.md`. Harness: `qa-reports/day-128-qa.cdp.js`.
+
+## Day 130 — Cycle 6 HARDEN Week, Day 3 (Edge Cases & Stress)
+
+**No open bugs at start of day. No open bugs at end of day.**
+
+Edge Cases & Stress sweep on the Day 127 build (`?v=1783036800` / sw v81, unchanged — HARDEN policy = zero new features). 36/36 assertions across 18 phases on the FIRST run (`qa-reports/day-130-qa.cdp.js`); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs; 0 harness self-bugs. Classic T1–T10 sweep (rapid gate placement during sim, wire-draw during animation, 10× resize, clear-localStorage reload, keyboard nav, colorblind + light/dark round-trips, 44-wire render at 0.74ms avg frame, 20× undo+redo, 10× RUN + 10× Quick Test spam) all no-throw. Cycle 6 BUILD surfaces stressed under churn: S1 Profile-hub 8× open/tab-storm/close (Day 124), S2 heatmap 8× seed/reset churn (Day 127), S3 tournament settings 6× connect/clear (Day 125), S4 cohort determinism across 4 reloads + URL override (Day 126) — all held. Standing floor (Day 78 staircase, Day 79 dead-ids, Day 92/107/123 ESM bindings) intact. Open Bugs queue: 0 → 0 (**55-day empty-queue streak** since Day 76). Latent observations: 0 → 0.
+
+Report: `qa-reports/day-130-qa.md`. Harness: `qa-reports/day-130-qa.cdp.js`.
+
+**Day 131 next:** Cycle 6 HARDEN Week Day 4 — Fix Everything (empty queue → likely rest-day confirmation probe per Day 90/100/116).
