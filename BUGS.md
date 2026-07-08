@@ -1,5 +1,26 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 131 — Cycle 6 HARDEN Week, Day 4 (2026-07-08) — Fix Everything (rest day)*
+
+## Day 131 — Cycle 6 HARDEN Week, Day 4 (Fix Everything) summary
+
+**Build under test:** local `?v=1783036800` / sw v81 (Day 127 artifact, **unchanged** — HARDEN ships ZERO features).
+**Mode:** Fix Day with an **empty Open Bugs queue** → Day 90/100/116 rest-day confirmation-probe precedent. **0 source-file changes.**
+**Result:** **28 / 28** assertions across 10 phases (27/28 first run — 1 harness self-bug, fixed harness-side, **0 app changes**); **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+Open Bugs queue empty for 55 days at start → no speculative fixes; ran a tight confirmation probe over the pinned Day 127 artifact. Standing floor held: build identity (11× `?v=1783036800` + sw v81), cold-start (50 cards / 2 nav), ESM bindings (Day 92 Gate + 8 GateTypes / Day 107 Wire+WireManager / Day 123 Simulation), Day 79 dead-ids (7 undefined + `#weekly-puzzle-btn` absent). Cycle 6 BUILD-surface confirmation: **D123** `game.simulation instanceof window.Simulation` + L1 AND-gate solve → runQuickTest → 3★ persists; **D124** Profile-hub opens + 5 tabs render non-empty + close clears `#profile-view` (4108→0); **D125** tournament connect→cloud-ready+persist / clear→local+wiped; **D126** cohort determinism (stable install id + cohort across 3 reloads); **D127** heatmap empty/partial(`10 / 50 · ★30/150`)/full(`50 / 50 · ★150/150`). Stress seams (gate/wire/RUN/undo storm + resize storm) no-throw.
+
+**First-run harness self-bug (0 app changes):** P4 (D124) checked the active pane via `.phub-pane.active`, but `_switchProfileTab()` shows panes via `style.display=''` on `#phub-pane-<key>` (the `.active` class is on tabs, not panes). App was correct throughout (`profLenBefore=4108` proved render, `profLenAfter=0`+`closedClean` proved Day 54 close-clears). Fixed harness-side by resolving each pane by id + testing `display!=='none' && innerHTML.length>0`. Same class as Days 97/98/99/107/108/115/117/122/125/128.
+
+**Open Bugs queue:** 0 → 0 (streak: **56 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-131-qa.md`. Harness: `qa-reports/day-131-qa.cdp.js` (28 assertions across 10 phases).
+
+**Day 132 next:** Cycle 6 HARDEN Week Day 5 — Regression Pass on deployed GitHub Pages build + Cycle 6 HARDEN week summary.
+
+---
+
 *Updated: Day 129 — Cycle 6 HARDEN Week, Day 2 (2026-07-06) — Level Playthrough*
 
 ## Day 129 — Cycle 6 HARDEN Week, Day 2 (Level Playthrough) summary
