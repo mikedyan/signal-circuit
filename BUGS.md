@@ -1648,3 +1648,13 @@ Edge Cases & Stress sweep on the Day 127 build (`?v=1783036800` / sw v81, unchan
 Report: `qa-reports/day-130-qa.md`. Harness: `qa-reports/day-130-qa.cdp.js`.
 
 **Day 131 next:** Cycle 6 HARDEN Week Day 4 — Fix Everything (empty queue → likely rest-day confirmation probe per Day 90/100/116).
+
+## Day 132 — Cycle 6 HARDEN Week, Day 5 (Regression Pass — deployed)
+
+**No open bugs at start of day. No open bugs at end of day.**
+
+Regression Pass against the LIVE GitHub Pages deployment (`https://mikedyan.github.io/signal-circuit/`). Confirmed Pages caught up to the pinned Day 127 artifact (11× `?v=1783036800` + sw v81, byte-matching local). 30/30 assertions across 12 phases on the FIRST run (`qa-reports/day-132-qa.cdp.js`); 0 console.error; 0 Runtime.exceptionThrown; 0 new user-facing bugs; 0 harness self-bugs. Deployed sweep: build identity + cold-start invariants; core loop end-to-end on L1 (3★ persists); all 8 modes reachable with Blitz (Day 61) + Speedrun (Day 74) HUD cleanup; Tournament mode=local. Cycle 6 BUILD regression D123–D127 all intact on deployed bytes (sim ESM, Profile-hub 5-tab merge + close-clears, tournament settings connect/clear, cohort determinism across 3 reloads, heatmap empty/partial/full). Open Bugs queue: 0 → 0 (**57-day empty-queue streak** since Day 76). Latent observations: 0 → 0. **Closes Cycle 6 HARDEN week.** Cycle 6 HARDEN scorecard: 85+40+36+28+30 = 219 assertions across Days 128–132, 0 user-facing bugs, 0 console errors, 0 source-file changes.
+
+Report: `qa-reports/day-132-qa.md`. Summary: `reviews/harden-cycle-6-week-summary.md`.
+
+**Day 133 next:** Cycle 6 PRUNE Week Day 1 — Fresh Eyes Audit + PRUNE_REPORT.md.
