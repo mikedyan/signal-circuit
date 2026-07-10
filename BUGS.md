@@ -1,5 +1,27 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 133 — Cycle 6 PRUNE Week, Day 1 (2026-07-10) — Fresh Eyes Audit*
+
+## Day 133 — Cycle 6 PRUNE Week, Day 1 (Fresh Eyes Audit) summary
+
+**Build under audit:** deployed `https://mikedyan.github.io/signal-circuit/` · `?v=1783036800` · sw v81 (Day 127 artifact, unchanged through the Cycle 6 HARDEN week).
+**Result:** **37 / 37** assertions across 9 phases (35/37 first run — 2 harness self-bugs on wrong element ids, fixed harness-side, **0 app changes**); **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+**Clutter score: 4/10** (held from Cycle 5; Cycle 2 closed 5/10, Cycle 1 baseline 8/10). Headline: the Day 124 Profile-hub merge dropped **end-game nav 18 → 14**, retiring the 3-cycle collection-modal carry-over (Cycles 2/4/5). Tier staircase `nav 2/2/5/9/14/14`, overflow `0/3/6/12/18/50`, cards `50` throughout. Cycle 5 Tier-1 cuts all held: new player opening Stats sees **1 tab** (Overview); empty Cards/Tournament tabs hidden (Day 119); Day 127 Progress heatmap hidden until ≥1 done; Reset Progress typed-confirm intact.
+
+**One new clutter source:** the Day 125 `Tournament (Online)` settings section (4 buttons + 2 inputs for a self-hosted-worker feature) — Settings now renders 17 buttons for a normal player → Tier-1 Cut #1 (collapse behind an Advanced disclosure). Wordy-text: the Day 127 heatmap summary welds `· tap-hold a cell for details` onto the stat line → Tier-1 Cut #2. Day 123 (sim ESM), Day 126 (cohort readout, debug-gated — no leak), Day 127 (heatmap, hidden-when-empty) are all PRUNE-shaped already.
+
+**First-run harness self-bugs (0 app changes):** (P4.d) probed `#tournament-connect-btn` — real id `#tournament-worker-save-btn` inside `#settings-tournament-section`; surface was present. (P8.a) probed `game.getCohort()` — real accessor `window.__onboardingExperiment.getCohort()`; resolves to `live`. Same class as Days 97/108/115/117/122/125/131.
+
+**Open Bugs queue:** 0 → 0 (streak: **58 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-133-qa.md`. Harness: `qa-reports/day-133-qa.cdp.js` (37 assertions, 9 phases). Full PRUNE plan: `PRUNE_REPORT.md`.
+
+**Day 134 next:** Cycle 6 PRUNE Week Day 2 — Design Simplification (ship 2 Tier-1 cuts: collapse Tournament-Online settings section; trim heatmap summary tail).
+
+---
+
 *Updated: Day 131 — Cycle 6 HARDEN Week, Day 4 (2026-07-08) — Fix Everything (rest day)*
 
 ## Day 131 — Cycle 6 HARDEN Week, Day 4 (Fix Everything) summary
