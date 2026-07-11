@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1783036800">
+  <link rel="stylesheet" href="css/style.css?v=1783728000">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -183,7 +183,13 @@
              no worker URL and no display name are set by default, so a fresh
              install stays fully local + anonymous. -->
         <div class="settings-section" id="settings-tournament-section">
-          <h4>Tournament (Online)</h4>
+          <!-- Day 134 PRUNE Cut #1: collapse this power-user section behind a
+               disclosure. Connect / Go Local / Save Name / Anonymous + the two
+               inputs only do anything for a player running their own Cloudflare
+               Worker (~0% of players), so a normal player sees one line to
+               ignore, not 4 always-visible buttons + 2 inputs. -->
+          <details id="settings-tournament-details" class="settings-advanced">
+            <summary class="settings-advanced-summary">⚙️ Advanced: Online Tournament</summary>
           <div id="tournament-settings-row">
             <div class="ts-field">
               <label class="ts-label" for="tournament-worker-url-input">Worker URL</label>
@@ -203,6 +209,7 @@
               </div>
             </div>
           </div>
+          </details>
         </div>
         <div class="settings-section">
           <h4>Data</h4>
@@ -860,15 +867,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1783036800"></script>
-  <script type="module" src="js/wires.js?v=1783036800"></script>
-  <script type="module" src="js/simulation.js?v=1783036800"></script>
-  <script src="js/levels.js?v=1783036800"></script>
-  <script src="js/audio.js?v=1783036800"></script>
-  <script src="js/achievements.js?v=1783036800"></script>
-  <script src="js/canvas.js?v=1783036800"></script>
-  <script src="js/ui.js?v=1783036800"></script>
-  <script src="js/tutorial.js?v=1783036800"></script>
-  <script src="js/main.js?v=1783036800"></script>
+  <script type="module" src="js/gates.js?v=1783728000"></script>
+  <script type="module" src="js/wires.js?v=1783728000"></script>
+  <script type="module" src="js/simulation.js?v=1783728000"></script>
+  <script src="js/levels.js?v=1783728000"></script>
+  <script src="js/audio.js?v=1783728000"></script>
+  <script src="js/achievements.js?v=1783728000"></script>
+  <script src="js/canvas.js?v=1783728000"></script>
+  <script src="js/ui.js?v=1783728000"></script>
+  <script src="js/tutorial.js?v=1783728000"></script>
+  <script src="js/main.js?v=1783728000"></script>
 </body>
 </html>

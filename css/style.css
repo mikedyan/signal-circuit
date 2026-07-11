@@ -6591,6 +6591,42 @@ body.light-mode .community-featured-card {
   font-weight: normal;
   opacity: 0.75;
 }
+/* Day 134 PRUNE Cut #1: Tournament (Online) power-user disclosure.
+   Summary mirrors the .settings-section h4 label style + a rotating caret. */
+.settings-advanced { margin: 0; }
+.settings-advanced-summary {
+  color: #0f0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: normal;
+  opacity: 0.75;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.settings-advanced-summary::-webkit-details-marker { display: none; }
+.settings-advanced-summary::before {
+  content: '\25B8';
+  display: inline-block;
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+.settings-advanced[open] > .settings-advanced-summary::before { transform: rotate(90deg); }
+.settings-advanced[open] > .settings-advanced-summary { margin-bottom: 8px; }
+.settings-advanced-summary:hover { opacity: 1; }
+/* The row carries an explicit #id display:flex (higher specificity than the UA
+   details-collapse), so collapse it deterministically when the disclosure is
+   closed. Overrides #tournament-settings-row's display:flex; when [open], this
+   rule drops out and the base flex layout returns. */
+.settings-advanced:not([open]) #tournament-settings-row { display: none; }
+body.light-mode .settings-advanced-summary { color: #2a8; }
+@media (prefers-reduced-motion: reduce) {
+  .settings-advanced-summary::before { transition: none; }
+}
 .settings-section #settings-row,
 .settings-section #notif-settings-row,
 .settings-section #sync-row {

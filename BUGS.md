@@ -1,5 +1,29 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 134 — Cycle 6 PRUNE Week, Day 2 (2026-07-11) — Design Simplification*
+
+## Day 134 — Cycle 6 PRUNE Week, Day 2 (Design Simplification) summary
+
+**Build:** LOCAL `?v=1783728000` / sw `signal-circuit-v82` (bumped from Day 127 `?v=1783036800` / v81 — first source change since Day 127).
+**Result:** **31 / 31** assertions across 6 phases; **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+Shipped the 2 Tier-1 cuts from the Day 133 PRUNE_REPORT:
+- **Cut #1 — Tournament (Online) → collapsed disclosure.** Wrapped the Day 125 section body in a native `<details class="settings-advanced">` (summary "⚙️ Advanced: Online Tournament", collapsed by default); old `<h4>` removed. Settings default view drops **17 → 13** visible buttons; the 4 tournament buttons + 2 inputs hide until expanded, all functional when opened, Day 125 anonymous-by-default privacy unchanged. Required a real CSS fix: `#tournament-settings-row`'s `#id display:flex` (specificity 1,0,0) overrode the native `<details>` collapse, so added `.settings-advanced:not([open]) #tournament-settings-row { display:none }` (1,2,0) to collapse deterministically.
+- **Cut #2 — heatmap summary trim.** Dropped `· tap-hold a cell for details` from the Day 127 `_renderProgressHeatmap()` summary; the per-cell `title` already carries the affordance. Summary now reads `10 / 50 levels · ★ 30 / 150`.
+
+**Harness self-bugs (fixed harness-side, 0 app changes):** (P4.a) source grep matched my own code comment, not the live template — narrowed to `totalMaxStars} · tap-hold`. (P5.f) `window.LEVELS` is a lexical `const` not a window prop → switched to `getLevelCount()`. Also added SW-unregister + cache-clear to the harness cold-load after a stale same-version precache masked the P3.a CSS fix (real users unaffected — fresh v82 install precaches corrected CSS).
+
+**LOC:** ≈ +48/−14. Cut #1 is a wrap (additive disclosure CSS, per PRUNE_REPORT); Cut #2 a removal. Net-negative mandate carried by Day 135 Code Cleanup (dead-id sweep).
+
+**Open Bugs queue:** 0 → 0 (streak: **59 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-134-qa.md`. Harness: `qa-reports/day-134-qa.cdp.js` (31 assertions, 6 phases).
+
+**Day 135 next:** Cycle 6 PRUNE Week Day 3 — Code Cleanup (Tier-2 Cut #3: dead-id sweep of the 5 retired Day 124 collection buttons + orphaned `setup*` wiring; net-negative LOC).
+
+---
+
 *Updated: Day 133 — Cycle 6 PRUNE Week, Day 1 (2026-07-10) — Fresh Eyes Audit*
 
 ## Day 133 — Cycle 6 PRUNE Week, Day 1 (Fresh Eyes Audit) summary

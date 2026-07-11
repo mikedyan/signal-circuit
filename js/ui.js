@@ -4154,7 +4154,10 @@ class UI {
     const mainRows = rows.filter((r) => !r.ch.isBonus);
     const bonusRows = rows.filter((r) => r.ch.isBonus);
 
-    let html = `<div class="progress-heatmap-meta">${totalDone} / ${totalLevels} levels · ★ ${totalStars} / ${totalMaxStars} · tap-hold a cell for details</div>`;
+    // Day 134 PRUNE Cut #2: dropped the persistent how-to instruction that used
+    // to be welded onto this stat line — the per-cell affordance already lives
+    // in each .phm-cell title attribute, so the summary now reads as pure data.
+    let html = `<div class="progress-heatmap-meta">${totalDone} / ${totalLevels} levels · ★ ${totalStars} / ${totalMaxStars}</div>`;
     html += '<div class="progress-heatmap-grid">' + mainRows.map(cellHtml).join('') + '</div>';
     if (bonusRows.length) {
       html += '<div class="progress-heatmap-section">Bonus &amp; Lab Bench</div>';
