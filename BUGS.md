@@ -1,6 +1,26 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 134 — Cycle 6 PRUNE Week, Day 2 (2026-07-11) — Design Simplification*
+*Updated: Day 135 — Cycle 6 PRUNE Week, Day 3 (2026-07-12) — Code Cleanup*
+
+## Day 135 — Cycle 6 PRUNE Week, Day 3 (Code Cleanup) summary
+
+**Build:** LOCAL `?v=1783814400` / sw `signal-circuit-v83` (bumped from Day 134 `?v=1783728000` / v82).
+**Result:** **42 / 42** assertions across 7 phases; **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+Shipped Tier-2 Cut #3 from the Day 133 PRUNE_REPORT — the dead-id sweep of the 5 collection buttons/modals retired by the Day 124 Profile-hub merge. Removed 5 orphaned `setup*` binders (`setupAchievements` / `setupMasteryTree` / `setupCircuitCollection` / `setupLogicProfile` / `setupCosmeticModal`) + their 5 `this.setup*()` constructor call sites. Each binder only wired old `btn`/`modal`/`close` ids that no longer exist in `index.html` (deleted Day 124), so all 5 already no-op'd. The 5 `render*()` methods they used to call are KEPT — they're the live path through `setupProfileHub` → `_switchProfileTab`. P4/P5 prove the hub still renders all 5 panes and the cosmetic card-click delegation still flips the active wire color (`classic → blue`).
+
+**Harness self-bug (fixed harness-side, 0 app changes):** P5 used `cosmetics.getActive('wireColor')`; the real accessor is the `activeWireColor` property. 41/42 first run → 42/42 after fix.
+
+**LOC:** `js/ui.js` +11/−98 = **net −87** (index.html +11/−11 cache-bust; sw.js +1/−1). Net-negative PRUNE mandate satisfied at day AND week level.
+
+**Open Bugs queue:** 0 → 0 (streak: **60 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-135-qa.md`. Harness: `qa-reports/day-135-qa.cdp.js` (42 assertions, 7 phases).
+
+**Day 136 next:** Cycle 6 PRUNE Week Day 4 — Polish Sprint (Tier-3 cuts #6 Tournament mode-label cross-fade + #7 heatmap cell tap-hold detail popover, + cold-start defaults re-audit).
+
+---
 
 ## Day 134 — Cycle 6 PRUNE Week, Day 2 (Design Simplification) summary
 

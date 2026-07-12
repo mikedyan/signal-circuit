@@ -18,7 +18,6 @@ class UI {
     this.setupChallengeConfig();
     this.setupOnboarding();
     this.setupShortcutsOverlay();
-    this.setupAchievements();
     this.setupHowToPlay();
     this.setupColorblindToggle();
     this.setupSandboxConfig();
@@ -31,9 +30,6 @@ class UI {
     this.setupFontSizeToggle();
     this.setupJourneyModal();
     this.setupLevelCreator();
-    this.setupMasteryTree();
-    this.setupCircuitCollection();
-    this.setupLogicProfile();
     this.setupShareCard();
     this.setupPlacementTest();
     this.setupCompetitiveModes(); // Day 32
@@ -43,7 +39,12 @@ class UI {
     this.setupAccessibleWiring(); // Day 33 T9
     this.setupLightMode(); // Day 35 T5
     this.setupUndoTimeline(); // Day 35 T6
-    this.setupCosmeticModal(); // Day 40
+    // Day 124/135: the 5 standalone collection modals (Achievements / Mastery /
+    // Customize / Collection / Logic) are merged into setupProfileHub(). Their
+    // old setup* binders (setupAchievements/setupMasteryTree/setupCircuitCollection/
+    // setupLogicProfile/setupCosmeticModal) were dead (their btn/modal ids no longer
+    // exist in index.html) and were removed in the Day 135 PRUNE dead-id sweep.
+    // The render*() methods they used to call are live inside _switchProfileTab().
     this.setupProfileHub(); // Day 124: tabbed Profile hub (merges 5 collection modals)
     this.setupDailyScreen(); // Day 44
     this.setupCommunitySection(); // Day 49
@@ -3086,28 +3087,7 @@ class UI {
     }
   }
 
-  // ── Achievements ──
-  setupAchievements() {
-    const btn = document.getElementById('achievements-btn');
-    const modal = document.getElementById('achievements-modal');
-    const closeBtn = document.getElementById('achievements-close');
-
-    if (btn) {
-      btn.addEventListener('click', () => {
-        this.renderAchievements();
-        modal.style.display = 'flex';
-      });
-    }
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => modal.style.display = 'none');
-    }
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.style.display = 'none';
-      });
-    }
-  }
-
+  // ── Achievements ── (Day 124: opened via setupProfileHub; renderAchievements kept)
   renderAchievements() {
     const list = document.getElementById('achievements-list');
     if (!list) return;
@@ -5493,24 +5473,7 @@ class UI {
     renderQuestion();
   }
 
-  // ── Mastery Tree (Day 31 T6) ──
-  setupMasteryTree() {
-    const btn = document.getElementById('mastery-tree-btn');
-    const modal = document.getElementById('mastery-tree-modal');
-    const closeBtn = document.getElementById('mastery-tree-close');
-
-    if (btn) btn.addEventListener('click', () => {
-      this.renderMasteryTree();
-      // Day 103 PRUNE Cut #4: surface the 5 Mastery Challenges inside the modal.
-      this.renderMasterySection();
-      if (modal) modal.style.display = 'flex';
-    });
-    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-    if (modal) modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
-    });
-  }
-
+  // ── Mastery Tree (Day 31 T6) ── (Day 124: opened via setupProfileHub)
   renderMasteryTree() {
     const container = document.getElementById('mastery-tree-view');
     if (!container) return;
@@ -5574,22 +5537,7 @@ class UI {
     container.innerHTML = html;
   }
 
-  // ── Circuit Collection Gallery (Day 31 T7) ──
-  setupCircuitCollection() {
-    const btn = document.getElementById('collection-btn');
-    const modal = document.getElementById('collection-modal');
-    const closeBtn = document.getElementById('collection-close');
-
-    if (btn) btn.addEventListener('click', () => {
-      this.renderCircuitCollection();
-      if (modal) modal.style.display = 'flex';
-    });
-    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-    if (modal) modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
-    });
-  }
-
+  // ── Circuit Collection Gallery (Day 31 T7) ── (Day 124: opened via setupProfileHub)
   renderCircuitCollection() {
     const container = document.getElementById('collection-list');
     if (!container) return;
@@ -5633,22 +5581,7 @@ class UI {
     container.innerHTML = html;
   }
 
-  // ── Logic Profile (Day 31 T9) ──
-  setupLogicProfile() {
-    const btn = document.getElementById('profile-btn');
-    const modal = document.getElementById('profile-modal');
-    const closeBtn = document.getElementById('profile-close');
-
-    if (btn) btn.addEventListener('click', () => {
-      this.renderLogicProfile();
-      if (modal) modal.style.display = 'flex';
-    });
-    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-    if (modal) modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
-    });
-  }
-
+  // ── Logic Profile (Day 31 T9) ── (Day 124: opened via setupProfileHub)
   renderLogicProfile() {
     const container = document.getElementById('profile-view');
     if (!container) return;
@@ -7175,27 +7108,7 @@ class UI {
     if (currentDot) currentDot.scrollIntoView({ inline: 'center', behavior: 'smooth' });
   }
 
-  // ── Day 40: Cosmetic Customization Modal ──
-
-  setupCosmeticModal() {
-    const btn = document.getElementById('customize-btn');
-    const modal = document.getElementById('cosmetic-modal');
-    const closeBtn = document.getElementById('cosmetic-close');
-    if (!btn || !modal) return;
-
-    btn.addEventListener('click', () => {
-      this.renderCosmeticModal();
-      modal.style.display = 'flex';
-    });
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
-    }
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
-    });
-  }
+  // ── Day 40: Cosmetic Customization Modal ── (Day 124: opened via setupProfileHub; renderCosmeticModal kept)
 
   // ── Day 124: Profile Hub ──
   // Merges the 5 standalone collection modals (Achievements / Mastery /
