@@ -830,7 +830,7 @@ class UI {
           const modal = document.getElementById('settings-modal');
           if (!modal || modal.style.display === 'none') return;
           const updated = (typeof backend.describe === 'function') ? backend.describe() : label;
-          el.textContent = updated;
+          this._crossfadeLabel(el, updated);
           try { el.setAttribute('data-mode', backend.getMode()); } catch (e) {}
         });
       } catch (e) {}
@@ -2947,7 +2947,7 @@ class UI {
           const screen = document.getElementById('tournament-screen');
           if (!screen || screen.style.display === 'none') return;
           const updated = (typeof backend.describe === 'function') ? backend.describe() : modeLabel;
-          setText('tournament-mode-label', updated);
+          this._crossfadeLabel(document.getElementById('tournament-mode-label'), updated);
         });
       } catch (e) { /* swallow */ }
     }
@@ -2970,7 +2970,7 @@ class UI {
           if (!screen || screen.style.display === 'none') return;
           this._renderTournamentLeaderboard();
           const updated = (typeof backend.describe === 'function') ? backend.describe() : modeLabel;
-          setText('tournament-mode-label', updated);
+          this._crossfadeLabel(document.getElementById('tournament-mode-label'), updated);
         });
       } catch (e) { /* swallow */ }
     }
@@ -4053,6 +4053,21 @@ class UI {
     return n;
   }
 
+  // Day 136 PRUNE Polish Cut #6: cross-fade a status label (Day 93 tournament
+  // mode chip) instead of snapping when its text actually changes. No-op on
+  // unchanged text or prefers-reduced-motion. Pairs with .label-crossfade-out.
+  _crossfadeLabel(el, text) {
+    if (!el) return;
+    if (el.textContent === text) return;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { el.textContent = text; return; }
+    el.classList.add('label-crossfade-out');
+    window.setTimeout(() => {
+      el.textContent = text;
+      el.classList.remove('label-crossfade-out');
+    }, 130);
+  }
+
   _renderProgressHeatmap() {
     const pane = document.getElementById('stats-progress-pane');
     if (!pane) return;
@@ -4121,13 +4136,21 @@ class UI {
       const pctLabel = Math.round(r.pct * 100);
       const glow = done ? `box-shadow:0 0 10px rgba(${rr},${gg},${bb},0.55);` : '';
       const check = done ? '<span class="phm-check" aria-hidden="true">✓</span>' : '';
+      // Day 136 PRUNE Polish Cut #7: pure-CSS .phm-pop detail popover shown on
+      // :hover / :focus-within; tabindex makes it tap/keyboard discoverable.
       return `
         <div class="phm-cell${done ? ' phm-done' : ''}" style="background:${bg};border-color:${border};${glow}"
+          tabindex="0" role="button"
           title="${title} — ${r.completed}/${r.total} levels, ${r.stars}/${r.maxStars}★">
           ${check}
           <div class="phm-title">${title}</div>
           <div class="phm-pct">${pctLabel}%</div>
           <div class="phm-sub">${r.completed}/${r.total} · ★${r.stars}/${r.maxStars}</div>
+          <div class="phm-pop" role="tooltip">
+            <strong>${title}</strong>
+            <span class="phm-pop-row">${r.completed} / ${r.total} levels</span>
+            <span class="phm-pop-row">★ ${r.stars} / ${r.maxStars}</span>
+          </div>
         </div>`;
     };
 

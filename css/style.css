@@ -7775,6 +7775,34 @@ body.light-mode #stats-progress-pane .phm-cell .phm-sub { color: #2a3a3a; }
 body.light-mode .progress-heatmap-section { color: #6a6a6a; border-top-color: #d8e0d0; }
 body.light-mode .progress-heatmap-empty { color: #6a6a6a !important; }
 
+/* Day 136 PRUNE Polish Cut #7: heatmap cell detail popover. Pure-CSS child
+   (.phm-pop) shown on hover / keyboard focus / tap (cells are tabindex=0). */
+.phm-cell { cursor: pointer; }
+.phm-cell:focus-visible { outline: 2px solid rgba(127, 255, 212, 0.8); outline-offset: 2px; }
+.phm-pop {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; z-index: 30;
+  min-width: 130px; padding: 7px 10px; border-radius: 8px;
+  background: rgba(16, 20, 26, 0.98); border: 1px solid rgba(127, 255, 212, 0.40);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  display: flex; flex-direction: column; gap: 2px;
+  font-size: 11px; color: #9fb2ae; text-align: left; white-space: nowrap;
+  pointer-events: none; opacity: 0; transform: translateX(-50%) translateY(4px);
+  transition: opacity .14s ease, transform .14s ease;
+}
+.phm-cell:hover .phm-pop, .phm-cell:focus-within .phm-pop, .phm-cell:focus .phm-pop { opacity: 1; transform: translateX(-50%) translateY(0); }
+.phm-pop strong { color: #7fffd4; font-size: 12.5px; font-weight: 700; }
+body.light-mode .phm-pop { background: rgba(250, 252, 250, 0.99); border-color: rgba(20, 120, 90, 0.40); color: #4a5a56; }
+body.light-mode .phm-pop strong { color: #0a7a5a; }
+
+/* Day 136 PRUNE Polish Cut #6: cross-fade the tournament connection-status
+   labels instead of snapping when describe() flips state (cloud-ready →
+   remote-fallback once the reachability probe resolves). */
+#tournament-mode-label, #tournament-connection-status { transition: opacity .13s ease; }
+#tournament-mode-label.label-crossfade-out, #tournament-connection-status.label-crossfade-out { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .phm-pop, #tournament-mode-label, #tournament-connection-status { transition: none; }
+}
+
 /* ── Day 125: Tournament (Online) settings surface ── */
 #tournament-settings-row {
   display: flex;

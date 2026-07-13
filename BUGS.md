@@ -1,6 +1,28 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 135 — Cycle 6 PRUNE Week, Day 3 (2026-07-12) — Code Cleanup*
+*Updated: Day 136 — Cycle 6 PRUNE Week, Day 4 (2026-07-13) — Polish Sprint*
+
+## Day 136 — Cycle 6 PRUNE Week, Day 4 (Polish Sprint) summary
+
+**Build:** LOCAL `?v=1783900800` / sw `signal-circuit-v84` (bumped from Day 135 `?v=1783814400` / v83).
+**Result:** **34 / 34** assertions across 6 phases; **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+Shipped the 2 Tier-3 polish cuts from the Day 133 PRUNE_REPORT + a cold-start defaults re-audit. **Cut #6 — Tournament mode-label cross-fade:** new `UI._crossfadeLabel(el,text)` fades the Day 93 connection chip out→swap→in (~260ms) only when `describe()` actually flips state (`cloud-ready → remote-fallback`); no-op on unchanged text; direct set under `prefers-reduced-motion`; wired into the async repaints only (first paint stays a direct `setText`). **Cut #7 — Progress-heatmap cell detail popover:** each Day 127 `.phm-cell` now carries a pure-CSS `.phm-pop` child (chapter name + `N/M levels` + `★earned/max`) shown on `:hover`/`:focus-within`/`:focus`; cells gained `tabindex=0`+`role=button` so the popover is tap/keyboard discoverable; native `title` retained for a11y. Cold-start defaults unchanged (SFX 0.4 / Music 0.2 / difficulty standard / 2 nav / 50 cards).
+
+**Implementation note:** the first popover pass used a body-appended fixed-positioned `#phm-popover` with JS delegation (+123 net LOC, over the ±50 polish-day budget). Refactored to the pure-CSS child popover — leaner (**net +51**), simpler, self-cleaning with the cell, no orphaned body element. Verified the CSS `:focus`/`:focus-within` popover shows/hides via computed opacity 1↔0.
+
+**Harness self-bugs (fixed harness-side, 0 app changes):** (1) `\s` in a template-literal regex was swallowed (`/\s+/` became `/s+/`, stripping every 's' → "level"/"Ba ic") — dropped the normalization; (2) opacity sampled synchronously mid-transition (0/0.99872) — added a 280ms settle wait + `≥0.9`/`≤0.1` thresholds.
+
+**LOC:** `js/ui.js` +26/−3, `css/style.css` +28 = **net +51** (index.html +11/−11 cache-bust; sw.js +1/−1). At the ±50 polish-day budget. **Week ledger −2** (Day 134 ~+34 + Day 135 −87 + Day 136 +51) — PRUNE net-negative mandate holds at week level.
+
+**Open Bugs queue:** 0 → 0 (streak: **61 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-136-qa.md`. Harness: `qa-reports/day-136-qa.cdp.js` (34 assertions, 6 phases).
+
+**Day 137 next:** Cycle 6 PRUNE Week Day 5 — Expert Panel + Validation (play 5 levels, re-score 10 dimensions, target ≥9.2, write `reviews/prune-cycle-6-review.md`, close Cycle 6 PRUNE Week + the 90-day cycle window).
+
+---
 
 ## Day 135 — Cycle 6 PRUNE Week, Day 3 (Code Cleanup) summary
 
