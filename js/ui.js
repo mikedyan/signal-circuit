@@ -46,6 +46,7 @@ class UI {
     // exist in index.html) and were removed in the Day 135 PRUNE dead-id sweep.
     // The render*() methods they used to call are live inside _switchProfileTab().
     this.setupProfileHub(); // Day 124: tabbed Profile hub (merges 5 collection modals)
+    this.setupModesHub(); // Day 138: Modes hub (folds the 8 challenge-mode buttons)
     this.setupDailyScreen(); // Day 44
     this.setupCommunitySection(); // Day 49
     this.updateDailyButtonBadge(); // Day 44
@@ -1006,14 +1007,21 @@ class UI {
       if (prev && visible && prev[id] === false) newlyRevealed.push(id);
     };
     // L6 — Tier 1 reveal
-    setVis('daily-challenge-btn', g6);
+    // Day 138 (Cycle 7 BUILD): the 8 challenge-mode buttons are folded into the
+    // #modes-hub-modal. Tier-gating now targets the .mode-card WRAPPERS
+    // (mode-card-<key>) rather than the buttons themselves — the re-parented
+    // buttons stay display:default inside their card so their handlers +
+    // badge updaters keep working; the card is what's shown/hidden. The single
+    // #modes-hub-btn reveals at g6 (earliest mode = Daily).
+    setVis('modes-hub-btn', g6);
+    setVis('mode-card-daily', g6);
     setVis('encyclopedia-btn', g6);
     setVis('stats-btn', g6);
     // L9 — procedural / freeform pair
-    setVis('random-challenge-btn', g9);
-    setVis('sandbox-btn', g9);
+    setVis('mode-card-random', g9);
+    setVis('mode-card-sandbox', g9);
     // L12 — mid-progression skill+meta
-    setVis('adaptive-challenge-btn', g12);
+    setVis('mode-card-adaptive', g12);
     // Day 124 BUILD: the 5 collection buttons (Achievements/Customize at g12 +
     // Mastery/Collection/Logic at g15) collapse into ONE Profile hub button.
     // It reveals at g12 (earliest of the five); the hub's internal tabs
@@ -1021,10 +1029,10 @@ class UI {
     // staircase stays smooth (see _profileTabAvailable).
     setVis('profile-hub-btn', g12);
     // L18 — Tier 3 endgame surface
-    setVis('tournament-btn', g18);
-    setVis('infinite-mode-btn', g18); // Day 68
-    setVis('blitz-mode-btn', g18);
-    setVis('speedrun-btn', g18);
+    setVis('mode-card-tournament', g18);
+    setVis('mode-card-infinite', g18); // Day 68
+    setVis('mode-card-blitz', g18);
+    setVis('mode-card-speedrun', g18);
     setVis('create-level-btn', g18);
     // Day 79 Code Cleanup: weekly-puzzle-btn fully removed from DOM
     // (Tournament subsumes Puzzle of the Week — Day 72/78).
@@ -7138,6 +7146,34 @@ class UI {
   // Customize / Collection / Logic Profile) into one tabbed surface. Mirrors
   // the Day 96 #stats-tabs / _switchStatsTab pattern. Re-parents (does not
   // rewrite) each content root; each render*() stays untouched.
+  // ── Day 138 (Cycle 7 BUILD): Modes hub ──
+  // The 8 challenge-mode buttons were re-parented into #modes-hub-modal (their
+  // ids/handlers/badge-updaters are untouched — see index.html). This wires the
+  // single #modes-hub-btn to open the modal, ONE consolidated backdrop/close
+  // handler (Day 61/74 duplicate-path discipline), and a delegated close-on-pick
+  // so the launched screen never sits behind the overlay.
+  setupModesHub() {
+    const modal = document.getElementById('modes-hub-modal');
+    if (!modal) return;
+    const btn = document.getElementById('modes-hub-btn');
+    const closeBtn = document.getElementById('modes-hub-close');
+    const list = document.getElementById('modes-hub-list');
+
+    const open = () => { modal.style.display = 'flex'; };
+    const close = () => { modal.style.display = 'none'; };
+
+    if (btn) btn.addEventListener('click', open);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+    // Picking a mode launches its flow via the button's own (unchanged) handler;
+    // this listener just hides the hub so the new screen isn't behind the modal.
+    // Bubble phase: the button's handler and this both fire; close() only hides.
+    if (list) list.addEventListener('click', (e) => {
+      if (e.target.closest('.challenge-btn')) close();
+    });
+  }
+
   setupProfileHub() {
     const modal = document.getElementById('profile-hub-modal');
     if (!modal) return;

@@ -7569,6 +7569,78 @@ body.light-mode .phub-tab.active {
 }
 body.light-mode #profile-hub-tabs { border-bottom-color: #c8d8c0; }
 
+/* Day 138 (Cycle 7 BUILD): Modes hub — shell mirrors #profile-hub-modal */
+#modes-hub-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+#modes-hub-content {
+  background: #1a1a2e;
+  border: 2px solid #5a4828;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 560px;
+  width: 90%;
+  max-height: 82vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+#modes-hub-content h3 {
+  color: #0f0;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.modes-hub-sub {
+  color: #8a9aaa;
+  font-size: 12px;
+  text-align: center;
+  margin: 0 0 16px;
+}
+#modes-hub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #2a3a4a;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color .15s, background .15s;
+}
+.mode-card:hover { border-color: #0a5a3a; background: rgba(0, 255, 100, 0.03); }
+.mode-card .challenge-btn { width: 100%; margin: 0; }
+.mode-desc {
+  color: #9aa5b0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0 2px;
+}
+#modes-hub-close { margin-top: 18px; }
+body.light-mode #modes-hub-content {
+  background: #eef2e8;
+  border-color: #c8a860;
+}
+body.light-mode #modes-hub-content h3 { color: #0a5a0a; }
+body.light-mode .modes-hub-sub { color: #5a6a55; }
+body.light-mode .mode-card {
+  border-color: #c8d8c0;
+  background: rgba(0, 0, 0, 0.02);
+}
+body.light-mode .mode-card:hover { border-color: #0a5a0a; background: rgba(0, 120, 40, 0.05); }
+body.light-mode .mode-desc { color: #4a5a48; }
+
 #stats-tabs {
   display: flex;
   gap: 4px;

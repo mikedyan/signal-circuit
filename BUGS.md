@@ -1,5 +1,27 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 138 — Cycle 7 BUILD Week, Day 1 (2026-07-15) — 🎮 Modes Hub*
+
+## Day 138 — Cycle 7 BUILD Week, Day 1 (🎮 Modes Hub consolidation) summary
+
+**Build:** LOCAL `?v=1783987200` / sw `signal-circuit-v85` (bumped from Day 136 `?v=1783900800` / v84 — first source change of Cycle 7).
+**Result:** **37 / 37** assertions across 8 phases on the **FIRST run**; **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs; **0** harness self-bugs.
+
+Folded the 8 challenge-mode buttons (daily/random/sandbox/adaptive/tournament/infinite/blitz/speedrun) into ONE `🎮 Modes` button opening `#modes-hub-modal`. Day 124 **re-parent, don't rewrite**: the exact buttons (ids/classes/handlers preserved) moved into `.mode-card` wrappers, each with a `.mode-desc` description. Tier-gating moved from buttons → card wrappers (`mode-card-<key>`); `#modes-hub-btn` reveals at g6. New `setupModesHub()` (one consolidated backdrop handler + close-on-pick). Level-select challenge section: 8 buttons → 1. This is the Cycle 6 PRUNE_REPORT Cut #4 promoted to a BUILD day.
+
+**Launch integrity (P4):** all 8 re-parented buttons still launch their flow from inside the hub + the hub closes on pick. **Badge integrity (P5):** `updateDailyButtonBadge`/`updateAdaptiveButtonBadge` still mutate the re-parented buttons (location-independent). Cold-start unchanged (2 nav buttons, 50 cards — Modes reveals at g6).
+
+**LOC:** `index.html` +54/−13, `js/ui.js` +45/−7, `css/style.css` +72, `sw.js` +1/−1, cache-bust ×11. Net ≈ +150 functional.
+
+**Open Bugs queue:** 0 → 0 (streak: **63 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-138-qa.md`. Harness: `qa-reports/day-138-qa.cdp.js` (37 assertions, 8 phases). Spec: `specs/day-138-modes-hub.md`. Roadmap: `roadmaps/cycle-7-build.md`.
+
+**Day 139 next:** Cycle 7 BUILD Week Day 2 — per-mode stat badges in the hub.
+
+---
+
 *Updated: Day 136 — Cycle 6 PRUNE Week, Day 4 (2026-07-13) — Polish Sprint*
 
 ## Day 136 — Cycle 6 PRUNE Week, Day 4 (Polish Sprint) summary

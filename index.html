@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1783900800">
+  <link rel="stylesheet" href="css/style.css?v=1783987200">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -94,19 +94,13 @@
           <div id="review-levels"></div>
         </div>
 
-        <!-- Challenge Mode Section -->
+        <!-- Challenge Mode Section — Day 138 (Cycle 7 BUILD): the 8 flat mode
+             buttons are folded into ONE #modes-hub-btn that opens #modes-hub-modal.
+             The buttons themselves are re-parented (ids/handlers preserved) into
+             .mode-card wrappers inside the modal (see below). -->
         <div id="challenge-section">
-          <div class="chapter-title">Challenge Mode</div>
-          <div id="challenge-buttons">
-            <button id="tournament-btn" class="challenge-btn tournament-btn" aria-label="Weekly Tournament" style="display:none;">🏆 Tournament</button>
-            <button id="daily-challenge-btn" class="challenge-btn daily-btn" aria-label="Daily Challenge">📅 Daily Challenge</button>
-            <button id="adaptive-challenge-btn" class="challenge-btn" aria-label="Adaptive Challenge">🎯 Adaptive</button>
-            <button id="infinite-mode-btn" class="challenge-btn infinite-btn" aria-label="Infinite Run">♾️ Infinite</button>
-            <button id="random-challenge-btn" class="challenge-btn" aria-label="Random Challenge">🎲 Random Challenge</button>
-            <button id="blitz-mode-btn" class="challenge-btn" aria-label="Blitz Mode">🔥 Blitz Ladder</button>
-            <button id="speedrun-btn" class="challenge-btn" aria-label="Speedrun Mode">🏁 Speedrun</button>
-            <button id="sandbox-btn" class="challenge-btn" aria-label="Sandbox mode">🔧 Sandbox</button>
-          </div>
+          <div class="chapter-title">More Ways to Play</div>
+          <button id="modes-hub-btn" class="challenge-btn modes-hub-open-btn" aria-label="Open game modes">🎮 Modes</button>
         </div>
 
         <!-- Day 49: Community Levels Section -->
@@ -286,6 +280,52 @@
           </div>
         </div>
         <button id="profile-hub-close">Close</button>
+      </div>
+    </div>
+
+    <!-- Day 138 (Cycle 7 BUILD): Modes hub. The 8 challenge-mode buttons are
+         re-parented here (ids/classes/aria-labels/handlers preserved) so all
+         existing wiring + badge updaters keep working. Tier-gating moved from
+         the buttons to the .mode-card wrappers (mode-card-<key>). -->
+    <div id="modes-hub-modal" style="display:none;">
+      <div id="modes-hub-content">
+        <h3>🎮 Game Modes</h3>
+        <p class="modes-hub-sub">Different ways to play beyond the campaign.</p>
+        <div id="modes-hub-list">
+          <div class="mode-card" id="mode-card-daily">
+            <button id="daily-challenge-btn" class="challenge-btn daily-btn" aria-label="Daily Challenge">📅 Daily Challenge</button>
+            <p class="mode-desc">One fresh puzzle every day. Keep a daily streak alive.</p>
+          </div>
+          <div class="mode-card" id="mode-card-random">
+            <button id="random-challenge-btn" class="challenge-btn" aria-label="Random Challenge">🎲 Random Challenge</button>
+            <p class="mode-desc">A one-off randomized puzzle built to your specs.</p>
+          </div>
+          <div class="mode-card" id="mode-card-sandbox">
+            <button id="sandbox-btn" class="challenge-btn" aria-label="Sandbox mode">🔧 Sandbox</button>
+            <p class="mode-desc">Free-build canvas — no goal, just experiment with gates.</p>
+          </div>
+          <div class="mode-card" id="mode-card-adaptive">
+            <button id="adaptive-challenge-btn" class="challenge-btn" aria-label="Adaptive Challenge">🎯 Adaptive</button>
+            <p class="mode-desc">Puzzles that scale to your current skill level.</p>
+          </div>
+          <div class="mode-card" id="mode-card-tournament">
+            <button id="tournament-btn" class="challenge-btn tournament-btn" aria-label="Weekly Tournament">🏆 Tournament</button>
+            <p class="mode-desc">Compete on this week's featured puzzle leaderboard.</p>
+          </div>
+          <div class="mode-card" id="mode-card-infinite">
+            <button id="infinite-mode-btn" class="challenge-btn infinite-btn" aria-label="Infinite Run">♾️ Infinite</button>
+            <p class="mode-desc">Endless procedurally-generated puzzles — how far can you go?</p>
+          </div>
+          <div class="mode-card" id="mode-card-blitz">
+            <button id="blitz-mode-btn" class="challenge-btn" aria-label="Blitz Mode">🔥 Blitz Ladder</button>
+            <p class="mode-desc">Climb a ladder of puzzles against the clock.</p>
+          </div>
+          <div class="mode-card" id="mode-card-speedrun">
+            <button id="speedrun-btn" class="challenge-btn" aria-label="Speedrun Mode">🏁 Speedrun</button>
+            <p class="mode-desc">Race to solve a fixed set as fast as you can.</p>
+          </div>
+        </div>
+        <button id="modes-hub-close">Close</button>
       </div>
     </div>
 
@@ -867,15 +907,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1783900800"></script>
-  <script type="module" src="js/wires.js?v=1783900800"></script>
-  <script type="module" src="js/simulation.js?v=1783900800"></script>
-  <script src="js/levels.js?v=1783900800"></script>
-  <script src="js/audio.js?v=1783900800"></script>
-  <script src="js/achievements.js?v=1783900800"></script>
-  <script src="js/canvas.js?v=1783900800"></script>
-  <script src="js/ui.js?v=1783900800"></script>
-  <script src="js/tutorial.js?v=1783900800"></script>
-  <script src="js/main.js?v=1783900800"></script>
+  <script type="module" src="js/gates.js?v=1783987200"></script>
+  <script type="module" src="js/wires.js?v=1783987200"></script>
+  <script type="module" src="js/simulation.js?v=1783987200"></script>
+  <script src="js/levels.js?v=1783987200"></script>
+  <script src="js/audio.js?v=1783987200"></script>
+  <script src="js/achievements.js?v=1783987200"></script>
+  <script src="js/canvas.js?v=1783987200"></script>
+  <script src="js/ui.js?v=1783987200"></script>
+  <script src="js/tutorial.js?v=1783987200"></script>
+  <script src="js/main.js?v=1783987200"></script>
 </body>
 </html>
