@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Signal Circuit — Logic Gate Puzzle Game</title>
-  <link rel="stylesheet" href="css/style.css?v=1783987200">
+  <link rel="stylesheet" href="css/style.css?v=1784073600">
 </head>
 <body>
   <!-- F29-1: Accessible noscript fallback -->
@@ -295,6 +295,7 @@
           <div class="mode-card" id="mode-card-daily">
             <button id="daily-challenge-btn" class="challenge-btn daily-btn" aria-label="Daily Challenge">📅 Daily Challenge</button>
             <p class="mode-desc">One fresh puzzle every day. Keep a daily streak alive.</p>
+            <span class="mode-stat" id="mode-stat-daily" style="display:none;"></span>
           </div>
           <div class="mode-card" id="mode-card-random">
             <button id="random-challenge-btn" class="challenge-btn" aria-label="Random Challenge">🎲 Random Challenge</button>
@@ -307,22 +308,27 @@
           <div class="mode-card" id="mode-card-adaptive">
             <button id="adaptive-challenge-btn" class="challenge-btn" aria-label="Adaptive Challenge">🎯 Adaptive</button>
             <p class="mode-desc">Puzzles that scale to your current skill level.</p>
+            <span class="mode-stat" id="mode-stat-adaptive" style="display:none;"></span>
           </div>
           <div class="mode-card" id="mode-card-tournament">
             <button id="tournament-btn" class="challenge-btn tournament-btn" aria-label="Weekly Tournament">🏆 Tournament</button>
             <p class="mode-desc">Compete on this week's featured puzzle leaderboard.</p>
+            <span class="mode-stat" id="mode-stat-tournament" style="display:none;"></span>
           </div>
           <div class="mode-card" id="mode-card-infinite">
             <button id="infinite-mode-btn" class="challenge-btn infinite-btn" aria-label="Infinite Run">♾️ Infinite</button>
             <p class="mode-desc">Endless procedurally-generated puzzles — how far can you go?</p>
+            <span class="mode-stat" id="mode-stat-infinite" style="display:none;"></span>
           </div>
           <div class="mode-card" id="mode-card-blitz">
             <button id="blitz-mode-btn" class="challenge-btn" aria-label="Blitz Mode">🔥 Blitz Ladder</button>
             <p class="mode-desc">Climb a ladder of puzzles against the clock.</p>
+            <span class="mode-stat" id="mode-stat-blitz" style="display:none;"></span>
           </div>
           <div class="mode-card" id="mode-card-speedrun">
             <button id="speedrun-btn" class="challenge-btn" aria-label="Speedrun Mode">🏁 Speedrun</button>
             <p class="mode-desc">Race to solve a fixed set as fast as you can.</p>
+            <span class="mode-stat" id="mode-stat-speedrun" style="display:none;"></span>
           </div>
         </div>
         <button id="modes-hub-close">Close</button>
@@ -907,15 +913,15 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
-  <script type="module" src="js/gates.js?v=1783987200"></script>
-  <script type="module" src="js/wires.js?v=1783987200"></script>
-  <script type="module" src="js/simulation.js?v=1783987200"></script>
-  <script src="js/levels.js?v=1783987200"></script>
-  <script src="js/audio.js?v=1783987200"></script>
-  <script src="js/achievements.js?v=1783987200"></script>
-  <script src="js/canvas.js?v=1783987200"></script>
-  <script src="js/ui.js?v=1783987200"></script>
-  <script src="js/tutorial.js?v=1783987200"></script>
-  <script src="js/main.js?v=1783987200"></script>
+  <script type="module" src="js/gates.js?v=1784073600"></script>
+  <script type="module" src="js/wires.js?v=1784073600"></script>
+  <script type="module" src="js/simulation.js?v=1784073600"></script>
+  <script src="js/levels.js?v=1784073600"></script>
+  <script src="js/audio.js?v=1784073600"></script>
+  <script src="js/achievements.js?v=1784073600"></script>
+  <script src="js/canvas.js?v=1784073600"></script>
+  <script src="js/ui.js?v=1784073600"></script>
+  <script src="js/tutorial.js?v=1784073600"></script>
+  <script src="js/main.js?v=1784073600"></script>
 </body>
 </html>

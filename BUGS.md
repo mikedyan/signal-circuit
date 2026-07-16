@@ -1,5 +1,29 @@
 # Bugs — Signal Circuit
 
+*Updated: Day 139 — Cycle 7 BUILD Week, Day 2 (2026-07-16) — Per-mode stat badges*
+
+## Day 139 — Cycle 7 BUILD Week, Day 2 (Per-mode stat badges in the hub) summary
+
+**Build:** LOCAL `?v=1784073600` / sw `signal-circuit-v86` (bumped from Day 138 `?v=1783987200` / v85).
+**Result:** **37 / 37** assertions across 6 phases (36/37 first run — 1 harness self-bug, fixed harness-side, **0 app changes**); **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+Turned the Day 138 Modes hub into a dashboard: each `.mode-card` now shows the player's own headline stat, read from **existing** GameState fields (no new persistence). New `UI.updateModeHubStats()` populates 6 `#mode-stat-<key>` pills — daily→streak, adaptive→skill label, tournament→last rank, infinite→best solved, blitz→best rung, speedrun→best time; called at setup + on every hub `open()`. Random/Sandbox have no persisted per-mode counter → intentionally no badge.
+
+**Seeded-stat proof (P3):** streak=5 → `🔥 5-day streak`; blitz-best=7 → `Best: rung 7`; speedrun-best=95 → `Best: 1:35`; infinite bestSolved=12 → `Best: 12 solved`; submitted tournament score → `Last rank: #N` matching `getSubmissionHistory()[0].rank`. **Launch integrity (P4):** all 8 buttons still launch + hub closes (Day 138 regression). Cold-start unchanged (2 nav, 50 cards, Modes reveals at g6).
+
+**First-run harness self-bug (0 app changes):** P2.1 expected zero-streak empty state after `seedProgress(18)`, but seeding marks the day played (`updateStreak()` → streak 1), so the pill correctly read `🔥 1-day streak`. App correct; fixed harness-side by clearing the streak key before the zero-state read. Same class as Days 97/108/115/117/122/125/131/135.
+
+**LOC:** `index.html` +6 (+11 cache-bust), `js/ui.js` +~55, `css/style.css` +~15, `sw.js` v85→v86. Net ≈ +76 functional. No new cold-start surface.
+
+**Open Bugs queue:** 0 → 0 (streak: **64 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
+
+Full report: `qa-reports/day-139-qa.md`. Harness: `qa-reports/day-139-qa.cdp.js` (37 assertions, 6 phases). Spec: `specs/day-139-mode-stat-badges.md`.
+
+**Day 140 next:** Cycle 7 BUILD Week Day 3 — "Recommended for you" spotlight card at the top of the hub.
+
+---
+
 *Updated: Day 138 — Cycle 7 BUILD Week, Day 1 (2026-07-15) — 🎮 Modes Hub*
 
 ## Day 138 — Cycle 7 BUILD Week, Day 1 (🎮 Modes Hub consolidation) summary

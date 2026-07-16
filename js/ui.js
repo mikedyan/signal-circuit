@@ -7159,7 +7159,9 @@ class UI {
     const closeBtn = document.getElementById('modes-hub-close');
     const list = document.getElementById('modes-hub-list');
 
-    const open = () => { modal.style.display = 'flex'; };
+    // Day 139: refresh the per-mode stat badges on every open so a fresh best
+    // (set inside a mode this session) shows immediately on return to the hub.
+    const open = () => { this.updateModeHubStats(); modal.style.display = 'flex'; };
     const close = () => { modal.style.display = 'none'; };
 
     if (btn) btn.addEventListener('click', open);
@@ -7172,6 +7174,68 @@ class UI {
     if (list) list.addEventListener('click', (e) => {
       if (e.target.closest('.challenge-btn')) close();
     });
+
+    // Initial paint (also runs on every open()).
+    this.updateModeHubStats();
+  }
+
+  // Day 139: populate each .mode-card's headline stat from EXISTING GameState
+  // fields (no new persistence). Each stat is independently try-guarded so a
+  // missing manager can never break the hub. Random/Sandbox have no persisted
+  // per-mode counter, so they intentionally render no badge.
+  updateModeHubStats() {
+    const gs = this.gameState;
+    const set = (key, text) => {
+      const el = document.getElementById('mode-stat-' + key);
+      if (!el) return;
+      if (text) { el.textContent = text; el.style.display = 'inline-block'; }
+      else { el.textContent = ''; el.style.display = 'none'; }
+    };
+
+    // Daily: current streak
+    try {
+      const streak = (gs.getStreakData && gs.getStreakData().streak) || 0;
+      set('daily', streak > 0 ? `🔥 ${streak}-day streak` : '✨ Start a streak today');
+    } catch (e) { set('daily', ''); }
+
+    // Adaptive: current skill label
+    try {
+      if (gs.skillTracker && gs.skillTracker.getSkillLevel) {
+        if (gs.skillTracker.calculate) gs.skillTracker.calculate();
+        const skill = gs.skillTracker.getSkillLevel();
+        set('adaptive', skill && skill.label ? `🎯 Skill: ${skill.label}` : '');
+      } else { set('adaptive', ''); }
+    } catch (e) { set('adaptive', ''); }
+
+    // Tournament: last (newest) submission rank
+    try {
+      const hist = (gs.weeklyTournament && gs.weeklyTournament.getSubmissionHistory)
+        ? gs.weeklyTournament.getSubmissionHistory() : [];
+      if (hist && hist.length) set('tournament', `🏆 Last rank: #${hist[0].rank}`);
+      else set('tournament', '🏅 No runs yet');
+    } catch (e) { set('tournament', ''); }
+
+    // Infinite: best depth (puzzles solved in a run)
+    try {
+      const best = (gs.infiniteRun && gs.infiniteRun.best) ? gs.infiniteRun.best : null;
+      const solved = best ? (best.bestSolved || 0) : 0;
+      set('infinite', solved > 0 ? `♾️ Best: ${solved} solved` : '♾️ Not played yet');
+    } catch (e) { set('infinite', ''); }
+
+    // Blitz: best ladder rung reached
+    try {
+      const rung = gs._getBlitzBest ? gs._getBlitzBest() : 0;
+      set('blitz', rung > 0 ? `🔥 Best: rung ${rung}` : '🔥 Not played yet');
+    } catch (e) { set('blitz', ''); }
+
+    // Speedrun: best total time
+    try {
+      const secs = gs._getSpeedrunBest ? gs._getSpeedrunBest() : 0;
+      if (secs > 0) {
+        const m = Math.floor(secs / 60), s = secs % 60;
+        set('speedrun', `🏁 Best: ${m}:${String(s).padStart(2, '0')}`);
+      } else { set('speedrun', '🏁 Not played yet'); }
+    } catch (e) { set('speedrun', ''); }
   }
 
   setupProfileHub() {
