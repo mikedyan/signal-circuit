@@ -1,6 +1,22 @@
 # Bugs — Signal Circuit
 
-*Updated: Day 139 — Cycle 7 BUILD Week, Day 2 (2026-07-16) — Per-mode stat badges*
+*Updated: Day 140 — Cycle 7 BUILD Week, Day 3 (2026-07-17) — "Recommended for you" spotlight*
+
+## Day 140 — Cycle 7 BUILD Week, Day 3 ("Recommended for you" spotlight) summary
+
+**Build:** LOCAL `?v=1784160000` / sw `signal-circuit-v87` (bumped from Day 139 `?v=1784073600` / v86).
+**Result:** **40 / 40** assertions across 6 phases; **0** console.error; **0** `Runtime.exceptionThrown`; **0** new user-facing bugs.
+
+Added a `#modes-hub-spotlight` card at the top of the Day 138 Modes hub that recommends ONE mode via a deterministic top-wins heuristic (`UI._recommendMode()`) over **existing** player state (no new persistence). Precedence: campaign-100%→blitz "Campaign conquered" · g18+no-tournament→tournament "Enter the arena" · g18+infinite-unrun→infinite "How far can you go?" · g18+blitz-unrun→blitz "Beat the clock" · g18+speedrun-unrun→speedrun "Set a time trial" · g12→adaptive "Sized to your skill" · g9→random "Mix it up" · g6 default→daily ("Keep your streak going" for app-open streak ≥2, else "Start here"). `renderModeSpotlight()` paints the card + wires Play to the recommended mode's real (re-parented) button; wired into `setupModesHub()` + hub `open()`.
+
+**Design realignment during QA (source change, not a user bug):** the first heuristic branched on "streak alive & not played today" → **unreachable**, because `updateStreak()` runs on every app load (streak always ≥1, lastPlayDate always today). Redesigned to treat the streak as an engagement signal only. All 9 heuristic branches are now reachable + individually asserted (P3).
+
+**Harness self-bugs (0 app changes):** (1) `seedProgress(N)` merges onto in-memory progress → decreasing seeds kept the higher count; fixed with `{clear:true}`. (2) same-`?v` in-place `ui.js` edit let the SW serve first-edit bytes (Day 134 class); fixed with a one-time `serviceWorker.unregister()` + `caches.delete()` purge in the harness. (3) added an 8s per-call timeout to the CDP `send()` so a stuck call surfaces instead of hanging silently; a clean `cdp-launch.sh stop/start` cleared a lingering page-target debug session.
+
+**LOC:** `index.html` +14/−13 (+11 cache-bust), `css/style.css` +53, `js/ui.js` +~140, `sw.js` v86→v87. Net ≈ +195 functional. No new cold-start surface (spotlight lives inside the hub modal; cold nav still 2).
+
+**Open Bugs queue:** 0 → 0 (streak: **65 consecutive days** since Day 76).
+**Latent observations:** 0 → 0.
 
 ## Day 139 — Cycle 7 BUILD Week, Day 2 (Per-mode stat badges in the hub) summary
 

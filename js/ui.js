@@ -7161,7 +7161,13 @@ class UI {
 
     // Day 139: refresh the per-mode stat badges on every open so a fresh best
     // (set inside a mode this session) shows immediately on return to the hub.
-    const open = () => { this.updateModeHubStats(); modal.style.display = 'flex'; };
+    // Day 140: also re-resolve the "Recommended for you" spotlight so it reacts
+    // to progress made this session (new streak, campaign cleared, etc.).
+    const open = () => {
+      this.updateModeHubStats();
+      this.renderModeSpotlight();
+      modal.style.display = 'flex';
+    };
     const close = () => { modal.style.display = 'none'; };
 
     if (btn) btn.addEventListener('click', open);
@@ -7177,6 +7183,141 @@ class UI {
 
     // Initial paint (also runs on every open()).
     this.updateModeHubStats();
+    this.renderModeSpotlight();
+  }
+
+  // Day 140 (Cycle 7 BUILD): map each mode key to its (re-parented) launch
+  // button id so the spotlight can trigger the exact same handler the card uses.
+  _modeButtonId(key) {
+    return {
+      daily: 'daily-challenge-btn',
+      random: 'random-challenge-btn',
+      sandbox: 'sandbox-btn',
+      adaptive: 'adaptive-challenge-btn',
+      tournament: 'tournament-btn',
+      infinite: 'infinite-mode-btn',
+      blitz: 'blitz-mode-btn',
+      speedrun: 'speedrun-btn',
+    }[key] || null;
+  }
+
+  // Day 140: deterministic "Recommended for you" heuristic. Reads ONLY existing
+  // GameState fields (no new persistence). Precedence is top-wins and every
+  // branch only recommends a mode that's currently UNLOCKED by the tier
+  // staircase (daily g6 · random/sandbox g9 · adaptive g12 · tournament/
+  // infinite/blitz/speedrun g18) — the hub itself only opens at g6, so daily is
+  // always a valid fallback. Each state read is independently try-guarded.
+  //
+  // NOTE on the streak: updateStreak() runs on every app load (main.js), so
+  // lastPlayDate is always "today" and streak is always >=1 by the time the hub
+  // renders. It's an app-open streak, not a per-daily-completion flag — so we
+  // treat it purely as an engagement signal (>=2 => a returning player), never
+  // as a "you still owe today's daily" trigger (that state is unreachable).
+  _recommendMode() {
+    const gs = this.gameState;
+    const completed = this._progressCompletedTotal();
+    const g9 = completed >= 9, g12 = completed >= 12, g18 = completed >= 18;
+    const totalLevels = (typeof getLevelCount === 'function') ? getLevelCount() : 50;
+
+    let streak = 0;
+    try { const sd = gs.getStreakData ? gs.getStreakData() : null; if (sd) streak = sd.streak || 0; } catch (e) {}
+    let blitzBest = 0;
+    try { blitzBest = gs._getBlitzBest ? gs._getBlitzBest() : 0; } catch (e) {}
+    let speedBest = 0;
+    try { speedBest = gs._getSpeedrunBest ? gs._getSpeedrunBest() : 0; } catch (e) {}
+    let infBest = 0;
+    try { infBest = (gs.infiniteRun && gs.infiniteRun.best) ? (gs.infiniteRun.best.bestSolved || 0) : 0; } catch (e) {}
+    let tourRuns = 0;
+    try {
+      const h = (gs.weeklyTournament && gs.weeklyTournament.getSubmissionHistory)
+        ? gs.weeklyTournament.getSubmissionHistory() : [];
+      tourRuns = h ? h.length : 0;
+    } catch (e) {}
+
+    // 1) Campaign 100% cleared & Blitz never run → capstone speed challenge.
+    if (g18 && completed >= totalLevels && blitzBest === 0) {
+      return { key: 'blitz', emoji: '🏆', title: 'Campaign conquered',
+        reason: `You've cleared all ${totalLevels} levels — test your speed on the Blitz ladder.` };
+    }
+    // 2) Endgame unlocked, tournament never tried → nudge competitive play.
+    if (g18 && tourRuns === 0) {
+      return { key: 'tournament', emoji: '🏆', title: 'Enter the arena',
+        reason: `This week's featured puzzle is live — post a time on the leaderboard.` };
+    }
+    // 3) Endgame unlocked, infinite never tried → endless mode.
+    if (g18 && infBest === 0) {
+      return { key: 'infinite', emoji: '♾️', title: 'How far can you go?',
+        reason: `Endless procedurally-generated puzzles — set your first depth record.` };
+    }
+    // 4) Endgame unlocked, blitz never tried → the timed ladder.
+    if (g18 && blitzBest === 0) {
+      return { key: 'blitz', emoji: '🔥', title: 'Beat the clock',
+        reason: `Climb the Blitz ladder — how many puzzles before time runs out?` };
+    }
+    // 5) Endgame unlocked, speedrun never tried → the time trial.
+    if (g18 && speedBest === 0) {
+      return { key: 'speedrun', emoji: '🏁', title: 'Set a time trial',
+        reason: `Race through a fixed set as fast as you can — log your first Speedrun.` };
+    }
+    // 6) Adaptive unlocked → skill-matched practice.
+    if (g12) {
+      let label = '';
+      try {
+        if (gs.skillTracker && gs.skillTracker.getSkillLevel) {
+          if (gs.skillTracker.calculate) gs.skillTracker.calculate();
+          label = (gs.skillTracker.getSkillLevel() || {}).label || '';
+        }
+      } catch (e) {}
+      return { key: 'adaptive', emoji: '🎯', title: 'Sized to your skill',
+        reason: label
+          ? `Adaptive puzzles tuned to your ${label} rating — right at your level.`
+          : `Adaptive puzzles that scale to your current skill level.` };
+    }
+    // 7) Random unlocked → variety.
+    if (g9) {
+      return { key: 'random', emoji: '🎲', title: 'Mix it up',
+        reason: `A fresh randomized puzzle built to your specs — no two the same.` };
+    }
+    // 8) Default (g6, daily is the only unlocked mode). Returning player (an
+    //    app-open streak >=2) gets streak-aware copy; a first-timer gets onboarding.
+    if (streak >= 2) {
+      return { key: 'daily', emoji: '🔥', title: 'Keep your streak going',
+        reason: `You're on a ${streak}-day streak — today's Daily Challenge keeps it climbing.` };
+    }
+    return { key: 'daily', emoji: '📅', title: 'Start here',
+      reason: `New to modes? A Daily Challenge is the perfect place to begin.` };
+  }
+
+  // Day 140: paint the spotlight card and wire its Play button to launch the
+  // recommended mode via the same (unchanged) mode-button handler. Re-innerHTML
+  // on every call replaces the button node, so no listener ever accumulates.
+  renderModeSpotlight() {
+    const host = document.getElementById('modes-hub-spotlight');
+    if (!host) return;
+    let rec = null;
+    try { rec = this._recommendMode(); } catch (e) { rec = null; }
+    if (!rec || !rec.key) { host.innerHTML = ''; host.style.display = 'none'; return; }
+    host.innerHTML = `
+      <div class="spotlight-label">✨ Recommended for you</div>
+      <button class="spotlight-card" id="mode-spotlight-btn" data-mode="${rec.key}" aria-label="${rec.title} — play this mode">
+        <span class="spotlight-emoji">${rec.emoji}</span>
+        <span class="spotlight-body">
+          <span class="spotlight-title">${rec.title}</span>
+          <span class="spotlight-reason">${rec.reason}</span>
+        </span>
+        <span class="spotlight-cta">Play ▸</span>
+      </button>`;
+    host.style.display = 'block';
+    const sbtn = document.getElementById('mode-spotlight-btn');
+    if (sbtn) sbtn.addEventListener('click', () => {
+      const targetId = this._modeButtonId(rec.key);
+      const target = targetId ? document.getElementById(targetId) : null;
+      // Hide the hub first so the launched screen isn't behind the overlay
+      // (mirrors the delegated close-on-pick in setupModesHub).
+      const modal = document.getElementById('modes-hub-modal');
+      if (modal) modal.style.display = 'none';
+      if (target) target.click();
+    });
   }
 
   // Day 139: populate each .mode-card's headline stat from EXISTING GameState
